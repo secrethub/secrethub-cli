@@ -53,11 +53,11 @@ func (cmd *ClearClipboardCommand) Run() error {
 
 	err = passhash.CompareHashAndPassword(cmd.hash, read)
 	if err != nil {
-		cmd.logger.Debug("not clearing clipboard because hash is different")
+		cmd.logger.Debugf("not clearing clipboard because hash is different")
 		return nil
 	}
 
-	cmd.logger.Debug("clearing clipboard")
+	cmd.logger.Debugf("clearing clipboard")
 	err = cmd.clipper.WriteAll(nil)
 	if err != nil {
 		return errio.Error(err)

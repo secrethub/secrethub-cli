@@ -33,7 +33,7 @@ type InjectCommand struct {
 // NewInjectCommand creates a new InjectCommand.
 func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 	return &InjectCommand{
-		clipper:             clip.Clipboard,
+		clipper:             clip.NewClipboard(),
 		clearClipboardAfter: defaultClearClipboardAfter,
 		io:                  io,
 		newClient:           newClient,

@@ -26,7 +26,7 @@ type ClearClipboardCommand struct {
 // NewClearClipboardCommand creates a new ClearClipboardCommand.
 func NewClearClipboardCommand(logger logging.Logger) *ClearClipboardCommand {
 	return &ClearClipboardCommand{
-		clipper: clip.Clipboard,
+		clipper: clip.NewClipboard(),
 		logger:  logger,
 	}
 }

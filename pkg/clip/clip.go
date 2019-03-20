@@ -12,9 +12,6 @@ var (
 	ErrCannotRead = errClip.Code("cannot_read").ErrorPref("cannot read from clipboard: %s")
 	// ErrCannotWrite is returned when data cannot be written to the clipboard.
 	ErrCannotWrite = errClip.Code("cannot_write").ErrorPref("cannot write to clipboard: %s")
-
-	// Clipboard is the default clipboard.
-	Clipboard Clipper = &clip{}
 )
 
 // Clipper allows you to read from and write to the clipboard.

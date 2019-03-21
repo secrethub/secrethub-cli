@@ -262,7 +262,6 @@ func TestParseCredential(t *testing.T) {
 
 	newReader := func(pass string) PassphraseReader {
 		return passphraseReader{
-			Logger:    testLogger,
 			FlagValue: pass,
 			Cache:     NewPassphraseCache(0, &TestKeyringCleaner{}, newTestKeyring()),
 		}

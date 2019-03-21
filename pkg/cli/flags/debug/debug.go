@@ -1,4 +1,4 @@
-package secrethub
+package debug
 
 import (
 	"github.com/keylockerbv/secrethub-cli/pkg/cli"

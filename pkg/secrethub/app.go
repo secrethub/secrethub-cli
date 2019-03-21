@@ -3,6 +3,7 @@ package secrethub
 import (
 	"fmt"
 	"github.com/keylockerbv/secrethub-cli/pkg/cli/flags/color"
+	"github.com/keylockerbv/secrethub-cli/pkg/cli/flags/debug"
 	"github.com/keylockerbv/secrethub-cli/pkg/cli/flags/mlock"
 	"strings"
 
@@ -111,7 +112,7 @@ func (app *App) Run(args []string) error {
 		return errio.Error(err)
 	}
 
-	RegisterDebugFlag(app.cli, app.logger)
+	debug.RegisterDebugFlag(app.cli, app.logger)
 	mlock.RegisterMlockFlag(app.cli)
 	color.RegisterColorFlag(app.cli)
 	app.credentialStore.Register(app.cli)

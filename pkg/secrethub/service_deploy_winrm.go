@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"bytes"
 	"fmt"
 
 	"io/ioutil"
@@ -10,7 +11,6 @@ import (
 
 	"net/url"
 
-	"github.com/keylockerbv/secrethub-cli/pkg/deployment"
 	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/keylockerbv/secrethub-cli/pkg/winrm"
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -181,7 +181,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	// Get the path to place the credential file in.
 	destinationPath := fmt.Sprintf("$HOME\\%s\\%s", defaultProfileDirName, defaultCredentialFilename)
 
-	deployer, err := deployment.NewWindowsDeployer(client, destinationPath)
+	deployer, err := NewWindowsDeployer(client, destinationPath)
 	if err != nil {
 		return errio.Error(err)
 	}
@@ -234,4 +234,39 @@ func (cmd *ServiceDeployWinRmCommand) checkWinRMVerifyCert() (bool, error) {
 	}
 
 	return false, nil
+}
+
+// Deployer is an interface that can be used to install the secrets client
+// and copy a service configuration to a target machine.
+type Deployer interface {
+	Configure([]byte) error
+}
+
+// WindowsDeployer deploy a secrets service to a Windows host.
+type WindowsDeployer struct {
+	conn *winrm.Client
+	path string
+}
+
+// NewWindowsDeployer creates a WindowsDeployer using a WinRM connection.
+func NewWindowsDeployer(conn *winrm.Client, path string) (Deployer, error) {
+	wd := WindowsDeployer{
+		conn: conn,
+		path: path,
+	}
+
+	return wd, nil
+}
+
+// Configure copies a service credential to a Windows host.
+func (wd WindowsDeployer) Configure(token []byte) error {
+	r := bytes.NewBuffer(token)
+	copyProgress := make(chan int)
+
+	err := wd.conn.CopyFile(r, wd.path, copyProgress)
+	if err != nil {
+		return errio.Error(err)
+	}
+
+	return nil
 }

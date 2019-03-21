@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/keylockerbv/secrethub-cli/pkg/filemode"
+	"github.com/keylockerbv/secrethub-cli/pkg/cli/flags/filemode"
 	"github.com/keylockerbv/secrethub/testutil"
 )
 

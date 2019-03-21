@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/keylockerbv/secrethub-cli/pkg/ui"
+	"github.com/keylockerbv/secrethub-cli/pkg/cli/flags/filemode"
 	"github.com/keylockerbv/secrethub-cli/pkg/clip"
-	"github.com/keylockerbv/secrethub-cli/pkg/filemode"
 	"github.com/keylockerbv/secrethub-cli/pkg/posix"
+	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"

@@ -2,11 +2,12 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/keylockerbv/secrethub-cli/pkg/cli/flags/mlock"
 	"strings"
 
 	raven "github.com/getsentry/raven-go"
-	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/keylockerbv/secrethub-cli/pkg/cli"
+	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	logging "github.com/op/go-logging"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -110,7 +111,7 @@ func (app *App) Run(args []string) error {
 	}
 
 	RegisterDebugFlag(app.cli, app.logger)
-	RegisterMlockFlag(app.cli)
+	mlock.RegisterMlockFlag(app.cli)
 	RegisterColorFlag(app.cli)
 	app.credentialStore.Register(app.cli)
 	app.clientFactory.Register(app.cli)

@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/keylockerbv/secrethub-cli/pkg/cli"
 	"strconv"
 
 	logging "github.com/op/go-logging"
@@ -8,7 +9,7 @@ import (
 )
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
-func RegisterDebugFlag(r FlagRegisterer, logger *logging.Logger) {
+func RegisterDebugFlag(r cli.FlagRegisterer, logger *logging.Logger) {
 	flag := debugFlag{
 		logger: logger,
 	}

@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/keylockerbv/secrethub-cli/pkg/cli"
 	"io/ioutil"
 	"os"
 	"time"
@@ -29,7 +30,7 @@ type CredentialStore interface {
 	Save() error
 	// Get retrieves a credential from the store.
 	Get() (secrethub.Credential, error)
-	Register(FlagRegisterer)
+	Register(cli.FlagRegisterer)
 }
 
 // NewCredentialStore creates a new CredentialStore.
@@ -49,7 +50,7 @@ type credentialStore struct {
 }
 
 // Register registers the flags for configuring the store on the provided Registerer.
-func (store *credentialStore) Register(r FlagRegisterer) {
+func (store *credentialStore) Register(r cli.FlagRegisterer) {
 	r.Flag("config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub").StringVar(&store.ConfigDir)
 	r.Flag("credential", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.").StringVar(&store.AccountCredential)
 	r.Flag("credential-passphrase", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.").Short('p').StringVar(&store.credentialPassphrase)

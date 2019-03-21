@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/keylockerbv/secrethub-cli/pkg/cli"
 	"net/url"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -11,7 +12,7 @@ import (
 type ClientFactory interface {
 	// NewClient returns a new SecretHub client.
 	NewClient() (secrethub.Client, error)
-	Register(FlagRegisterer)
+	Register(cli.FlagRegisterer)
 }
 
 // NewClientFactory creates a new ClientFactory.
@@ -27,7 +28,7 @@ type clientFactory struct {
 }
 
 // Register the flags for configuration on a cli application.
-func (f *clientFactory) Register(r FlagRegisterer) {
+func (f *clientFactory) Register(r cli.FlagRegisterer) {
 	r.Flag("api-remote", "The SecretHub API address, don't set this unless you know what you're doing.").Hidden().URLVar(&f.ServerURL)
 }
 

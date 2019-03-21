@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/keylockerbv/secrethub-cli/pkg/cli"
 	"strconv"
 
 	"github.com/fatih/color"
@@ -16,7 +17,7 @@ func (f noColorFlag) init() {
 }
 
 // RegisterColorFlag registers a color flag that configures whether colored output is used.
-func RegisterColorFlag(r FlagRegisterer) {
+func RegisterColorFlag(r cli.FlagRegisterer) {
 	flag := noColorFlag(false)
 	r.Flag("no-color", "Disable colored output.").SetValue(&flag)
 }

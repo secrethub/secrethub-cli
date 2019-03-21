@@ -1,6 +1,7 @@
-package secrethub
+package mlock
 
 import (
+	"github.com/keylockerbv/secrethub-cli/pkg/cli"
 	"strconv"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/mlock"
@@ -24,7 +25,7 @@ func (f mlockFlag) init() error {
 }
 
 // RegisterMlockFlag registers a mlock flag that enables memory locking when set to true.
-func RegisterMlockFlag(r FlagRegisterer) {
+func RegisterMlockFlag(r cli.FlagRegisterer) {
 	flag := mlockFlag(false)
 	r.Flag("mlock", "Enable memory locking").SetValue(&flag)
 }

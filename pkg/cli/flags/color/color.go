@@ -1,4 +1,4 @@
-package secrethub
+package color
 
 import (
 	"github.com/keylockerbv/secrethub-cli/pkg/cli"

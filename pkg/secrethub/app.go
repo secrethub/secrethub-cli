@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/keylockerbv/secrethub-cli/pkg/cli/flags/color"
 	"github.com/keylockerbv/secrethub-cli/pkg/cli/flags/mlock"
 	"strings"
 
@@ -112,7 +113,7 @@ func (app *App) Run(args []string) error {
 
 	RegisterDebugFlag(app.cli, app.logger)
 	mlock.RegisterMlockFlag(app.cli)
-	RegisterColorFlag(app.cli)
+	color.RegisterColorFlag(app.cli)
 	app.credentialStore.Register(app.cli)
 	app.clientFactory.Register(app.cli)
 	app.registerCommands()

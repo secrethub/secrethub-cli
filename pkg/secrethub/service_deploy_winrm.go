@@ -181,7 +181,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	// Get the path to place the credential file in.
 	destinationPath := fmt.Sprintf("$HOME\\%s\\%s", defaultProfileDirName, defaultCredentialFilename)
 
-	deployer, err := NewWindowsDeployer(client, destinationPath)
+	deployer, err := newWindowsDeployer(client, destinationPath)
 	if err != nil {
 		return errio.Error(err)
 	}
@@ -197,7 +197,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 	// Copy the config to the host.
 	fmt.Fprintln(cmd.io.Stdout(), "Deploying configuration...")
-	err = deployer.Configure(credential)
+	err = deployer.configure(credential)
 	if err != nil {
 		return errio.Error(err)
 	}
@@ -236,21 +236,21 @@ func (cmd *ServiceDeployWinRmCommand) checkWinRMVerifyCert() (bool, error) {
 	return false, nil
 }
 
-// Deployer is an interface that can be used to install the secrets client
+// deployer is an interface that can be used to install the secrets client
 // and copy a service configuration to a target machine.
-type Deployer interface {
-	Configure([]byte) error
+type deployer interface {
+	configure([]byte) error
 }
 
-// WindowsDeployer deploy a secrets service to a Windows host.
-type WindowsDeployer struct {
+// windowsDeployer deploy a secrets service to a Windows host.
+type windowsDeployer struct {
 	conn *winrm.Client
 	path string
 }
 
-// NewWindowsDeployer creates a WindowsDeployer using a WinRM connection.
-func NewWindowsDeployer(conn *winrm.Client, path string) (Deployer, error) {
-	wd := WindowsDeployer{
+// newWindowsDeployer creates a windowsDeployer using a WinRM connection.
+func newWindowsDeployer(conn *winrm.Client, path string) (deployer, error) {
+	wd := windowsDeployer{
 		conn: conn,
 		path: path,
 	}
@@ -258,8 +258,8 @@ func NewWindowsDeployer(conn *winrm.Client, path string) (Deployer, error) {
 	return wd, nil
 }
 
-// Configure copies a service credential to a Windows host.
-func (wd WindowsDeployer) Configure(token []byte) error {
+// configure copies a service credential to a Windows host.
+func (wd windowsDeployer) configure(token []byte) error {
 	r := bytes.NewBuffer(token)
 	copyProgress := make(chan int)
 

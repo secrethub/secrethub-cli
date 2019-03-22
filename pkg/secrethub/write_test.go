@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/keylockerbv/secrethub-cli/pkg/clip/fakeclip"
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
@@ -8,7 +9,6 @@ import (
 
 	"github.com/keylockerbv/secrethub-cli/pkg/clip"
 	"github.com/keylockerbv/secrethub-cli/pkg/ui"
-	"github.com/keylockerbv/secrethub/testutil"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -168,7 +168,7 @@ func TestWriteCommand_Run(t *testing.T) {
 			cmd: WriteCommand{
 				path:         "namespace/repo/secret",
 				useClipboard: true,
-				clipper:      testutil.NewTestClipboardWithValue([]byte("clipped secret value")),
+				clipper:      fakeclip.NewWithValue([]byte("clipped secret value")),
 			},
 			service: fakeclient.SecretService{
 				Writer: fakeclient.Writer{
@@ -187,7 +187,7 @@ func TestWriteCommand_Run(t *testing.T) {
 			cmd: WriteCommand{
 				path:         "namespace/repo/secret",
 				useClipboard: true,
-				clipper:      testutil.NewErrClipboard(clip.ErrCannotRead("read error"), nil),
+				clipper:      fakeclip.NewWithErr(clip.ErrCannotRead("read error"), nil),
 			},
 			err: clip.ErrCannotRead("read error"),
 		},

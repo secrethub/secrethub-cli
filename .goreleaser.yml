@@ -12,6 +12,8 @@ builds:
       - amd64
       - 386
     main: ./cmd/secrethub/main.go
+    ldflags:
+      - -s -w -X main.commit={{ .ShortCommit }} -X main.version={{ .Version }}
 
 archive:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"

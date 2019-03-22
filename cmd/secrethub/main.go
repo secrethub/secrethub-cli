@@ -8,8 +8,13 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
+// version and commit are printed when running `secrethub --version`.
+// They are set on compile-time using ldflags.
+var version string
+var commit string
+
 func main() {
-	err := secrethub.NewApp().Run(os.Args[1:])
+	err := secrethub.NewApp().Version(version, commit).Run(os.Args[1:])
 	if err != nil {
 		handleError(err)
 	}

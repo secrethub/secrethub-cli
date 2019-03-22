@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/keylockerbv/secrethub-cli/pkg/spawnprocess"
-	logging "github.com/op/go-logging"
+	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	libkeyring "github.com/zalando/go-keyring"
 )
@@ -45,7 +44,6 @@ type PassphraseReader interface {
 // passphraseReader provides passphrase reading capability to the CLI.
 type passphraseReader struct {
 	io        ui.IO
-	Logger    *logging.Logger
 	FlagValue string
 	Cache     *PassphraseCache
 }
@@ -58,7 +56,6 @@ func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassph
 
 	return &passphraseReader{
 		io:        io,
-		Logger:    logger,
 		FlagValue: credentialPassphrase,
 		Cache:     NewPassphraseCache(ttl, cleaner, keyring),
 	}

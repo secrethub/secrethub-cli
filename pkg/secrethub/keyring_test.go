@@ -5,13 +5,11 @@ import (
 	"time"
 
 	"github.com/keylockerbv/secrethub/testutil"
-	logging "github.com/op/go-logging"
 	libkeyring "github.com/zalando/go-keyring"
 )
 
 var (
 	password        = "test-password"
-	testLogger      = logging.MustGetLogger("keyring_test")
 	testTTL         = 15 * time.Second
 	testKeyringItem = &KeyringItem{
 		RunningCleanupProcess: false,
@@ -51,7 +49,6 @@ func (fp FakePassphraseReader) IncorrectPassphrase(username string) error {
 func TestPassphraseReaderGet_Flag(t *testing.T) {
 	// Arrange
 	reader := passphraseReader{
-		Logger:    testLogger,
 		FlagValue: password,
 		Cache:     NewPassphraseCache(testTTL, &TestKeyringCleaner{}, newTestKeyring()),
 	}
@@ -70,7 +67,6 @@ func TestPassphraseReaderGet_Keystore(t *testing.T) {
 	err := cache.Set(username1, password)
 	testutil.OK(t, err)
 	reader := passphraseReader{
-		Logger:    testLogger,
 		FlagValue: "",
 		Cache:     cache,
 	}

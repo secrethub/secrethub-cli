@@ -1,0 +1,22 @@
+project_name: secrethub
+
+builds:
+  - binary: "{{ .ProjectName }}"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - 386
+    main: ./cmd/secrethub/main.go
+
+archive:
+  name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
+  replacements:
+    386: x86
+  files:
+  # Only archive the binary
+  - none*

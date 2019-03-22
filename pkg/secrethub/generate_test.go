@@ -1,10 +1,10 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/ui"
-	"github.com/keylockerbv/secrethub/testutil"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	randchargeneratorfakes "github.com/secrethub/secrethub-go/pkg/randchar/fakes"
@@ -13,8 +13,6 @@ import (
 )
 
 func TestGenerateSecretCommand_run(t *testing.T) {
-	testutil.Unit(t)
-
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
@@ -126,10 +124,10 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			err := tc.cmd.run()
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
-			testutil.Compare(t, tc.service.Writer.ArgPath, tc.path)
-			testutil.Compare(t, tc.service.Writer.ArgData, tc.data)
-			testutil.Compare(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, tc.service.Writer.ArgPath, tc.path)
+			assert.Equal(t, tc.service.Writer.ArgData, tc.data)
+			assert.Equal(t, io.StdOut.String(), tc.out)
 		})
 	}
 }

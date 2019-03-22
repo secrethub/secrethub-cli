@@ -1,11 +1,11 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 	"time"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/ui"
-	"github.com/keylockerbv/secrethub/testutil"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -14,8 +14,6 @@ import (
 )
 
 func TestMkDirCommand(t *testing.T) {
-	testutil.Unit(t)
-
 	cases := map[string]struct {
 		path      string
 		newClient func() (secrethub.Client, error)
@@ -84,8 +82,8 @@ func TestMkDirCommand(t *testing.T) {
 
 			err := cmd.Run()
 
-			testutil.Compare(t, err, tc.err)
-			testutil.Compare(t, tc.stdout, io.StdOut.String())
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, tc.stdout, io.StdOut.String())
 		})
 	}
 }

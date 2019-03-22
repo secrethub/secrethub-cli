@@ -1,6 +1,7 @@
 package consumption
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"os"
 	"testing"
 
@@ -10,8 +11,6 @@ import (
 
 	"github.com/keylockerbv/secrethub-cli/pkg/validation"
 	"github.com/secrethub/secrethub-go/internals/api"
-
-	"github.com/keylockerbv/secrethub/testutil"
 )
 
 func TestNewEnvVar(t *testing.T) {
@@ -89,10 +88,10 @@ func TestNewEnvVar(t *testing.T) {
 			actual, err := newEnvar(tc.source, tc.target)
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
+			assert.Equal(t, err, tc.err)
 
 			if tc.err == nil {
-				testutil.Compare(t, actual, tc.expected)
+				assert.Equal(t, actual, tc.expected)
 			}
 
 		})
@@ -116,7 +115,7 @@ func TestNewEnv(t *testing.T) {
 	}
 
 	absPath, err := filepath.Abs("abs_env_path")
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	relPathWithSecretEnv := filepath.Join("rel", SecretEnvPath)
 
@@ -215,7 +214,7 @@ func TestNewEnv(t *testing.T) {
 			actual := newEnv(tc.env, tc.rootPath, tc.vars...)
 
 			// Assert
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }
@@ -225,12 +224,12 @@ func TestEnvParse(t *testing.T) {
 	source1 := "namespace/repo/dir/secret1:latest"
 	target1 := "SECRET1"
 	v1, err := newEnvar(source1, target1)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	source2 := "namespace/repo/dir/secret2:latest"
 	target2 := "SECRET2"
 	v2, err := newEnvar(source2, target2)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	cases := []struct {
 		name     string
@@ -325,10 +324,10 @@ func TestEnvParse(t *testing.T) {
 			actual, err := parser.Parse("", true, tc.config)
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
+			assert.Equal(t, err, tc.err)
 
 			if tc.err == nil {
-				testutil.Compare(t, actual, tc.expected)
+				assert.Equal(t, actual, tc.expected)
 			}
 		})
 	}
@@ -342,7 +341,7 @@ func TestEnvSetAndClear(t *testing.T) {
 		Data: []byte("secret 1 data"),
 	}
 	v1, err := newEnvar(source1, target1)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	source2 := "user/repo/dir/secret2:latest"
 	target2 := "SECRET2"
@@ -350,10 +349,10 @@ func TestEnvSetAndClear(t *testing.T) {
 		Data: []byte("secret 2 data\n"),
 	}
 	v2, err := newEnvar(source2, target2)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	vNonExisting, err := newEnvar("user/repo/non_existing_secret", "NONEXISTING")
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	secrets := map[api.SecretPath]api.SecretVersion{
 		api.SecretPath(source1): secret1,
@@ -398,7 +397,7 @@ func TestEnvSetAndClear(t *testing.T) {
 			err := env.Set(secrets)
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
+			assert.Equal(t, err, tc.err)
 
 			if tc.err == nil {
 				for target, expected := range tc.expected {
@@ -406,12 +405,12 @@ func TestEnvSetAndClear(t *testing.T) {
 					if err != nil {
 						t.Errorf("cannot read file: %v", err)
 					} else {
-						testutil.CompareDescribe(t, target, actual, expected)
+						assert.Equal(t, actual, expected)
 					}
 				}
 
 				err = env.Clear()
-				testutil.OK(t, err)
+				assert.OK(t, err)
 
 				_, err = os.Stat(env.dirPath)
 				if !os.IsNotExist(err) {

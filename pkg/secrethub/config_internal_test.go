@@ -3,13 +3,14 @@ package secrethub
 // This file solely exists for backwards compatibility.
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
+	"os"
 	"testing"
 
 	"net/url"
 
-	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/keylockerbv/secrethub-cli/pkg/configuration"
-	"github.com/keylockerbv/secrethub/testutil"
+	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 )
 
@@ -39,7 +40,10 @@ func testLoadConfigUser(t *testing.T, path string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer testutil.RemoveOrFail(t, path)
+	defer func() {
+		err := os.Remove(path)
+		assert.OK(t, err)
+	}()
 
 	// Act
 	actual, err := LoadConfig(ui.NewFakeIO(), path)
@@ -78,7 +82,10 @@ func testLoadConfigService(t *testing.T, path string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer testutil.RemoveOrFail(t, path)
+	defer func() {
+		err := os.Remove(path)
+		assert.OK(t, err)
+	}()
 
 	// Act
 	actual, err := LoadConfig(ui.NewFakeIO(), path)

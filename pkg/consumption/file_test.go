@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/keylockerbv/secrethub/testutil"
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestNewFile(t *testing.T) {
@@ -216,7 +216,7 @@ func TestFileSetAndClear(t *testing.T) {
 	sourceNonExisting := api.SecretPath("user/repo/non_existing_secret")
 
 	absTarget, err := filepath.Abs("test_set_abs_path")
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	secrets := map[api.SecretPath]api.SecretVersion{
 		source1:       secret1,
@@ -285,7 +285,7 @@ func TestFileSetAndClear(t *testing.T) {
 				if err != nil {
 					t.Errorf("cannot read file: %v", err)
 				} else {
-					testutil.CompareDescribe(t, "file value should be equal to set value", actual, tc.expected)
+					assert.Equal(t, actual, tc.expected)
 				}
 
 				err = file.Clear()

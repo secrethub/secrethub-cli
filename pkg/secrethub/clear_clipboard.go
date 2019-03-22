@@ -1,13 +1,13 @@
 package secrethub
 
 import (
+	"golang.org/x/crypto/bcrypt"
 	"time"
 
 	"encoding/hex"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/clip"
 	"github.com/keylockerbv/secrethub-cli/pkg/logging"
-	"github.com/keylockerbv/secrethub-cli/pkg/passhash"
 	"github.com/keylockerbv/secrethub-cli/pkg/spawnprocess"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
@@ -51,7 +51,7 @@ func (cmd *ClearClipboardCommand) Run() error {
 		return err
 	}
 
-	err = passhash.CompareHashAndPassword(cmd.hash, read)
+	err = bcrypt.CompareHashAndPassword(cmd.hash, read)
 	if err != nil {
 		cmd.logger.Debugf("not clearing clipboard because hash is different")
 		return nil
@@ -67,7 +67,7 @@ func (cmd *ClearClipboardCommand) Run() error {
 
 // WriteClipboardAutoClear writes data to the clipboard and clears it after the timeout.
 func WriteClipboardAutoClear(data []byte, timeout time.Duration, clipper clip.Clipper) error {
-	hash, err := passhash.GenerateFromPassword(data)
+	hash, err := bcrypt.GenerateFromPassword(data, bcrypt.DefaultCost)
 	if err != nil {
 		return errio.Error(err)
 	}

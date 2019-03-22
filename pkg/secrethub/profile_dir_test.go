@@ -38,7 +38,7 @@ func TestIsOldConfiguration(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Arrange
-			dir, cleanup := testdata.TempDir(t)
+			dir, cleanup := testdata.tempDir(t)
 			defer cleanup()
 
 			for _, file := range tc.files {

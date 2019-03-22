@@ -18,7 +18,7 @@ import (
 // TestOldConfigToCredential tests whether older config structs can be successfully migrated to a Credential.
 func TestOldConfigToCredential(t *testing.T) {
 	// Arrange
-	dir, cleanup := testdata.TempDir(t)
+	dir, cleanup := testdata.tempDir(t)
 	defer cleanup()
 
 	url, err := url.Parse("https://some.remote.com")
@@ -102,7 +102,7 @@ func TestOldConfigToCredential(t *testing.T) {
 
 func TestReadOldCredential(t *testing.T) {
 	// Arrange
-	dir, cleanup := testdata.TempDir(t)
+	dir, cleanup := testdata.tempDir(t)
 	defer cleanup()
 
 	url, err := url.Parse("https://some.remote.com")
@@ -154,7 +154,7 @@ func TestCredentialReader(t *testing.T) {
 	assert.OK(t, err)
 
 	// Setup an old configuration dir
-	oldDir, cleanupOld := testdata.TempDir(t)
+	oldDir, cleanupOld := testdata.tempDir(t)
 	defer cleanupOld()
 
 	url, err := url.Parse("https://some.remote.com")
@@ -174,7 +174,7 @@ func TestCredentialReader(t *testing.T) {
 	assert.OK(t, err)
 
 	// Setup a configuration dir with credential
-	credentialDir, cleanupSettings := testdata.TempDir(t)
+	credentialDir, cleanupSettings := testdata.tempDir(t)
 	defer cleanupSettings()
 
 	encoded, err := secrethub.EncodeCredential(secrethub.RSACredential{RSAPrivateKey: key})

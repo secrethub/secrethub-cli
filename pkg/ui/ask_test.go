@@ -1,11 +1,10 @@
 package ui
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"bytes"
-
-	"github.com/keylockerbv/secrethub/testutil"
 )
 
 func TestConfirmCaseInsensitive(t *testing.T) {
@@ -61,9 +60,9 @@ func TestConfirmCaseInsensitive(t *testing.T) {
 			actual, err := ConfirmCaseInsensitive(io, "question", tc.expectedConfirmation...)
 
 			// Assert
-			testutil.Compare(t, err, nil)
-			testutil.Compare(t, actual, tc.expected)
-			testutil.Compare(t, io.PromptOut.String(), "question: ")
+			assert.Equal(t, err, nil)
+			assert.Equal(t, actual, tc.expected)
+			assert.Equal(t, io.PromptOut.String(), "question: ")
 		})
 	}
 }
@@ -206,9 +205,9 @@ func TestAskYesNo(t *testing.T) {
 			actual, err := AskYesNo(io, tc.question, tc.defaultAnswer)
 
 			// Assert
-			testutil.Compare(t, err, nil)
-			testutil.Compare(t, actual, tc.expected)
-			testutil.Compare(t, io.PromptOut.String(), tc.out)
+			assert.Equal(t, err, nil)
+			assert.Equal(t, actual, tc.expected)
+			assert.Equal(t, io.PromptOut.String(), tc.out)
 		})
 	}
 }

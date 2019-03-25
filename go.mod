@@ -13,8 +13,6 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/getsentry/raven-go v0.2.0
 	github.com/godbus/dbus v4.1.0+incompatible // indirect
-	github.com/jmoiron/sqlx v1.2.0 // indirect
-	github.com/keylockerbv/secrethub v0.18.0
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/masterzen/winrm v0.0.0-20190308153735-1d17eaf15943
 	github.com/mattn/go-colorable v0.1.1
@@ -28,7 +26,6 @@ require (
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 	golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223
 	golang.org/x/text v0.3.0
-	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.2.2
 )

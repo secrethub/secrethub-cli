@@ -2,12 +2,12 @@ package secrethub
 
 import (
 	"errors"
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"bytes"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/ui"
-	"github.com/keylockerbv/secrethub/testutil"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -15,8 +15,6 @@ import (
 )
 
 func TestACLRmCommand_Run(t *testing.T) {
-	testutil.Unit(t)
-
 	testError := errio.Error(errors.New("test error"))
 
 	cases := map[string]struct {
@@ -110,11 +108,11 @@ func TestACLRmCommand_Run(t *testing.T) {
 			err := tc.cmd.Run()
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
-			testutil.Compare(t, io.StdOut.String(), tc.out)
-			testutil.Compare(t, io.PromptOut.String(), tc.promptOut)
-			testutil.Compare(t, deleter.ArgPath, tc.argPath)
-			testutil.Compare(t, deleter.ArgAccountName, tc.argAccountName)
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
+			assert.Equal(t, deleter.ArgPath, tc.argPath)
+			assert.Equal(t, deleter.ArgAccountName, tc.argAccountName)
 		})
 	}
 }

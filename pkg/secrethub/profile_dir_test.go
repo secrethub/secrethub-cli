@@ -1,16 +1,13 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
-
-	"github.com/keylockerbv/secrethub/testutil"
 )
 
 func TestIsOldConfiguration(t *testing.T) {
-	testutil.Unit(t)
-
 	// Arrange
 	cases := map[string]struct {
 		files    []string
@@ -41,12 +38,12 @@ func TestIsOldConfiguration(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Arrange
-			dir, cleanup := testdata.TempDir(t)
+			dir, cleanup := testdata.tempDir(t)
 			defer cleanup()
 
 			for _, file := range tc.files {
 				err := ioutil.WriteFile(filepath.Join(dir, file), []byte("test data"), 0770)
-				testutil.OK(t, err)
+				assert.OK(t, err)
 			}
 
 			profileDir := ProfileDir(dir)
@@ -55,7 +52,7 @@ func TestIsOldConfiguration(t *testing.T) {
 			actual := profileDir.IsOldConfiguration()
 
 			// Assert
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

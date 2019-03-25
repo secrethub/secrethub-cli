@@ -1,11 +1,11 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"strings"
 	"testing"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/validation"
-	"github.com/keylockerbv/secrethub/testutil"
 )
 
 const nested = `ROOT:
@@ -77,7 +77,7 @@ func TestParseEnvFile(t *testing.T) {
 		"invalid_name": {
 			in: "FOO=: bar",
 			errcheck: func(t *testing.T, err error) {
-				testutil.Compare(t, err, validation.ErrInvalidEnvarName("FOO="))
+				assert.Equal(t, err, validation.ErrInvalidEnvarName("FOO="))
 			},
 		},
 	}
@@ -91,9 +91,9 @@ func TestParseEnvFile(t *testing.T) {
 			if tc.errcheck != nil {
 				tc.errcheck(t, err)
 			} else {
-				testutil.OK(t, err)
+				assert.OK(t, err)
 			}
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

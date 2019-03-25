@@ -1,12 +1,12 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 	"time"
 
-	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/keylockerbv/secrethub-cli/pkg/secrethub/fakes"
-	"github.com/keylockerbv/secrethub/testutil"
+	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -14,8 +14,6 @@ import (
 )
 
 func TestInspectRepo_Run(t *testing.T) {
-	testutil.Unit(t)
-
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	testTime := time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC)
@@ -124,8 +122,8 @@ func TestInspectRepo_Run(t *testing.T) {
 			err := tc.cmd.Run()
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
-			testutil.Compare(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, io.StdOut.String(), tc.out)
 		})
 	}
 }

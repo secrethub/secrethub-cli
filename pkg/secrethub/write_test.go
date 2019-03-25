@@ -1,13 +1,14 @@
 package secrethub
 
 import (
+	"github.com/keylockerbv/secrethub-cli/pkg/clip/fakeclip"
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"bytes"
 
-	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/keylockerbv/secrethub-cli/pkg/clip"
-	"github.com/keylockerbv/secrethub/testutil"
+	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -15,8 +16,6 @@ import (
 )
 
 func TestWriteCommand_Run(t *testing.T) {
-	testutil.Unit(t)
-
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
@@ -169,7 +168,7 @@ func TestWriteCommand_Run(t *testing.T) {
 			cmd: WriteCommand{
 				path:         "namespace/repo/secret",
 				useClipboard: true,
-				clipper:      testutil.NewTestClipboardWithValue([]byte("clipped secret value")),
+				clipper:      fakeclip.NewWithValue([]byte("clipped secret value")),
 			},
 			service: fakeclient.SecretService{
 				Writer: fakeclient.Writer{
@@ -188,7 +187,7 @@ func TestWriteCommand_Run(t *testing.T) {
 			cmd: WriteCommand{
 				path:         "namespace/repo/secret",
 				useClipboard: true,
-				clipper:      testutil.NewErrClipboard(clip.ErrCannotRead("read error"), nil),
+				clipper:      fakeclip.NewWithErr(clip.ErrCannotRead("read error"), nil),
 			},
 			err: clip.ErrCannotRead("read error"),
 		},
@@ -216,11 +215,11 @@ func TestWriteCommand_Run(t *testing.T) {
 			err := tc.cmd.Run()
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
-			testutil.Compare(t, tc.service.Writer.ArgPath, tc.path)
-			testutil.Compare(t, tc.service.Writer.ArgData, tc.data)
-			testutil.Compare(t, io.PromptOut.String(), tc.promptOut)
-			testutil.Compare(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, tc.service.Writer.ArgPath, tc.path)
+			assert.Equal(t, tc.service.Writer.ArgData, tc.data)
+			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
+			assert.Equal(t, io.StdOut.String(), tc.out)
 		})
 	}
 }

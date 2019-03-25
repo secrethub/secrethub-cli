@@ -1,10 +1,9 @@
 package consumption
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"os"
 	"testing"
-
-	"github.com/keylockerbv/secrethub/testutil"
 )
 
 func TestPresenter_Parse_Success(t *testing.T) {
@@ -18,7 +17,10 @@ func TestPresenter_Parse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer testutil.RemoveOrFail(t, "inject_test_file")
+	defer func () {
+		err := os.Remove("inject_test_file")
+		assert.OK(t, err)
+	}()
 
 	spec := []byte(
 		`
@@ -89,7 +91,10 @@ func TestPresenter_Parse_DuplicateFileConsumable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer testutil.RemoveOrFail(t, "inject_test_file")
+	defer func () {
+		err := os.Remove("inject_test_file")
+		assert.OK(t, err)
+	}()
 
 	spec := []byte(
 		`

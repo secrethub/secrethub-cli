@@ -2,9 +2,9 @@ package injection
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
-	"github.com/keylockerbv/secrethub/testutil"
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -44,8 +44,6 @@ var (
 )
 
 func TestParse(t *testing.T) {
-	testutil.Unit(t)
-
 	// Arrange
 	cases := map[string]struct {
 		raw      string
@@ -157,19 +155,17 @@ func TestParse(t *testing.T) {
 
 			// Assert
 			if tc.success {
-				testutil.OK(t, err)
+				assert.OK(t, err)
 			} else if err == nil {
 				t.Errorf("Expected an error but parse succeeded.")
 			}
 
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }
 
 func TestInject(t *testing.T) {
-	testutil.Unit(t)
-
 	// Arrange
 	cases := map[string]struct {
 		raw      string
@@ -301,8 +297,8 @@ func TestInject(t *testing.T) {
 			actual, err := injectRecursive(tc.raw, defaultDelimiters, tc.secrets)
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

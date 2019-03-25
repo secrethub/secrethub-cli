@@ -1,12 +1,12 @@
 package consumption_test
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/consumption"
-	"github.com/keylockerbv/secrethub/testutil"
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -63,7 +63,10 @@ func TestInjectSetClear(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not write test config to inject: %s", err)
 	}
-	defer testutil.RemoveOrFail(t, "test-config.json")
+	defer func () {
+		err := os.Remove("test-config.json")
+		assert.OK(t, err)
+	}()
 
 	err = presenter.Parse([]byte(testInjectConf))
 	if err != nil {

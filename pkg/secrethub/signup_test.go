@@ -1,20 +1,18 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"bytes"
 
-	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/keylockerbv/secrethub-cli/pkg/progress/fakeprogress"
-	"github.com/keylockerbv/secrethub/testutil"
+	"github.com/keylockerbv/secrethub-cli/pkg/ui"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )
 
 func TestSignUpCommand_Run(t *testing.T) {
-	testutil.Unit(t)
-
 	cases := map[string]struct {
 		cmd       SignUpCommand
 		promptIn  string
@@ -44,9 +42,9 @@ func TestSignUpCommand_Run(t *testing.T) {
 			err := tc.cmd.Run()
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
-			testutil.Compare(t, io.PromptOut.String(), tc.promptOut)
-			testutil.Compare(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
+			assert.Equal(t, io.StdOut.String(), tc.out)
 		})
 	}
 }

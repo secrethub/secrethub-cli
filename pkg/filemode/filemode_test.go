@@ -1,11 +1,11 @@
 package filemode_test
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"os"
 	"testing"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/filemode"
-	"github.com/keylockerbv/secrethub/testutil"
 )
 
 func TestParseFilemode(t *testing.T) {
@@ -48,8 +48,8 @@ func TestParseFilemode(t *testing.T) {
 			actual, err := filemode.Parse(tc.input)
 
 			// Assert
-			testutil.Compare(t, err, tc.error)
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, err, tc.error)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

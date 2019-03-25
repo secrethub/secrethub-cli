@@ -1,15 +1,13 @@
 package validation_test
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/validation"
-	"github.com/keylockerbv/secrethub/testutil"
 )
 
 func TestIsEnvarNameIEEE(t *testing.T) {
-	testutil.Unit(t)
-
 	// Arrange
 	cases := map[string]struct {
 		input    string
@@ -48,14 +46,12 @@ func TestIsEnvarNameIEEE(t *testing.T) {
 
 			// Assert
 			t.Log(tc.input)
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }
 
 func TestIsPosixEnvarName(t *testing.T) {
-	testutil.Unit(t)
-
 	// Arrange
 	cases := map[string]struct {
 		input    string
@@ -97,7 +93,7 @@ func TestIsPosixEnvarName(t *testing.T) {
 			actual := validation.IsEnvarNamePosix(tc.input)
 
 			// Assert
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }
@@ -123,7 +119,7 @@ func TestValidateEnvarName(t *testing.T) {
 			err := validation.ValidateEnvarName(tc.input)
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
+			assert.Equal(t, err, tc.err)
 		})
 	}
 }

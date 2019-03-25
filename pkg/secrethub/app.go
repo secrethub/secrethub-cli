@@ -92,12 +92,18 @@ func NewApp() *App {
 		"Options set on the command-line take precedence over those set in the environment. " +
 		"The format for environment variables is `SECRETHUB_[COMMAND_]FLAG_NAME`."
 	return &App{
-		cli:             cli.NewApp(ApplicationName, help).Version(secrethub.ClientVersion),
+		cli:             cli.NewApp(ApplicationName, help),
 		credentialStore: store,
 		clientFactory:   NewClientFactory(store),
 		io:              io,
 		logger:          cli.NewLogger(logFormat, logModule, false),
 	}
+}
+
+// Version adds a flag for displaying the application version number.
+func (app *App) Version(version string, commit string) *App {
+	app.cli = app.cli.Version(ApplicationName + " version " + version + ", build " + commit)
+	return app
 }
 
 // Run builds the command-line application, parses the arguments,

@@ -1,10 +1,10 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"github.com/keylockerbv/secrethub-cli/pkg/ui"
-	"github.com/keylockerbv/secrethub/testutil"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -12,8 +12,6 @@ import (
 )
 
 func TestRepoInitCommand_Run(t *testing.T) {
-	testutil.Unit(t)
-
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
@@ -78,9 +76,9 @@ func TestRepoInitCommand_Run(t *testing.T) {
 			err := cmd.Run()
 
 			// Assert
-			testutil.Compare(t, err, tc.err)
-			testutil.Compare(t, io.StdOut.String(), tc.out)
-			testutil.Compare(t, tc.service.Creater.Argpath, tc.argPath)
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, tc.service.Creater.Argpath, tc.argPath)
 		})
 	}
 }

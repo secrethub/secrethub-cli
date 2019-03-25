@@ -30,7 +30,7 @@ type WriteCommand struct {
 // NewWriteCommand creates a new WriteCommand.
 func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 	return &WriteCommand{
-		clipper:   clip.Clipboard,
+		clipper:   clip.NewClipboard(),
 		io:        io,
 		newClient: newClient,
 	}

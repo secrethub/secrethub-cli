@@ -1,15 +1,12 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 	"time"
-
-	"github.com/keylockerbv/secrethub/testutil"
 )
 
 func TestTimeFormatter_Format(t *testing.T) {
-	testutil.Unit(t)
-
 	tzAmsterdam, _ := time.LoadLocation("Europe/Amsterdam")
 
 	cases := map[string]struct {
@@ -40,7 +37,7 @@ func TestTimeFormatter_Format(t *testing.T) {
 			actual := tc.tf.Format(tc.time)
 
 			// Assert
-			testutil.Compare(t, actual, tc.expected)
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

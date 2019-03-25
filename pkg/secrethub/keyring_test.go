@@ -1,17 +1,15 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 	"time"
 
-	"github.com/keylockerbv/secrethub/testutil"
-	logging "github.com/op/go-logging"
 	libkeyring "github.com/zalando/go-keyring"
 )
 
 var (
 	password        = "test-password"
-	testLogger      = logging.MustGetLogger("keyring_test")
 	testTTL         = 15 * time.Second
 	testKeyringItem = &KeyringItem{
 		RunningCleanupProcess: false,
@@ -51,7 +49,6 @@ func (fp FakePassphraseReader) IncorrectPassphrase(username string) error {
 func TestPassphraseReaderGet_Flag(t *testing.T) {
 	// Arrange
 	reader := passphraseReader{
-		Logger:    testLogger,
 		FlagValue: password,
 		Cache:     NewPassphraseCache(testTTL, &TestKeyringCleaner{}, newTestKeyring()),
 	}
@@ -60,17 +57,16 @@ func TestPassphraseReaderGet_Flag(t *testing.T) {
 	actual, err := reader.Get(username1)
 
 	// Assert
-	testutil.OK(t, err)
-	testutil.Compare(t, actual, []byte(password))
+	assert.OK(t, err)
+	assert.Equal(t, actual, []byte(password))
 }
 
 func TestPassphraseReaderGet_Keystore(t *testing.T) {
 	// Arrange
 	cache := NewPassphraseCache(testTTL, &TestKeyringCleaner{}, newTestKeyring())
 	err := cache.Set(username1, password)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 	reader := passphraseReader{
-		Logger:    testLogger,
 		FlagValue: "",
 		Cache:     cache,
 	}
@@ -79,8 +75,8 @@ func TestPassphraseReaderGet_Keystore(t *testing.T) {
 	actual, err := reader.Get(username1)
 
 	// Assert
-	testutil.OK(t, err)
-	testutil.Compare(t, actual, []byte(password))
+	assert.OK(t, err)
+	assert.Equal(t, actual, []byte(password))
 }
 
 func TestPassphraseCacheSetSuccess(t *testing.T) {
@@ -91,7 +87,7 @@ func TestPassphraseCacheSetSuccess(t *testing.T) {
 	err := cache.Set(username1, password)
 
 	// Assert
-	testutil.OK(t, err)
+	assert.OK(t, err)
 }
 
 func TestPassphraseCacheSet_CleanupCalled(t *testing.T) {
@@ -103,7 +99,7 @@ func TestPassphraseCacheSet_CleanupCalled(t *testing.T) {
 	err := cache.Set(username1, password)
 
 	// Assert
-	testutil.OK(t, err)
+	assert.OK(t, err)
 	if !cleaner.cleanupCalled {
 		t.Errorf("keyring cleaner not called")
 	}
@@ -113,14 +109,14 @@ func TestPassphraseCacheGet_Success(t *testing.T) {
 	// Arrange
 	cache := NewPassphraseCache(testTTL, &TestKeyringCleaner{}, newTestKeyring())
 	err := cache.Set(username1, password)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	// Act
 	actual, err := cache.Get(username1)
 
 	// Assert
-	testutil.OK(t, err)
-	testutil.Compare(t, actual, password)
+	assert.OK(t, err)
+	assert.Equal(t, actual, password)
 }
 
 func TestPassphraseCacheGet_UpdatedAfterRead(t *testing.T) {
@@ -128,20 +124,20 @@ func TestPassphraseCacheGet_UpdatedAfterRead(t *testing.T) {
 	keyring := newTestKeyring()
 	cache := NewPassphraseCache(testTTL, &TestKeyringCleaner{}, keyring)
 	err := cache.Set(username1, password)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	expected, err := keyring.Get(username1)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	time.Sleep(20 * time.Millisecond)
 
 	// Act
 	_, err = cache.Get(username1)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	// Assert
 	actual, err := keyring.Get(username1)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 	if !actual.ExpiresAt.After(expected.ExpiresAt) {
 		t.Errorf("password last read not updated")
 	}
@@ -155,7 +151,7 @@ func TestPassphraseCacheGet_NonExisting(t *testing.T) {
 	_, err := cache.Get(username1)
 
 	// Assert
-	testutil.Compare(t, err, ErrKeyringItemNotFound)
+	assert.Equal(t, err, ErrKeyringItemNotFound)
 }
 
 func TestPassphraseCacheGet_Expired(t *testing.T) {
@@ -170,17 +166,17 @@ func TestPassphraseCacheGet_Expired(t *testing.T) {
 	}
 
 	err := keyring.Set(username1, item)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	// Act
 	actual, err := cache.Get(username1)
 
 	// Assert
-	testutil.Compare(t, actual, "")
-	testutil.Compare(t, err, ErrKeyringItemNotFound)
+	assert.Equal(t, actual, "")
+	assert.Equal(t, err, ErrKeyringItemNotFound)
 
 	_, err = keyring.Get(username1)
-	testutil.Compare(t, err, ErrKeyringItemNotFound)
+	assert.Equal(t, err, ErrKeyringItemNotFound)
 }
 
 func TestKeyringSet_Success(t *testing.T) {
@@ -191,7 +187,7 @@ func TestKeyringSet_Success(t *testing.T) {
 	err := keyring.Set(username1, testKeyringItem)
 
 	// Assert
-	testutil.OK(t, err)
+	assert.OK(t, err)
 }
 
 func TestKeyringSet_Twice(t *testing.T) {
@@ -201,27 +197,27 @@ func TestKeyringSet_Twice(t *testing.T) {
 	err := keyring.Set(username1, &KeyringItem{
 		Passphrase: "first",
 	})
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	// Act
 	err = keyring.Set(username1, testKeyringItem)
 
 	// Assert
-	testutil.OK(t, err)
+	assert.OK(t, err)
 }
 
 func TestKeyring_Get(t *testing.T) {
 	// Arrange
 	keyring := newTestKeyring()
 	err := keyring.Set(username1, testKeyringItem)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	// Act
 	actual, err := keyring.Get(username1)
 
 	// Assert
-	testutil.OK(t, err)
-	testutil.Compare(t, actual, testKeyringItem)
+	assert.OK(t, err)
+	assert.Equal(t, actual, testKeyringItem)
 }
 
 func TestKeyring_Get_NonExisting(t *testing.T) {
@@ -232,20 +228,20 @@ func TestKeyring_Get_NonExisting(t *testing.T) {
 	_, err := keyring.Get(username1)
 
 	// Assert
-	testutil.Compare(t, err, ErrKeyringItemNotFound)
+	assert.Equal(t, err, ErrKeyringItemNotFound)
 }
 
 func TestKeyring_Delete(t *testing.T) {
 	// Arrange
 	keyring := newTestKeyring()
 	err := keyring.Set(username1, testKeyringItem)
-	testutil.OK(t, err)
+	assert.OK(t, err)
 
 	// Act
 	err = keyring.Delete(username1)
 
 	// Assert
-	testutil.OK(t, err)
+	assert.OK(t, err)
 }
 
 func TestKeyring_Delete_NonExisting(t *testing.T) {
@@ -256,5 +252,5 @@ func TestKeyring_Delete_NonExisting(t *testing.T) {
 	err := keyring.Delete(username1)
 
 	// Assert
-	testutil.Compare(t, err, ErrKeyringItemNotFound)
+	assert.Equal(t, err, ErrKeyringItemNotFound)
 }

@@ -8,8 +8,14 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
+// These variables are set at compile-time using ldflags when creating a build.
+var (
+	version string
+	commit  string
+)
+
 func main() {
-	err := secrethub.NewApp().Run(os.Args[1:])
+	err := secrethub.NewApp().Version(version, commit).Run(os.Args[1:])
 	if err != nil {
 		handleError(err)
 	}

@@ -15,7 +15,7 @@ builds:
     ldflags:
       - -s -w -X main.commit={{ .ShortCommit }} -X main.version={{ .Version }}
     flags:
-      - -tags production
+      - -tags=production
 
 archive:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"

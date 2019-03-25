@@ -8,8 +8,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
-// version and commit are printed when running `secrethub --version`.
-// They are set on compile-time using ldflags.
+// These variables are set at compile-time using ldflags when creating a build.
 var (
 	version string
 	commit  string

@@ -10,8 +10,10 @@ import (
 
 // version and commit are printed when running `secrethub --version`.
 // They are set on compile-time using ldflags.
-var version string
-var commit string
+var (
+	version string
+	commit  string
+)
 
 func main() {
 	err := secrethub.NewApp().Version(version, commit).Run(os.Args[1:])

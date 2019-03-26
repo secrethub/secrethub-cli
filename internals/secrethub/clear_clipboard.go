@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 
 	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
-	"github.com/keylockerbv/secrethub-cli/internals/logging"
 	"github.com/keylockerbv/secrethub-cli/internals/cli/spawnprocess"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
@@ -15,16 +14,21 @@ import (
 // defaultClearClipboardAfter defines the default TTL for data written to the clipboard.
 const defaultClearClipboardAfter = 45 * time.Second
 
+// Logger can be used to log information.
+type Logger interface {
+	Debugf(format string, args ...interface{})
+}
+
 // ClearClipboardCommand is a command to clear the contents of the clipboard after some time passed.
 type ClearClipboardCommand struct {
 	clipper clip.Clipper
 	hash    []byte
-	logger  logging.Logger
+	logger  Logger
 	timeout time.Duration
 }
 
 // NewClearClipboardCommand creates a new ClearClipboardCommand.
-func NewClearClipboardCommand(logger logging.Logger) *ClearClipboardCommand {
+func NewClearClipboardCommand(logger Logger) *ClearClipboardCommand {
 	return &ClearClipboardCommand{
 		clipper: clip.NewClipboard(),
 		logger:  logger,

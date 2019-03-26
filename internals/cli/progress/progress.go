@@ -1,3 +1,4 @@
+// progress provides a printer that writes dots at a configured interval.
 package progress
 
 import (

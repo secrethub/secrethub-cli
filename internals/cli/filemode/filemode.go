@@ -1,3 +1,4 @@
+// Package filemode provides a wrapper around os.FileMode so that it can be parsed from a CLI flag.
 package filemode
 
 import (

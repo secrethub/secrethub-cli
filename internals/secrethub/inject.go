@@ -12,7 +12,7 @@ import (
 	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
 	"github.com/keylockerbv/secrethub-cli/internals/cli/filemode"
 	"github.com/keylockerbv/secrethub-cli/internals/cli/posix"
-	"github.com/keylockerbv/secrethub-cli/internals/injection"
+	"github.com/keylockerbv/secrethub-cli/internals/secrettpl"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -75,7 +75,7 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	tpl, err := injection.NewTemplate(string(raw))
+	tpl, err := secrettpl.New(string(raw))
 	if err != nil {
 		return errio.Error(err)
 	}

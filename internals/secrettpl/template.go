@@ -1,4 +1,4 @@
-package injection
+package secrettpl
 
 import (
 	"strings"
@@ -40,8 +40,8 @@ type Template struct {
 	delimiters delimiters
 }
 
-// NewTemplate creates a new template and parses it.
-func NewTemplate(raw string) (*Template, error) {
+// New creates a new template and parses it.
+func New(raw string) (*Template, error) {
 	tpl := &Template{
 		Raw:        raw,
 		delimiters: defaultDelimiters,

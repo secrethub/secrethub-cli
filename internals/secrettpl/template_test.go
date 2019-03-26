@@ -1,4 +1,4 @@
-package injection
+package secrettpl
 
 import (
 	"fmt"

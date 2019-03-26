@@ -5,7 +5,7 @@ import (
 
 	"github.com/keylockerbv/secrethub-cli/internals/cli/validation"
 
-	"github.com/keylockerbv/secrethub-cli/internals/injection"
+	"github.com/keylockerbv/secrethub-cli/internals/secrettpl"
 	"github.com/secrethub/secrethub-go/internals/api"
 	yaml "gopkg.in/yaml.v2"
 
@@ -262,12 +262,12 @@ type EnvSource interface {
 // file of key=value statements, separated by newlines and optionally
 // containing template syntax to inject secrets into.
 type EnvTemplate struct {
-	Template *injection.Template
+	Template *secrettpl.Template
 }
 
 // NewEnvTemplate parses a raw string template.
 func NewEnvTemplate(raw string) (*EnvTemplate, error) {
-	tpl, err := injection.NewTemplate(raw)
+	tpl, err := secrettpl.New(raw)
 	if err != nil {
 		return nil, err
 	}

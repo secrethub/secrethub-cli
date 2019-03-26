@@ -1,3 +1,5 @@
+// Package clip provides functionality to read from and write to the clipboard.
+// It exports an interface, so that it can be easily mocked.
 package clip
 
 import (

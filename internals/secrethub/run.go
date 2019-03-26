@@ -22,7 +22,7 @@ import (
 
 	"path/filepath"
 
-	"github.com/keylockerbv/secrethub-cli/internals/consumption"
+	"github.com/keylockerbv/secrethub-cli/internals/secretspec"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
@@ -94,7 +94,7 @@ func (cmd *RunCommand) Run() error {
 		envSources = append(envSources, tplSource)
 	}
 
-	envDir := filepath.Join(consumption.SecretEnvPath, cmd.env)
+	envDir := filepath.Join(secretspec.SecretEnvPath, cmd.env)
 	_, err = os.Stat(envDir)
 	if err == nil {
 		dirSource, err := NewEnvDir(envDir)

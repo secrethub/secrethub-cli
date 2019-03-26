@@ -1,4 +1,4 @@
-package consumption
+package secretspec
 
 import (
 	"os"

@@ -1,4 +1,4 @@
-package consumption_test
+package secretspec_test
 
 import (
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/keylockerbv/secrethub-cli/internals/consumption"
+	"github.com/keylockerbv/secrethub-cli/internals/secretspec"
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -49,11 +49,11 @@ secrets:
 )
 
 func TestInjectSetClear(t *testing.T) {
-	parsers := []consumption.Parser{
-		consumption.InjectParser{},
+	parsers := []secretspec.Parser{
+		secretspec.InjectParser{},
 	}
 
-	presenter, err := consumption.NewPresenter(testRootPath, false, parsers...)
+	presenter, err := secretspec.NewPresenter(testRootPath, false, parsers...)
 	if err != nil {
 		t.Fatalf("cannot create new Presenter: %s", err)
 	}

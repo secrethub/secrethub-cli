@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
-	"github.com/keylockerbv/secrethub-cli/internals/consumption"
+	"github.com/keylockerbv/secrethub-cli/internals/secretspec"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
@@ -33,7 +33,7 @@ func (cmd *ClearCommand) Register(r Registerer) {
 
 // Run clears the secrets from the system.
 func (cmd *ClearCommand) Run() error {
-	presenter, err := consumption.NewPresenter("", true, consumption.DefaultParsers...)
+	presenter, err := secretspec.NewPresenter("", true, secretspec.DefaultParsers...)
 	if err != nil {
 		return errio.Error(err)
 	}

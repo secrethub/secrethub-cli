@@ -1,4 +1,4 @@
-package consumption
+package secretspec
 
 import (
 	"github.com/secrethub/secrethub-go/internals/assert"

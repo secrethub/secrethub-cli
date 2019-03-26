@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
-	"github.com/keylockerbv/secrethub-cli/internals/consumption"
+	"github.com/keylockerbv/secrethub-cli/internals/secretspec"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
@@ -44,7 +44,7 @@ func (cmd *SetCommand) Register(r Registerer) {
 
 // Run parses a secret spec file and presents secrets on the system.
 func (cmd *SetCommand) Run() error {
-	presenter, err := consumption.NewPresenter("", true, consumption.DefaultParsers...)
+	presenter, err := secretspec.NewPresenter("", true, secretspec.DefaultParsers...)
 	if err != nil {
 		return errio.Error(err)
 	}

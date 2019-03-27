@@ -267,13 +267,13 @@ type EnvTemplate struct {
 
 // NewEnvTemplate parses a raw string template.
 func NewEnvTemplate(raw string) (*EnvTemplate, error) {
-	tpl, err := tpl.New(raw)
+	template, err := tpl.New(raw)
 	if err != nil {
 		return nil, err
 	}
 
 	return &EnvTemplate{
-		Template: tpl,
+		Template: template,
 	}, nil
 }
 

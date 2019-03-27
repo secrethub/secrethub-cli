@@ -17,7 +17,7 @@
 
 Binaries are provided in the [GitHub releases][releases]. Place the binary of your OS in the PATH and you are good to go!
 
-We plan to distribute secrethub via package managers ([#1](https://github.com/secrethub/secrethub-cli/issues/1)).
+We plan to distribute secrethub via package managers ([#27](https://github.com/secrethub/secrethub-cli/issues/27)).
 Please feel free to join the discussion and let us know what package manager you are using.
 
 ## Usage

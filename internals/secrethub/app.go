@@ -140,7 +140,7 @@ func (app *App) registerCommands() {
 	NewAuditSecretCommand(app.io, app.clientFactory.NewClient).Register(auditCommand)
 
 	NewClearCommand(app.io).Register(app.cli)
-	NewClearClipboardCommand(app.logger).Register(app.cli)
+	NewClearClipboardCommand().Register(app.cli)
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
 	NewGenerateSecretCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewInjectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)

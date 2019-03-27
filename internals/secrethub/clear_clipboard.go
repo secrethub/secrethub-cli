@@ -14,24 +14,17 @@ import (
 // defaultClearClipboardAfter defines the default TTL for data written to the clipboard.
 const defaultClearClipboardAfter = 45 * time.Second
 
-// Logger can be used to log information.
-type Logger interface {
-	Debugf(format string, args ...interface{})
-}
-
 // ClearClipboardCommand is a command to clear the contents of the clipboard after some time passed.
 type ClearClipboardCommand struct {
 	clipper clip.Clipper
 	hash    []byte
-	logger  Logger
 	timeout time.Duration
 }
 
 // NewClearClipboardCommand creates a new ClearClipboardCommand.
-func NewClearClipboardCommand(logger Logger) *ClearClipboardCommand {
+func NewClearClipboardCommand() *ClearClipboardCommand {
 	return &ClearClipboardCommand{
 		clipper: clip.NewClipboard(),
-		logger:  logger,
 	}
 }
 
@@ -57,11 +50,9 @@ func (cmd *ClearClipboardCommand) Run() error {
 
 	err = bcrypt.CompareHashAndPassword(cmd.hash, read)
 	if err != nil {
-		cmd.logger.Debugf("not clearing clipboard because hash is different")
 		return nil
 	}
 
-	cmd.logger.Debugf("clearing clipboard")
 	err = cmd.clipper.WriteAll(nil)
 	if err != nil {
 		return errio.Error(err)

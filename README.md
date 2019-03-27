@@ -120,4 +120,4 @@ Please reach out on [Discord][discord-cli] or via email ([support@secrethub.io](
 [golang-ci]: https://golangci.com/r/github.com/secrethub/secrethub-cli
 [goreportcard]: https://goreportcard.com/report/github.com/secrethub/secrethub-cli
 [travis-ci]: https://travis-ci.org/secrethub/secrethub-cli
-[discord-cli]: https://discord.gg/Wut4KUK
+[discord-cli]: https://discord.gg/gyQXAFU

@@ -32,11 +32,6 @@ Ensure it is accessible through the `PATH` environment variable.
 export PATH=$PATH:/usr/local/secrethub
 ```
 
-Verify your installation works by running the following command:
-```sh
-secrethub --version
-```
-
 ### Build from source
 
 To build from source, [GoLang](https://golang.org) is required.
@@ -60,6 +55,13 @@ mv ./secrethub /usr/local/bin/
 
 We plan to distribute secrethub via package managers ([#27](https://github.com/secrethub/secrethub-cli/issues/27)).
 Please feel free to join the discussion and let us know what package manager you are using.
+
+## Test your installation
+
+Verify your installation works by running the following command:
+```sh
+secrethub --version
+```
 
 ## Install auto-completion
 

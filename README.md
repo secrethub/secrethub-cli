@@ -84,7 +84,7 @@ Or have a look at the [reference docs](https://secrethub.io/docs/reference/) whe
 Pull requests from the community are welcome.
 If you'd like to contribute, please checkout [the contributing guidelines](./CONTRIBUTING.md).
 
-## Test
+### Test
 
 Run all tests:
 

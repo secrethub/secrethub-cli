@@ -1,5 +1,7 @@
 // +build !production
 
+// Package fakeclip provides fake implementations of the clip.Clipper interface
+// to be used for testing.
 package fakeclip
 
 import (

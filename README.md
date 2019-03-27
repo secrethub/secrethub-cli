@@ -98,9 +98,14 @@ Run a single test:
 
     go test ./internals/secrethub -run TestWriteCommand_Run
 
+## Getting help
+
+Please reach out on [Discord][discord-cli] or via email ([support@secrethub.io](mailto:support@secrethub.io)) if you have any questions. We're here to help.
+
 [secrethub]: https://secrethub.io
 [releases]: https://github.com/secrethub/secrethub-cli/releases
 [godoc]: http://godoc.org/github.com/secrethub/secrethub-cli
 [golang-ci]: https://golangci.com/r/github.com/secrethub/secrethub-cli
 [goreportcard]: https://goreportcard.com/report/github.com/secrethub/secrethub-cli
 [travis-ci]: https://travis-ci.org/secrethub/secrethub-cli
+[discord-cli]: https://discordapp.com/channels/554666183006224385/554685208486608906

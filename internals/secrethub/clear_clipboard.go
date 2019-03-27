@@ -1,14 +1,12 @@
 package secrethub
 
 import (
+	"encoding/hex"
+	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
+	"github.com/keylockerbv/secrethub-cli/internals/cli/cloneproc"
+	"github.com/secrethub/secrethub-go/internals/errio"
 	"golang.org/x/crypto/bcrypt"
 	"time"
-
-	"encoding/hex"
-
-	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/spawnprocess"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // defaultClearClipboardAfter defines the default TTL for data written to the clipboard.
@@ -72,7 +70,7 @@ func WriteClipboardAutoClear(data []byte, timeout time.Duration, clipper clip.Cl
 		return errio.Error(err)
 	}
 
-	err = spawnprocess.SpawnCloneProcess(
+	err = cloneproc.Spawn(
 		"clipboard-clear", hex.EncodeToString(hash),
 		"--timeout", timeout.String())
 

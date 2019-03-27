@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/spawnprocess"
+	"github.com/keylockerbv/secrethub-cli/internals/cli/cloneproc"
 	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	libkeyring "github.com/zalando/go-keyring"
@@ -317,7 +317,7 @@ func NewKeyringCleaner() KeyringCleaner {
 
 // Cleanup starts a Cleanup process to clean up the cached passphrase when it expires.
 func (kc keyringCleaner) Cleanup(username string) error {
-	err := spawnprocess.SpawnCloneProcess("keyring-clear", username)
+	err := cloneproc.Spawn("keyring-clear", username)
 	if err != nil {
 		return err
 	}

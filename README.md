@@ -27,7 +27,7 @@ mkdir /usr/local/secrethub
 tar -C /usr/local/secrethub -xzf secrethub-VERSION-OS-ARCH.tar.gz
 ```
 
-Ensure it is accessible through the PATH environment variable.
+Ensure it is accessible through the `PATH` environment variable.
 ```sh
 export PATH=$PATH:/usr/local/secrethub
 ```

@@ -15,7 +15,36 @@
 
 ## Installation
 
-Binaries are provided in the [GitHub releases][releases]. Place the binary of your OS in the PATH and you are good to go!
+### Download
+
+Official binary distributions are available for the Linux, macOS, and Windows operating systems for both the 32-bit (386) and 64-bit (amd64) versions.
+You can find the latest release [here][releases].
+
+To install the SecretHub CLI, download the archive file appropriate for your operating system and extract it e.g. to `/usr/local/secrethub`.
+
+```sh
+mkdir /usr/local/secrethub
+tar -C /usr/local/secrethub -xzf secrethub-VERSION-OS-ARCH.tar.gz
+```
+
+Ensure it is accessible through the PATH environment variable.
+```sh
+export PATH=$PATH:/usr/local/secrethub
+```
+
+Verify your installation works by running the following command:
+```sh
+secrethub --version
+```
+
+### Install from source
+
+To build the binary from source, run:
+```sh
+make install
+```
+
+### Install via a package manager
 
 We plan to distribute secrethub via package managers ([#27](https://github.com/secrethub/secrethub-cli/issues/27)).
 Please feel free to join the discussion and let us know what package manager you are using.

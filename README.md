@@ -104,7 +104,7 @@ Run a single test:
 ## Uninstalling
 
 To remove an existing SecretHub installation from your system delete the secrethub directory.
-This is usually `/usr/local/secrethub` under Linux, macOS, and FreeBSD or `c:\SecretHub` under Windows.
+This is usually `/usr/local/secrethub` under Linux and macOS.
 
 You should also remove the SecretHub directory from your PATH environment variable.
 

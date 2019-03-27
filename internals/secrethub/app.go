@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	raven "github.com/getsentry/raven-go"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
 	"github.com/keylockerbv/secrethub-cli/internals/cli"
+	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
 	logging "github.com/op/go-logging"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -72,7 +72,6 @@ type App struct {
 	clientFactory   ClientFactory
 	cli             *cli.App
 	io              ui.IO
-	logger          *logging.Logger
 }
 
 // Registerer allows others to register commands on it.
@@ -96,7 +95,6 @@ func NewApp() *App {
 		credentialStore: store,
 		clientFactory:   NewClientFactory(store),
 		io:              io,
-		logger:          cli.NewLogger(logFormat, logModule, false),
 	}
 }
 
@@ -115,7 +113,7 @@ func (app *App) Run(args []string) error {
 		return errio.Error(err)
 	}
 
-	RegisterDebugFlag(app.cli, app.logger)
+	RegisterDebugFlag(app.cli)
 	RegisterMlockFlag(app.cli)
 	RegisterColorFlag(app.cli)
 	app.credentialStore.Register(app.cli)

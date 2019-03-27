@@ -106,7 +106,7 @@ Run a single test:
 To remove an existing SecretHub installation from your system delete the secrethub directory.
 This is usually `/usr/local/secrethub` under Linux and macOS.
 
-You should also remove the SecretHub directory from your PATH environment variable.
+You should also remove the SecretHub directory from your `PATH` environment variable.
 
 If you've installed auto-completion, you should remove either `/etc/bash_completion.d/secrethub` or `~/.zsh/completion/secrethub`.
 

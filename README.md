@@ -4,7 +4,7 @@
 [![Travis CI](https://travis-ci.org/secrethub/secrethub-cli.svg?branch=master)][travis-ci]
 [![GolangCI](https://golangci.com/badges/github.com/secrethub/secrethub-cli.svg)][golang-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
-[![Discord](https://img.shields.io/badge/discord-SecretHub-7289da.svg?logo=discord)][discord-cli]
+[![Discord](https://img.shields.io/badge/discord-SecretHub-7289da.svg?logo=discord)][discord]
 
 <img src="https://secrethub.io/img/secrethub-logo-shield.svg" alt="SecretHub" width="100px"/>
 
@@ -112,7 +112,7 @@ If you've installed auto-completion, you should remove either `/etc/bash_complet
 
 ## Getting help
 
-Please reach out on [Discord][discord-cli] or via email ([support@secrethub.io](mailto:support@secrethub.io)) if you have any questions. We're here to help.
+Come chat with us on [Discord][discord] or email us at [support@secrethub.io](mailto:support@secrethub.io)
 
 [secrethub]: https://secrethub.io
 [releases]: https://github.com/secrethub/secrethub-cli/releases
@@ -120,4 +120,4 @@ Please reach out on [Discord][discord-cli] or via email ([support@secrethub.io](
 [golang-ci]: https://golangci.com/r/github.com/secrethub/secrethub-cli
 [goreportcard]: https://goreportcard.com/report/github.com/secrethub/secrethub-cli
 [travis-ci]: https://travis-ci.org/secrethub/secrethub-cli
-[discord-cli]: https://discord.gg/gyQXAFU
+[discord]: https://discord.gg/gyQXAFU

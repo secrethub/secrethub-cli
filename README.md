@@ -39,9 +39,21 @@ secrethub --version
 
 ### Build from source
 
-To build the binary from source, run:
+To build from source, [GoLang](https://golang.org) is required.
+
+To install the binary in the [GOBIN](https://golang.org/cmd/go/#hdr-GOPATH_environment_variable), run:
 ```sh
 make install
+```
+
+Alternatively, to build the binary in the current directory, run:
+```sh
+make build
+```
+
+Now you can move it into the `PATH` to use it from any directory:
+```sh
+mv ./secrethub /usr/local/bin/
 ```
 
 ### Use a package manager

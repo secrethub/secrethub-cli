@@ -49,6 +49,19 @@ make install
 We plan to distribute secrethub via package managers ([#27](https://github.com/secrethub/secrethub-cli/issues/27)).
 Please feel free to join the discussion and let us know what package manager you are using.
 
+## Install auto-completion
+
+To install auto completion for the CLI, run one of the following commands depending on your shell of choice:
+
+```sh
+# Install bash completion
+secrethub --completion-script-bash > /etc/bash_completion.d/secrethub
+```
+```sh
+# Install zsh completion
+secrethub --completion-script-zsh > ~/.zsh/completion/secrethub
+```
+
 ## Usage
 
 Checkout the [getting started docs](https://secrethub.io/docs/getting-started/).

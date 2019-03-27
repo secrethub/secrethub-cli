@@ -1,15 +1,12 @@
 package secrethub
 
 import (
-	"golang.org/x/crypto/bcrypt"
-	"time"
-
 	"encoding/hex"
-
 	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
-	"github.com/keylockerbv/secrethub-cli/internals/logging"
 	"github.com/keylockerbv/secrethub-cli/internals/cli/cloneproc"
 	"github.com/secrethub/secrethub-go/internals/errio"
+	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 // defaultClearClipboardAfter defines the default TTL for data written to the clipboard.
@@ -19,15 +16,13 @@ const defaultClearClipboardAfter = 45 * time.Second
 type ClearClipboardCommand struct {
 	clipper clip.Clipper
 	hash    []byte
-	logger  logging.Logger
 	timeout time.Duration
 }
 
 // NewClearClipboardCommand creates a new ClearClipboardCommand.
-func NewClearClipboardCommand(logger logging.Logger) *ClearClipboardCommand {
+func NewClearClipboardCommand() *ClearClipboardCommand {
 	return &ClearClipboardCommand{
 		clipper: clip.NewClipboard(),
-		logger:  logger,
 	}
 }
 
@@ -53,11 +48,9 @@ func (cmd *ClearClipboardCommand) Run() error {
 
 	err = bcrypt.CompareHashAndPassword(cmd.hash, read)
 	if err != nil {
-		cmd.logger.Debugf("not clearing clipboard because hash is different")
 		return nil
 	}
 
-	cmd.logger.Debugf("clearing clipboard")
 	err = cmd.clipper.WriteAll(nil)
 	if err != nil {
 		return errio.Error(err)

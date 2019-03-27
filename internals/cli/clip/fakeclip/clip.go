@@ -1,7 +1,7 @@
 // +build !production
 
-// Package fakeclip provides implementations of the Clipper interface of the
-// clip package to be used in tests to mock the clipboard.
+// Package fakeclip provides fake implementations of the clip.Clipper interface
+// to be used for testing.
 package fakeclip
 
 import (

@@ -1,7 +1,7 @@
 // +build !production
 
-// Package fakeprogress provides an implementation of the Printer interface of the
-// progress package to be used in tests.
+// Package fakeprogress provides an implementation of the progress.Printer interface
+// to be used in tests.
 package fakeprogress
 
 // Printer is a mock of the Printer interface.

@@ -8,7 +8,7 @@ import (
 
 	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
 	"github.com/keylockerbv/secrethub-cli/internals/logging"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/spawnprocess"
+	"github.com/keylockerbv/secrethub-cli/internals/cli/cloneproc"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
@@ -77,7 +77,7 @@ func WriteClipboardAutoClear(data []byte, timeout time.Duration, clipper clip.Cl
 		return errio.Error(err)
 	}
 
-	err = spawnprocess.SpawnCloneProcess(
+	err = cloneproc.Spawn(
 		"clipboard-clear", hex.EncodeToString(hash),
 		"--timeout", timeout.String())
 

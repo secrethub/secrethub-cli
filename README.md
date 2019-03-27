@@ -15,7 +15,7 @@
 
 ## Installation
 
-### Download
+### Download a binary distribution
 
 Official binary distributions are available for the Linux, macOS, and Windows operating systems for both the 32-bit (386) and 64-bit (amd64) versions.
 You can find the latest release [here][releases].
@@ -37,14 +37,14 @@ Verify your installation works by running the following command:
 secrethub --version
 ```
 
-### Install from source
+### Build from source
 
 To build the binary from source, run:
 ```sh
 make install
 ```
 
-### Install via a package manager
+### Use a package manager
 
 We plan to distribute secrethub via package managers ([#27](https://github.com/secrethub/secrethub-cli/issues/27)).
 Please feel free to join the discussion and let us know what package manager you are using.

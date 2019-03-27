@@ -62,7 +62,7 @@ secrethub --completion-script-bash > /etc/bash_completion.d/secrethub
 secrethub --completion-script-zsh > ~/.zsh/completion/secrethub
 ```
 
-## Usage
+## Getting started
 
 Checkout the [getting started docs](https://secrethub.io/docs/getting-started/).
 Or have a look at the [reference docs](https://secrethub.io/docs/reference/) where each command is documented in detail.

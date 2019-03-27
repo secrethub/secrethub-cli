@@ -37,7 +37,7 @@ export PATH=$PATH:/usr/local/secrethub
 
 To build from source, [GoLang](https://golang.org) is required.
 
-To install the binary in the [GOBIN](https://golang.org/cmd/go/#hdr-GOPATH_environment_variable), run:
+To install the binary in the [GOBIN](https://golang.org/cmd/go/#hdr-GOPATH_environment_variable) directory, run:
 ```sh
 make install
 ```

@@ -98,6 +98,15 @@ Run a single test:
 
     go test ./internals/secrethub -run TestWriteCommand_Run
 
+## Uninstalling
+
+To remove an existing SecretHub installation from your system delete the secrethub directory.
+This is usually `/usr/local/secrethub` under Linux, macOS, and FreeBSD or `c:\SecretHub` under Windows.
+
+You should also remove the SecretHub directory from your PATH environment variable.
+
+If you've installed auto-completion, you should remove either `/etc/bash_completion.d/secrethub` or `~/.zsh/completion/secrethub`.
+
 ## Getting help
 
 Please reach out on [Discord][discord-cli] or via email ([support@secrethub.io](mailto:support@secrethub.io)) if you have any questions. We're here to help.

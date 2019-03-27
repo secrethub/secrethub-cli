@@ -1,4 +1,9 @@
-# SecretHub CLI
+<p align="center">
+  <img src="https://secrethub.io/img/secrethub-logo.svg" alt="SecretHub" width="400px"/>
+</p>
+<h2 align="center">
+  <i>CLI</i>
+</h2>
 
 [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)][godoc]
 [![Travis CI](https://travis-ci.org/secrethub/secrethub-cli.svg?branch=master)][travis-ci]
@@ -6,13 +11,9 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
 [![Discord](https://img.shields.io/badge/discord-SecretHub-7289da.svg?logo=discord)][discord]
 
-<img src="https://secrethub.io/img/secrethub-logo-shield.svg" alt="SecretHub" width="100px"/>
+The SecretHub CLI provides the command-line interface to interact with SecretHub.
 
----
-
-[SecretHub][secrethub] is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.
-
-`secrethub-cli` provides the command line interface to interact with the SecretHub API.
+> [SecretHub][secrethub] is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.
 
 ## Installation
 

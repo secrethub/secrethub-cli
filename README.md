@@ -14,14 +14,6 @@
 
 `secrethub-cli` provides the command line interface to interact with the SecretHub API.
 
-1. [Installation](#installation)
-1. [Test your installation](#test-your-installation)
-1. [Install auto-completion](#install-auto-completion)
-1. [Getting Started](#getting-started)
-1. [Development](#development)
-1. [Uninstalling](#uninstalling)
-1. [Getting Help](#getting-help)
-
 ## Installation
 
 ### Download a binary distribution

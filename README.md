@@ -4,6 +4,7 @@
 [![Travis CI](https://travis-ci.org/secrethub/secrethub-cli.svg?branch=master)][travis-ci]
 [![GolangCI](https://golangci.com/badges/github.com/secrethub/secrethub-cli.svg)][golang-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
+[![Discord](https://img.shields.io/badge/discord-SecretHub-7289da.svg?logo=discord)][discord-cli]
 
 <img src="https://secrethub.io/img/secrethub-logo-shield.svg" alt="SecretHub" width="100px"/>
 

@@ -11,7 +11,7 @@
 
 [SecretHub][secrethub] is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.
 
-`secrethub-cli` provides the command line interface to interact with the SecretHub server.
+`secrethub-cli` provides the command line interface to interact with the SecretHub API.
 
 ## Installation
 

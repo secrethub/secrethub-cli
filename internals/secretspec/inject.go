@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/keylockerbv/secrethub-cli/internals/secrettpl"
+	"github.com/keylockerbv/secrethub-cli/internals/tpl"
 
 	"fmt"
 
@@ -100,7 +100,7 @@ func (p InjectParser) Parse(rootPath string, allowMountAnywhere bool, config map
 		return nil, errio.Error(err)
 	}
 
-	inj.template, err = secrettpl.New(string(decodedBytes))
+	inj.template, err = tpl.New(string(decodedBytes))
 	if err != nil {
 		return nil, errio.Error(err)
 	}
@@ -117,7 +117,7 @@ type Inject struct {
 
 	encoding encoding.Encoding
 
-	template *secrettpl.Template
+	template *tpl.Template
 }
 
 // Set injects all secrets with data from matching secrets in the map

@@ -1,4 +1,4 @@
-package secrettpl
+package tpl
 
 import (
 	"fmt"

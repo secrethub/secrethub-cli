@@ -13,12 +13,11 @@ import (
 const (
 	// ApplicationName is the name of the command-line application.
 	ApplicationName = "secrethub"
-	logModule       = "log"
 )
 
 var (
 	// logger handles logging statements at different levels
-	logger = cli.NewLogger(logModule)
+	logger = cli.NewLogger()
 )
 
 // Errors
@@ -93,7 +92,7 @@ func NewApp() *App {
 		credentialStore: store,
 		clientFactory:   NewClientFactory(store),
 		io:              io,
-		logger:          cli.NewLogger(logModule),
+		logger:          cli.NewLogger(),
 	}
 }
 

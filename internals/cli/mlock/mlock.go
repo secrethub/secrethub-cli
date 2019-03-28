@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	log = cli.NewLogger("log")
+	log = cli.NewLogger()
 
 	// This should be set per OS
 	available bool

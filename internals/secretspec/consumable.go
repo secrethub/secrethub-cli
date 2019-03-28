@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	log = cli.NewLogger("log")
+	log = cli.NewLogger()
 
 	// DefaultParsers contains the default supported parsers.
 	DefaultParsers = []Parser{

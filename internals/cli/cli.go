@@ -3,7 +3,7 @@ package cli
 import (
 	"os"
 
-	logging "github.com/op/go-logging"
+	"github.com/op/go-logging"
 )
 
 const logFormat = `%{color}%{level:.4s} ▶ %{color:reset} %{message}`

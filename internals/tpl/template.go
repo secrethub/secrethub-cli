@@ -1,3 +1,4 @@
+// Package tpl provides a way to parse a template string and inject secret values into it.
 package tpl
 
 import (

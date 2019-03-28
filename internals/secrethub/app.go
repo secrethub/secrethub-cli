@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	raven "github.com/getsentry/raven-go"
 	"github.com/keylockerbv/secrethub-cli/internals/cli"
 	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
 	logging "github.com/op/go-logging"
@@ -108,11 +107,6 @@ func (app *App) Version(version string, commit string) *App {
 // configures global behavior and executes the command given by the args.
 func (app *App) Run(args []string) error {
 	// Construct the CLI
-	err := raven.SetDSN(cli.ClientSentryDSN)
-	if err != nil {
-		return errio.Error(err)
-	}
-
 	RegisterDebugFlag(app.cli)
 	RegisterMlockFlag(app.cli)
 	RegisterColorFlag(app.cli)
@@ -123,7 +117,7 @@ func (app *App) Run(args []string) error {
 	app.cli.UsageTemplate(DefaultUsageTemplate)
 
 	// Parse also executes the command when parsing is successful.
-	_, err = app.cli.Parse(args)
+	_, err := app.cli.Parse(args)
 	return err
 }
 

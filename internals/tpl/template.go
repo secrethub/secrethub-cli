@@ -1,4 +1,4 @@
-// Package tpl provides functionality to insert secret values in template strings.
+// Package tpl provides a way to parse a template string and inject secret values into it.
 package tpl
 
 import (

@@ -14,7 +14,6 @@ import (
 const (
 	// ApplicationName is the name of the command-line application.
 	ApplicationName = "secrethub"
-	logFormat       = `%{color}%{level:.4s} ▶ %{color:reset} %{message}`
 	logModule       = "log"
 )
 

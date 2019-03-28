@@ -19,12 +19,14 @@ type logger struct {
 	*logging.Logger
 }
 
-// NewLogger returns a logger with the given format, module and loglevel.
-func NewLogger(module string) Logger {
+func init() {
 	formatter := logging.MustStringFormatter(logFormat)
 	backend := logging.NewBackendFormatter(logging.NewLogBackend(os.Stdout, "", 0), formatter)
 	logging.SetBackend(backend)
+}
 
+// NewLogger returns a logger with the given format, module and loglevel.
+func NewLogger(module string) Logger {
 	l := logging.MustGetLogger(module)
 	logging.SetLevel(logging.INFO, module)
 

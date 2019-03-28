@@ -14,6 +14,8 @@ const (
 type Logger interface {
 	// Debugf logs a message when debug mode is enabled.
 	Debugf(format string, args ...interface{})
+	// Warningf logs a message when debug mode is enabled.
+	Warningf(format string, args ...interface{})
 	// EnableDebug turns printing debug messages on.
 	EnableDebug()
 }

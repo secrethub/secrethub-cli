@@ -71,6 +71,7 @@ type App struct {
 	clientFactory   ClientFactory
 	cli             *cli.App
 	io              ui.IO
+	logger          *logging.Logger
 }
 
 // Registerer allows others to register commands on it.
@@ -94,6 +95,7 @@ func NewApp() *App {
 		credentialStore: store,
 		clientFactory:   NewClientFactory(store),
 		io:              io,
+		logger:          cli.NewLogger(logFormat, logModule, false),
 	}
 }
 
@@ -107,7 +109,7 @@ func (app *App) Version(version string, commit string) *App {
 // configures global behavior and executes the command given by the args.
 func (app *App) Run(args []string) error {
 	// Construct the CLI
-	RegisterDebugFlag(app.cli)
+	RegisterDebugFlag(app.cli, app.logger)
 	RegisterMlockFlag(app.cli)
 	RegisterColorFlag(app.cli)
 	app.credentialStore.Register(app.cli)

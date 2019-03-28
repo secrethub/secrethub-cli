@@ -3,12 +3,13 @@ package secrethub
 import (
 	"strconv"
 
-	logging "github.com/op/go-logging"
+	"github.com/keylockerbv/secrethub-cli/internals/cli"
+
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
-func RegisterDebugFlag(r FlagRegisterer, logger *logging.Logger) {
+func RegisterDebugFlag(r FlagRegisterer, logger cli.Logger) {
 	flag := debugFlag{
 		logger: logger,
 	}
@@ -18,13 +19,13 @@ func RegisterDebugFlag(r FlagRegisterer, logger *logging.Logger) {
 // debugFlag configures the debug level of a logger.
 type debugFlag struct {
 	debug  bool
-	logger *logging.Logger
+	logger cli.Logger
 }
 
 func (f debugFlag) init() {
 	if f.debug {
-		logging.SetLevel(logging.DEBUG, f.logger.Module)
-		f.logger.Debug("Loglevel set to debug")
+		f.logger.EnableDebug()
+		f.logger.Debugf("Loglevel set to debug")
 	}
 }
 

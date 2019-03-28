@@ -71,7 +71,7 @@ type App struct {
 	clientFactory   ClientFactory
 	cli             *cli.App
 	io              ui.IO
-	logger          *logging.Logger
+	logger          cli.Logger
 }
 
 // Registerer allows others to register commands on it.

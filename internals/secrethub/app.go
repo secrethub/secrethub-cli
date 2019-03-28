@@ -6,7 +6,6 @@ import (
 
 	"github.com/keylockerbv/secrethub-cli/internals/cli"
 	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
-	logging "github.com/op/go-logging"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
@@ -19,7 +18,7 @@ const (
 
 var (
 	// logger handles logging statements at different levels
-	logger = logging.MustGetLogger(logModule)
+	logger = cli.NewLogger(logModule)
 )
 
 // Errors

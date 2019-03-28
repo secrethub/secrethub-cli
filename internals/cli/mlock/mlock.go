@@ -2,12 +2,12 @@
 package mlock
 
 import (
-	logging "github.com/op/go-logging"
+	"github.com/keylockerbv/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 var (
-	log = logging.MustGetLogger("log")
+	log = cli.NewLogger("log")
 
 	// This should be set per OS
 	available bool

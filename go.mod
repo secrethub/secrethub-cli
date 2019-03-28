@@ -11,7 +11,6 @@ require (
 	github.com/danieljoos/wincred v1.0.1 // indirect
 	github.com/docker/go-units v0.3.3
 	github.com/fatih/color v1.7.0
-	github.com/getsentry/raven-go v0.2.0
 	github.com/godbus/dbus v4.1.0+incompatible // indirect
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/masterzen/winrm v0.0.0-20190308153735-1d17eaf15943

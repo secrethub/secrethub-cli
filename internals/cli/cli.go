@@ -6,6 +6,8 @@ import (
 	logging "github.com/op/go-logging"
 )
 
+const logFormat = `%{color}%{level:.4s} ▶ %{color:reset} %{message}`
+
 type Logger interface {
 	// Debugf logs a message when debug mode is enabled.
 	Debugf(format string, args ...interface{})
@@ -18,18 +20,13 @@ type logger struct {
 }
 
 // NewLogger returns a logger with the given format, module and loglevel.
-func NewLogger(format string, module string, debug bool) Logger {
-	formatter := logging.MustStringFormatter(format)
+func NewLogger(module string) Logger {
+	formatter := logging.MustStringFormatter(logFormat)
 	backend := logging.NewBackendFormatter(logging.NewLogBackend(os.Stdout, "", 0), formatter)
 	logging.SetBackend(backend)
 
 	l := logging.MustGetLogger(module)
-	if debug {
-		logging.SetLevel(logging.DEBUG, module)
-		l.Debug("Loglevel set to debug")
-	} else {
-		logging.SetLevel(logging.INFO, module)
-	}
+	logging.SetLevel(logging.INFO, module)
 
 	return logger{Logger: l}
 }
@@ -37,4 +34,5 @@ func NewLogger(format string, module string, debug bool) Logger {
 // EnableDebug turns printing debug messages on.
 func (l logger) EnableDebug() {
 	logging.SetLevel(logging.DEBUG, l.Module)
+	l.Debug("Loglevel set to debug")
 }

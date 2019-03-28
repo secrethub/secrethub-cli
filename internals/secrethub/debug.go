@@ -25,7 +25,6 @@ type debugFlag struct {
 func (f debugFlag) init() {
 	if f.debug {
 		f.logger.EnableDebug()
-		f.logger.Debugf("Loglevel set to debug")
 	}
 }
 

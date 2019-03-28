@@ -1,5 +1,3 @@
-// Package ui provides functionality to interact with the user.
-//
-// Information can be supplied to the user on stdout and the user
-// can be prompted for input using stdin/stdout or tty.
+// Package ui provides a simple way to interact with the user through the terminal,
+// i.e. the interface of a CLI.
 package ui

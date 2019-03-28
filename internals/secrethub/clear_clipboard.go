@@ -2,8 +2,8 @@ package secrethub
 
 import (
 	"encoding/hex"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/cloneproc"
+	"github.com/secrethub/secrethub-cli/internals/cli/clip"
+	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"golang.org/x/crypto/bcrypt"
 	"time"

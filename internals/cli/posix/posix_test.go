@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/posix"
+	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 )
 
 func TestAddNewLine_EmptyData(t *testing.T) {

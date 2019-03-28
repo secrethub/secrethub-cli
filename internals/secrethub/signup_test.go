@@ -6,8 +6,8 @@ import (
 
 	"bytes"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/progress/fakeprogress"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/progress/fakeprogress"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )

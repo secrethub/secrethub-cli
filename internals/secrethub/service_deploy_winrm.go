@@ -11,8 +11,8 @@ import (
 
 	"net/url"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
-	"github.com/keylockerbv/secrethub-cli/internals/winrm"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/winrm"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 

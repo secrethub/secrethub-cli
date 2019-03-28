@@ -7,7 +7,7 @@ package fakeclip
 import (
 "sync"
 
-"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
+"github.com/secrethub/secrethub-cli/internals/cli/clip"
 )
 
 // testClipper implements the clipboard.Clipper interface and

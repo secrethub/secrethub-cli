@@ -1,14 +1,14 @@
 package secrethub
 
 import (
-	"github.com/keylockerbv/secrethub-cli/internals/cli/clip/fakeclip"
+	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"bytes"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/clip"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"

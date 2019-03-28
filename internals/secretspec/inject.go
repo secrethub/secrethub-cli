@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/keylockerbv/secrethub-cli/internals/tpl"
+	"github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"fmt"
 

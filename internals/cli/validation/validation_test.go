@@ -4,7 +4,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/validation"
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 )
 
 func TestIsEnvarNameIEEE(t *testing.T) {

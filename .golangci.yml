@@ -17,4 +17,5 @@ linters:
     - nakedret
     - prealloc
     - gofmt
+    - goconst
 disable-all: true

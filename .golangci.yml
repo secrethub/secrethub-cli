@@ -21,4 +21,5 @@ linters:
     - goimports
     - misspell
     - unparam
+    - unconvert
 disable-all: true

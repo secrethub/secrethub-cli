@@ -19,4 +19,5 @@ linters:
     - gofmt
     - goconst
     - goimports
+    - misspell
 disable-all: true

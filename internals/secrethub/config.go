@@ -264,10 +264,10 @@ func LoadConfig(io ui.IO, path string) (*Config, error) {
 	}
 
 	if t == ConfigUserType {
-		logger.Debug("parsing user config")
+		logger.Debugf("parsing user config")
 		config, err = parseUserConfig(io, mapConfig, path)
 	} else if t == ConfigServiceType {
-		logger.Debug("parsing service config")
+		logger.Debugf("parsing service config")
 		config, err = parseServiceConfig(configData)
 	} else {
 		return &config, ErrConfigTypeUnknown(path)

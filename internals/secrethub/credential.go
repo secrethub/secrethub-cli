@@ -42,7 +42,7 @@ func NewCredentialReader(io ui.IO, profileDir ProfileDir, flagValue string, pass
 		}
 
 		if profileDir.IsOldConfiguration() {
-			logger.Debug("falling back to old configuration")
+			logger.Debugf("falling back to old configuration")
 			return readOldCredential(io, profileDir, passReader)
 		}
 

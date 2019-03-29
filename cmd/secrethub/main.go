@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/keylockerbv/secrethub-cli/internals/secrethub"
+	"github.com/secrethub/secrethub-cli/internals/secrethub"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 

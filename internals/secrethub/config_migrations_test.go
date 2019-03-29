@@ -5,9 +5,9 @@ package secrethub_test
 import (
 	"testing"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
-	"github.com/keylockerbv/secrethub-cli/internals/secrethub"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/configuration"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub"
+	"github.com/secrethub/secrethub-cli/internals/cli/configuration"
 	"github.com/kylelemons/godebug/pretty"
 )
 

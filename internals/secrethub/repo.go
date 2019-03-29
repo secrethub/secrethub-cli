@@ -1,6 +1,6 @@
 package secrethub
 
-import "github.com/keylockerbv/secrethub-cli/internals/cli/ui"
+import "github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 // RepoCommand handles operations on repositories.
 type RepoCommand struct {

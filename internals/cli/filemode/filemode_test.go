@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/filemode"
+	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 )
 
 func TestParseFilemode(t *testing.T) {

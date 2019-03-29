@@ -3,9 +3,9 @@ package secrethub
 import (
 	"os/exec"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/validation"
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 
-	"github.com/keylockerbv/secrethub-cli/internals/tpl"
+	"github.com/secrethub/secrethub-cli/internals/tpl"
 	"github.com/secrethub/secrethub-go/internals/api"
 	yaml "gopkg.in/yaml.v2"
 
@@ -22,7 +22,7 @@ import (
 
 	"path/filepath"
 
-	"github.com/keylockerbv/secrethub-cli/internals/secretspec"
+	"github.com/secrethub/secrethub-cli/internals/secretspec"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 

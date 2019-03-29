@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/posix"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )

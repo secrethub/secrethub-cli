@@ -1,7 +1,7 @@
 package secrethub
 
 import (
-	"github.com/keylockerbv/secrethub-cli/internals/cli"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 

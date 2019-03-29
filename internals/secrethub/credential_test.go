@@ -9,8 +9,8 @@ import (
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/configuration"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/configuration"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 	"github.com/secrethub/secrethub-go/internals/crypto"
 )

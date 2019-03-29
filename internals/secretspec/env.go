@@ -9,7 +9,7 @@ import (
 
 	"fmt"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/validation"
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )

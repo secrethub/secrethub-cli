@@ -1,4 +1,4 @@
-module github.com/keylockerbv/secrethub-cli
+module github.com/secrethub/secrethub-cli
 
 go 1.12
 

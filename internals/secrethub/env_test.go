@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/validation"
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 )
 
 const nested = `ROOT:

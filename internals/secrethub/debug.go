@@ -3,7 +3,7 @@ package secrethub
 import (
 	"strconv"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 )

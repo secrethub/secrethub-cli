@@ -9,8 +9,8 @@ import (
 
 	"net/url"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/configuration"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/configuration"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 )
 

@@ -1,7 +1,7 @@
 package secrethub
 
 import (
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 

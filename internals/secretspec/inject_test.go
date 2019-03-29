@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/keylockerbv/secrethub-cli/internals/secretspec"
+	"github.com/secrethub/secrethub-cli/internals/secretspec"
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 

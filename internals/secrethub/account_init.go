@@ -10,12 +10,12 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/progress"
+	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/ui"
-	"github.com/keylockerbv/secrethub-cli/internals/cli/clip"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 )
 
 // Constants that define the waiting periods for polling the server to check whether the credential is added.

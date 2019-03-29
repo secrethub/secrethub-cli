@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/keylockerbv/secrethub-cli/internals/cli/posix"
+	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/mitchellh/mapstructure"
 
 	"reflect"

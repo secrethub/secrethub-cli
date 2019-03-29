@@ -20,4 +20,5 @@ linters:
     - goconst
     - goimports
     - misspell
+    - unparam
 disable-all: true

@@ -16,4 +16,5 @@ linters:
     - depguard
     - nakedret
     - prealloc
+    - gofmt
 disable-all: true

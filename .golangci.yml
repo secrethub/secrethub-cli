@@ -10,4 +10,10 @@ linters:
     - ineffassign
     - deadcode
     - errcheck
+    - golint
+    - stylecheck
+    - dupl
+    - depguard
+    - nakedret
+    - prealloc
 disable-all: true

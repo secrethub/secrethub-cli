@@ -1,22 +1,21 @@
 package winrm
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/hex"
 	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
 
-	"crypto/x509"
-
-	"encoding/hex"
-
-	"bytes"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/masterzen/winrm"
+
 	"github.com/secrethub/secrethub-go/internals/errio"
+
+	"github.com/masterzen/winrm"
 )
 
 // Errors

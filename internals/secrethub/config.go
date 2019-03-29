@@ -3,18 +3,19 @@ package secrethub
 // This file solely exists for backwards compatibility.
 
 import (
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"strings"
 
-	"fmt"
-
-	"github.com/asaskevich/govalidator"
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/cli/configuration"
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 	"github.com/secrethub/secrethub-go/internals/errio"
+
+	"github.com/asaskevich/govalidator"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 const (

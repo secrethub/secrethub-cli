@@ -2,11 +2,11 @@ package secrethub
 
 import (
 	"fmt"
-
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"

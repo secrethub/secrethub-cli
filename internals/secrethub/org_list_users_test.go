@@ -1,14 +1,14 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
-
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
+
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"

@@ -17,7 +17,7 @@ func TestPresenter_Parse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func () {
+	defer func() {
 		err := os.Remove("inject_test_file")
 		assert.OK(t, err)
 	}()
@@ -91,7 +91,7 @@ func TestPresenter_Parse_DuplicateFileConsumable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func () {
+	defer func() {
 		err := os.Remove("inject_test_file")
 		assert.OK(t, err)
 	}()

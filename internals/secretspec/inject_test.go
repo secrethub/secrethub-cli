@@ -1,13 +1,14 @@
 package secretspec_test
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/secretspec"
+
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 var (
@@ -63,7 +64,7 @@ func TestInjectSetClear(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not write test config to inject: %s", err)
 	}
-	defer func () {
+	defer func() {
 		err := os.Remove("test-config.json")
 		assert.OK(t, err)
 	}()

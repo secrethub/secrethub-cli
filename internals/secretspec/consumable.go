@@ -1,16 +1,16 @@
 package secretspec
 
 import (
+	"io/ioutil"
+	"os"
 	"path/filepath"
 
-	"os"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
-	"io/ioutil"
-
-	logging "github.com/op/go-logging"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
-	yaml "gopkg.in/yaml.v2"
+
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	log = logging.MustGetLogger("log")
+	log = cli.NewLogger()
 
 	// DefaultParsers contains the default supported parsers.
 	DefaultParsers = []Parser{

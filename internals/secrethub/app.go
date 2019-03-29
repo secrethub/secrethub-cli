@@ -6,7 +6,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	logging "github.com/op/go-logging"
+
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
@@ -14,13 +14,11 @@ import (
 const (
 	// ApplicationName is the name of the command-line application.
 	ApplicationName = "secrethub"
-	logFormat       = `%{color}%{level:.4s} ▶ %{color:reset} %{message}`
-	logModule       = "log"
 )
 
 var (
 	// logger handles logging statements at different levels
-	logger = logging.MustGetLogger(logModule)
+	logger = cli.NewLogger()
 )
 
 // Errors
@@ -71,6 +69,7 @@ type App struct {
 	clientFactory   ClientFactory
 	cli             *cli.App
 	io              ui.IO
+	logger          cli.Logger
 }
 
 // Registerer allows others to register commands on it.
@@ -94,6 +93,7 @@ func NewApp() *App {
 		credentialStore: store,
 		clientFactory:   NewClientFactory(store),
 		io:              io,
+		logger:          cli.NewLogger(),
 	}
 }
 
@@ -107,7 +107,7 @@ func (app *App) Version(version string, commit string) *App {
 // configures global behavior and executes the command given by the args.
 func (app *App) Run(args []string) error {
 	// Construct the CLI
-	RegisterDebugFlag(app.cli)
+	RegisterDebugFlag(app.cli, app.logger)
 	RegisterMlockFlag(app.cli)
 	RegisterColorFlag(app.cli)
 	app.credentialStore.Register(app.cli)

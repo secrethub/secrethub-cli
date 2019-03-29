@@ -51,6 +51,6 @@ func lockMemory() error {
 	} else if err != nil {
 		return errio.Error(err)
 	}
-	log.Debug("mlock is active")
+	log.Debugf("mlock is active")
 	return nil
 }

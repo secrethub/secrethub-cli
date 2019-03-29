@@ -25,3 +25,13 @@ archive:
   # Only archive the binary and LICENSE file
   - none*
   - LICENSE
+
+brew:
+  name: cli
+  github:
+    owner: secrethub
+    name: homebrew-tools
+  folder: Formula
+
+  homepage: https://secrethub.io
+  description: Command-line interface for SecretHub

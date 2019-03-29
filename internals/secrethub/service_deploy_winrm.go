@@ -107,10 +107,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	skipVerifyCert, err := cmd.checkWinRMVerifyCert()
-	if err != nil {
-		return errio.Error(err)
-	}
+	skipVerifyCert := cmd.checkWinRMVerifyCert()
 
 	config := &winrm.Config{
 		Host: cmd.resourceURI.Hostname(),
@@ -181,10 +178,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	// Get the path to place the credential file in.
 	destinationPath := fmt.Sprintf("$HOME\\%s\\%s", defaultProfileDirName, defaultCredentialFilename)
 
-	deployer, err := newWindowsDeployer(client, destinationPath)
-	if err != nil {
-		return errio.Error(err)
-	}
+	deployer := newWindowsDeployer(client, destinationPath)
 
 	if !cmd.io.Stdin().IsPiped() {
 		return ErrNoDataOnStdin
@@ -226,14 +220,13 @@ func (cmd *ServiceDeployWinRmCommand) checkWinRMTLS() (bool, error) {
 }
 
 // checkWinRMVerifyCert checks if the given schema corresponds to the given CLI flags.
-// This method can later be extended when we implement CA verifying.
-func (cmd *ServiceDeployWinRmCommand) checkWinRMVerifyCert() (bool, error) {
+func (cmd *ServiceDeployWinRmCommand) checkWinRMVerifyCert() bool {
 	if cmd.noVerify {
 		fmt.Fprintln(cmd.io.Stdout(), "WARNING: insecure no verify cert flag is set! We recommend to always verify the certificate.")
-		return true, nil
+		return true
 	}
 
-	return false, nil
+	return false
 }
 
 // deployer is an interface that can be used to install the secrets client
@@ -249,13 +242,13 @@ type windowsDeployer struct {
 }
 
 // newWindowsDeployer creates a windowsDeployer using a WinRM connection.
-func newWindowsDeployer(conn *winrm.Client, path string) (deployer, error) {
+func newWindowsDeployer(conn *winrm.Client, path string) deployer {
 	wd := windowsDeployer{
 		conn: conn,
 		path: path,
 	}
 
-	return wd, nil
+	return wd
 }
 
 // configure copies a service credential to a Windows host.

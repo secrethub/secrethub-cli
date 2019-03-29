@@ -1,10 +1,11 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestIsOldConfiguration(t *testing.T) {

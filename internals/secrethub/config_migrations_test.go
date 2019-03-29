@@ -5,9 +5,10 @@ package secrethub_test
 import (
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/configuration"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub"
-	"github.com/secrethub/secrethub-cli/internals/cli/configuration"
+
 	"github.com/kylelemons/godebug/pretty"
 )
 
@@ -51,9 +52,7 @@ func TestConfigMigrations_FullPath(t *testing.T) {
 	currentVersion := 1
 	goalVersion := secrethub.ConfigVersion
 
-	secrethub.GetUsername = func(ui.IO) (string, error) {
-		return "test", nil
-	}
+	secrethub.GetUsername = getTestUsername
 
 	testMigration(t, configIn, expectedOut, currentVersion, goalVersion)
 }
@@ -92,9 +91,7 @@ func TestConfigMigrations_v2_to_v3_ServiceNotAvailable(t *testing.T) {
 
 func TestConfigMigrations_v2_to_v3_CannotParseUser(t *testing.T) {
 
-	secrethub.GetUsername = func(ui.IO) (string, error) {
-		return "test", nil
-	}
+	secrethub.GetUsername = getTestUsername
 
 	_, err := configuration.MigrateConfigTo(ui.NewFakeIO(), configuration.ConfigMap{"type": "user", "user": "not-a-map"}, 2, 3, secrethub.ConfigMigrations, false)
 
@@ -122,9 +119,7 @@ func TestConfigMigrations_v2_to_v3(t *testing.T) {
 	currentVersion := 2
 	goalVersion := 3
 
-	secrethub.GetUsername = func(ui.IO) (string, error) {
-		return "test", nil
-	}
+	secrethub.GetUsername = getTestUsername
 
 	testMigration(t, configIn, expectedOut, currentVersion, goalVersion)
 
@@ -165,4 +160,8 @@ func testMigration(t *testing.T, configIn, expectedOut []byte, currentVersion, g
 	if diff != "" {
 		t.Errorf("New config is not as expected. Differences: \n%s", diff)
 	}
+}
+
+func getTestUsername(ui.IO) (string, error) {
+	return "test", nil
 }

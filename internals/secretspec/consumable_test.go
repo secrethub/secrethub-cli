@@ -1,9 +1,10 @@
 package secretspec
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"os"
 	"testing"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestPresenter_Parse_Success(t *testing.T) {
@@ -17,7 +18,7 @@ func TestPresenter_Parse_Success(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func () {
+	defer func() {
 		err := os.Remove("inject_test_file")
 		assert.OK(t, err)
 	}()
@@ -91,7 +92,7 @@ func TestPresenter_Parse_DuplicateFileConsumable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func () {
+	defer func() {
 		err := os.Remove("inject_test_file")
 		assert.OK(t, err)
 	}()

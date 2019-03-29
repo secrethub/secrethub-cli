@@ -1,9 +1,10 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 	"time"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestTimeFormatter_Format(t *testing.T) {

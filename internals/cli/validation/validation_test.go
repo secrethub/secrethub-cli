@@ -1,10 +1,11 @@
 package validation_test
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestIsEnvarNameIEEE(t *testing.T) {

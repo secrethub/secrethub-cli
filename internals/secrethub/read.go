@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	units "github.com/docker/go-units"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
+
+	units "github.com/docker/go-units"
 )
 
 // ReadCommand is a command to read a secret.

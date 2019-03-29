@@ -1,11 +1,12 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	randchargeneratorfakes "github.com/secrethub/secrethub-go/pkg/randchar/fakes"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"

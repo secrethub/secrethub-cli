@@ -4,17 +4,16 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
+	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
-	"github.com/mitchellh/mapstructure"
-
-	"reflect"
-
-	"time"
 
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 	"github.com/secrethub/secrethub-go/internals/errio"
+
+	"github.com/mitchellh/mapstructure"
 	yaml "gopkg.in/yaml.v2"
 )
 

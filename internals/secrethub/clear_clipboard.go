@@ -2,11 +2,14 @@ package secrethub
 
 import (
 	"encoding/hex"
+	"time"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
+
 	"github.com/secrethub/secrethub-go/internals/errio"
+
 	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
 // defaultClearClipboardAfter defines the default TTL for data written to the clipboard.

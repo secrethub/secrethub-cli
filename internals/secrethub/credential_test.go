@@ -1,18 +1,18 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"io/ioutil"
 	"net/url"
 	"path/filepath"
 	"testing"
 
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/configuration"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/internals/crypto"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
 // TestOldConfigToCredential tests whether older config structs can be successfully migrated to a Credential.

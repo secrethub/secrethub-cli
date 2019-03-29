@@ -1,13 +1,13 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
-	"testing"
-
 	"bytes"
+	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress/fakeprogress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )

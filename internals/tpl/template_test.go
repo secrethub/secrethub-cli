@@ -2,10 +2,10 @@ package tpl
 
 import (
 	"fmt"
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 var (

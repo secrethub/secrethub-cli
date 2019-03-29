@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
+	"bytes"
 	"testing"
 
-	"bytes"
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestConfirmCaseInsensitive(t *testing.T) {

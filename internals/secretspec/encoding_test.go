@@ -3,60 +3,52 @@ package secretspec
 import (
 	"testing"
 
+	"github.com/secrethub/secrethub-go/internals/assert"
+
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/charmap"
 )
 
 func TestDetectEncoding(t *testing.T) {
-	cases := []struct {
-		name     string
+	cases := map[string]struct {
 		input    []byte
 		expected encoding.Encoding
 	}{
-		{
-			name:     "utf8",
+		"utf8": {
 			input:    []byte{0xEF, 0xBB, 0xBF, 0x01, 0x02},
 			expected: EncodingUTF8,
 		},
-		{
-			name:     "utf16le",
+		"utf16le": {
 			input:    []byte{0xFF, 0xFE, 0x03},
 			expected: EncodingUTF16LittleEndian,
 		},
-		{
-			name:     "utf16be",
+		"utf16be": {
 			input:    []byte{0xFE, 0xFF, 0x03},
 			expected: EncodingUTF16BigEndian,
 		},
-		{
-			name:     "utf32le",
+		"utf32le": {
 			input:    []byte{0xFF, 0xFE, 0x00, 0x00, 0x03},
 			expected: EncodingUTF32LittleEndian,
 		},
-		{
-			name:     "utf32be",
+		"utf32be": {
 			input:    []byte{0x00, 0x00, 0xFE, 0xFF, 0x03},
 			expected: EncodingUTF32BigEndian,
 		},
-		{
-			name:     "unknown encoding",
+		"unknown encoding": {
 			input:    []byte{0x01, 0x02, 0x03},
 			expected: nil,
 		},
-		{
-			name:     "empty",
+		"empty": {
 			input:    []byte{},
 			expected: nil,
 		},
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			encoding := DetectEncoding(c.input)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			actual := DetectEncoding(tc.input)
 
-			if c.expected != encoding {
-				t.Errorf("unexpected returned encoding, %v (actual) != %v (expected)", encoding, c.expected)
-			}
+			assert.Equal(t, actual, tc.expected)
 
 		})
 	}
@@ -110,16 +102,16 @@ func TestEncodingFromString(t *testing.T) {
 		},
 	}
 
-	for _, c := range cases {
-		t.Run(c.input, func(t *testing.T) {
-			encoding, err := EncodingFromString(c.input)
+	for _, tc := range cases {
+		t.Run(tc.input, func(t *testing.T) {
+			actual, err := EncodingFromString(tc.input)
 
-			if c.err != nil && err != c.err {
-				t.Errorf("returned error not as expected, %v (actual) != %v (expected)", err, c.err)
+			if tc.err != nil && err != tc.err {
+				t.Errorf("returned error not as expected, %v (actual) != %v (expected)", err, tc.err)
 			}
 
-			if c.expected != nil && c.expected != encoding {
-				t.Errorf("unexpected returned encoding, %v (actual) != %v (expected)", encoding, c.expected)
+			if tc.expected != nil && tc.expected != actual {
+				t.Errorf("unexpected returned encoding, %v (actual) != %v (expected)", actual, tc.expected)
 			}
 
 		})

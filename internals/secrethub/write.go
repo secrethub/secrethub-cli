@@ -2,12 +2,12 @@ package secrethub
 
 import (
 	"bytes"
-
 	"fmt"
 	"io/ioutil"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )

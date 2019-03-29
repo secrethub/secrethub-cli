@@ -77,7 +77,7 @@ func AskAndValidate(io IO, question string, n int, validationFunc func(string) e
 }
 
 // ConfirmCaseInsensitive asks the user to confirm by typing one of the expected strings.
-// The comparision is not case-sensitive. If multiple values for expected are given,
+// The comparison is not case-sensitive. If multiple values for expected are given,
 // true is returned if the input equals any of the the expected values.
 func ConfirmCaseInsensitive(io IO, question string, expected ...string) (bool, error) {
 	response, err := Ask(io, fmt.Sprintf("%s: ", question))

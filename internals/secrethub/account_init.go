@@ -212,7 +212,7 @@ func (cmd *AccountInitCommand) Run() error {
 		base64.RawURLEncoding.Encode(out, outBytes)
 
 		if cmd.useClipboard {
-			err = cmd.clipper.WriteAll([]byte(out))
+			err = cmd.clipper.WriteAll(out)
 			if err != nil {
 				return errio.Error(err)
 			}

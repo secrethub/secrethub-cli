@@ -89,11 +89,11 @@ func TestInjectSetClear(t *testing.T) {
 		t.Fatalf("cannot read from consumable file: %s", err)
 	}
 
-	if string(actual) != string(testConfigJSONExpected) {
+	if string(actual) != testConfigJSONExpected {
 		t.Errorf(
 			"unexpected consumable data:\n\t%s (actual) != %s (expected)",
 			string(actual),
-			string(testConfigJSONExpected),
+			testConfigJSONExpected,
 		)
 	}
 

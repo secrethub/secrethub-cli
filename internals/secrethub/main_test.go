@@ -1,12 +1,13 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 var (

@@ -3,15 +3,15 @@ package secrethub
 // This file solely exists for backwards compatibility.
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
+	"net/url"
 	"os"
 	"testing"
 
-	"net/url"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/configuration"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 var testPaths = []string{

@@ -1,11 +1,12 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"strings"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 const nested = `ROOT:

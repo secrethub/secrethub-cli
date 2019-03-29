@@ -1,11 +1,12 @@
 package filemode_test
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"os"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestParseFilemode(t *testing.T) {

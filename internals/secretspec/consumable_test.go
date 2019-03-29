@@ -1,9 +1,10 @@
 package secretspec
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"os"
 	"testing"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestPresenter_Parse_Success(t *testing.T) {

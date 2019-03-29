@@ -1,16 +1,15 @@
 package secretspec
 
 import (
-	"github.com/secrethub/secrethub-go/internals/assert"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
-	"io/ioutil"
-
-	"path/filepath"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
+
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestNewEnvVar(t *testing.T) {

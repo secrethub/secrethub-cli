@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="https://secrethub.io/img/secrethub-logo.svg" alt="SecretHub" width="400px"/>
+  <img src="https://secrethub.io/img/secrethub-logo.svg" alt="SecretHub" width="380px"/>
 </p>
-<h2 align="center">
+<h1 align="center">
   <i>CLI</i>
-</h2>
+</h1>
 
 [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)][godoc]
 [![Travis CI](https://travis-ci.org/secrethub/secrethub-cli.svg?branch=master)][travis-ci]

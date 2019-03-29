@@ -29,13 +29,10 @@ var (
 //
 // Progress is reported in the progress channel given as a variable.
 func doCopy(client *winrm.Client, in io.Reader, toPath string, progress chan int) error {
-	tempFile, err := tempFileName()
-	if err != nil {
-		return fmt.Errorf("error generating unique filename: %v", err)
-	}
+	tempFile := tempFileName()
 	tempPath := "$env:TEMP\\" + tempFile
 
-	err = uploadContent(client, maxOperationsPerShell, "%TEMP%\\"+tempFile, in, progress)
+	err := uploadContent(client, maxOperationsPerShell, "%TEMP%\\"+tempFile, in, progress)
 	if err != nil {
 		return fmt.Errorf("error uploading file to %s: %v", tempPath, err)
 	}
@@ -294,8 +291,8 @@ func appendContent(shell *winrm.Shell, filePath, content string) (err error) {
 	return nil
 }
 
-func tempFileName() (string, error) {
-	return fmt.Sprintf("winrmcp-%s.tmp", uuid.New()), nil
+func tempFileName() string {
+	return fmt.Sprintf("winrmcp-%s.tmp", uuid.New())
 }
 
 func chunkSize(filePath string) int {

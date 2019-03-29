@@ -18,4 +18,5 @@ linters:
     - prealloc
     - gofmt
     - goconst
+    - goimports
 disable-all: true

@@ -19,6 +19,8 @@ builds:
 
 archive:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
+  replacements:
+    darwin: macOS
   files:
   # Only archive the binary and LICENSE file
   - none*

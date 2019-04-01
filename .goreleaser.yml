@@ -29,7 +29,7 @@ archive:
   - LICENSE
 
 checksum:
-  name_template: {{ .ProjectName }}-{{ .Tag }}-checksums.txt
+  name_template: "{{ .ProjectName }}-{{ .Tag }}-checksums.txt"
 
 brew:
   name: cli

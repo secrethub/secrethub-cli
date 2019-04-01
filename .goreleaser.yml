@@ -24,6 +24,9 @@ archive:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
   replacements:
     darwin: macOS
+  format_overrides:
+    - goos: windows
+      format: zip
   files:
   # Only archive the binary and LICENSE file
   - none*

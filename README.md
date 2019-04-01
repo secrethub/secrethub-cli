@@ -31,7 +31,7 @@ tar -C /usr/local/secrethub -xzf secrethub-VERSION-OS-ARCH.tar.gz
 
 Ensure it is accessible through the `PATH` environment variable.
 ```sh
-export PATH=$PATH:/usr/local/secrethub
+export PATH=$PATH:/usr/local/secrethub/bin
 ```
 
 ### Build from source

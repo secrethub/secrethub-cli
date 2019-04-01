@@ -26,8 +26,6 @@ archive:
     - goos: windows
       format: zip
   files:
-  # Only archive the binary and LICENSE file
-  - none*
   - LICENSE
 
 checksum:

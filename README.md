@@ -25,7 +25,7 @@ You can find the latest release [here][releases].
 To install the SecretHub CLI, download the archive file appropriate for your operating system and extract it e.g. to `/usr/local/secrethub`.
 
 ```sh
-mkdir /usr/local/secrethub
+mkdir -p /usr/local/secrethub
 tar -C /usr/local/secrethub -xzf secrethub-VERSION-OS-ARCH.tar.gz
 ```
 

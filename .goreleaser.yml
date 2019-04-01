@@ -32,6 +32,9 @@ archive:
   - none*
   - LICENSE
 
+checksum:
+  name_template: {{ .ProjectName }}-{{ .Tag }}-checksums.txt
+
 brew:
   name: cli
   github:

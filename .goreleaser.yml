@@ -19,8 +19,6 @@ builds:
 
 archive:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
-  replacements:
-    386: x86
   files:
   # Only archive the binary and LICENSE file
   - none*

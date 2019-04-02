@@ -1,7 +1,7 @@
 project_name: secrethub
 
 builds:
-  - binary: "bin/{{ .ProjectName }}"
+  - binary: "bin/secrethub"
     env:
       - CGO_ENABLED=0
     goos:
@@ -32,7 +32,7 @@ checksum:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-checksums.txt"
 
 brew:
-  name: cli
+  name: secrethub-cli
   github:
     owner: secrethub
     name: homebrew-tools

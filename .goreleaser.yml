@@ -1,7 +1,7 @@
 project_name: secrethub
 
 builds:
-  - binary: "bin/{{ .ProjectName }}"
+  - binary: "bin/secrethub"
     env:
       - CGO_ENABLED=0
     goos:

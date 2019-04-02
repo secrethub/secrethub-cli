@@ -9,6 +9,7 @@
 [![Travis CI](https://travis-ci.org/secrethub/secrethub-cli.svg?branch=master)][travis-ci]
 [![GolangCI](https://golangci.com/badges/github.com/secrethub/secrethub-cli.svg)][golang-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
+[![Version]( https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
 [![Discord](https://img.shields.io/badge/discord-SecretHub-7289da.svg?logo=discord)][discord]
 
 The SecretHub CLI provides the command-line interface to interact with SecretHub.
@@ -124,6 +125,7 @@ Come chat with us on [Discord][discord] or email us at [support@secrethub.io](ma
 
 [secrethub]: https://secrethub.io
 [releases]: https://github.com/secrethub/secrethub-cli/releases
+[latest-version]: https://github.com/secrethub/secrethub-cli/releases/latest
 [godoc]: http://godoc.org/github.com/secrethub/secrethub-cli
 [golang-ci]: https://golangci.com/r/github.com/secrethub/secrethub-cli
 [goreportcard]: https://goreportcard.com/report/github.com/secrethub/secrethub-cli

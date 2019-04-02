@@ -60,8 +60,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
-github.com/secrethub/secrethub-go v0.0.0-20190319121742-4fdf39566d36 h1:Un2a2ylmibAxljk5KCuydkwVseyNfERDoO01ckte9pg=
-github.com/secrethub/secrethub-go v0.0.0-20190319121742-4fdf39566d36/go.mod h1:gqrxdTNcVowCy/Bo49Y+7En12aV24wnoG3ktUF9xW/k=
+github.com/secrethub/secrethub-go v0.18.0 h1:6Jm3d/UjaWgOoduZX9S1MjiXG+zyVsxkpQ5RxLRucRs=
+github.com/secrethub/secrethub-go v0.18.0/go.mod h1:gqrxdTNcVowCy/Bo49Y+7En12aV24wnoG3ktUF9xW/k=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=

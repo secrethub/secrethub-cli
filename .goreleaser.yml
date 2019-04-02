@@ -1,7 +1,7 @@
 project_name: secrethub
 
 builds:
-  - binary: "{{ .ProjectName }}"
+  - binary: "bin/{{ .ProjectName }}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -11,6 +11,9 @@ builds:
     goarch:
       - amd64
       - 386
+    ignore:
+      - goos: darwin
+        goarch: 386
     main: ./cmd/secrethub/main.go
     ldflags:
       - -s -w -X main.commit={{ .ShortCommit }} -X main.version={{ .Version }}
@@ -19,9 +22,21 @@ builds:
 
 archive:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
-  replacements:
-    386: x86
+  format_overrides:
+    - goos: windows
+      format: zip
   files:
-  # Only archive the binary and LICENSE file
-  - none*
   - LICENSE
+
+checksum:
+  name_template: "{{ .ProjectName }}-{{ .Tag }}-checksums.txt"
+
+brew:
+  name: cli
+  github:
+    owner: secrethub
+    name: homebrew-tools
+  folder: Formula
+
+  homepage: https://secrethub.io
+  description: Command-line interface for SecretHub

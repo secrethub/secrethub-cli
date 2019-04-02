@@ -29,7 +29,14 @@ mkdir -p /usr/local/secrethub
 tar -C /usr/local/secrethub -xzf secrethub-VERSION-OS-ARCH.tar.gz
 ```
 
-Ensure it is accessible through the `PATH` environment variable.
+ Ensure the binary is accessible by symlinking to it from a directory that is on your `PATH`, e.g. `/usr/local/bin`:
+
+ ```sh
+ ln -s /usr/local/secrethub/bin/secrethub /usr/local/bin/secrethub
+ ```
+
+Alternatively, you can add the folder containing the binary to your `PATH` environment variable:
+
 ```sh
 export PATH=$PATH:/usr/local/secrethub/bin
 ```

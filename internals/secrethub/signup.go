@@ -164,6 +164,6 @@ func (cmd *SignUpCommand) Run() error {
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")
-	fmt.Fprintf(cmd.io.Stdout(), "We've send an email to %s Please verify your email address to continue.\n", cmd.email)
+	fmt.Fprintf(cmd.io.Stdout(), "Please verify your email address to continue. We've sent a verification mail to %s\n", cmd.email)
 	return nil
 }

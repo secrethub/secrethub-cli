@@ -35,25 +35,6 @@ db_password: LEYkTdMCksCVMc4X3gpYN0fk
 
 The SecretHub CLI can be installed in various ways. Have a look at our [installation guide](https://secrethub.io/docs/getting-started/install) for more information.
 
-### Build from source
-
-To build from source, [GoLang](https://golang.org) is required.
-
-To install the binary in the [GOBIN](https://golang.org/cmd/go/#hdr-GOPATH_environment_variable) directory, run:
-```sh
-make install
-```
-
-Alternatively, to build the binary in the current directory, run:
-```sh
-make build
-```
-
-Now you can move it into the `PATH` to use it from any directory:
-```sh
-mv ./secrethub /usr/local/bin/
-```
-
 ## Getting started
 
 Checkout the [getting started docs](https://secrethub.io/docs/getting-started/).
@@ -63,6 +44,22 @@ Or have a look at the [reference docs](https://secrethub.io/docs/reference/) whe
 
 Pull requests from the community are welcome.
 If you'd like to contribute, please checkout [the contributing guidelines](./CONTRIBUTING.md).
+
+### Build
+
+To build from source, having [Golang](https://golang.org) installed is required.
+To build the binary in the current directory, run:
+
+```sh
+make build
+```
+
+### Install
+
+To install the binary in the [GOBIN](https://golang.org/cmd/go/#hdr-GOPATH_environment_variable) directory, run:
+```sh
+make install
+```
 
 ### Test
 

@@ -54,26 +54,6 @@ Now you can move it into the `PATH` to use it from any directory:
 mv ./secrethub /usr/local/bin/
 ```
 
-### Test your installation
-
-Verify your installation works by running the following command:
-```sh
-secrethub --version
-```
-
-### Install auto-completion
-
-To install auto completion for the CLI, run one of the following commands depending on your shell of choice:
-
-```sh
-# Install bash completion
-secrethub --completion-script-bash > /etc/bash_completion.d/secrethub
-```
-```sh
-# Install zsh completion
-secrethub --completion-script-zsh > ~/.zsh/completion/secrethub
-```
-
 ## Getting started
 
 Checkout the [getting started docs](https://secrethub.io/docs/getting-started/).

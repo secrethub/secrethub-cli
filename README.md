@@ -16,6 +16,21 @@ The SecretHub CLI provides the command-line interface to interact with SecretHub
 
 > [SecretHub][secrethub] is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.
 
+## Usage
+
+```sh
+$ secrethub write path/to/secret
+Type in your secret: ************************  
+
+$ cat config.yml.tpl
+db_user: myapp
+db_password: ${path/to/secret:latest}
+
+$ cat config.yml.tpl | secrethub inject
+db_user: myapp
+db_password: LEYkTdMCksCVMc4X3gpYN0fk
+```
+
 ## Installation
 
 ### Download a binary distribution

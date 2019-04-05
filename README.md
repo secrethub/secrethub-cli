@@ -31,14 +31,11 @@ db_user: myapp
 db_password: LEYkTdMCksCVMc4X3gpYN0fk
 ```
 
+See the [getting started guide](https://secrethub.io/docs/getting-started/) for a more extensive introduction and check out  the [reference docs](https://secrethub.io/docs/reference/) for an overview of all commands.
+
 ## Installation
 
 The SecretHub CLI can be installed in various ways. Have a look at our [installation guide](https://secrethub.io/docs/getting-started/install) for more information.
-
-## Getting started
-
-Checkout the [getting started docs](https://secrethub.io/docs/getting-started/).
-Or have a look at the [reference docs](https://secrethub.io/docs/reference/) where each command is documented in detail.
 
 ## Development
 

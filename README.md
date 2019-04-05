@@ -33,29 +33,7 @@ db_password: LEYkTdMCksCVMc4X3gpYN0fk
 
 ## Installation
 
-### Download a binary distribution
-
-Official binary distributions are available for the Linux, macOS, and Windows operating systems for both the 32-bit (386) and 64-bit (amd64) versions.
-You can find the latest release [here][releases].
-
-To install the SecretHub CLI, download the archive file appropriate for your operating system and extract it e.g. to `/usr/local/secrethub`.
-
-```sh
-mkdir -p /usr/local/secrethub
-tar -C /usr/local/secrethub -xzf secrethub-VERSION-OS-ARCH.tar.gz
-```
-
- Ensure the binary is accessible by symlinking to it from a directory that is on your `PATH`, e.g. `/usr/local/bin`:
-
- ```sh
- ln -s /usr/local/secrethub/bin/secrethub /usr/local/bin/secrethub
- ```
-
-Alternatively, you can add the folder containing the binary to your `PATH` environment variable:
-
-```sh
-export PATH=$PATH:/usr/local/secrethub/bin
-```
+The SecretHub CLI can be installed in various ways. Have a look at our [installation guide](https://secrethub.io/docs/getting-started/install) for more information.
 
 ### Build from source
 
@@ -76,19 +54,14 @@ Now you can move it into the `PATH` to use it from any directory:
 mv ./secrethub /usr/local/bin/
 ```
 
-### Use a package manager
-
-We plan to distribute secrethub via package managers ([#27](https://github.com/secrethub/secrethub-cli/issues/27)).
-Please feel free to join the discussion and let us know what package manager you are using.
-
-## Test your installation
+### Test your installation
 
 Verify your installation works by running the following command:
 ```sh
 secrethub --version
 ```
 
-## Install auto-completion
+### Install auto-completion
 
 To install auto completion for the CLI, run one of the following commands depending on your shell of choice:
 
@@ -124,15 +97,6 @@ Run tests for one package:
 Run a single test:
 
     go test ./internals/secrethub -run TestWriteCommand_Run
-
-## Uninstalling
-
-To remove an existing SecretHub installation from your system delete the `secrethub` directory.
-This is usually `/usr/local/secrethub` under Linux and macOS.
-
-You should also remove the SecretHub directory from your `PATH` environment variable.
-
-If you've installed auto-completion, you should remove either `/etc/bash_completion.d/secrethub` or `~/.zsh/completion/secrethub`.
 
 ## Getting help
 

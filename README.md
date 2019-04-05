@@ -35,7 +35,9 @@ See the [getting started guide](https://secrethub.io/docs/getting-started/) for 
 
 ## Installation
 
-The SecretHub CLI can be installed in various ways. Have a look at our [installation guide](https://secrethub.io/docs/getting-started/install) for more information.
+Official distributions [are available][releases] for Linux, macOS, and Windows for both `386` (32-bit) and `amd64` (64-bit) architectures.
+
+Check out the [installation guide](https://secrethub.io/docs/getting-started/install) for detailed instructions on how to install the SecretHub CLI on your platform of choice.
 
 ## Development
 
@@ -54,6 +56,7 @@ make build
 ### Install
 
 To install the binary in the [GOBIN](https://golang.org/cmd/go/#hdr-GOPATH_environment_variable) directory, run:
+
 ```sh
 make install
 ```

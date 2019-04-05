@@ -31,13 +31,13 @@ db_user: myapp
 db_password: LEYkTdMCksCVMc4X3gpYN0fk
 ```
 
-See the [getting started guide](https://secrethub.io/docs/getting-started/) for a more extensive introduction and check out  the [reference docs](https://secrethub.io/docs/reference/) for an overview of all commands.
+See the [getting started guide][getting-started] for a more extensive introduction and check out the [reference docs][reference-docs] for an overview of all commands.
 
 ## Installation
 
 Official distributions [are available][releases] for Linux, macOS, and Windows for both `386` (32-bit) and `amd64` (64-bit) architectures.
 
-Check out the [installation guide](https://secrethub.io/docs/getting-started/install) for detailed instructions on how to install the SecretHub CLI on your platform of choice.
+Check out the [installation guide][installation-guide] for detailed instructions on how to install the SecretHub CLI on your platform of choice.
 
 ## Development
 
@@ -80,6 +80,9 @@ Run a single test:
 Come chat with us on [Discord][discord] or email us at [support@secrethub.io](mailto:support@secrethub.io)
 
 [secrethub]: https://secrethub.io
+[getting-started]: https://secrethub.io/docs/getting-started/
+[installation-guide]: https://secrethub.io/docs/getting-started/install
+[reference-docs]: https://secrethub.io/docs/reference/
 [releases]: https://github.com/secrethub/secrethub-cli/releases
 [latest-version]: https://github.com/secrethub/secrethub-cli/releases/latest
 [godoc]: http://godoc.org/github.com/secrethub/secrethub-cli

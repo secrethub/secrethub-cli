@@ -10,7 +10,7 @@
 [![GolangCI](https://golangci.com/badges/github.com/secrethub/secrethub-cli.svg)][golang-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
 [![Version]( https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
-[![Discord](https://img.shields.io/badge/discord-SecretHub-7289da.svg?logo=discord)][discord]
+[![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)][discord]
 
 The SecretHub CLI provides the command-line interface to interact with SecretHub.
 

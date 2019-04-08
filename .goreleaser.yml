@@ -46,3 +46,13 @@ snapcraft:
   publish: true
   summary: Command-line interface for SecretHub
   description: SecretHub is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.
+
+scoop:
+  bucket:
+    owner: secrethub
+    name: scoop-secrethub
+
+  homepage: https://secrethub.io
+  description: Command-line interface for SecretHub
+
+  license: Apache-2.0

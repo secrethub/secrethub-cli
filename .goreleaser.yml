@@ -1,7 +1,7 @@
 project_name: secrethub
 
 builds:
-  - binary: "bin/secrethub"
+  - binary: "secrethub"
     env:
       - CGO_ENABLED=0
     goos:
@@ -25,6 +25,7 @@ archive:
   format_overrides:
     - goos: windows
       format: zip
+  bin_directory: true
   files:
   - LICENSE
 
@@ -40,3 +41,18 @@ brew:
 
   homepage: https://secrethub.io
   description: Command-line interface for SecretHub
+
+snapcraft:
+  publish: true
+  summary: Command-line interface for SecretHub
+  description: SecretHub is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.
+
+scoop:
+  bucket:
+    owner: secrethub
+    name: scoop-secrethub
+
+  homepage: https://secrethub.io
+  description: Command-line interface for SecretHub
+
+  license: Apache-2.0

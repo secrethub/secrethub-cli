@@ -40,3 +40,13 @@ brew:
 
   homepage: https://secrethub.io
   description: Command-line interface for SecretHub
+
+scoop:
+  bucket:
+    owner: secrethub
+    name: scoop-secrethub
+
+  homepage: https://secrethub.io
+  description: Command-line interface for SecretHub
+
+  license: Apache-2.0

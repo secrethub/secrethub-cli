@@ -1,7 +1,7 @@
 project_name: secrethub
 
 builds:
-  - binary: "bin/secrethub"
+  - binary: "secrethub"
     env:
       - CGO_ENABLED=0
     goos:
@@ -25,6 +25,7 @@ archive:
   format_overrides:
     - goos: windows
       format: zip
+  bin_directory: yes
   files:
   - LICENSE
 

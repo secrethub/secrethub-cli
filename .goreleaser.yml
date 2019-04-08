@@ -25,7 +25,7 @@ archive:
   format_overrides:
     - goos: windows
       format: zip
-  bin_directory: yes
+  bin_directory: true
   files:
   - LICENSE
 

@@ -43,6 +43,7 @@ brew:
   description: Command-line interface for SecretHub
 
 snapcraft:
+  name: secrethub-cli
   publish: true
   summary: Command-line interface for SecretHub
   description: SecretHub is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.

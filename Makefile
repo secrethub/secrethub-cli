@@ -26,3 +26,6 @@ build:
 
 install:
 	go install ${BUILD_FLAGS} ./cmd/secrethub
+
+msi:
+	./msi.sh

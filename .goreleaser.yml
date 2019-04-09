@@ -47,6 +47,17 @@ snapcraft:
   publish: true
   summary: Command-line interface for SecretHub
   description: SecretHub is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.
+  apps:
+    secrethub-cli:
+      plugs:
+        - network
+        - personal-files
+  plugs:
+    personal-files:
+      read:
+        - $HOME/.secrethub
+      write:
+        - $HOME/.secrethub
 
 scoop:
   bucket:

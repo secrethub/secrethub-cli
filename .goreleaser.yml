@@ -50,13 +50,6 @@ snapcraft:
     secrethub-cli:
       plugs:
         - network
-        - personal-files
-  plugs:
-    personal-files:
-      read:
-        - $HOME/.secrethub
-      write:
-        - $HOME/.secrethub
 
 scoop:
   bucket:

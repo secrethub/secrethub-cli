@@ -53,6 +53,7 @@ snapcraft:
         - network
 
 scoop:
+  name: secrethub-cli
   bucket:
     owner: secrethub
     name: scoop-secrethub

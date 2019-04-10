@@ -49,6 +49,7 @@ snapcraft:
   apps:
     secrethub:
       plugs:
+        - home
         - network
 
 scoop:

@@ -62,7 +62,7 @@ func (cmd *OrgInitCommand) Run() error {
 	} else if !cmd.force && incompleteInput {
 		fmt.Fprintf(
 			cmd.io.Stdout(),
-			"Before initializing a new organization, I need to know a few things about your organization. "+
+			"Before initializing a new organization, we need to know a few things about your organization. "+
 				"Please answer the questions below, followed by an [ENTER]\n\n",
 		)
 

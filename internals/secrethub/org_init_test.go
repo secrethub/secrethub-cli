@@ -26,6 +26,7 @@ func TestOrgInitCommand_Run(t *testing.T) {
 			cmd: OrgInitCommand{
 				name:        "company",
 				description: "description",
+				force:       true,
 			},
 			service: fakeclient.OrgService{
 				Creater: fakeclient.OrgCreater{
@@ -41,6 +42,7 @@ func TestOrgInitCommand_Run(t *testing.T) {
 			cmd: OrgInitCommand{
 				name:        "company",
 				description: "description",
+				force:       true,
 			},
 			newClientErr: testErr,
 			err:          testErr,
@@ -49,6 +51,7 @@ func TestOrgInitCommand_Run(t *testing.T) {
 			cmd: OrgInitCommand{
 				name:        "company",
 				description: "description",
+				force:       true,
 			},
 			service: fakeclient.OrgService{
 				Creater: fakeclient.OrgCreater{

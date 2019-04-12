@@ -39,6 +39,22 @@ func (cmd *OrgInitCommand) Register(r Registerer) {
 func (cmd *OrgInitCommand) Run() error {
 	var err error
 
+	client, err := cmd.newClient()
+	if err != nil {
+		return errio.Error(err)
+	}
+
+	user, err := client.Me().GetUser()
+	if user.Username == "Replace this predicate with a check whether user is on free plan" {
+		wantsTrial, err := ui.AskYesNo(cmd.io, "Creating an organization is not available on the free plan, would you to like to proceed and start a 14-day trial?", ui.DefaultNo)
+		if err != nil {
+			return errio.Error(err)
+		}
+		if !wantsTrial {
+			return nil
+		}
+	}
+
 	incompleteInput := cmd.name == "" || cmd.description == ""
 	if cmd.force && incompleteInput {
 		return ErrMissingFlags
@@ -67,11 +83,6 @@ func (cmd *OrgInitCommand) Run() error {
 
 		// Print a whitespace line here for readability.
 		fmt.Fprintln(cmd.io.Stdout(), "")
-	}
-
-	client, err := cmd.newClient()
-	if err != nil {
-		return errio.Error(err)
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Creating organization...\n")

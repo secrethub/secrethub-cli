@@ -40,7 +40,7 @@ func (cmd *OrgInitCommand) Run() error {
 	var err error
 
 	if !cmd.force {
-		confirmed, err := ui.AskYesNo(cmd.io, "Creating an organization is not available on the free plan, would you to like to proceed and start a 14-day trial?", ui.DefaultNo)
+		confirmed, err := ui.AskYesNo(cmd.io, "Creating an organization will start a free 14-day trial (no strings attached) of the Team plan. Visit https://secrethub.io/pricing for more information. Would you like to proceed?", ui.DefaultYes)
 		if err != nil {
 			return errio.Error(err)
 		}

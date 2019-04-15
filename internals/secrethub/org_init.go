@@ -39,14 +39,27 @@ func (cmd *OrgInitCommand) Register(r Registerer) {
 func (cmd *OrgInitCommand) Run() error {
 	var err error
 
+	if !cmd.force {
+		confirmed, err := ui.AskYesNo(cmd.io, "Creating an organization will start a free 14-day trial (no strings attached) of the Team plan. Visit https://secrethub.io/pricing for more information. Would you like to proceed?", ui.DefaultYes)
+		if err != nil {
+			return errio.Error(err)
+		}
+		if !confirmed {
+			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			return nil
+		}
+
+		// Print a whitespace line here for readability.
+		fmt.Fprintln(cmd.io.Stdout(), "")
+	}
+
 	incompleteInput := cmd.name == "" || cmd.description == ""
 	if cmd.force && incompleteInput {
 		return ErrMissingFlags
-
 	} else if !cmd.force && incompleteInput {
 		fmt.Fprintf(
 			cmd.io.Stdout(),
-			"Before initializing a new organization, I need to know a few things about your organization. "+
+			"Before initializing a new organization, we need to know a few things about your organization. "+
 				"Please answer the questions below, followed by an [ENTER]\n\n",
 		)
 

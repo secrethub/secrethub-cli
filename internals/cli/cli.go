@@ -11,6 +11,7 @@ const (
 	logModule = "log"
 )
 
+// Logger can be used to log debug and warning messages.
 type Logger interface {
 	// Debugf logs a message when debug mode is enabled.
 	Debugf(format string, args ...interface{})

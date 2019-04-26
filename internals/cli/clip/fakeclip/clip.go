@@ -17,14 +17,14 @@ type testClipper struct {
 	val []byte
 }
 
-// NewTestClipboard creates a new testClipper to replace clip.Clipboard in tests.
+// New creates a new testClipper to replace clip.Clipboard in tests.
 func New() clip.Clipper {
 	return &testClipper{
 		val: []byte{},
 	}
 }
 
-// NewTestClipboardWithValue creates a new testClipper to replace clip.Clipboard in tests,
+// NewWithValue creates a new testClipper to replace clip.Clipboard in tests,
 // that is initialized with a value.
 func NewWithValue(initial []byte) clip.Clipper {
 	return &testClipper{
@@ -47,7 +47,7 @@ func (c *testClipper) WriteAll(value []byte) error {
 	return nil
 }
 
-// NewErrClipboard creates a new errClipper to replace clip.Clipbard in tests.
+// NewWithErr creates a new errClipper to replace clip.Clipbard in tests.
 func NewWithErr(readError error, writeError error) clip.Clipper {
 	return &errClipper{
 		readError:  readError,

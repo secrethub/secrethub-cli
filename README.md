@@ -31,13 +31,30 @@ db_user: myapp
 db_password: LEYkTdMCksCVMc4X3gpYN0fk
 ```
 
-See the [getting started guide][getting-started] for a more extensive introduction and check out the [reference docs][reference-docs] for an overview of all commands.
+See the [reference docs][reference-docs] for a detailed overview of all commands.
 
-## Installation
+## Get started
 
-Official distributions [are available][releases] for Linux, macOS, and Windows for both `386` (32-bit) and `amd64` (64-bit) architectures.
+### 1. [Download][installation-guide] the CLI.  
+
+Official distributions are available for Linux, macOS, and Windows for both `386` (32-bit) and `amd64` (64-bit) architectures.
 
 Check out the [installation guide][installation-guide] for detailed instructions on how to install the SecretHub CLI on your platform of choice.
+
+### 2. Run `signup`
+
+Run `signup` to claim your free developer account:
+
+```
+secrethub signup
+```
+
+And you're done. 
+Follow the [getting started guide][getting-started] for a brief introduction into the basics of SecretHub.
+
+## Getting help
+
+Come chat with us on [Discord][discord] or email us at [support@secrethub.io](mailto:support@secrethub.io)
 
 ## Development
 
@@ -75,9 +92,7 @@ Run a single test:
 
     go test ./internals/secrethub -run TestWriteCommand_Run
 
-## Getting help
 
-Come chat with us on [Discord][discord] or email us at [support@secrethub.io](mailto:support@secrethub.io)
 
 [secrethub]: https://secrethub.io
 [getting-started]: https://secrethub.io/docs/getting-started/

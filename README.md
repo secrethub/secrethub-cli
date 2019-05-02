@@ -5,7 +5,7 @@
   <i>CLI</i>
 </h1>
 
-[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)][godoc]
+[![GoDoc](https://godoc.org/github.com/secrethub/secrethub-cli?status.svg)][godoc]
 [![Travis CI](https://travis-ci.org/secrethub/secrethub-cli.svg?branch=master)][travis-ci]
 [![GolangCI](https://golangci.com/badges/github.com/secrethub/secrethub-cli.svg)][golang-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]

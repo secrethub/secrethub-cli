@@ -2,7 +2,8 @@ package secrethub
 
 import (
 	"github.com/secrethub/secrethub-cli/internals/cli"
-	kingpin "github.com/alecthomas/kingpin"
+
+	"github.com/alecthomas/kingpin"
 )
 
 // BindAction binds a function to a command clause, so that

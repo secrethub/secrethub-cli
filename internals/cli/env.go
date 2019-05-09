@@ -8,8 +8,8 @@ import (
 	"text/tabwriter"
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
+	"github.com/alecthomas/kingpin"
 	"github.com/secrethub/secrethub-go/internals/errio"
-	kingpin "github.com/alecthomas/kingpin"
 )
 
 var (

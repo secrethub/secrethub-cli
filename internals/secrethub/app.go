@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/alecthomas/kingpin"
 	"strings"
 	"text/template"
 
@@ -11,6 +10,8 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+
+	"github.com/alecthomas/kingpin"
 )
 
 const (

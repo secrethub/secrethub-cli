@@ -125,10 +125,7 @@ func (app *App) Run(args []string) error {
 func (app *App) registerCommands() {
 	NewACLCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewAccountCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
-
-	auditCommand := app.cli.Command("audit", "Show the audit log of all actions on a repository or a secret.")
-	NewAuditCommand(app.io, app.clientFactory.NewClient).Register(auditCommand)
-
+	NewAuditCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewClearCommand(app.io).Register(app.cli)
 	NewClearClipboardCommand().Register(app.cli)
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)

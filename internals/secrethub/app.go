@@ -128,8 +128,6 @@ func (app *App) registerCommands() {
 
 	auditCommand := app.cli.Command("audit", "Show the audit log of all actions on a repository or a secret.")
 	NewAuditCommand(app.io, app.clientFactory.NewClient).Register(auditCommand)
-	NewAuditRepoCommand(app.io, app.clientFactory.NewClient).Register(auditCommand)
-	NewAuditSecretCommand(app.io, app.clientFactory.NewClient).Register(auditCommand)
 
 	NewClearCommand(app.io).Register(app.cli)
 	NewClearClipboardCommand().Register(app.cli)

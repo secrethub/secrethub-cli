@@ -9,7 +9,7 @@ import (
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/secrethub/secrethub-go/internals/errio"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	kingpin "github.com/alecthomas/kingpin"
 )
 
 var (

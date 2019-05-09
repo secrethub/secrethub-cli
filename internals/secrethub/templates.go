@@ -4,24 +4,39 @@ var (
 	// DefaultUsageTemplate is custom template for displaying usage
 	// Changes in comparison to kingpin.DefaultUsageTemplate:
 	// 1. Removed * for default commands
-	DefaultUsageTemplate = `{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
-{{end}}\
+	DefaultUsageTemplate = `
+{{define "FormatSubCommands"}}\
+{{ $managementCommands := .Commands | ManagementCommands }}\
+{{ $rootCommands := .Commands | RootCommands }}\
 
-{{define "FormatCommands"}}\
-{{range .FlattenedCommands}}\
-{{if not .Hidden}}\
-  {{.FullCommand}}{{template "FormatCommand" .}}
-{{.Help|Wrap 4}}
-{{end}}\
+{{ if $managementCommands }}\
+Management Commands:
+{{ $managementCommands | CommandsToTwoColumns | FormatTwoColumns }}
+{{ end }}\
+
+{{ if $rootCommands }}\
+{{ if $managementCommands }}\
+Commands:
+{{ end }}\
+{{ $rootCommands | CommandsToTwoColumns | FormatTwoColumns }}
 {{end}}\
 {{end}}\
 
 {{define "FormatUsage"}}\
-{{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
+{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
+{{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
 {{.Help|Wrap 0}}\
+{{end}}\
+
+{{if .Flags}}\
+Flags:
+{{.Flags|FlagsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{if .Args}}\
+Args:
+{{.Args|ArgsToTwoColumns|FormatTwoColumns}}
 {{end}}\
 
 {{end}}\
@@ -31,21 +46,12 @@ usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Conte
 {{else}}\
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
 {{end}}\
-{{if .Context.Flags}}\
-Flags:
-{{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.Args}}\
-Args:
-{{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
-{{end}}\
 {{if .Context.SelectedCommand}}\
 {{if len .Context.SelectedCommand.Commands}}\
 Subcommands:
-{{template "FormatCommands" .Context.SelectedCommand}}
+{{template "FormatSubCommands" .Context.SelectedCommand}}
 {{end}}\
 {{else if .App.Commands}}\
-Commands:
-{{template "FormatCommands" .App}}
+{{template "FormatSubCommands" .App}}
 {{end}}`
 )

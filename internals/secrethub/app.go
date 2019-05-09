@@ -2,7 +2,9 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/alecthomas/kingpin"
 	"strings"
+	"text/template"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -115,6 +117,35 @@ func (app *App) Run(args []string) error {
 	app.registerCommands()
 
 	app.cli.UsageTemplate(DefaultUsageTemplate)
+	app.cli.UsageFuncs(template.FuncMap{
+		"ManagementCommands": func(cmds []*kingpin.CmdModel) []*kingpin.CmdModel {
+			var res []*kingpin.CmdModel
+			for _, cmd := range cmds {
+				if len(cmd.Commands) > 0 {
+					res = append(res, cmd)
+				}
+			}
+			return res
+		},
+		"RootCommands": func(cmds []*kingpin.CmdModel) []*kingpin.CmdModel {
+			var res []*kingpin.CmdModel
+			for _, cmd := range cmds {
+				if len(cmd.Commands) == 0 {
+					res = append(res, cmd)
+				}
+			}
+			return res
+		},
+		"CommandsToTwoColumns": func(cmds []*kingpin.CmdModel) [][2]string {
+			var rows [][2]string
+			for _, cmd := range cmds {
+				if !cmd.Hidden {
+					rows = append(rows, [2]string{cmd.Name, cmd.Help})
+				}
+			}
+			return rows
+		},
+	})
 
 	// Parse also executes the command when parsing is successful.
 	_, err := app.cli.Parse(args)

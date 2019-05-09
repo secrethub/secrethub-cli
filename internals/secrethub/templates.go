@@ -53,5 +53,9 @@ Subcommands:
 {{end}}\
 {{else if .App.Commands}}\
 {{template "FormatSubCommands" .App}}
-{{end}}`
+{{end}}\
+{{if not .Context.SelectedCommand}}\
+Run '{{ .App.Name }} <command> --help' for more information on a command.
+{{ end }}\
+`
 )

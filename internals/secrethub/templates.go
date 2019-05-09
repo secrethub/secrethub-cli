@@ -30,7 +30,7 @@ Commands:
 {{.Help|Wrap 0}}\
 {{end}}\
 
-{{if .Flags}}\
+{{if .Flags}}
 Flags:
 {{.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\

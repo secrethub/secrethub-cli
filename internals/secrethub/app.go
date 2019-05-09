@@ -3,12 +3,15 @@ package secrethub
 import (
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+
+	"github.com/alecthomas/kingpin"
 )
 
 const (
@@ -85,6 +88,7 @@ func NewApp() *App {
 	io := ui.NewUserIO()
 	store := NewCredentialStore(io)
 	help := "The SecretHub Command-Line Interface (CLI) is a unified tool to manage your secrets inside SecretHub.\n\n" +
+		"Check out https://secrethub.io/docs/getting-started/ for a step-by-step introduction.\n\n" +
 		"The CLI is configurable through command-line flags and environment variables. " +
 		"Options set on the command-line take precedence over those set in the environment. " +
 		"The format for environment variables is `SECRETHUB_[COMMAND_]FLAG_NAME`."
@@ -115,6 +119,35 @@ func (app *App) Run(args []string) error {
 	app.registerCommands()
 
 	app.cli.UsageTemplate(DefaultUsageTemplate)
+	app.cli.UsageFuncs(template.FuncMap{
+		"ManagementCommands": func(cmds []*kingpin.CmdModel) []*kingpin.CmdModel {
+			var res []*kingpin.CmdModel
+			for _, cmd := range cmds {
+				if len(cmd.Commands) > 0 {
+					res = append(res, cmd)
+				}
+			}
+			return res
+		},
+		"RootCommands": func(cmds []*kingpin.CmdModel) []*kingpin.CmdModel {
+			var res []*kingpin.CmdModel
+			for _, cmd := range cmds {
+				if len(cmd.Commands) == 0 {
+					res = append(res, cmd)
+				}
+			}
+			return res
+		},
+		"CommandsToTwoColumns": func(cmds []*kingpin.CmdModel) [][2]string {
+			var rows [][2]string
+			for _, cmd := range cmds {
+				if !cmd.Hidden {
+					rows = append(rows, [2]string{cmd.Name, cmd.Help})
+				}
+			}
+			return rows
+		},
+	})
 
 	// Parse also executes the command when parsing is successful.
 	_, err := app.cli.Parse(args)

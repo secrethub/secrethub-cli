@@ -1,8 +1,8 @@
 package secrethub
 
 import (
+	"github.com/alecthomas/kingpin"
 	"github.com/secrethub/secrethub-cli/internals/cli"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 // FlagRegisterer allows others to register flags on it.

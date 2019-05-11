@@ -18,7 +18,7 @@ func NewOrgCommand(io ui.IO, newClient newClientFunc) *OrgCommand {
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *OrgCommand) Register(r Registerer) {
-	clause := r.Command("org", "Manage a SecretHub organization.")
+	clause := r.Command("org", "Manage shared organization workspaces.")
 	NewOrgInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgInspectCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgInviteCommand(cmd.io, cmd.newClient).Register(clause)

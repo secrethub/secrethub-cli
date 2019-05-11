@@ -23,7 +23,7 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *AuditCommand) Register(r Registerer) {
-	clause := r.Command("audit", "Show the audit log of all actions on a repository or a secret.")
+	clause := r.Command("audit", "Show the audit log.")
 	clause.Default()
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit (<namespace>/<repo>[/<path>])").SetValue(&cmd.path)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)

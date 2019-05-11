@@ -44,7 +44,7 @@ func (cmd *TreeCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *TreeCommand) Register(r Registerer) {
-	clause := r.Command("tree", "List contents of directories in a tree-like format.")
+	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
 	clause.Arg("dir-path", "The path to to show contents for (<namespace>/<repo>[/<dir>])").Required().SetValue(&cmd.path)
 
 	BindAction(clause, cmd.Run)

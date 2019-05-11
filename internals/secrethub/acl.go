@@ -18,7 +18,7 @@ func NewACLCommand(io ui.IO, newClient newClientFunc) *ACLCommand {
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *ACLCommand) Register(r Registerer) {
-	clause := r.Command("acl", "").Hidden()
+	clause := r.Command("acl", "Manage access rules on directories.")
 	NewACLCheckCommand(cmd.io, cmd.newClient).Register(clause)
 	NewACLListCommand(cmd.io, cmd.newClient).Register(clause)
 	NewACLRmCommand(cmd.io, cmd.newClient).Register(clause)

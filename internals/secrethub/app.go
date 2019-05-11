@@ -87,8 +87,9 @@ type newClientFunc func() (secrethub.Client, error)
 func NewApp() *App {
 	io := ui.NewUserIO()
 	store := NewCredentialStore(io)
-	help := "The SecretHub Command-Line Interface (CLI) is a unified tool to manage your secrets inside SecretHub.\n\n" +
-		"Check out https://secrethub.io/docs/getting-started/ for a step-by-step introduction.\n\n" +
+	help := "The SecretHub command-line interface is a unified tool to manage your infrastructure secrets with SecretHub.\n\n" +
+		"For a step-by-step introduction, check out:\n\n" +
+		"https://secrethub.io/docs/getting-started/\n\n" +
 		"The CLI is configurable through command-line flags and environment variables. " +
 		"Options set on the command-line take precedence over those set in the environment. " +
 		"The format for environment variables is `SECRETHUB_[COMMAND_]FLAG_NAME`."

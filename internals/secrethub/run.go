@@ -62,7 +62,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
-	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").StringVar(&cmd.env)
+	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 
 	BindAction(clause, cmd.Run)
 }

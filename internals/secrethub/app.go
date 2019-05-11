@@ -156,27 +156,33 @@ func (app *App) Run(args []string) error {
 
 // registerCommands initializes all commands and registers them on the app.
 func (app *App) registerCommands() {
+
+	// Management commands
+	NewOrgCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewRepoCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewACLCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewServiceCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewAccountCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
-	NewAuditCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewClearCommand(app.io).Register(app.cli)
-	NewClearClipboardCommand().Register(app.cli)
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
+
+	// Commands
+	NewSignUpCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
+	NewWriteCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewReadCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewGenerateSecretCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewInjectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewInspectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewLsCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewMkDirCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewOrgCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewPrintEnvCommand(app.cli, app.io).Register(app.cli)
-	NewReadCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewRepoCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewRmCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewRunCommand(app.clientFactory.NewClient).Register(app.cli)
-	NewSetCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewSignUpCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
 	NewTreeCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewWriteCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewInspectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewAuditCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewInjectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewRunCommand(app.clientFactory.NewClient).Register(app.cli)
+	NewPrintEnvCommand(app.cli, app.io).Register(app.cli)
+
+	// Hidden commands
+	NewClearCommand(app.io).Register(app.cli)
+	NewSetCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewClearClipboardCommand().Register(app.cli)
 	NewKeyringClearCommand().Register(app.cli)
-	NewServiceCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 }

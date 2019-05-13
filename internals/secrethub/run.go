@@ -80,6 +80,13 @@ func (cmd *RunCommand) Run() error {
 	}
 	envSources = append(envSources, flagSource)
 
+	if cmd.template == "" {
+		const defaultTemplate = "secrethub-env.yml"
+		if _, err := os.Stat(defaultTemplate); err == nil {
+			cmd.template = defaultTemplate
+		}
+	}
+
 	if cmd.template != "" {
 		file, err := ioutil.ReadFile(cmd.template)
 		if err != nil {

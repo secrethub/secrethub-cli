@@ -4,6 +4,8 @@ github.com/Azure/go-ntlmssp v0.0.0-20180810175552-4a21cbd618b4 h1:pSm8mp0T2OH2CP
 github.com/Azure/go-ntlmssp v0.0.0-20180810175552-4a21cbd618b4/go.mod h1:chxPXzSsl7ZWRAuOIE23GDNzjWuZquvFlgA8xmpunjU=
 github.com/ChrisTrenkamp/goxpath v0.0.0-20170922090931-c385f95c6022 h1:y8Gs8CzNfDF5AZvjr+5UyGQvQEBL7pwo+v+wX6q9JI8=
 github.com/ChrisTrenkamp/goxpath v0.0.0-20170922090931-c385f95c6022/go.mod h1:nuWgzSkT5PnyOd+272uUmV0dnAnAn42Mk7PiQC5VzN4=
+github.com/alecthomas/kingpin v0.0.0-20190511121203-91c304675159 h1:p/tyVUpLaJ4sI1p47kNX4FEmMcQXS8vh0aNDhc75MeE=
+github.com/alecthomas/kingpin v0.0.0-20190511121203-91c304675159/go.mod h1:idxgS9pV6OOpAhZvx+gcoGRMX9/tt0iqkw/pNxI0C14=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc h1:cAKDfWh5VpdgMhJosfJnn5/FoN2SRZ4p7fJNX58YPaU=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf h1:qet1QNfXsQxTZqLG4oE62mJzwPIB8+Tee4RNCL9ulrY=
@@ -64,8 +66,6 @@ github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/secrethub/secrethub-go v0.18.0 h1:6Jm3d/UjaWgOoduZX9S1MjiXG+zyVsxkpQ5RxLRucRs=
 github.com/secrethub/secrethub-go v0.18.0/go.mod h1:gqrxdTNcVowCy/Bo49Y+7En12aV24wnoG3ktUF9xW/k=
-github.com/simonbarendse/kingpin v0.0.0-20190509121241-d44931961c2f h1:ckwdZMEqB/h3+c599A7O2zag7mAWl0KmfNp5IUfJBHM=
-github.com/simonbarendse/kingpin v0.0.0-20190509121241-d44931961c2f/go.mod h1:idxgS9pV6OOpAhZvx+gcoGRMX9/tt0iqkw/pNxI0C14=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=

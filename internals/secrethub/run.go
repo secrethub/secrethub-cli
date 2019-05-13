@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"bufio"
 	"os/exec"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
@@ -93,7 +94,7 @@ func (cmd *RunCommand) Run() error {
 			return ErrCannotReadFile(cmd.template, err)
 		}
 
-		tplSource, err := NewEnvTemplate(string(file))
+		tplSource, err := NewEnv(string(file))
 		if err != nil {
 			return errio.Error(err)
 		}
@@ -265,39 +266,71 @@ type EnvSource interface {
 	Env(secrets map[api.SecretPath][]byte) (map[string]string, error)
 }
 
-// EnvTemplate defines a method to load environment variables from a
-// file of key: value statements, separated by newlines and optionally
-// containing template syntax to inject secrets into.
-type EnvTemplate struct {
+// Env describes a set of key value pairs.
+//
+// The file can be formatted as `key: value` or `key=value` pairs.
+// Secrets can be injected into the values by using the template syntax.
+type Env struct {
+	raw      string
 	Template *tpl.Template
 }
 
-// NewEnvTemplate parses a raw string template.
-func NewEnvTemplate(raw string) (*EnvTemplate, error) {
+// NewEnv loads an environment of key-value pairs from a string.
+// The format of the string can be `key: value` or `key=value` pairs.
+func NewEnv(raw string) (*Env, error) {
 	template, err := tpl.New(raw)
 	if err != nil {
 		return nil, err
 	}
 
-	return &EnvTemplate{
+	return &Env{
+		raw:      raw,
 		Template: template,
 	}, nil
 }
 
 // Secrets returns the secret paths contained in the template.
-func (tpl EnvTemplate) Secrets() []api.SecretPath {
-	return tpl.Template.Secrets
+func (e Env) Secrets() []api.SecretPath {
+	return e.Template.Secrets
 }
 
 // Env returns a map of environment key value pairs, with the given secrets
 // set to their corresponding value.
-func (tpl EnvTemplate) Env(secrets map[api.SecretPath][]byte) (map[string]string, error) {
-	raw, err := tpl.Template.Inject(secrets)
-	if err != nil {
-		return nil, errio.Error(err)
+func (e Env) Env(secrets map[api.SecretPath][]byte) (map[string]string, error) {
+	// key: value
+	yml := make(map[string]string)
+	err := yaml.Unmarshal([]byte(e.raw), yml)
+	if err == nil {
+		injected, err := e.Template.Inject(secrets)
+		if err != nil {
+			return nil, errio.Error(err)
+		}
+
+		return parseYMLEnvFile(injected)
 	}
 
-	return parseYMLEnvFile(raw)
+	// key=value
+	result := make(map[string]string)
+	scanner := bufio.NewScanner(strings.NewReader(e.raw))
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			return nil, ErrEnvFileFormat("")
+		}
+		key := parts[0]
+		value := parts[1]
+		t, err := tpl.New(value)
+		if err != nil {
+			return nil, ErrEnvFileFormat(err)
+		}
+		injected, err := t.Inject(secrets)
+		if err != nil {
+			return nil, err
+		}
+		result[key] = injected
+	}
+	return result, nil
 }
 
 // parseYMLEnvFile parses an environment file with key: value statements,

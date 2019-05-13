@@ -266,7 +266,7 @@ type EnvSource interface {
 }
 
 // EnvTemplate defines a method to load environment variables from a
-// file of key=value statements, separated by newlines and optionally
+// file of key: value statements, separated by newlines and optionally
 // containing template syntax to inject secrets into.
 type EnvTemplate struct {
 	Template *tpl.Template
@@ -300,7 +300,7 @@ func (tpl EnvTemplate) Env(secrets map[api.SecretPath][]byte) (map[string]string
 	return parseEnvFile(raw)
 }
 
-// parseEnvFile parses an environment file with key=value statements,
+// parseEnvFile parses an environment file with key: value statements,
 // separated by a newline.
 func parseEnvFile(raw string) (map[string]string, error) {
 	result := make(map[string]string)

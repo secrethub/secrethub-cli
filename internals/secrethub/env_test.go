@@ -86,7 +86,7 @@ func TestParseEnvFile(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Act
-			actual, err := parseEnvFile(tc.in)
+			actual, err := parseYMLEnvFile(tc.in)
 
 			// Assert
 			if tc.errcheck != nil {

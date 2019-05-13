@@ -297,12 +297,12 @@ func (tpl EnvTemplate) Env(secrets map[api.SecretPath][]byte) (map[string]string
 		return nil, errio.Error(err)
 	}
 
-	return parseEnvFile(raw)
+	return parseYMLEnvFile(raw)
 }
 
-// parseEnvFile parses an environment file with key: value statements,
+// parseYMLEnvFile parses an environment file with key: value statements,
 // separated by a newline.
-func parseEnvFile(raw string) (map[string]string, error) {
+func parseYMLEnvFile(raw string) (map[string]string, error) {
 	result := make(map[string]string)
 
 	err := yaml.Unmarshal([]byte(raw), result)

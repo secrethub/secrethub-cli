@@ -58,11 +58,11 @@ func NewRunCommand(newClient newClientFunc) *RunCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RunCommand) Register(r Registerer) {
-	clause := r.Command("run", "Runs a program and passes environment variables to it, sourcing values from SecretHub.")
+	clause := r.Command("run", "Pass secrets as environment variables to a process.")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
-	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").StringVar(&cmd.env)
+	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 
 	BindAction(clause, cmd.Run)
 }

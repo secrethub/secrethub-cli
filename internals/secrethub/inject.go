@@ -45,7 +45,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 // Register adds a CommandClause and it's args and flags to a cli.App.
 // Register adds args and flags.
 func (cmd *InjectCommand) Register(r Registerer) {
-	clause := r.Command("inject", "Read a template from stdin and write to stdout with secrets injected into the template.")
+	clause := r.Command("inject", "Inject secrets into a template.")
 	clause.Flag(
 		"clip",
 		fmt.Sprintf(

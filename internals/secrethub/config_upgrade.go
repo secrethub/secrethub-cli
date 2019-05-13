@@ -24,7 +24,7 @@ func NewConfigCommand(io ui.IO, store CredentialStore) *ConfigCommand {
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *ConfigCommand) Register(r Registerer) {
-	clause := r.Command("config", "Manage your local .secrethub configuration file.")
+	clause := r.Command("config", "Manage your local configuration file.")
 	NewConfigUpgradeCommand(cmd.io, cmd.credentialStore).Register(clause)
 }
 

@@ -33,7 +33,7 @@ func (cmd *PrintEnvCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *PrintEnvCommand) Register(r Registerer) {
-	clause := r.Command("printenv", "Print debug statements about environment variables.")
+	clause := r.Command("printenv", "Print environment variables.")
 	clause.Flag("verbose", "Show all possible environment variables.").Short('v').BoolVar(&cmd.verbose)
 
 	BindAction(clause, cmd.Run)

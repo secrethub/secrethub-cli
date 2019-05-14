@@ -260,9 +260,9 @@ func NewEnv(raw string) Env {
 func (e Env) Env(client secrethub.Client) (map[string]string, error) {
 
 	// Parse key-value pairs
-	pairs, err := parseYMLPairs(e.raw)
+	pairs, err := parseEnvPairs(e.raw)
 	if err != nil {
-		pairs, err = parseEnvPairs(e.raw)
+		pairs, err = parseYMLPairs(e.raw)
 		if err != nil {
 			return nil, ErrEnvFileFormat
 		}

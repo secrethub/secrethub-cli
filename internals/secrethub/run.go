@@ -24,14 +24,14 @@ import (
 
 // Errors
 var (
-	errRun                  = errio.Namespace("read_secret")
-	ErrStartFailed          = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
-	ErrSignalFailed         = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
-	ErrReadEnvDir           = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
-	ErrReadEnvFile          = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
-	ErrEnvDirNotFound       = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
-	ErrEnvFileFormat        = errRun.Code("invalid_env_file_format").Error("template is not formatted as key=value or key: value pairs")
-	ErrEnvFileFormatSecrets = errRun.Code("invalid_env_file_format").ErrorPref("%s")
+	errRun            = errio.Namespace("read_secret")
+	ErrStartFailed    = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
+	ErrSignalFailed   = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
+	ErrReadEnvDir     = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
+	ErrReadEnvFile    = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
+	ErrEnvDirNotFound = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
+	ErrTemplate       = errRun.Code("invalid_template").ErrorPref("could not parse template: %s")
+	ErrEnvFileFormat  = errRun.Code("invalid_env_file_format").Error("template is not formatted as key=value or key: value pairs")
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -281,7 +281,7 @@ func (e Env) Env(client secrethub.Client) (map[string]string, error) {
 	for key, value := range pairs {
 		t, err := tpl.NewParser().Parse(value)
 		if err != nil {
-			return nil, ErrEnvFileFormatSecrets(err)
+			return nil, ErrTemplate(err)
 		}
 
 		secrets := make(map[string][]byte)

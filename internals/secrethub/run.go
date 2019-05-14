@@ -96,11 +96,7 @@ func (cmd *RunCommand) Run() error {
 			return ErrCannotReadFile(cmd.template, err)
 		}
 
-		tplSource, err := NewEnv(string(file))
-		if err != nil {
-			return errio.Error(err)
-		}
-
+		tplSource := NewEnv(string(file))
 		envSources = append(envSources, tplSource)
 	}
 
@@ -259,10 +255,10 @@ type Env struct {
 
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
-func NewEnv(raw string) (*Env, error) {
-	return &Env{
+func NewEnv(raw string) Env {
+	return Env{
 		raw: raw,
-	}, nil
+	}
 }
 
 // Env returns a map of environment key value pairs, with the given secrets

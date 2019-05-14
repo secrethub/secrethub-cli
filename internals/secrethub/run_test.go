@@ -70,10 +70,7 @@ func TestNewEnv(t *testing.T) {
 
 			for format, tpl := range tc.tpl {
 				t.Run(format, func(t *testing.T) {
-					env, err := NewEnv(tpl)
-					assert.OK(t, err)
-
-					actual, err := env.Env(client)
+					actual, err := NewEnv(tpl).Env(client)
 					assert.Equal(t, err, tc.err)
 
 					assert.Equal(t, actual, tc.expected)

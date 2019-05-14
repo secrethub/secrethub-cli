@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"bufio"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"os/exec"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
@@ -29,13 +30,13 @@ import (
 
 // Errors
 var (
-	errRun            = errio.Namespace("read_secret")
-	ErrStartFailed    = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
-	ErrSignalFailed   = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
-	ErrReadEnvDir     = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
-	ErrReadEnvFile    = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
-	ErrEnvDirNotFound = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
-	ErrEnvFileFormat  = errRun.Code("invalid_env_file_format").Error("template is not formatted as key=value or key: value pairs")
+	errRun                  = errio.Namespace("read_secret")
+	ErrStartFailed          = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
+	ErrSignalFailed         = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
+	ErrReadEnvDir           = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
+	ErrReadEnvFile          = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
+	ErrEnvDirNotFound       = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
+	ErrEnvFileFormat        = errRun.Code("invalid_env_file_format").Error("template is not formatted as key=value or key: value pairs")
 	ErrEnvFileFormatSecrets = errRun.Code("invalid_env_file_format").ErrorPref("%s")
 )
 
@@ -113,31 +114,15 @@ func (cmd *RunCommand) Run() error {
 		envSources = append(envSources, dirSource)
 	}
 
-	// Collect all secrets
-	secrets := make(map[api.SecretPath][]byte)
-	for _, source := range envSources {
-		for _, path := range source.Secrets() {
-			secrets[path] = []byte{}
-		}
-	}
-
 	client, err := cmd.newClient()
 	if err != nil {
 		return errio.Error(err)
 	}
 
-	for path := range secrets {
-		secret, err := client.Secrets().Versions().GetWithData(path.Value())
-		if err != nil {
-			return errio.Error(err)
-		}
-		secrets[path] = secret.Data
-	}
-
 	// Construct the environment, sourcing variables from the configured sources.
 	environment := make(map[string]string)
 	for _, source := range envSources {
-		pairs, err := source.Env(secrets)
+		pairs, err := source.Env(client)
 		if err != nil {
 			return errio.Error(err)
 		}
@@ -259,12 +244,9 @@ func parseKeyValueStringsToMap(values []string) (map[string]string, error) {
 
 // EnvSource defines a method of reading environment variables from a source.
 type EnvSource interface {
-	// Secrets returns the secrets contained in the source
-	// that need to be set to their corresponding value.
-	Secrets() []api.SecretPath
 	// Env returns a map of key value pairs, with the given secrets
 	// set to their corresponding value.
-	Env(secrets map[api.SecretPath][]byte) (map[string]string, error)
+	Env(client secrethub.Client) (map[string]string, error)
 }
 
 // Env describes a set of key value pairs.
@@ -272,86 +254,83 @@ type EnvSource interface {
 // The file can be formatted as `key: value` or `key=value` pairs.
 // Secrets can be injected into the values by using the template syntax.
 type Env struct {
-	raw      string
-	Template *tpl.Template
+	raw string
 }
 
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
 func NewEnv(raw string) (*Env, error) {
-	template, err := tpl.New(raw)
-	if err != nil {
-		return nil, err
-	}
-
 	return &Env{
-		raw:      raw,
-		Template: template,
+		raw: raw,
 	}, nil
-}
-
-// Secrets returns the secret paths contained in the template.
-func (e Env) Secrets() []api.SecretPath {
-	return e.Template.Secrets
 }
 
 // Env returns a map of environment key value pairs, with the given secrets
 // set to their corresponding value.
-func (e Env) Env(secrets map[api.SecretPath][]byte) (map[string]string, error) {
-	// key: value
-	yml := make(map[string]string)
-	err := yaml.Unmarshal([]byte(e.raw), yml)
-	if err == nil {
-		injected, err := e.Template.Inject(secrets)
+func (e Env) Env(client secrethub.Client) (map[string]string, error) {
+
+	// Parse key-value pairs
+	pairs, err := parseYMLPairs(e.raw)
+	if err != nil {
+		pairs, err = parseEnvPairs(e.raw)
 		if err != nil {
-			return nil, errio.Error(err)
-		}
-
-		return parseYMLEnvFile(injected)
-	}
-
-	// key=value
-	result := make(map[string]string)
-	scanner := bufio.NewScanner(strings.NewReader(e.raw))
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
 			return nil, ErrEnvFileFormat
 		}
-		key := parts[0]
-		value := parts[1]
+	}
+
+	// Validate keys
+	for key := range pairs {
+		err := validation.ValidateEnvarName(key)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Inject secrets into values
+	result := make(map[string]string)
+	for key, value := range pairs {
 		t, err := tpl.New(value)
 		if err != nil {
 			return nil, ErrEnvFileFormatSecrets(err)
 		}
+
+		secrets := make(map[api.SecretPath][]byte)
+		for _, path := range t.Secrets {
+			secret, err := client.Secrets().Versions().GetWithData(path.Value())
+			if err != nil {
+				return nil, err
+			}
+			secrets[path] = secret.Data
+		}
+
 		injected, err := t.Inject(secrets)
 		if err != nil {
 			return nil, err
 		}
 		result[key] = injected
 	}
+
 	return result, nil
 }
 
-// parseYMLEnvFile parses an environment file with key: value statements,
-// separated by a newline.
-func parseYMLEnvFile(raw string) (map[string]string, error) {
-	result := make(map[string]string)
-
-	err := yaml.Unmarshal([]byte(raw), result)
-	if err != nil {
-		return nil, ErrEnvFileFormat
-	}
-
-	for name := range result {
-		err := validation.ValidateEnvarName(name)
-		if err != nil {
-			return nil, errio.Error(err)
+func parseEnvPairs(raw string) (map[string]string, error) {
+	pairs := make(map[string]string)
+	scanner := bufio.NewScanner(strings.NewReader(raw))
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) != 2 {
+			return nil, ErrEnvFileFormat
 		}
+		pairs[parts[0]] = parts[1]
 	}
+	return pairs, nil
+}
 
-	return result, nil
+func parseYMLPairs(raw string) (map[string]string, error) {
+	pairs := make(map[string]string)
+	err := yaml.Unmarshal([]byte(raw), pairs)
+	return pairs, err
 }
 
 // EnvDir defines environment variables sourced from files in a directory.
@@ -388,60 +367,41 @@ func NewEnvDir(path string) (EnvDir, error) {
 	return env, nil
 }
 
-// Secrets returns the secrets that need to be set to their
-// corresponding value. Because the env dir can only contain
-// values, this returns an empty slice.
-func (dir EnvDir) Secrets() []api.SecretPath {
-	return []api.SecretPath{}
-}
-
 // Env returns a map of environment variables sourced from the directory.
-func (dir EnvDir) Env(secrets map[api.SecretPath][]byte) (map[string]string, error) {
+func (dir EnvDir) Env(client secrethub.Client) (map[string]string, error) {
 	return dir, nil
 }
 
 // EnvFlags defines environment variables sourced from command-line flags.
-type EnvFlags map[string]api.SecretPath
+type EnvFlags map[string]string
 
 // NewEnvFlags parses a map of flag values.
 func NewEnvFlags(flags map[string]string) (EnvFlags, error) {
-	result := make(map[string]api.SecretPath)
-
 	for name, path := range flags {
 		err := validation.ValidateEnvarName(name)
 		if err != nil {
 			return nil, errio.Error(err)
 		}
 
-		secretPath, err := api.NewSecretPath(path)
+		err = api.ValidateSecretPath(path)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
-
-		result[name] = secretPath
 	}
 
-	return result, nil
-}
-
-// Secrets returns the secrets contained in the source
-// that need to be set to their corresponding value.
-func (ef EnvFlags) Secrets() []api.SecretPath {
-	secrets := make([]api.SecretPath, len(ef))
-	i := 0
-	for _, path := range ef {
-		secrets[i] = path
-		i++
-	}
-	return secrets
+	return flags, nil
 }
 
 // Env returns a map of environment variables sourced from
 // command-line flags and set to their corresponding value.
-func (ef EnvFlags) Env(secrets map[api.SecretPath][]byte) (map[string]string, error) {
+func (ef EnvFlags) Env(client secrethub.Client) (map[string]string, error) {
 	result := make(map[string]string)
 	for name, path := range ef {
-		result[name] = string(secrets[path])
+		secret, err := client.Secrets().Versions().GetWithData(path)
+		if err != nil {
+			return nil, err
+		}
+		result[name] = string(secret.Data)
 	}
 	return result, nil
 }

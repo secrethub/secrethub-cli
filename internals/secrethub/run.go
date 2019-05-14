@@ -42,7 +42,7 @@ var (
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
 	command   []string
-	envar     map[string]string
+	envvar    map[string]string
 	template  string
 	env       string
 	newClient newClientFunc
@@ -51,7 +51,7 @@ type RunCommand struct {
 // NewRunCommand creates a new RunCommand.
 func NewRunCommand(newClient newClientFunc) *RunCommand {
 	return &RunCommand{
-		envar:     make(map[string]string),
+		envvar:    make(map[string]string),
 		newClient: newClient,
 	}
 }
@@ -60,8 +60,8 @@ func NewRunCommand(newClient newClientFunc) *RunCommand {
 func (cmd *RunCommand) Register(r Registerer) {
 	clause := r.Command("run", "Pass secrets as environment variables to a process.")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
-	clause.Flag("var", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
-	clause.Flag("envar", "").Hidden().StringMapVar(&cmd.envar)
+	clause.Flag("var", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envvar)
+	clause.Flag("envar", "").Hidden().StringMapVar(&cmd.envvar)
 	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 
@@ -75,7 +75,7 @@ func (cmd *RunCommand) Run() error {
 	envSources := []EnvSource{}
 
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
-	flagSource, err := NewEnvFlags(cmd.envar)
+	flagSource, err := NewEnvFlags(cmd.envvar)
 	if err != nil {
 		return errio.Error(err)
 	}

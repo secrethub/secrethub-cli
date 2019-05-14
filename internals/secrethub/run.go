@@ -35,7 +35,8 @@ var (
 	ErrReadEnvDir     = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
 	ErrReadEnvFile    = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
 	ErrEnvDirNotFound = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
-	ErrEnvFileFormat  = errRun.Code("invalid_env_file_format").ErrorPref("env-file templates must be a valid yaml file with a map of string key and value pairs: %v")
+	ErrEnvFileFormat  = errRun.Code("invalid_env_file_format").Error("template is not formatted as key=value or key: value pairs")
+	ErrEnvFileFormatSecrets = errRun.Code("invalid_env_file_format").ErrorPref("%s")
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -316,13 +317,13 @@ func (e Env) Env(secrets map[api.SecretPath][]byte) (map[string]string, error) {
 		line := scanner.Text()
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
-			return nil, ErrEnvFileFormat("")
+			return nil, ErrEnvFileFormat
 		}
 		key := parts[0]
 		value := parts[1]
 		t, err := tpl.New(value)
 		if err != nil {
-			return nil, ErrEnvFileFormat(err)
+			return nil, ErrEnvFileFormatSecrets(err)
 		}
 		injected, err := t.Inject(secrets)
 		if err != nil {
@@ -340,7 +341,7 @@ func parseYMLEnvFile(raw string) (map[string]string, error) {
 
 	err := yaml.Unmarshal([]byte(raw), result)
 	if err != nil {
-		return nil, ErrEnvFileFormat(err)
+		return nil, ErrEnvFileFormat
 	}
 
 	for name := range result {

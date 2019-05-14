@@ -38,7 +38,7 @@ var (
 )
 
 // RunCommand runs a program and passes environment variables to it that are
-// defined with --envar or --template flags and secrets.yml files.
+// defined with --var or --template flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
 	command   []string
@@ -60,7 +60,8 @@ func NewRunCommand(newClient newClientFunc) *RunCommand {
 func (cmd *RunCommand) Register(r Registerer) {
 	clause := r.Command("run", "Pass secrets as environment variables to a process.")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
-	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
+	clause.Flag("var", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
+	clause.Flag("envar", "").Hidden().StringMapVar(&cmd.envar)
 	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 

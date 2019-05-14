@@ -1,10 +1,7 @@
 package secrethub
 
 import (
-	"strings"
 	"testing"
-
-	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
@@ -44,9 +41,7 @@ func TestParseEnvFile(t *testing.T) {
 			expected: nil,
 			errcheck: func(t *testing.T, err error) {
 				t.Helper()
-				if !strings.Contains(err.Error(), "yaml: unmarshal errors:") {
-					t.Errorf("unexpected error: %v (actual) != yaml: unmarshal errors (expected)", err)
-				}
+				assert.Equal(t, err, ErrTemplate(1, "template is not formatted as key=value pairs"))
 			},
 		},
 		"multiline": {
@@ -76,9 +71,9 @@ func TestParseEnvFile(t *testing.T) {
 			},
 		},
 		"invalid_name": {
-			in: "FOO=: bar",
+			in: "FOO\000: bar",
 			errcheck: func(t *testing.T, err error) {
-				assert.Equal(t, err, validation.ErrInvalidEnvarName("FOO="))
+				assert.Equal(t, err, ErrTemplate(1, "template is not formatted as key=value pairs"))
 			},
 		},
 	}
@@ -86,7 +81,7 @@ func TestParseEnvFile(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Act
-			actual, err := parseYMLPairs(tc.in)
+			actual, err := NewEnv(tc.in).Env(nil)
 
 			// Assert
 			if tc.errcheck != nil {

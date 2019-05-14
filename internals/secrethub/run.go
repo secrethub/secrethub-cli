@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -30,8 +31,7 @@ var (
 	ErrReadEnvDir     = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
 	ErrReadEnvFile    = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
 	ErrEnvDirNotFound = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
-	ErrTemplate       = errRun.Code("invalid_template").ErrorPref("could not parse template: %s")
-	ErrEnvFileFormat  = errRun.Code("invalid_env_file_format").Error("template is not formatted as key=value or key: value pairs")
+	ErrTemplate       = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -234,9 +234,33 @@ func parseKeyValueStringsToMap(values []string) (map[string]string, error) {
 
 // EnvSource defines a method of reading environment variables from a source.
 type EnvSource interface {
-	// Env returns a map of key value pairs, with the given secrets
-	// set to their corresponding value.
+	// Env returns a map of key value pairs.
 	Env(client secrethub.Client) (map[string]string, error)
+}
+
+type envTemplate struct {
+	vars map[string]tpl.Template
+}
+
+func (t envTemplate) env(client secrethub.Client) (map[string]string, error) {
+	result := make(map[string]string)
+	for key, template := range t.vars {
+		secrets := make(map[string][]byte)
+		for _, path := range template.Secrets() {
+			secret, err := client.Secrets().Versions().GetWithData(path)
+			if err != nil {
+				return nil, err
+			}
+			secrets[path] = secret.Data
+		}
+
+		value, err := template.Inject(secrets)
+		if err != nil {
+			return nil, err
+		}
+		result[key] = value
+	}
+	return result, nil
 }
 
 // Env describes a set of key value pairs.
@@ -255,72 +279,79 @@ func NewEnv(raw string) Env {
 	}
 }
 
-// Env returns a map of environment key value pairs, with the given secrets
-// set to their corresponding value.
 func (e Env) Env(client secrethub.Client) (map[string]string, error) {
-
-	// Parse key-value pairs
-	pairs, err := parseEnvPairs(e.raw)
+	template, err := parseEnv(e.raw)
 	if err != nil {
-		pairs, err = parseYMLPairs(e.raw)
-		if err != nil {
-			return nil, ErrEnvFileFormat
-		}
-	}
-
-	// Validate keys
-	for key := range pairs {
-		err := validation.ValidateEnvarName(key)
-		if err != nil {
+		template, ymlErr := parseYML(e.raw)
+		if ymlErr != nil {
 			return nil, err
 		}
+		return template.env(client)
 	}
-
-	// Inject secrets into values
-	result := make(map[string]string)
-	for key, value := range pairs {
-		t, err := tpl.NewParser().Parse(value)
-		if err != nil {
-			return nil, ErrTemplate(err)
-		}
-
-		secrets := make(map[string][]byte)
-		for _, path := range t.Secrets() {
-			secret, err := client.Secrets().Versions().GetWithData(path)
-			if err != nil {
-				return nil, err
-			}
-			secrets[path] = secret.Data
-		}
-
-		injected, err := t.Inject(secrets)
-		if err != nil {
-			return nil, err
-		}
-		result[key] = injected
-	}
-
-	return result, nil
+	return template.env(client)
 }
 
-func parseEnvPairs(raw string) (map[string]string, error) {
-	pairs := make(map[string]string)
+func parseEnv(raw string) (envTemplate, error) {
+	vars := map[string]tpl.Template{}
+	tplParser := tpl.NewParser()
 	scanner := bufio.NewScanner(strings.NewReader(raw))
+
+	i := 1
 	for scanner.Scan() {
 		line := scanner.Text()
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
-			return nil, ErrEnvFileFormat
+			return envTemplate{}, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
-		pairs[parts[0]] = parts[1]
+
+		key := parts[0]
+		value := parts[1]
+
+		t, err := tplParser.Parse(value)
+		if err != nil {
+			return envTemplate{}, ErrTemplate(i, err)
+		}
+
+		err = validation.ValidateEnvarName(key)
+		if err != nil {
+			return envTemplate{}, ErrTemplate(i, err)
+		}
+
+		vars[key] = t
+		i++
 	}
-	return pairs, nil
+
+	return envTemplate{
+		vars: vars,
+	}, nil
 }
 
-func parseYMLPairs(raw string) (map[string]string, error) {
+func parseYML(raw string) (envTemplate, error) {
 	pairs := make(map[string]string)
 	err := yaml.Unmarshal([]byte(raw), pairs)
-	return pairs, err
+	if err != nil {
+		return envTemplate{}, err
+	}
+
+	tplParser := tpl.NewParser()
+
+	vars := map[string]tpl.Template{}
+	for key, value := range pairs {
+		err = validation.ValidateEnvarName(key)
+		if err != nil {
+			return envTemplate{}, err
+		}
+
+		t, err := tplParser.Parse(value)
+		if err != nil {
+			return envTemplate{}, err
+		}
+		vars[key] = t
+	}
+
+	return envTemplate{
+		vars: vars,
+	}, nil
 }
 
 // EnvDir defines environment variables sourced from files in a directory.

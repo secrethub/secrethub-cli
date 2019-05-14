@@ -189,7 +189,7 @@ func (cmd *RunCommand) Run() error {
 		select {
 		case s := <-signals:
 			err := command.Process.Signal(s)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "process already finished") {
 				fmt.Fprintln(os.Stderr, ErrSignalFailed(err))
 			}
 		case <-done:

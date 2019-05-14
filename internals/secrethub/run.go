@@ -24,7 +24,7 @@ import (
 
 // Errors
 var (
-	errRun            = errio.Namespace("read_secret")
+	errRun            = errio.Namespace("run")
 	ErrStartFailed    = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
 	ErrSignalFailed   = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
 	ErrReadEnvDir     = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")

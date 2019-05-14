@@ -74,7 +74,7 @@ func TestInjectSetClear(t *testing.T) {
 		t.Fatalf("cannot initialize Presenter: %s", err)
 	}
 
-	expected := map[api.SecretPath]api.SecretVersion{
+	expected := map[string]api.SecretVersion{
 		"danny/example-repo/test_secret":  testSecret1,
 		"danny/example-repo/test_secret2": testSecret2,
 	}

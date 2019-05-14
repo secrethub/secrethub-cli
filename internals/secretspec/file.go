@@ -54,7 +54,7 @@ func (p FileParser) Parse(rootPath string, allowMountAnywhere bool, config map[s
 		}
 	}
 
-	file, err := newFile(api.SecretPath(source), target, filemode)
+	file, err := newFile(source, target, filemode)
 	if err != nil {
 		return nil, errio.Error(err)
 	}
@@ -69,7 +69,7 @@ func (p FileParser) Parse(rootPath string, allowMountAnywhere bool, config map[s
 
 // file implements a Consumable written to a file.
 type file struct {
-	source   api.SecretPath
+	source   string
 	target   string
 	filemode os.FileMode
 }
@@ -77,14 +77,14 @@ type file struct {
 // newFile creates a new file consumable and sets default values.
 // When target is empty, it defaults to the source name. When
 // filemode is empty, it defaults to the DefaultFileMode.
-func newFile(source api.SecretPath, target string, filemode os.FileMode) (*file, error) {
-	err := source.Validate()
+func newFile(source string, target string, filemode os.FileMode) (*file, error) {
+	err := api.ValidateSecretPath(source)
 	if err != nil {
 		return nil, ErrInvalidSourcePath(err)
 	}
 
 	if target == "" {
-		target = source.GetSecret()
+		target = api.SecretPath(source).GetSecret()
 	}
 
 	if filemode == 0 {
@@ -110,7 +110,7 @@ func (f *file) createTarget(rootPath string, allowMountAnywhere bool) error {
 
 // Set writes the contents of a matching secret in the given map to
 // the file.
-func (f *file) Set(secrets map[api.SecretPath]api.SecretVersion) error {
+func (f *file) Set(secrets map[string]api.SecretVersion) error {
 	log.Debugf("setting file: %s (source) => %s (target)", f.source, f.target)
 	version, found := secrets[f.source]
 	if !found {
@@ -145,8 +145,8 @@ func (f *file) String() string {
 }
 
 // Sources returns the full path of the secret from which the consumable is sourced.
-func (f *file) Sources() map[api.SecretPath]struct{} {
-	sources := make(map[api.SecretPath]struct{})
+func (f *file) Sources() map[string]struct{} {
+	sources := make(map[string]struct{})
 	sources[f.source] = struct{}{}
 	return sources
 }

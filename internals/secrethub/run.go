@@ -2,30 +2,24 @@ package secrethub
 
 import (
 	"bufio"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
-	"os/exec"
-
-	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-
-	"github.com/secrethub/secrethub-cli/internals/tpl"
-	"github.com/secrethub/secrethub-go/internals/api"
-	yaml "gopkg.in/yaml.v2"
-
-	"os"
-
-	"syscall"
-
-	"os/signal"
-
-	"strings"
-
 	"fmt"
 	"io/ioutil"
-
+	"os"
+	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"strings"
+	"syscall"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secretspec"
+	"github.com/secrethub/secrethub-cli/internals/tpl"
+
+	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Errors
@@ -285,14 +279,14 @@ func (e Env) Env(client secrethub.Client) (map[string]string, error) {
 	// Inject secrets into values
 	result := make(map[string]string)
 	for key, value := range pairs {
-		t, err := tpl.New(value)
+		t, err := tpl.NewParser().Parse(value)
 		if err != nil {
 			return nil, ErrEnvFileFormatSecrets(err)
 		}
 
-		secrets := make(map[api.SecretPath][]byte)
-		for _, path := range t.Secrets {
-			secret, err := client.Secrets().Versions().GetWithData(path.Value())
+		secrets := make(map[string][]byte)
+		for _, path := range t.Secrets() {
+			secret, err := client.Secrets().Versions().GetWithData(path)
 			if err != nil {
 				return nil, err
 			}

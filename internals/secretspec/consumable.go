@@ -53,11 +53,11 @@ var (
 // Consumable is a secret that can be consumed by a process in an environment.
 type Consumable interface {
 	// Set sets the consumable to any matching secrets.
-	Set(secrets map[api.SecretPath]api.SecretVersion) error
+	Set(secrets map[string]api.SecretVersion) error
 	// Clear clears the consumable of any content.
 	Clear() error
 	// Sources returns a set of full paths of the secrets corresponding to the consumable.
-	Sources() map[api.SecretPath]struct{}
+	Sources() map[string]struct{}
 	// Equals returns whether to Consumables have the same target. This can be used to check whether they can exist in the same spec.
 	Equals(consumable Consumable) bool
 	String() string
@@ -159,7 +159,7 @@ func (p *Presenter) parse(config Spec) (Consumable, error) {
 }
 
 // Set sets all consumables that correspond to the given secrets.
-func (p *Presenter) Set(secrets map[api.SecretPath]api.SecretVersion) error {
+func (p *Presenter) Set(secrets map[string]api.SecretVersion) error {
 	for _, consumable := range p.consumables {
 		err := consumable.Set(secrets)
 		if err != nil {
@@ -171,8 +171,8 @@ func (p *Presenter) Set(secrets map[api.SecretPath]api.SecretVersion) error {
 }
 
 // Sources returns the full paths of all secrets sourced within the presenter.
-func (p *Presenter) Sources() map[api.SecretPath]struct{} {
-	total := make(map[api.SecretPath]struct{})
+func (p *Presenter) Sources() map[string]struct{} {
+	total := make(map[string]struct{})
 	for _, consumable := range p.consumables {
 		for source := range consumable.Sources() {
 			total[source] = struct{}{}

@@ -78,9 +78,9 @@ func (cmd *SetCommand) Run() error {
 		fmt.Fprintf(cmd.io.Stdout(), "Warning: %s contains no secret declarations.\n", c)
 	}
 
-	secrets := make(map[api.SecretPath]api.SecretVersion)
+	secrets := make(map[string]api.SecretVersion)
 	for path := range paths {
-		secret, err := client.Secrets().Versions().GetWithData(path.Value())
+		secret, err := client.Secrets().Versions().GetWithData(path)
 		if err != nil {
 			return errio.Error(err)
 		}

@@ -1,10 +1,11 @@
 package secrethub
 
 import (
+	"testing"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
-	"testing"
 )
 
 func TestNewEnv(t *testing.T) {

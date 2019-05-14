@@ -10,9 +10,10 @@ import (
 
 // Errors
 var (
-	errInject         = errio.Namespace("inject")
-	ErrParseFailed    = errInject.Code("parse_failed").ErrorPref("failed to parse contents: %v")
-	ErrSecretNotFound = errInject.Code("secret_not_found").ErrorPref("no secret found to inject for path %s")
+	errInject               = errio.Namespace("inject")
+	ErrSecretNotFound       = errInject.Code("secret_not_found").ErrorPref("no secret found to inject for path %s")
+	ErrReplacementNotClosed = errInject.Code("replacement_not_closed").ErrorPref("missing closing '%s'")
+	ErrReplacementNotOpened = errInject.Code("replacement_not_opened").ErrorPref("missing opening '%s'")
 )
 
 const (
@@ -24,171 +25,137 @@ const (
 	DefaultTrimChars = " "
 )
 
-var (
-	// defaultDelimiters contain the default delimiters for injection.
-	defaultDelimiters = delimiters{
-		start:     DefaultStartDelimiter,
-		end:       DefaultEndDelimiter,
-		trimChars: DefaultTrimChars,
-	}
-)
-
-// Template helps with injecting values into strings that contain the template syntax.
-type Template struct {
-	Raw     string
-	Secrets []api.SecretPath
-
-	delimiters delimiters
+// Parser parses a raw string into a template.
+type Parser interface {
+	Parse(raw string) (Template, error)
 }
 
-// New creates a new template and parses it.
-func New(raw string) (*Template, error) {
-	tpl := &Template{
-		Raw:        raw,
-		delimiters: defaultDelimiters,
+type parser struct {
+	startDelim string
+	endDelim   string
+	trimChars  string
+}
+
+// Template helps with injecting values into strings that contain the template syntax.
+type Template interface {
+	Inject(secrets map[string][]byte) (string, error)
+	Secrets() []string
+}
+
+type template struct {
+	nodes []node
+}
+
+// NewParser creates a new template parser.
+func NewParser() Parser {
+	return parser{
+		startDelim: DefaultStartDelimiter,
+		endDelim:   DefaultEndDelimiter,
+		trimChars:  DefaultTrimChars,
 	}
-
-	secrets, err := parse(tpl.Raw, tpl.delimiters)
-
-	if err != nil {
-		return nil, errio.Error(err)
-	}
-
-	tpl.Secrets = secrets
-	return tpl, nil
 }
 
 // Inject inserts the given secrets at their corresponding places in
 // the raw template and returns the injected template.
-func (t *Template) Inject(secrets map[api.SecretPath][]byte) (string, error) {
-	return injectRecursive(t.Raw, t.delimiters, secrets)
-}
-
-// parse is a recursive helper function that parses a string to a list of SecretPaths contained between inject delimiters.
-func parse(raw string, delims delimiters) ([]api.SecretPath, error) {
-	// Find the first occurrence of the start delimiter and the first occurrence of the end delimiter thereafter.
-	start, end := delims.find(raw)
-	if end == 0 {
-		return nil, nil
-	}
-
-	// The text from the start delimiter til the end delimiter (including both delimiters themselves).
-	rawPath := raw[start:end]
-
-	var paths []api.SecretPath
-	path, err := delims.parsePath(rawPath)
-	if err != nil {
-		// Not a valid SecretPath between delimiters.
-		// So parse again, starting after the currently used start delimiter.
-		paths, err = parse(raw[start+len(delims.start):], delims)
-		if err != nil {
-			return nil, err
-		}
-
-	} else {
-		paths, err = parse(raw[end:], delims)
-		if err != nil {
-			return nil, err
-		}
-
-		// Eliminate duplicates
-		duplicate := false
-		for _, p := range paths {
-			if p == path {
-				duplicate = true
-				break
-			}
-		}
-
-		if !duplicate {
-			paths = append([]api.SecretPath{path}, paths...)
-		}
-	}
-
-	return paths, nil
-}
-
-// injectRecursive is a helper function to recursively inject secrets into strings.
-func injectRecursive(raw string, delims delimiters, secrets map[api.SecretPath][]byte) (string, error) {
-
-	// Find the first occurrence of the start delimiter and the first occurrence of the end delimiter thereafter.
-	start, end := delims.find(raw)
-	if end == 0 {
-		return raw, nil
-	}
-
-	// The text from the start delimiter til the end delimiter (including both delimiters themselves).
-	rawPath := raw[start:end]
-
-	path, err := delims.parsePath(rawPath)
-	if err != nil {
-		// Not a valid SecretPath between delimiters.
-		// So parse again, starting after the currently used start delimiter.
-		res, err := injectRecursive(raw[start+len(delims.start):], delims, secrets)
+func (t template) Inject(secrets map[string][]byte) (string, error) {
+	res := ""
+	for _, n := range t.nodes {
+		injected, err := n.inject(secrets)
 		if err != nil {
 			return "", err
 		}
+		res += injected
+	}
+	return res, nil
+}
 
-		return raw[:start] + delims.start + res, nil
+// Secrets returns the paths of all secrets the template contains.
+func (t template) Secrets() []string {
+	set := map[string]bool{}
+	for _, n := range t.nodes {
+		s, ok := n.(secret)
+		if ok {
+			set[string(s)] = true
+		}
 	}
 
-	// Path between delimiters is valid, so add it to the the list.
-	secret, ok := secrets[path]
+	res := make([]string, len(set))
+	i := 0
+	for s := range set {
+		res[i] = s
+		i++
+	}
+	return res
+}
+
+// node is a part of the template, either a plain text value or
+// a path to a secret.
+type node interface {
+	inject(secrets map[string][]byte) (string, error)
+}
+
+type val string
+
+func (v val) inject(map[string][]byte) (string, error) {
+	return string(v), nil
+}
+
+type secret string
+
+func (s secret) inject(secrets map[string][]byte) (string, error) {
+	data, ok := secrets[string(s)]
 	if !ok {
-		return "", ErrSecretNotFound(path)
+		return "", ErrSecretNotFound(s)
 	}
+	return string(data), nil
+}
 
-	// Continue parsing after the end delimiter.
-	res, err := injectRecursive(raw[end:], delims, secrets)
+func (p parser) Parse(raw string) (Template, error) {
+	nodes, err := p.parse(raw)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	injected := raw[:start] + string(secret) + res
-	return injected, nil
-
+	return template{
+		nodes: nodes,
+	}, nil
 }
 
-// delimiters is able to find segments of text between the configured delimiters.
-type delimiters struct {
-	start     string
-	end       string
-	trimChars string
-}
-
-// find finds the first occurrence of the start delimiter in the text
-// and the first occurrence of the end delimiter after that.
-// If not both can be found, both returns values are 0.
-func (d delimiters) find(raw string) (int, int) {
-	// Find the first occurrence of the first start delimiter.
-	start := strings.Index(raw, d.start)
-	if start < 0 {
-		return 0, 0
+// parse is a recursive helper function that parses a string to a list of SecretPaths contained between inject delimiters.
+func (p parser) parse(raw string) ([]node, error) {
+	parts := strings.SplitN(raw, p.startDelim, 2)
+	if len(parts) == 1 {
+		if strings.Contains(parts[0], p.endDelim) {
+			return nil, ErrReplacementNotOpened(p.startDelim)
+		}
+		return []node{val(parts[0])}, nil
+	}
+	if len(parts[0]) > 0 {
+		if strings.Contains(parts[0], p.endDelim) {
+			return nil, ErrReplacementNotOpened(p.startDelim)
+		}
+		tail, err := p.parse(p.startDelim + parts[1])
+		if err != nil {
+			return nil, err
+		}
+		return append([]node{val(parts[0])}, tail...), nil
 	}
 
-	// Find the first occurrence of the end delimiter.
-	length := strings.Index(raw[start:], d.end) + 1
-	if length < len(d.start)+len(d.end) {
-		return 0, 0
+	parts = strings.SplitN(parts[1], p.endDelim, 2)
+	if len(parts) == 1 {
+		return nil, ErrReplacementNotClosed(p.endDelim)
 	}
 
-	end := start + length
+	path := strings.Trim(parts[0], p.trimChars)
 
-	return start, end
-}
-
-// parsePath is a helper function to parse an api.SecretPath
-// The start and end delimiters should be included in the passed string.
-func (d delimiters) parsePath(raw string) (api.SecretPath, error) {
-	// Make sure we don't go out of bounds on the slice.
-	// This path should not be reached when parsePath is used correctly.
-	if len(d.start) > len(raw)-len(d.end) {
-		return api.SecretPath(""), ErrParseFailed(raw)
+	err := api.ValidateSecretPath(path)
+	if err != nil {
+		return nil, err
 	}
 
-	// Trim ${ and }
-	raw = raw[len(d.start) : len(raw)-len(d.end)]
-	// Trim spaces
-	raw = strings.Trim(raw, d.trimChars)
-	return api.NewSecretPath(raw)
+	tail, err := p.parse(parts[1])
+	if err != nil {
+		return nil, err
+	}
+
+	return append([]node{secret(path)}, tail...), nil
 }

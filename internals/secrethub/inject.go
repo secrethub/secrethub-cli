@@ -13,11 +13,10 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/tpl"
 
-	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
-	units "github.com/docker/go-units"
+	"github.com/docker/go-units"
 )
 
 // InjectCommand is a command to read a secret.
@@ -77,23 +76,24 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	tpl, err := tpl.New(string(raw))
+	tpl, err := tpl.NewParser().Parse(string(raw))
 	if err != nil {
 		return errio.Error(err)
 	}
 
-	secrets := make(map[api.SecretPath][]byte)
+	secrets := make(map[string][]byte)
 
 	var client secrethub.Client
-	if len(tpl.Secrets) > 0 {
+	secretPaths := tpl.Secrets()
+	if len(secretPaths) > 0 {
 		client, err = cmd.newClient()
 		if err != nil {
 			return errio.Error(err)
 		}
 	}
 
-	for _, path := range tpl.Secrets {
-		secret, err := client.Secrets().Versions().GetWithData(path.Value())
+	for _, path := range secretPaths {
+		secret, err := client.Secrets().Versions().GetWithData(path)
 		if err != nil {
 			return errio.Error(err)
 		}

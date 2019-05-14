@@ -10,10 +10,10 @@ import (
 
 // Errors
 var (
-	errInject               = errio.Namespace("inject")
-	ErrSecretNotFound       = errInject.Code("secret_not_found").ErrorPref("no secret found to inject for path %s")
-	ErrReplacementNotClosed = errInject.Code("replacement_not_closed").ErrorPref("missing closing '%s'")
-	ErrReplacementNotOpened = errInject.Code("replacement_not_opened").ErrorPref("missing opening '%s'")
+	errTemplate             = errio.Namespace("template")
+	ErrSecretNotFound       = errTemplate.Code("secret_not_found").ErrorPref("no secret found to inject for path %s")
+	ErrReplacementNotClosed = errTemplate.Code("replacement_not_closed").ErrorPref("missing closing '%s'")
+	ErrReplacementNotOpened = errTemplate.Code("replacement_not_opened").ErrorPref("missing opening '%s'")
 )
 
 const (

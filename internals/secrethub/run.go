@@ -32,6 +32,7 @@ var (
 	ErrReadEnvFile    = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
 	ErrEnvDirNotFound = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
 	ErrTemplate       = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
+	ErrTemplateFile   = errRun.Code("invalid_template_file").ErrorPref("template file '%s' is invalid: %s")
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -85,12 +86,10 @@ func (cmd *RunCommand) Run() error {
 	}
 
 	if cmd.template != "" {
-		file, err := ioutil.ReadFile(cmd.template)
+		tplSource, err := NewEnvFile(cmd.template)
 		if err != nil {
-			return ErrCannotReadFile(cmd.template, err)
+			return err
 		}
-
-		tplSource := NewEnv(string(file))
 		envSources = append(envSources, tplSource)
 	}
 
@@ -263,6 +262,33 @@ func (t envTemplate) env(client secrethub.Client) (map[string]string, error) {
 	return result, nil
 }
 
+// NewEnvFile returns an new environment from a file.
+func NewEnvFile(filepath string) (EnvFile, error) {
+	content, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return EnvFile{}, ErrCannotReadFile(filepath, err)
+	}
+	return EnvFile{
+		path: filepath,
+		env:  NewEnv(string(content)),
+	}, nil
+}
+
+// EnvFile contains an environment that is read from a file.
+type EnvFile struct {
+	path string
+	env  Env
+}
+
+// Env returns a map of key value pairs read from the environment file.
+func (e EnvFile) Env(client secrethub.Client) (map[string]string, error) {
+	env, err := e.env.Env(client)
+	if err != nil {
+		return nil, ErrTemplateFile(e.path, err)
+	}
+	return env, nil
+}
+
 // Env describes a set of key value pairs.
 //
 // The file can be formatted as `key: value` or `key=value` pairs.
@@ -279,6 +305,7 @@ func NewEnv(raw string) Env {
 	}
 }
 
+// Env returns a map of key value pairs read from the environment.
 func (e Env) Env(client secrethub.Client) (map[string]string, error) {
 	template, err := parseEnv(e.raw)
 	if err != nil {

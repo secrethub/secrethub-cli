@@ -2,12 +2,14 @@ package secrethub
 
 import (
 	"os/exec"
+	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 
 	"github.com/secrethub/secrethub-cli/internals/tpl"
 	"github.com/secrethub/secrethub-go/internals/api"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	"os"
 
@@ -35,6 +37,10 @@ var (
 	ErrReadEnvFile    = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
 	ErrEnvDirNotFound = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
 	ErrEnvFileFormat  = errRun.Code("invalid_env_file_format").ErrorPref("env-file templates must be a valid yaml file with a map of string key and value pairs: %v")
+)
+
+var (
+	maskString = "<redacted by SecretHub>"
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -168,11 +174,22 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
+	maskStrings := make([][]byte, len(secrets))
+	for _, val := range secrets {
+		maskStrings = append(maskStrings, val)
+	}
+
+	maskedStdOut := masker.NewMaskedWriter(os.Stdout, maskStrings, maskString, time.Millisecond*500)
+	maskedStdErr := masker.NewMaskedWriter(os.Stderr, maskStrings, maskString, time.Millisecond*500)
+
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = mapToKeyValueStrings(environment)
 	command.Stdin = os.Stdin
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
+	command.Stdout = maskedStdOut
+	command.Stderr = maskedStdErr
+
+	go maskedStdOut.Run()
+	go maskedStdErr.Run()
 
 	err = command.Start()
 	if err != nil {
@@ -198,12 +215,21 @@ func (cmd *RunCommand) Run() error {
 		}
 	}()
 
-	err = command.Wait()
+	commandErr := command.Wait()
 	done <- true
 
+	err = maskedStdOut.Flush()
 	if err != nil {
+		fmt.Println(err)
+	}
+	err = maskedStdErr.Flush()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if commandErr != nil {
 		// Check if the program exited with an error
-		exitErr, ok := err.(*exec.ExitError)
+		exitErr, ok := commandErr.(*exec.ExitError)
 		if ok {
 			waitStatus, ok := exitErr.Sys().(syscall.WaitStatus)
 			if ok {
@@ -213,7 +239,7 @@ func (cmd *RunCommand) Run() error {
 			}
 
 		}
-		return errio.Error(err)
+		return errio.Error(commandErr)
 	}
 
 	return nil

@@ -175,8 +175,10 @@ func (cmd *RunCommand) Run() error {
 	}
 
 	maskStrings := make([][]byte, len(secrets))
+	i := 0
 	for _, val := range secrets {
-		maskStrings = append(maskStrings, val)
+		maskStrings[i] = val
+		i++
 	}
 
 	maskedStdOut := masker.NewMaskedWriter(os.Stdout, maskStrings, maskString, time.Millisecond*500)

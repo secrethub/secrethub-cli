@@ -96,10 +96,10 @@ type MaskedWriter struct {
 func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout time.Duration) *MaskedWriter {
 	var lock sync.Mutex
 	matchers := make([]Matcher, len(masks))
-	for _, mask := range masks {
-		matchers = append(matchers, &sequenceMatcher{
+	for i, mask := range masks {
+		matchers[i] = &sequenceMatcher{
 			sequence: mask,
-		})
+		}
 	}
 	return &MaskedWriter{
 		w:          w,

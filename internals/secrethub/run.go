@@ -47,11 +47,13 @@ var (
 // defined with --envar or --template flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
-	command   []string
-	envar     map[string]string
-	template  string
-	env       string
-	newClient newClientFunc
+	command        []string
+	envar          map[string]string
+	template       string
+	env            string
+	noMasking      bool
+	maskingTimeout time.Duration
+	newClient      newClientFunc
 }
 
 // NewRunCommand creates a new RunCommand.
@@ -69,6 +71,8 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
+	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
+	clause.Flag("masking-timeout", "The time to wait for a partial secret that is written to stdout or stderr to be completed for masking.").Default("1s").DurationVar(&cmd.maskingTimeout)
 
 	BindAction(clause, cmd.Run)
 }
@@ -181,17 +185,22 @@ func (cmd *RunCommand) Run() error {
 		i++
 	}
 
-	maskedStdOut := masker.NewMaskedWriter(os.Stdout, maskStrings, maskString, time.Millisecond*500)
-	maskedStdErr := masker.NewMaskedWriter(os.Stderr, maskStrings, maskString, time.Millisecond*500)
+	maskedStdout := masker.NewMaskedWriter(os.Stdout, maskStrings, maskString, cmd.maskingTimeout)
+	maskedStderr := masker.NewMaskedWriter(os.Stderr, maskStrings, maskString, cmd.maskingTimeout)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = mapToKeyValueStrings(environment)
 	command.Stdin = os.Stdin
-	command.Stdout = maskedStdOut
-	command.Stderr = maskedStdErr
+	if cmd.noMasking {
+		command.Stdout = os.Stdout
+		command.Stderr = os.Stderr
+	} else {
+		command.Stdout = maskedStdout
+		command.Stderr = maskedStderr
 
-	go maskedStdOut.Run()
-	go maskedStdErr.Run()
+		go maskedStdout.Run()
+		go maskedStderr.Run()
+	}
 
 	err = command.Start()
 	if err != nil {
@@ -220,13 +229,15 @@ func (cmd *RunCommand) Run() error {
 	commandErr := command.Wait()
 	done <- true
 
-	err = maskedStdOut.Flush()
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = maskedStdErr.Flush()
-	if err != nil {
-		fmt.Println(err)
+	if !cmd.noMasking {
+		err = maskedStdout.Flush()
+		if err != nil {
+			fmt.Println(err)
+		}
+		err = maskedStderr.Flush()
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	if commandErr != nil {

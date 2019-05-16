@@ -154,7 +154,7 @@ func (mw *MaskedWriter) flushBuffer() {
 // If no new data is received on the output channel for Timeout, the output buffer is forced flushed
 // and all ongoing matches are reset.
 //
-// This should be run in a seperate goroutine.
+// This should be run in a separate goroutine.
 func (mw *MaskedWriter) Run() {
 	masking := false
 	for {

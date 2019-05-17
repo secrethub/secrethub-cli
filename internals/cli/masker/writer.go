@@ -1,3 +1,4 @@
+// Package masker provides a wrapper around an io.Writer that replaces sensitive values in its output.
 package masker
 
 import (
@@ -6,6 +7,7 @@ import (
 	"time"
 )
 
+// Matcher is an interface used by MaskedWriter to find matches of sequences to mask.
 type Matcher interface {
 	Read(byte) int
 	InProgress() bool
@@ -111,7 +113,7 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 	}
 }
 
-// Write implements implements to Write from io.Writer
+// Write implements to Write from io.Writer
 // It is responsible for finding any matches to mask and mark the appropriate bytes as masked.
 // This function never returns an error. These can instead be caught with Flush().
 func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
@@ -150,7 +152,7 @@ func (mw *MaskedWriter) flushBuffer() {
 	mw.buf = mw.buf[:0]
 }
 
-// Run writes any data processed data from the output channel to the underlying io.Writer.
+// Run writes any processed data from the output channel to the underlying io.Writer.
 // If no new data is received on the output channel for Timeout, the output buffer is forced flushed
 // and all ongoing matches are reset.
 //

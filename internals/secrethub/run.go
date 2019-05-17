@@ -39,7 +39,7 @@ var (
 	ErrEnvFileFormat  = errRun.Code("invalid_env_file_format").ErrorPref("env-file templates must be a valid yaml file with a map of string key and value pairs: %v")
 )
 
-var (
+const (
 	maskString = "<redacted by SecretHub>"
 )
 
@@ -232,11 +232,11 @@ func (cmd *RunCommand) Run() error {
 	if !cmd.noMasking {
 		err = maskedStdout.Flush()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 		}
 		err = maskedStderr.Flush()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 		}
 	}
 

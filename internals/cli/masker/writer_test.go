@@ -182,7 +182,7 @@ func TestNewMaskedWriter(t *testing.T) {
 			},
 			expected: maskString + " " + maskString + " fo",
 		},
-		"within Timeout": {
+		"within timeout": {
 			maskStrings: []string{"foo", "bar"},
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("fo"))
@@ -194,7 +194,7 @@ func TestNewMaskedWriter(t *testing.T) {
 			timeout:  &timeout20ms,
 			expected: maskString + " test",
 		},
-		"outside Timeout": {
+		"outside timeout": {
 			maskStrings: []string{"foo", "bar"},
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("fo"))

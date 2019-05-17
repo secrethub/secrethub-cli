@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// Matcher is an interface used by MaskedWriter to find matches of sequences to mask.
-type Matcher interface {
+// matcher is an interface used by MaskedWriter to find matches of sequences to mask.
+type matcher interface {
 	Read(byte) int
 	InProgress() bool
 	Reset()
@@ -76,14 +76,14 @@ type maskByte struct {
 	masked bool
 }
 
-// MaskedWriter wraps an io.Writer and masks all matches found by Matchers with MaskString.
-// If no write is made for Timeout on the io.Writer, any matches in progress are reset
+// MaskedWriter wraps an io.Writer which masks all occurrences of masks by maskString.
+// If no write is made for timeout on the io.Writer, any matches in progress are reset
 // and the buffer is flushed. This is to ensure that the writer does not hang on partial matches.
 type MaskedWriter struct {
 	w          io.Writer
-	MaskString string
-	Matchers   []Matcher
-	Timeout    time.Duration
+	maskString string
+	matchers   []matcher
+	timeout    time.Duration
 
 	buf    []maskByte
 	lock   *sync.Mutex
@@ -93,9 +93,10 @@ type MaskedWriter struct {
 	nOut   int64
 }
 
+// NewMaskedWriter returns a new MaskedWriter that masks all occurrences of sequences in masks with maskString.
 func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout time.Duration) *MaskedWriter {
 	var lock sync.Mutex
-	matchers := make([]Matcher, len(masks))
+	matchers := make([]matcher, len(masks))
 	for i, mask := range masks {
 		matchers[i] = &sequenceMatcher{
 			sequence: mask,
@@ -103,9 +104,9 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 	}
 	return &MaskedWriter{
 		w:          w,
-		MaskString: maskString,
-		Matchers:   matchers,
-		Timeout:    timeout,
+		maskString: maskString,
+		matchers:   matchers,
+		timeout:    timeout,
 		lock:       &lock,
 		output:     make(chan []maskByte, 1),
 	}
@@ -121,7 +122,7 @@ func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
 		mw.lock.Lock()
 		mw.buf = append(mw.buf, maskByte{byte: b})
 
-		for _, matcher := range mw.Matchers {
+		for _, matcher := range mw.matchers {
 			maskLen := matcher.Read(b)
 			for i := 0; i < maskLen; i++ {
 				mw.buf[len(mw.buf)-1-i].masked = true
@@ -149,7 +150,7 @@ func (mw *MaskedWriter) flushBuffer() {
 }
 
 // Run writes any processed data from the output channel to the underlying io.Writer.
-// If no new data is received on the output channel for Timeout, the output buffer is forced flushed
+// If no new data is received on the output channel for timeout, the output buffer is forced flushed
 // and all ongoing matches are reset.
 //
 // This should be run in a separate goroutine.
@@ -157,10 +158,10 @@ func (mw *MaskedWriter) Run() {
 	masking := false
 	for {
 		select {
-		case <-time.After(mw.Timeout):
+		case <-time.After(mw.timeout):
 			mw.lock.Lock()
 			if len(mw.output) == 0 {
-				for _, matcher := range mw.Matchers {
+				for _, matcher := range mw.matchers {
 					matcher.Reset()
 				}
 				mw.flushBuffer()
@@ -171,7 +172,7 @@ func (mw *MaskedWriter) Run() {
 				var err error
 				if b.masked {
 					if !masking {
-						_, err = mw.w.Write([]byte(mw.MaskString))
+						_, err = mw.w.Write([]byte(mw.maskString))
 						if err != nil {
 							mw.err = err
 							return

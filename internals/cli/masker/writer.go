@@ -133,8 +133,6 @@ func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
 
 		if !matchInProgress {
 			mw.flushBuffer()
-		} else {
-			mw.output <- []maskByte{}
 		}
 
 		mw.lock.Unlock()

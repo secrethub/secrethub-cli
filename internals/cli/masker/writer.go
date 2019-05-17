@@ -33,11 +33,9 @@ func (m *sequenceMatcher) Read(in byte) int {
 	}
 
 	m.currentIndex -= m.findShift()
-
 	if m.sequence[m.currentIndex] == in {
 		return m.Read(in)
 	}
-	m.currentIndex = 0
 	return 0
 }
 

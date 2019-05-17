@@ -32,7 +32,7 @@ func (m *sequenceMatcher) Read(in byte) int {
 		return 0
 	}
 
-	m.findShift()
+	m.currentIndex -= m.findShift()
 
 	if m.sequence[m.currentIndex] == in {
 		return m.Read(in)
@@ -44,7 +44,7 @@ func (m *sequenceMatcher) Read(in byte) int {
 // findShift checks whether we can also make a partial match by decreasing the currentIndex .
 // For example, if the sequence is foofoobar, if someone inserts foofoofoobar, we still want to match.
 // So after the third f is inserted, the currentIndex is decreased by 3 with the following code.
-func (m *sequenceMatcher) findShift() {
+func (m *sequenceMatcher) findShift() int {
 	for offset := 1; offset <= m.currentIndex; offset++ {
 		ok := true
 		for i := 0; i < m.currentIndex-offset; i++ {
@@ -54,10 +54,10 @@ func (m *sequenceMatcher) findShift() {
 			}
 		}
 		if ok {
-			m.currentIndex -= offset
-			return
+			return offset
 		}
 	}
+	return m.currentIndex
 }
 
 // InProgress returns whether this sequenceMatcher is currently partially matching.

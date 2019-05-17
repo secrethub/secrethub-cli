@@ -113,7 +113,7 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 	}
 }
 
-// Write implements to Write from io.Writer
+// Write implements Write from io.Writer
 // It is responsible for finding any matches to mask and mark the appropriate bytes as masked.
 // This function never returns an error. These can instead be caught with Flush().
 func (mw *MaskedWriter) Write(p []byte) (n int, err error) {

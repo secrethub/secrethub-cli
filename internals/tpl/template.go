@@ -13,7 +13,6 @@ var (
 	errTemplate             = errio.Namespace("template")
 	ErrSecretNotFound       = errTemplate.Code("secret_not_found").ErrorPref("no secret found to inject for path %s")
 	ErrReplacementNotClosed = errTemplate.Code("replacement_not_closed").ErrorPref("missing closing '%s'")
-	ErrReplacementNotOpened = errTemplate.Code("replacement_not_opened").ErrorPref("missing opening '%s'")
 )
 
 const (
@@ -124,15 +123,9 @@ func (p parser) Parse(raw string) (Template, error) {
 func (p parser) parse(raw string) ([]node, error) {
 	parts := strings.SplitN(raw, p.startDelim, 2)
 	if len(parts) == 1 {
-		if strings.Contains(parts[0], p.endDelim) {
-			return nil, ErrReplacementNotOpened(p.startDelim)
-		}
 		return []node{val(parts[0])}, nil
 	}
 	if len(parts[0]) > 0 {
-		if strings.Contains(parts[0], p.endDelim) {
-			return nil, ErrReplacementNotOpened(p.startDelim)
-		}
 		tail, err := p.parse(p.startDelim + parts[1])
 		if err != nil {
 			return nil, err

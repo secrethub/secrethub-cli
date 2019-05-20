@@ -104,8 +104,8 @@ func TestParse(t *testing.T) {
 			err: ErrReplacementNotClosed(DefaultEndDelimiter),
 		},
 		"unopened": {
-			raw: `{ foobar }`,
-			err: ErrReplacementNotOpened(DefaultStartDelimiter),
+			raw:      `{ foobar }`,
+			expected: []string{},
 		},
 		"unclosed_with_nested": {
 			raw: fmt.Sprintf(`${ ${ %s }`, testSecretPath),

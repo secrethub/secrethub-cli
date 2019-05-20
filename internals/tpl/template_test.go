@@ -138,12 +138,15 @@ func TestParse(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Act
 			tpl, err := NewParser().Parse(tc.raw)
-			actual := tpl.Secrets()
-			sort.Strings(actual)
+			if err == nil {
+				actual := tpl.Secrets()
+				sort.Strings(actual)
+				assert.Equal(t, actual, tc.expected)
+			}
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, actual, tc.expected)
+
 		})
 	}
 }

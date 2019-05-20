@@ -72,7 +72,7 @@ func (t template) Inject(replacements map[string]string) (string, error) {
 func (t template) Keys() []string {
 	set := map[string]bool{}
 	for _, n := range t.nodes {
-		s, ok := n.(secret)
+		s, ok := n.(key)
 		if ok {
 			set[string(s)] = true
 		}
@@ -88,9 +88,9 @@ func (t template) Keys() []string {
 }
 
 // node is a part of the template, either a plain text value or
-// a path to a secret.
+// a key that will be mapped to a value.
 type node interface {
-	inject(secrets map[string]string) (string, error)
+	inject(replacements map[string]string) (string, error)
 }
 
 type val string
@@ -99,9 +99,9 @@ func (v val) inject(map[string]string) (string, error) {
 	return string(v), nil
 }
 
-type secret string
+type key string
 
-func (s secret) inject(replacements map[string]string) (string, error) {
+func (s key) inject(replacements map[string]string) (string, error) {
 	data, ok := replacements[string(s)]
 	if !ok {
 		return "", ErrKeyNotFound(s)
@@ -119,7 +119,8 @@ func (p parser) Parse(raw string) (Template, error) {
 	}, nil
 }
 
-// parse is a recursive helper function that parses a string to a list of SecretPaths contained between inject delimiters.
+// parse is a recursive helper function that parses a string to a list of nodes. Nodes are
+// text values or keys that are replaced with other values on inject.
 func (p parser) parse(raw string) ([]node, error) {
 	parts := strings.SplitN(raw, p.startDelim, 2)
 	if len(parts) == 1 {
@@ -150,5 +151,5 @@ func (p parser) parse(raw string) ([]node, error) {
 		return nil, err
 	}
 
-	return append([]node{secret(path)}, tail...), nil
+	return append([]node{key(path)}, tail...), nil
 }

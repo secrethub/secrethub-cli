@@ -1,7 +1,10 @@
 package secrethub
 
 import (
+	"errors"
 	"testing"
+
+	"github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -50,14 +53,17 @@ func TestNewEnv(t *testing.T) {
 				"bar": "baz",
 			},
 		},
-		"inject not closed": {
+		"inject not closed yml": {
 			tpl: map[string]string{
 				"yml": "foo: ${path/to/secret",
+			},
+			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
+		},
+		"inject not closed env": {
+			tpl: map[string]string{
 				"env": "foo=${path/to/secret",
 			},
-			expected: map[string]string{
-				"foo": "${path/to/secret",
-			},
+			err: ErrTemplate(1, tpl.ErrReplacementNotClosed("}")),
 		},
 	}
 

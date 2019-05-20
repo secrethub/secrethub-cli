@@ -11,7 +11,9 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secretspec"
 	"github.com/secrethub/secrethub-cli/internals/tpl"
@@ -35,15 +37,21 @@ var (
 	ErrTemplateFile   = errRun.Code("invalid_template_file").ErrorPref("template file '%s' is invalid: %s")
 )
 
+const (
+	maskString = "<redacted by SecretHub>"
+)
+
 // RunCommand runs a program and passes environment variables to it that are
 // defined with --envar or --template flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
-	command   []string
-	envar     map[string]string
-	template  string
-	env       string
-	newClient newClientFunc
+	command        []string
+	envar          map[string]string
+	template       string
+	env            string
+	noMasking      bool
+	maskingTimeout time.Duration
+	newClient      newClientFunc
 }
 
 // NewRunCommand creates a new RunCommand.
@@ -61,6 +69,8 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
+	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
+	clause.Flag("masking-timeout", "The time to wait for a partial secret that is written to stdout or stderr to be completed for masking.").Default("1s").DurationVar(&cmd.maskingTimeout)
 
 	BindAction(clause, cmd.Run)
 }
@@ -144,11 +154,29 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
+	maskStrings := make([][]byte, len(secrets))
+	i := 0
+	for _, val := range secrets {
+		maskStrings[i] = val
+		i++
+	}
+
+	maskedStdout := masker.NewMaskedWriter(os.Stdout, maskStrings, maskString, cmd.maskingTimeout)
+	maskedStderr := masker.NewMaskedWriter(os.Stderr, maskStrings, maskString, cmd.maskingTimeout)
+
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = mapToKeyValueStrings(environment)
 	command.Stdin = os.Stdin
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
+	if cmd.noMasking {
+		command.Stdout = os.Stdout
+		command.Stderr = os.Stderr
+	} else {
+		command.Stdout = maskedStdout
+		command.Stderr = maskedStderr
+
+		go maskedStdout.Run()
+		go maskedStderr.Run()
+	}
 
 	err = command.Start()
 	if err != nil {
@@ -165,7 +193,7 @@ func (cmd *RunCommand) Run() error {
 		select {
 		case s := <-signals:
 			err := command.Process.Signal(s)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "process already finished") {
 				fmt.Fprintln(os.Stderr, ErrSignalFailed(err))
 			}
 		case <-done:
@@ -174,12 +202,23 @@ func (cmd *RunCommand) Run() error {
 		}
 	}()
 
-	err = command.Wait()
+	commandErr := command.Wait()
 	done <- true
 
-	if err != nil {
+	if !cmd.noMasking {
+		err = maskedStdout.Flush()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		err = maskedStderr.Flush()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}
+
+	if commandErr != nil {
 		// Check if the program exited with an error
-		exitErr, ok := err.(*exec.ExitError)
+		exitErr, ok := commandErr.(*exec.ExitError)
 		if ok {
 			waitStatus, ok := exitErr.Sys().(syscall.WaitStatus)
 			if ok {
@@ -189,7 +228,7 @@ func (cmd *RunCommand) Run() error {
 			}
 
 		}
-		return errio.Error(err)
+		return errio.Error(commandErr)
 	}
 
 	return nil

@@ -4,7 +4,6 @@ package tpl
 import (
 	"strings"
 
-	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
@@ -139,17 +138,12 @@ func (p parser) parse(raw string) ([]node, error) {
 		return nil, ErrReplacementNotClosed(p.endDelim)
 	}
 
-	path := strings.Trim(parts[0], p.trimChars)
-
-	err := api.ValidateSecretPath(path)
-	if err != nil {
-		return nil, err
-	}
+	k := strings.Trim(parts[0], p.trimChars)
 
 	tail, err := p.parse(parts[1])
 	if err != nil {
 		return nil, err
 	}
 
-	return append([]node{key(path)}, tail...), nil
+	return append([]node{key(k)}, tail...), nil
 }

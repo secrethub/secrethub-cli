@@ -5,7 +5,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
@@ -76,28 +75,28 @@ func TestParse(t *testing.T) {
 			expected: []string{testSecretPath, testSecretPath2},
 		},
 		"invalid_path": {
-			raw: `${ invalidpath }`,
-			err: api.ErrInvalidSecretPath("invalidpath"),
+			raw:      `${ invalidpath }`,
+			expected: []string{"invalidpath"},
 		},
 		"empty": {
-			raw: `${}`,
-			err: api.ErrInvalidSecretName,
+			raw:      `${}`,
+			expected: []string{""},
 		},
 		"empty_nested": {
-			raw: `${${}}`,
-			err: api.ErrInvalidSecretName,
+			raw:      `${${}}`,
+			expected: []string{"${"},
 		},
 		"path_folowed_by_delim": {
-			raw: fmt.Sprintf(`${ %s ${}}`, testSecretPath),
-			err: api.ErrInvalidSecretName,
+			raw:      fmt.Sprintf(`${ %s ${}}`, testSecretPath),
+			expected: []string{fmt.Sprintf("%s ${", testSecretPath)},
 		},
 		"path_followed_by_nested_path": {
-			raw: fmt.Sprintf(`${ %s ${ %s }}`, testSecretPath, testSecretPath2),
-			err: api.ErrInvalidSecretPath(fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2)),
+			raw:      fmt.Sprintf(`${ %s ${ %s }}`, testSecretPath, testSecretPath2),
+			expected: []string{fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2)},
 		},
 		"nested": {
-			raw: fmt.Sprintf(`${ ${ %s }}`, testSecretPath),
-			err: api.ErrInvalidSecretPath(fmt.Sprintf("${ %s", testSecretPath)),
+			raw:      fmt.Sprintf(`${ ${ %s }}`, testSecretPath),
+			expected: []string{fmt.Sprintf("${ %s", testSecretPath)},
 		},
 		"unclosed": {
 			raw: `${ foobar`,
@@ -108,20 +107,20 @@ func TestParse(t *testing.T) {
 			expected: []string{},
 		},
 		"unclosed_with_nested": {
-			raw: fmt.Sprintf(`${ ${ %s }`, testSecretPath),
-			err: api.ErrInvalidSecretPath(fmt.Sprintf("${ %s", testSecretPath)),
+			raw:      fmt.Sprintf(`${ ${ %s }`, testSecretPath),
+			expected: []string{fmt.Sprintf("${ %s", testSecretPath)},
 		},
 		"unclosed_with_empty_nested": {
-			raw: `${ ${}`,
-			err: api.ErrInvalidSecretName,
+			raw:      `${ ${}`,
+			expected: []string{"${"},
 		},
 		"unclosed_with_path_and_empty_nested": {
-			raw: fmt.Sprintf(`${ %s ${}`, testSecretPath),
-			err: api.ErrInvalidSecretName,
+			raw:      fmt.Sprintf(`${ %s ${}`, testSecretPath),
+			expected: []string{fmt.Sprintf("%s ${", testSecretPath)},
 		},
 		"unclosed_with_path_and_nested": {
-			raw: fmt.Sprintf(`${ %s ${ %s }`, testSecretPath, testSecretPath2),
-			err: api.ErrInvalidSecretPath(fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2)),
+			raw:      fmt.Sprintf(`${ %s ${ %s }`, testSecretPath, testSecretPath2),
+			expected: []string{fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2)},
 		},
 		"YAML": {
 			raw:      dataYAML,

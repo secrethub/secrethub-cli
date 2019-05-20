@@ -37,8 +37,8 @@ type parser struct {
 
 // Template helps with injecting values into strings that contain the template syntax.
 type Template interface {
-	Inject(secrets map[string][]byte) (string, error)
-	Secrets() []string
+	Inject(replacements map[string]string) (string, error)
+	Keys() []string
 }
 
 type template struct {
@@ -54,12 +54,12 @@ func NewParser() Parser {
 	}
 }
 
-// Inject inserts the given secrets at their corresponding places in
+// Inject inserts the given replacements at their corresponding places in
 // the raw template and returns the injected template.
-func (t template) Inject(secrets map[string][]byte) (string, error) {
+func (t template) Inject(replacements map[string]string) (string, error) {
 	res := ""
 	for _, n := range t.nodes {
-		injected, err := n.inject(secrets)
+		injected, err := n.inject(replacements)
 		if err != nil {
 			return "", err
 		}
@@ -68,8 +68,8 @@ func (t template) Inject(secrets map[string][]byte) (string, error) {
 	return res, nil
 }
 
-// Secrets returns the paths of all secrets the template contains.
-func (t template) Secrets() []string {
+// Keys returns all keys the template contains.
+func (t template) Keys() []string {
 	set := map[string]bool{}
 	for _, n := range t.nodes {
 		s, ok := n.(secret)
@@ -90,23 +90,23 @@ func (t template) Secrets() []string {
 // node is a part of the template, either a plain text value or
 // a path to a secret.
 type node interface {
-	inject(secrets map[string][]byte) (string, error)
+	inject(secrets map[string]string) (string, error)
 }
 
 type val string
 
-func (v val) inject(map[string][]byte) (string, error) {
+func (v val) inject(map[string]string) (string, error) {
 	return string(v), nil
 }
 
 type secret string
 
-func (s secret) inject(secrets map[string][]byte) (string, error) {
-	data, ok := secrets[string(s)]
+func (s secret) inject(replacements map[string]string) (string, error) {
+	data, ok := replacements[string(s)]
 	if !ok {
 		return "", ErrSecretNotFound(s)
 	}
-	return string(data), nil
+	return data, nil
 }
 
 func (p parser) Parse(raw string) (Template, error) {

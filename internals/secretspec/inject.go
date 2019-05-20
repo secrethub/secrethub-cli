@@ -124,9 +124,9 @@ type Inject struct {
 // and writes to the target file. Though the map may contain other
 // secrets, it must contain all source secrets of this consumable.
 func (inj *Inject) Set(secrets map[string]api.SecretVersion) error {
-	input := make(map[string][]byte, len(secrets))
+	input := make(map[string]string, len(secrets))
 	for path, secret := range secrets {
-		input[path] = secret.Data
+		input[path] = string(secret.Data)
 	}
 
 	output, err := inj.template.Inject(input)
@@ -147,7 +147,7 @@ func (inj *Inject) Set(secrets map[string]api.SecretVersion) error {
 // Sources returns the full paths of the secrets from which the Consumable is sourced.
 func (inj *Inject) Sources() map[string]struct{} {
 	sources := make(map[string]struct{})
-	for _, path := range inj.template.Secrets() {
+	for _, path := range inj.template.Keys() {
 		sources[path] = struct{}{}
 	}
 	return sources

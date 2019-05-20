@@ -20,7 +20,6 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -113,15 +112,31 @@ func (cmd *RunCommand) Run() error {
 		envSources = append(envSources, dirSource)
 	}
 
+	// Collect all secrets
+	secrets := make(map[string]string)
+	for _, source := range envSources {
+		for _, path := range source.Secrets() {
+			secrets[path] = ""
+		}
+	}
+
 	client, err := cmd.newClient()
 	if err != nil {
 		return errio.Error(err)
 	}
 
+	for path := range secrets {
+		secret, err := client.Secrets().Versions().GetWithData(path)
+		if err != nil {
+			return errio.Error(err)
+		}
+		secrets[path] = string(secret.Data)
+	}
+
 	// Construct the environment, sourcing variables from the configured sources.
 	environment := make(map[string]string)
 	for _, source := range envSources {
-		pairs, err := source.Env(client)
+		pairs, err := source.Env(secrets)
 		if err != nil {
 			return errio.Error(err)
 		}
@@ -157,7 +172,7 @@ func (cmd *RunCommand) Run() error {
 	maskStrings := make([][]byte, len(secrets))
 	i := 0
 	for _, val := range secrets {
-		maskStrings[i] = val
+		maskStrings[i] = []byte(val)
 		i++
 	}
 
@@ -273,25 +288,18 @@ func parseKeyValueStringsToMap(values []string) (map[string]string, error) {
 // EnvSource defines a method of reading environment variables from a source.
 type EnvSource interface {
 	// Env returns a map of key value pairs.
-	Env(client secrethub.Client) (map[string]string, error)
+	Env(secrets map[string]string) (map[string]string, error)
+	// Secrets returns a list of paths to secrets that are used in the environment.
+	Secrets() []string
 }
 
 type envTemplate struct {
 	vars map[string]tpl.Template
 }
 
-func (t envTemplate) env(client secrethub.Client) (map[string]string, error) {
+func (t envTemplate) Env(secrets map[string]string) (map[string]string, error) {
 	result := make(map[string]string)
 	for key, template := range t.vars {
-		secrets := make(map[string][]byte)
-		for _, path := range template.Secrets() {
-			secret, err := client.Secrets().Versions().GetWithData(path)
-			if err != nil {
-				return nil, err
-			}
-			secrets[path] = secret.Data
-		}
-
 		value, err := template.Inject(secrets)
 		if err != nil {
 			return nil, err
@@ -301,60 +309,63 @@ func (t envTemplate) env(client secrethub.Client) (map[string]string, error) {
 	return result, nil
 }
 
+// Secrets returns a list of paths to secrets that are used in the environment.
+func (t envTemplate) Secrets() []string {
+	result := []string{}
+	for _, template := range t.vars {
+		result = append(result, template.Keys()...)
+	}
+	return result
+}
+
 // NewEnvFile returns an new environment from a file.
 func NewEnvFile(filepath string) (EnvFile, error) {
 	content, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return EnvFile{}, ErrCannotReadFile(filepath, err)
 	}
+	env, err := NewEnv(string(content))
+	if err != nil {
+		return EnvFile{}, err
+	}
 	return EnvFile{
 		path: filepath,
-		env:  NewEnv(string(content)),
+		env:  env,
 	}, nil
 }
 
 // EnvFile contains an environment that is read from a file.
 type EnvFile struct {
 	path string
-	env  Env
+	env  EnvSource
 }
 
 // Env returns a map of key value pairs read from the environment file.
-func (e EnvFile) Env(client secrethub.Client) (map[string]string, error) {
-	env, err := e.env.Env(client)
+func (e EnvFile) Env(secrets map[string]string) (map[string]string, error) {
+	env, err := e.env.Env(secrets)
 	if err != nil {
 		return nil, ErrTemplateFile(e.path, err)
 	}
 	return env, nil
 }
 
-// Env describes a set of key value pairs.
-//
-// The file can be formatted as `key: value` or `key=value` pairs.
-// Secrets can be injected into the values by using the template syntax.
-type Env struct {
-	raw string
+// Secrets returns a list of paths to secrets that are used in the environment.
+func (e EnvFile) Secrets() []string {
+	return e.env.Secrets()
 }
 
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
-func NewEnv(raw string) Env {
-	return Env{
-		raw: raw,
-	}
-}
-
-// Env returns a map of key value pairs read from the environment.
-func (e Env) Env(client secrethub.Client) (map[string]string, error) {
-	template, err := parseEnv(e.raw)
+func NewEnv(raw string) (EnvSource, error) {
+	template, err := parseEnv(raw)
 	if err != nil {
-		template, ymlErr := parseYML(e.raw)
+		template, ymlErr := parseYML(raw)
 		if ymlErr != nil {
 			return nil, err
 		}
-		return template.env(client)
+		return template, nil
 	}
-	return template.env(client)
+	return template, nil
 }
 
 func parseEnv(raw string) (envTemplate, error) {
@@ -455,8 +466,13 @@ func NewEnvDir(path string) (EnvDir, error) {
 }
 
 // Env returns a map of environment variables sourced from the directory.
-func (dir EnvDir) Env(client secrethub.Client) (map[string]string, error) {
+func (dir EnvDir) Env(secrets map[string]string) (map[string]string, error) {
 	return dir, nil
+}
+
+// Secrets returns a list of paths to secrets that are used in the environment.
+func (dir EnvDir) Secrets() []string {
+	return []string{}
 }
 
 // EnvFlags defines environment variables sourced from command-line flags.
@@ -481,14 +497,21 @@ func NewEnvFlags(flags map[string]string) (EnvFlags, error) {
 
 // Env returns a map of environment variables sourced from
 // command-line flags and set to their corresponding value.
-func (ef EnvFlags) Env(client secrethub.Client) (map[string]string, error) {
+func (ef EnvFlags) Env(secrets map[string]string) (map[string]string, error) {
 	result := make(map[string]string)
 	for name, path := range ef {
-		secret, err := client.Secrets().Versions().GetWithData(path)
-		if err != nil {
-			return nil, err
-		}
-		result[name] = string(secret.Data)
+		result[name] = secrets[path]
 	}
 	return result, nil
+}
+
+// Secrets returns the paths to the secrets that are used in the flags.
+func (ef EnvFlags) Secrets() []string {
+	result := make([]string, len(ef))
+	i := 0
+	for _, v := range ef {
+		result[i] = v
+		i++
+	}
+	return result
 }

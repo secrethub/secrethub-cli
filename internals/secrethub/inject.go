@@ -81,10 +81,10 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	secrets := make(map[string][]byte)
+	secrets := make(map[string]string)
 
 	var client secrethub.Client
-	secretPaths := tpl.Secrets()
+	secretPaths := tpl.Keys()
 	if len(secretPaths) > 0 {
 		client, err = cmd.newClient()
 		if err != nil {
@@ -97,7 +97,7 @@ func (cmd *InjectCommand) Run() error {
 		if err != nil {
 			return errio.Error(err)
 		}
-		secrets[path] = secret.Data
+		secrets[path] = string(secret.Data)
 	}
 
 	injected, err := tpl.Inject(secrets)

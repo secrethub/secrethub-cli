@@ -139,7 +139,7 @@ func TestParse(t *testing.T) {
 			// Act
 			tpl, err := NewParser().Parse(tc.raw)
 			if err == nil {
-				actual := tpl.Secrets()
+				actual := tpl.Keys()
 				sort.Strings(actual)
 				assert.Equal(t, actual, tc.expected)
 			}
@@ -155,7 +155,7 @@ func TestInject(t *testing.T) {
 	// Arrange
 	cases := map[string]struct {
 		raw      string
-		secrets  map[string][]byte
+		secrets  map[string]string
 		expected string
 		err      error
 	}{
@@ -169,53 +169,53 @@ func TestInject(t *testing.T) {
 		},
 		"one": {
 			raw: fmt.Sprintf(`${%s}`, testSecretPath),
-			secrets: map[string][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			expected: testSecretValue,
 		},
 		"with_space": {
 			raw: fmt.Sprintf(`${ %s }`, testSecretPath),
-			secrets: map[string][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			expected: testSecretValue,
 		},
 		"two": {
 			raw: fmt.Sprintf(`${ %s }${ %s}`, testSecretPath, testSecretPath2),
-			secrets: map[string][]byte{
-				testSecretPath:  []byte(testSecretValue),
-				testSecretPath2: []byte(testSecretValue2),
+			secrets: map[string]string{
+				testSecretPath:  testSecretValue,
+				testSecretPath2: testSecretValue2,
 			},
 			expected: fmt.Sprintf("%s%s", testSecretValue, testSecretValue2),
 		},
 		"duplicates": {
 			raw: fmt.Sprintf(`${ %s }${ %s}${%s }`, testSecretPath, testSecretPath2, testSecretPath2),
-			secrets: map[string][]byte{
-				testSecretPath:  []byte(testSecretValue),
-				testSecretPath2: []byte(testSecretValue2),
+			secrets: map[string]string{
+				testSecretPath:  testSecretValue,
+				testSecretPath2: testSecretValue2,
 			},
 			expected: fmt.Sprintf("%s%s%s", testSecretValue, testSecretValue2, testSecretValue2),
 		},
 		"not_found": {
 			raw: fmt.Sprintf(`${ %s }${ %s}`, testSecretPath, testSecretPath2),
-			secrets: map[string][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			err:      ErrSecretNotFound(testSecretPath2),
 			expected: "",
 		},
 		"YAML": {
 			raw: dataYAML,
-			secrets: map[string][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			expected: expectedYAML,
 		},
 		"JSON": {
 			raw: dataJSON,
-			secrets: map[string][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			expected: expectedJSON,
 		},

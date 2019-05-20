@@ -81,15 +81,24 @@ func TestParseEnvFile(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Act
-			actual, err := NewEnv(tc.in).Env(nil)
-
-			// Assert
-			if tc.errcheck != nil {
-				tc.errcheck(t, err)
+			env, err := NewEnv(tc.in)
+			if err != nil {
+				if tc.errcheck != nil {
+					tc.errcheck(t, err)
+				} else {
+					assert.OK(t, err)
+				}
 			} else {
-				assert.OK(t, err)
+				actual, err := env.Env(nil)
+
+				// Assert
+				if tc.errcheck != nil {
+					tc.errcheck(t, err)
+				} else {
+					assert.OK(t, err)
+				}
+				assert.Equal(t, actual, tc.expected)
 			}
-			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

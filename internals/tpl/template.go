@@ -11,7 +11,7 @@ import (
 // Errors
 var (
 	errTemplate             = errio.Namespace("template")
-	ErrSecretNotFound       = errTemplate.Code("secret_not_found").ErrorPref("no secret found to inject for path %s")
+	ErrKeyNotFound          = errTemplate.Code("key_not_found").ErrorPref("no value supplied for key %s")
 	ErrReplacementNotClosed = errTemplate.Code("replacement_not_closed").ErrorPref("missing closing '%s'")
 )
 
@@ -104,7 +104,7 @@ type secret string
 func (s secret) inject(replacements map[string]string) (string, error) {
 	data, ok := replacements[string(s)]
 	if !ok {
-		return "", ErrSecretNotFound(s)
+		return "", ErrKeyNotFound(s)
 	}
 	return data, nil
 }

@@ -202,7 +202,7 @@ func TestInject(t *testing.T) {
 			secrets: map[string]string{
 				testSecretPath: testSecretValue,
 			},
-			err:      ErrSecretNotFound(testSecretPath2),
+			err:      ErrKeyNotFound(testSecretPath2),
 			expected: "",
 		},
 		"YAML": {

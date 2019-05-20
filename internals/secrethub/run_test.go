@@ -32,20 +32,22 @@ func TestNewEnv(t *testing.T) {
 		},
 		"= in value": {
 			tpl: map[string]string{
-				"yml": "foo: foo=bar",
-				"env": "foo=foo=bar",
+				"yml": "foo: foo=bar\nbar: baz",
+				"env": "foo=foo=bar\nbar=baz",
 			},
 			expected: map[string]string{
 				"foo": "foo=bar",
+				"bar": "baz",
 			},
 		},
 		"double ==": {
 			tpl: map[string]string{
-				"yml": "foo: =foobar",
-				"env": "foo==foobar",
+				"yml": "foo: =foobar\nbar: baz",
+				"env": "foo==foobar\nbar=baz",
 			},
 			expected: map[string]string{
 				"foo": "=foobar",
+				"bar": "baz",
 			},
 		},
 		"inject not closed": {

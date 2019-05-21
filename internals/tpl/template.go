@@ -11,7 +11,7 @@ import (
 var (
 	errTemplate     = errio.Namespace("template")
 	ErrKeyNotFound  = errTemplate.Code("key_not_found").ErrorPref("no value supplied for key %s")
-	ErrTagNotClosed = errTemplate.Code("tag_not_closed").ErrorPref("missing closing '%s'")
+	ErrTagNotClosed = errTemplate.Code("tag_not_closed").ErrorPref("missing closing delimiter '%s'")
 )
 
 const (

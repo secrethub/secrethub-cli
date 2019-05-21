@@ -59,7 +59,7 @@ func TestNewEnv(t *testing.T) {
 			tpl: map[string]string{
 				"env": "foo=${path/to/secret",
 			},
-			err: ErrTemplate(1, tpl.ErrReplacementNotClosed("}")),
+			err: ErrTemplate(1, tpl.ErrTagNotClosed("}")),
 		},
 	}
 

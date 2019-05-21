@@ -9,9 +9,9 @@ import (
 
 // Errors
 var (
-	errTemplate             = errio.Namespace("template")
-	ErrKeyNotFound          = errTemplate.Code("key_not_found").ErrorPref("no value supplied for key %s")
-	ErrReplacementNotClosed = errTemplate.Code("replacement_not_closed").ErrorPref("missing closing '%s'")
+	errTemplate     = errio.Namespace("template")
+	ErrKeyNotFound  = errTemplate.Code("key_not_found").ErrorPref("no value supplied for key %s")
+	ErrTagNotClosed = errTemplate.Code("tag_not_closed").ErrorPref("missing closing '%s'")
 )
 
 const (
@@ -135,7 +135,7 @@ func (p parser) parse(raw string) ([]node, error) {
 
 	parts = strings.SplitN(parts[1], p.endDelim, 2)
 	if len(parts) == 1 {
-		return nil, ErrReplacementNotClosed(p.endDelim)
+		return nil, ErrTagNotClosed(p.endDelim)
 	}
 
 	k := strings.Trim(parts[0], p.trimChars)

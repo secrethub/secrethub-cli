@@ -100,7 +100,7 @@ func TestParse(t *testing.T) {
 		},
 		"unclosed": {
 			raw: `${ foobar`,
-			err: ErrReplacementNotClosed(DefaultEndDelimiter),
+			err: ErrTagNotClosed(DefaultEndDelimiter),
 		},
 		"unopened": {
 			raw:      `{ foobar }`,

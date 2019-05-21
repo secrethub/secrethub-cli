@@ -69,11 +69,11 @@ func (t template) Inject(replacements map[string]string) (string, error) {
 
 // Keys returns all keys the template contains.
 func (t template) Keys() []string {
-	set := map[string]bool{}
+	set := map[string]struct{}{}
 	for _, n := range t.nodes {
 		s, ok := n.(key)
 		if ok {
-			set[string(s)] = true
+			set[string(s)] = struct{}{}
 		}
 	}
 

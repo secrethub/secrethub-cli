@@ -311,9 +311,18 @@ func (t envTemplate) Env(secrets map[string]string) (map[string]string, error) {
 
 // Secrets returns a list of paths to secrets that are used in the environment.
 func (t envTemplate) Secrets() []string {
-	result := []string{}
+	set := map[string]struct{}{}
 	for _, template := range t.vars {
-		result = append(result, template.Keys()...)
+		for _, k := range template.Keys() {
+			set[k] = struct{}{}
+		}
+	}
+
+	result := make([]string, len(set))
+	i := 0
+	for k := range set {
+		result[i] = k
+		i++
 	}
 	return result
 }

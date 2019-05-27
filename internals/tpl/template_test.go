@@ -2,7 +2,6 @@ package tpl
 
 import (
 	"fmt"
-	"sort"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -47,56 +46,56 @@ func TestParse(t *testing.T) {
 	// Arrange
 	cases := map[string]struct {
 		raw      string
-		expected []string
+		expected []node
 		err      error
 	}{
 		"empty_string": {
 			raw:      "",
-			expected: []string{},
+			expected: []node{},
 		},
 		"none": {
 			raw:      "foo=bar",
-			expected: []string{},
+			expected: []node{val("foo=bar")},
 		},
 		"one": {
 			raw:      fmt.Sprintf(`${%s}`, testSecretPath),
-			expected: []string{testSecretPath},
+			expected: []node{key(testSecretPath)},
 		},
 		"with_space": {
 			raw:      fmt.Sprintf(`${ %s }`, testSecretPath),
-			expected: []string{testSecretPath},
+			expected: []node{key(testSecretPath)},
 		},
 		"two": {
 			raw:      fmt.Sprintf(`${ %s }${ %s}`, testSecretPath, testSecretPath2),
-			expected: []string{testSecretPath, testSecretPath2},
+			expected: []node{key(testSecretPath), key(testSecretPath2)},
 		},
 		"duplicates": {
 			raw:      fmt.Sprintf(`${ %s }${ %s}${%s }`, testSecretPath, testSecretPath2, testSecretPath2),
-			expected: []string{testSecretPath, testSecretPath2},
+			expected: []node{key(testSecretPath), key(testSecretPath2), key(testSecretPath2)},
 		},
 		"invalid_path": {
 			raw:      `${ invalidpath }`,
-			expected: []string{"invalidpath"},
+			expected: []node{key("invalidpath")},
 		},
 		"empty": {
 			raw:      `${}`,
-			expected: []string{""},
+			expected: []node{key("")},
 		},
 		"empty_nested": {
 			raw:      `${${}}`,
-			expected: []string{"${"},
+			expected: []node{key("${"), val("}")},
 		},
 		"path_folowed_by_delim": {
 			raw:      fmt.Sprintf(`${ %s ${}}`, testSecretPath),
-			expected: []string{fmt.Sprintf("%s ${", testSecretPath)},
+			expected: []node{key(fmt.Sprintf("%s ${", testSecretPath)), val("}")},
 		},
 		"path_followed_by_nested_path": {
 			raw:      fmt.Sprintf(`${ %s ${ %s }}`, testSecretPath, testSecretPath2),
-			expected: []string{fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2)},
+			expected: []node{key(fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2)), val("}")},
 		},
 		"nested": {
 			raw:      fmt.Sprintf(`${ ${ %s }}`, testSecretPath),
-			expected: []string{fmt.Sprintf("${ %s", testSecretPath)},
+			expected: []node{key(fmt.Sprintf("${ %s", testSecretPath)), val("}")},
 		},
 		"unclosed": {
 			raw: `${ foobar`,
@@ -104,31 +103,43 @@ func TestParse(t *testing.T) {
 		},
 		"unopened": {
 			raw:      `{ foobar }`,
-			expected: []string{},
+			expected: []node{val("{ foobar }")},
 		},
 		"unclosed_with_nested": {
 			raw:      fmt.Sprintf(`${ ${ %s }`, testSecretPath),
-			expected: []string{fmt.Sprintf("${ %s", testSecretPath)},
+			expected: []node{key(fmt.Sprintf("${ %s", testSecretPath))},
 		},
 		"unclosed_with_empty_nested": {
 			raw:      `${ ${}`,
-			expected: []string{"${"},
+			expected: []node{key("${")},
 		},
 		"unclosed_with_path_and_empty_nested": {
 			raw:      fmt.Sprintf(`${ %s ${}`, testSecretPath),
-			expected: []string{fmt.Sprintf("%s ${", testSecretPath)},
+			expected: []node{key(fmt.Sprintf("%s ${", testSecretPath))},
 		},
 		"unclosed_with_path_and_nested": {
 			raw:      fmt.Sprintf(`${ %s ${ %s }`, testSecretPath, testSecretPath2),
-			expected: []string{fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2)},
+			expected: []node{key(fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2))},
 		},
 		"YAML": {
-			raw:      dataYAML,
-			expected: []string{testSecretPath},
+			raw: dataYAML,
+			expected: []node{
+				val(`config:
+			some_field: "some value"
+			secret_field: "`),
+				key(testSecretPath),
+				val("\"")},
 		},
 		"JSON": { // TODO: Decide what to do in this case
-			raw:      dataJSON,
-			expected: []string{testSecretPath},
+			raw: dataJSON,
+			expected: []node{
+				val(`{
+			"some_field" : "some value",
+			"secret_field" : "`),
+				key(testSecretPath),
+				val(`"
+		}`),
+			},
 		},
 		// TODO: add unhappy test cases
 	}
@@ -136,16 +147,15 @@ func TestParse(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Act
-			tpl, err := NewParser().Parse(tc.raw)
-			if err == nil {
-				actual := tpl.Keys()
-				sort.Strings(actual)
-				assert.Equal(t, actual, tc.expected)
-			}
+			actual, err := parser{
+				startDelim: DefaultStartDelimiter,
+				endDelim:   DefaultEndDelimiter,
+				trimChars:  DefaultTrimChars,
+			}.parse(tc.raw)
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

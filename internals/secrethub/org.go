@@ -22,6 +22,7 @@ func (cmd *OrgCommand) Register(r Registerer) {
 	NewOrgInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgInspectCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgInviteCommand(cmd.io, cmd.newClient).Register(clause)
+	NewOrgPurchaseCommand(cmd.io).Register(clause)
 	NewOrgListUsersCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgLsCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgRevokeCommand(cmd.io, cmd.newClient).Register(clause)

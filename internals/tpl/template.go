@@ -123,7 +123,10 @@ func (p parser) Parse(raw string) (Template, error) {
 func (p parser) parse(raw string) ([]node, error) {
 	parts := strings.SplitN(raw, p.startDelim, 2)
 	if len(parts) == 1 {
-		return []node{val(parts[0])}, nil
+		if len(parts[0]) > 0 {
+			return []node{val(parts[0])}, nil
+		}
+		return []node{}, nil
 	}
 	if len(parts[0]) > 0 {
 		tail, err := p.parse(p.startDelim + parts[1])

@@ -216,9 +216,9 @@ func (cmd *AccountInitCommand) Run() error {
 			if err != nil {
 				return errio.Error(err)
 			}
-			fmt.Fprintln(cmd.io.Stdout(), "The credential's public component has been copied to the clipboard. To add the credential to your account, paste the clipboard contents in https://dashboard.secrethub.io/me/settings")
+			fmt.Fprintln(cmd.io.Stdout(), "The credential's public component has been copied to the clipboard. To add the credential to your account, paste the clipboard contents in https://dashboard.secrethub.io/account-init")
 		} else {
-			fmt.Fprintln(cmd.io.Stdout(), "To add the credential to your account, paste the public component shown below in https://dashboard.secrethub.io/me/settings")
+			fmt.Fprintln(cmd.io.Stdout(), "To add the credential to your account, paste the public component shown below in https://dashboard.secrethub.io/account-init")
 
 			fmt.Fprintf(cmd.io.Stdout(), "\n%s\n", out)
 		}

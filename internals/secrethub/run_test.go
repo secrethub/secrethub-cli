@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -60,6 +61,26 @@ func TestNewEnv(t *testing.T) {
 				"env": "foo=${path/to/secret",
 			},
 			err: ErrTemplate(1, tpl.ErrTagNotClosed("}")),
+		},
+		"nested yml": {
+			tpl: map[string]string{
+				"yml": `ROOT:
+	SUB:
+		NAME1: val1`,
+			},
+			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
+		},
+		"invalid key yml": {
+			tpl: map[string]string{
+				"yml": "FOO\000: bar",
+			},
+			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
+		},
+		"invalid key env": {
+			tpl: map[string]string{
+				"env": "FOO\000=bar",
+			},
+			err: ErrTemplate(1, validation.ErrInvalidEnvarName("FOO\000")),
 		},
 	}
 

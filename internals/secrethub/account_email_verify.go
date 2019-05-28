@@ -50,7 +50,9 @@ func (cmd *AccountEmailVerifyCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "An email has been sent to %s with an email verification link. Please check your mail and click the link.\n", user.Email)
+	fmt.Fprintf(cmd.io.Stdout(), "An email has been sent to %s with an email verification link. Please check your mail and click the link.\n\n", user.Email)
+
+	fmt.Fprintf(cmd.io.Stdout(), "Please contact support@secrethub.io if the problem persists.\n\n")
 
 	return nil
 }

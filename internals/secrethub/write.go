@@ -38,7 +38,7 @@ func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *WriteCommand) Register(r Registerer) {
-	clause := r.Command("write", "Write to a path to create or overwrite a secret. Input can be piped, copied from the clipboard or you will be asked to input the secret.")
+	clause := r.Command("write", "Write a secret.")
 	clause.Arg("secret-path", "The path to the secret (<namespace>/<repo>[/<dir>]/<secret>)").Required().SetValue(&cmd.path)
 	clause.Flag("clip", "Use clipboard content as input.").Short('c').BoolVar(&cmd.useClipboard)
 	clause.Flag("no-trim", "Do not trim leading and trailing whitespace in the secret.").BoolVar(&cmd.noTrim)

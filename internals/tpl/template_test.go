@@ -130,7 +130,7 @@ func TestParse(t *testing.T) {
 				key(testSecretPath),
 				val("\"")},
 		},
-		"JSON": { // TODO: Decide what to do in this case
+		"JSON": {
 			raw: dataJSON,
 			expected: []node{
 				val(`{

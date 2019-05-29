@@ -12,13 +12,22 @@ builds:
       - amd64
       - 386
       - arm64
+      - arm
+    goarm:
+      - 5
+      - 6
+      - 7
     ignore:
       - goos: darwin
         goarch: 386
       - goos: darwin
         goarch: arm64
+      - goos: darwin
+        goarch: arm
       - goos: windows
         goarch: arm64
+      - goos: windows
+        goarch: arm
     main: ./cmd/secrethub/main.go
     ldflags:
       - -s -w -X main.commit={{ .ShortCommit }} -X main.version={{ .Version }}
@@ -26,7 +35,7 @@ builds:
       - -tags=production
 
 archive:
-  name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
+  name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
   format_overrides:
     - goos: windows
       format: zip

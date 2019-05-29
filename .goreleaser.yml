@@ -11,9 +11,14 @@ builds:
     goarch:
       - amd64
       - 386
+      - arm64
     ignore:
       - goos: darwin
         goarch: 386
+      - goos: darwin
+        goarch: arm64
+      - goos: windows
+        goarch: arm64
     main: ./cmd/secrethub/main.go
     ldflags:
       - -s -w -X main.commit={{ .ShortCommit }} -X main.version={{ .Version }}

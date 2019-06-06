@@ -69,13 +69,13 @@ func (cmd *ServiceInitCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	service, err := client.Services().Create(repo.Value(), cmd.description, serviceCredential)
+	service, err := client.Services().Create(repo.Value(), cmd.description, serviceCredential, serviceCredential)
 	if err != nil {
 		return errio.Error(err)
 	}
 
 	if cmd.permission != 0 {
-		_, err = client.AccessRules().Set(cmd.path.Value(), cmd.permission, service.ServiceID)
+		_, err = client.AccessRules().Set(cmd.path.Value(), cmd.permission.String(), service.ServiceID)
 		if err != nil {
 			_, delErr := client.Services().Delete(service.ServiceID)
 			if delErr != nil {

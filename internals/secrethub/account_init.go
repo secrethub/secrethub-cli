@@ -289,7 +289,18 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 	}
 
 	fmt.Fprint(cmd.io.Stdout(), "Finishing setup of your account...")
-	_, err = client.Accounts().Keys().Create()
+
+	credential, err := cmd.credentialStore.Get()
+	if err != nil {
+		return err
+	}
+
+	fingerprint, err := credential.Fingerprint()
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Accounts().Keys().Create(fingerprint, credential)
 	if err != nil {
 		fmt.Fprintln(cmd.io.Stdout(), " Failed")
 		return err

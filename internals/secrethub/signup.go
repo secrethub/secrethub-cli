@@ -153,7 +153,7 @@ func (cmd *SignUpCommand) Run() error {
 
 	fmt.Fprint(cmd.io.Stdout(), "Signing you up...")
 	cmd.progressPrinter.Start()
-	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName)
+	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential, credential)
 	cmd.progressPrinter.Stop()
 	if err != nil {
 		return errio.Error(err)

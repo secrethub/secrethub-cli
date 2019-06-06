@@ -23,20 +23,20 @@ var (
 
 // CredentialReader reads a credential.
 type CredentialReader interface {
-	Read() (secrethub.Credential, error)
+	Read() (secrethub.RSACredential, error)
 }
 
 // CredentialReaderFunc is a helper function that implements the CredentialReader interface.
-type CredentialReaderFunc func() (secrethub.Credential, error)
+type CredentialReaderFunc func() (secrethub.RSACredential, error)
 
 // Read reads a credential.
-func (fn CredentialReaderFunc) Read() (secrethub.Credential, error) {
+func (fn CredentialReaderFunc) Read() (secrethub.RSACredential, error) {
 	return fn()
 }
 
 // NewCredentialReader creates a new credential reader.
 func NewCredentialReader(io ui.IO, profileDir ProfileDir, flagValue string, passReader PassphraseReader) CredentialReader {
-	fn := func() (secrethub.Credential, error) {
+	fn := func() (secrethub.RSACredential, error) {
 		if flagValue != "" {
 			return parseCredential(flagValue, passReader)
 		}
@@ -63,12 +63,12 @@ func NewCredentialReader(io ui.IO, profileDir ProfileDir, flagValue string, pass
 }
 
 // parseCredential parses and decodes a credential, optionally unarmoring it.
-func parseCredential(raw string, reader PassphraseReader) (secrethub.Credential, error) {
+func parseCredential(raw string, reader PassphraseReader) (secrethub.RSACredential, error) {
 	parser := secrethub.NewCredentialParser(secrethub.DefaultCredentialDecoders)
 
 	encoded, err := parser.Parse(raw)
 	if err != nil {
-		return nil, errio.Error(err)
+		return secrethub.RSACredential{}, errio.Error(err)
 	}
 
 	if encoded.IsEncrypted() {
@@ -76,24 +76,24 @@ func parseCredential(raw string, reader PassphraseReader) (secrethub.Credential,
 
 		passphrase, err := reader.Get(id)
 		if err != nil {
-			return nil, errio.Error(err)
+			return secrethub.RSACredential{}, errio.Error(err)
 		}
 
 		passBasedKey, err := secrethub.NewPassBasedKey(passphrase)
 		if err != nil {
-			return nil, err
+			return secrethub.RSACredential{}, err
 		}
 
 		credential, err := encoded.DecodeEncrypted(passBasedKey)
 		if crypto.IsWrongKey(err) {
 			incorrectErr := reader.IncorrectPassphrase(id)
 			if incorrectErr != nil {
-				return nil, ErrIncorrectPassphraseNotCleared(err, incorrectErr)
+				return secrethub.RSACredential{}, ErrIncorrectPassphraseNotCleared(err, incorrectErr)
 			}
 
-			return nil, ErrCannotDecryptCredential
+			return secrethub.RSACredential{}, ErrCannotDecryptCredential
 		} else if err != nil {
-			return nil, errio.Error(err)
+			return secrethub.RSACredential{}, errio.Error(err)
 		}
 
 		return credential, nil
@@ -110,7 +110,7 @@ func getEncryptedCredentialID(encrypted []byte) string {
 }
 
 // readOldCredential reads an old configuration into a Credential.
-func readOldCredential(io ui.IO, profileDir ProfileDir, passReader PassphraseReader) (secrethub.Credential, error) {
+func readOldCredential(io ui.IO, profileDir ProfileDir, passReader PassphraseReader) (secrethub.RSACredential, error) {
 	config, err := LoadConfig(io, profileDir.oldConfigFile())
 	if err != nil {
 		return nil, errio.Error(err)

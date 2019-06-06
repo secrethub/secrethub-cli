@@ -3,6 +3,7 @@ package secrethub
 import (
 	"net/url"
 
+	"github.com/secrethub/secrethub-go/internals/auth"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
@@ -39,7 +40,7 @@ func (f *clientFactory) NewClient() (secrethub.Client, error) {
 		return nil, errio.Error(err)
 	}
 
-	return secrethub.NewClient(credential, f.NewClientOptions()), nil
+	return secrethub.NewClient(credential, auth.NewHTTPSigner(credential), f.NewClientOptions()), nil
 }
 
 // NewClientOptions returns the client options configured by the flags.

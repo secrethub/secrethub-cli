@@ -29,7 +29,7 @@ type CredentialStore interface {
 	// Save persists the credential.
 	Save() error
 	// Get retrieves a credential from the store.
-	Get() (secrethub.Credential, error)
+	Get() (secrethub.RSACredential, error)
 	Register(FlagRegisterer)
 }
 
@@ -97,7 +97,7 @@ func (store *credentialStore) CredentialExists() (bool, error) {
 // Get retrieves a credential from the store.
 // When a credential is set, that credential is returned,
 // otherwise the credential is read from the configured file.
-func (store *credentialStore) Get() (secrethub.Credential, error) {
+func (store *credentialStore) Get() (secrethub.RSACredential, error) {
 	if store.credential != nil {
 		return store.credential, nil
 	}

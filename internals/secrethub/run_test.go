@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
+	secrethubtpl "github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	"github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -42,14 +43,14 @@ func TestParseEnv(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseEnv(tc.raw)
 
-			expected := map[string]tpl.Template{}
+			expected := map[string]secrethubtpl.Template{}
 			for k, v := range tc.expected {
-				template, err := tpl.NewParser("{{", "}}").Parse(v)
+				template, err := secrethubtpl.Parse(v)
 				assert.OK(t, err)
 				expected[k] = template
 			}
 
-			assert.Equal(t, actual, envTemplate{vars: expected})
+			assert.Equal(t, actual, expected)
 			assert.Equal(t, err, tc.err)
 		})
 	}
@@ -100,7 +101,7 @@ func TestParseYML(t *testing.T) {
 				expected[k] = template
 			}
 
-			assert.Equal(t, actual, envTemplate{vars: expected})
+			assert.Equal(t, actual, ymlTemplate{vars: expected})
 			assert.Equal(t, err, tc.err)
 		})
 	}
@@ -110,6 +111,7 @@ func TestNewEnv(t *testing.T) {
 	cases := map[string]struct {
 		raw          string
 		replacements map[string]string
+		templateVars map[string]string
 		expected     map[string]string
 		err          error
 	}{
@@ -121,6 +123,19 @@ func TestNewEnv(t *testing.T) {
 			expected: map[string]string{
 				"foo": "bar",
 				"baz": "val",
+			},
+		},
+		"success with vars": {
+			raw: "foo=bar\nbaz={{${app}/db/pass}}",
+			replacements: map[string]string{
+				"company/application/db/pass": "secret",
+			},
+			templateVars: map[string]string{
+				"app": "company/application",
+			},
+			expected: map[string]string{
+				"foo": "bar",
+				"baz": "secret",
 			},
 		},
 		"success yml": {
@@ -145,7 +160,7 @@ func TestNewEnv(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			env, err := NewEnv(tc.raw)
+			env, err := NewEnv(tc.raw, tc.templateVars)
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {

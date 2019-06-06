@@ -17,10 +17,10 @@ func TestParseEnv(t *testing.T) {
 		err      error
 	}{
 		"success": {
-			raw: "foo=bar\nbaz=${path/to/secret}",
+			raw: "foo=bar\nbaz={{path/to/secret}}",
 			expected: map[string]string{
 				"foo": "bar",
-				"baz": "${path/to/secret}",
+				"baz": "{{path/to/secret}}",
 			},
 		},
 		"= sign in value": {
@@ -30,8 +30,8 @@ func TestParseEnv(t *testing.T) {
 			},
 		},
 		"inject not closed": {
-			raw: "foo=${path/to/secret",
-			err: ErrTemplate(1, tpl.ErrTagNotClosed("}")),
+			raw: "foo={{path/to/secret",
+			err: ErrTemplate(1, tpl.ErrTagNotClosed("}}")),
 		},
 		"invalid key": {
 			raw: "FOO\000=bar",
@@ -44,7 +44,7 @@ func TestParseEnv(t *testing.T) {
 
 			expected := map[string]tpl.Template{}
 			for k, v := range tc.expected {
-				template, err := tpl.NewParser("${", "}").Parse(v)
+				template, err := tpl.NewParser("{{", "}}").Parse(v)
 				assert.OK(t, err)
 				expected[k] = template
 			}
@@ -114,7 +114,7 @@ func TestNewEnv(t *testing.T) {
 		err          error
 	}{
 		"success": {
-			raw: "foo=bar\nbaz=${path/to/secret}",
+			raw: "foo=bar\nbaz={{path/to/secret}}",
 			replacements: map[string]string{
 				"path/to/secret": "val",
 			},
@@ -138,8 +138,8 @@ func TestNewEnv(t *testing.T) {
 			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
 		},
 		"env error": {
-			raw: "foo=${path/to/secret",
-			err: ErrTemplate(1, tpl.ErrTagNotClosed("}")),
+			raw: "foo={{path/to/secret",
+			err: ErrTemplate(1, tpl.ErrTagNotClosed("}}")),
 		},
 	}
 

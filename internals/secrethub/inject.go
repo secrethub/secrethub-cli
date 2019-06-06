@@ -76,7 +76,7 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	tpl, err := tpl.NewParser().Parse(string(raw))
+	tpl, err := tpl.NewParser("${", "}").Parse(string(raw))
 	if err != nil {
 		return errio.Error(err)
 	}

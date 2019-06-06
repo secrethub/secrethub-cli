@@ -44,7 +44,7 @@ func TestParseEnv(t *testing.T) {
 
 			expected := map[string]tpl.Template{}
 			for k, v := range tc.expected {
-				template, err := tpl.NewParser().Parse(v)
+				template, err := tpl.NewParser("${", "}").Parse(v)
 				assert.OK(t, err)
 				expected[k] = template
 			}
@@ -95,7 +95,7 @@ func TestParseYML(t *testing.T) {
 
 			expected := map[string]tpl.Template{}
 			for k, v := range tc.expected {
-				template, err := tpl.NewParser().Parse(v)
+				template, err := tpl.NewParser("${", "}").Parse(v)
 				assert.OK(t, err)
 				expected[k] = template
 			}

@@ -14,15 +14,6 @@ var (
 	ErrTagNotClosed = errTemplate.Code("tag_not_closed").ErrorPref("missing closing delimiter '%s'")
 )
 
-const (
-	// DefaultStartDelimiter defines the characters a template block starts with.
-	DefaultStartDelimiter = "${"
-	// DefaultEndDelimiter defines the characters a template block ends with.
-	DefaultEndDelimiter = "}"
-	// DefaultTrimChars defines the cutset of characters that will be trimmed from template blocks.
-	DefaultTrimChars = " "
-)
-
 // Parser parses a raw string into a template.
 type Parser interface {
 	Parse(raw string) (Template, error)
@@ -31,7 +22,6 @@ type Parser interface {
 type parser struct {
 	startDelim string
 	endDelim   string
-	trimChars  string
 }
 
 // Template helps with injecting values into strings that contain the template syntax.
@@ -45,11 +35,10 @@ type template struct {
 }
 
 // NewParser creates a new template parser.
-func NewParser() Parser {
+func NewParser(startDelim, endDelim string) Parser {
 	return parser{
-		startDelim: DefaultStartDelimiter,
-		endDelim:   DefaultEndDelimiter,
-		trimChars:  DefaultTrimChars,
+		startDelim: startDelim,
+		endDelim:   endDelim,
 	}
 }
 
@@ -141,7 +130,7 @@ func (p parser) parse(raw string) ([]node, error) {
 		return nil, ErrTagNotClosed(p.endDelim)
 	}
 
-	k := strings.Trim(parts[0], p.trimChars)
+	k := strings.Trim(parts[0], " ")
 
 	tail, err := p.parse(parts[1])
 	if err != nil {

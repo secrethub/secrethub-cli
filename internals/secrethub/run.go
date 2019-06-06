@@ -372,7 +372,7 @@ func NewEnv(raw string) (EnvSource, error) {
 
 func parseEnv(raw string) (envTemplate, error) {
 	vars := map[string]tpl.Template{}
-	tplParser := tpl.NewParser()
+	tplParser := tpl.NewParser("${", "}")
 	scanner := bufio.NewScanner(strings.NewReader(raw))
 
 	i := 1
@@ -412,7 +412,7 @@ func parseYML(raw string) (envTemplate, error) {
 		return envTemplate{}, err
 	}
 
-	tplParser := tpl.NewParser()
+	tplParser := tpl.NewParser("${", "}")
 
 	vars := map[string]tpl.Template{}
 	for key, value := range pairs {

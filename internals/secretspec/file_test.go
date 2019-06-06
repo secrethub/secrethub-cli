@@ -11,13 +11,13 @@ import (
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
+const source1 = "user/repo/dir/secret1:latest"
+
 func TestNewFile(t *testing.T) {
 	// Arrange
-	source1 := api.SecretPath("user/repo/dir/secret1:latest")
-
 	cases := []struct {
 		name     string
-		source   api.SecretPath
+		source   string
 		target   string
 		filemode os.FileMode
 		fail     bool
@@ -95,8 +95,6 @@ func TestNewFile(t *testing.T) {
 
 func TestFileParse(t *testing.T) {
 	// Arrange
-	source1 := "user/repo/dir/secret1:latest"
-
 	cases := []struct {
 		name     string
 		config   map[string]interface{}
@@ -111,7 +109,7 @@ func TestFileParse(t *testing.T) {
 				"filemode": "0770",
 			},
 			expected: &file{
-				source:   api.SecretPath(source1),
+				source:   source1,
 				target:   "target",
 				filemode: 0770,
 			},
@@ -132,7 +130,7 @@ func TestFileParse(t *testing.T) {
 				"filemode": "0770",
 			},
 			expected: &file{
-				source:   api.SecretPath(source1),
+				source:   source1,
 				target:   "secret1",
 				filemode: 0770,
 			},
@@ -145,7 +143,7 @@ func TestFileParse(t *testing.T) {
 				"filemode": "0770",
 			},
 			expected: &file{
-				source:   api.SecretPath(source1),
+				source:   source1,
 				target:   "secret1",
 				filemode: 0770,
 			},
@@ -157,7 +155,7 @@ func TestFileParse(t *testing.T) {
 				"target": "target",
 			},
 			expected: &file{
-				source:   api.SecretPath(source1),
+				source:   source1,
 				target:   "target",
 				filemode: DefaultFileMode,
 			},
@@ -170,7 +168,7 @@ func TestFileParse(t *testing.T) {
 				"filemode": "",
 			},
 			expected: &file{
-				source:   api.SecretPath(source1),
+				source:   source1,
 				target:   "target",
 				filemode: DefaultFileMode,
 			},
@@ -203,29 +201,29 @@ func TestFileParse(t *testing.T) {
 
 func TestFileSetAndClear(t *testing.T) {
 	// Arrange
-	source1 := api.SecretPath("user/repo/dir/secret:latest")
+	source1 := "user/repo/dir/secret:latest"
 	secret1 := api.SecretVersion{
 		Data: []byte("secret 1 data"),
 	}
 
-	sourceNewLine := api.SecretPath("user/repo/dir/secret_newline:latest")
+	sourceNewLine := "user/repo/dir/secret_newline:latest"
 	secretNewLine := api.SecretVersion{
 		Data: []byte("secret 2 data\n"),
 	}
 
-	sourceNonExisting := api.SecretPath("user/repo/non_existing_secret")
+	sourceNonExisting := "user/repo/non_existing_secret"
 
 	absTarget, err := filepath.Abs("test_set_abs_path")
 	assert.OK(t, err)
 
-	secrets := map[api.SecretPath]api.SecretVersion{
+	secrets := map[string]api.SecretVersion{
 		source1:       secret1,
 		sourceNewLine: secretNewLine,
 	}
 
 	cases := []struct {
 		name     string
-		source   api.SecretPath
+		source   string
 		target   string
 		filemode os.FileMode
 		err      error

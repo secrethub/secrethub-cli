@@ -27,14 +27,15 @@ import (
 
 // Errors
 var (
-	errRun            = errio.Namespace("run")
-	ErrStartFailed    = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
-	ErrSignalFailed   = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
-	ErrReadEnvDir     = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
-	ErrReadEnvFile    = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
-	ErrEnvDirNotFound = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
-	ErrTemplate       = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
-	ErrTemplateFile   = errRun.Code("invalid_template_file").ErrorPref("template file '%s' is invalid: %s")
+	errRun                = errio.Namespace("run")
+	ErrStartFailed        = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
+	ErrSignalFailed       = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
+	ErrReadEnvDir         = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
+	ErrReadEnvFile        = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
+	ErrEnvDirNotFound     = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
+	ErrTemplate           = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
+	ErrTemplateFile       = errRun.Code("invalid_template_file").ErrorPref("template file '%s' is invalid: %s")
+	ErrInvalidTemplateVar = errRun.Code("invalid_template_var").ErrorPref("template variable '%s' is invalid: template variables may only contain uppercase letters, digits, and the '_' (underscore) and are not allowed to start with a number")
 )
 
 const (
@@ -90,6 +91,12 @@ func (cmd *RunCommand) Run() error {
 		return errio.Error(err)
 	}
 	envSources = append(envSources, flagSource)
+
+	for k := range cmd.templateVars {
+		if !validation.IsEnvarNamePosix(k) {
+			return ErrInvalidTemplateVar(k)
+		}
+	}
 
 	if cmd.template != "" {
 		tplSource, err := NewEnvFile(cmd.template, cmd.templateVars)

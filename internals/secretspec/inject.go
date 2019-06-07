@@ -100,7 +100,7 @@ func (p InjectParser) Parse(rootPath string, allowMountAnywhere bool, config map
 		return nil, errio.Error(err)
 	}
 
-	inj.template, err = tpl.NewParser().Parse(string(decodedBytes))
+	inj.template, err = tpl.NewParser("${", "}").Parse(string(decodedBytes))
 	if err != nil {
 		return nil, errio.Error(err)
 	}

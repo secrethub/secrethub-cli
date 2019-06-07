@@ -99,7 +99,7 @@ func TestParse(t *testing.T) {
 		},
 		"unclosed": {
 			raw: `${ foobar`,
-			err: ErrTagNotClosed(DefaultEndDelimiter),
+			err: ErrTagNotClosed("}"),
 		},
 		"unopened": {
 			raw:      `{ foobar }`,
@@ -148,9 +148,8 @@ func TestParse(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Act
 			actual, err := parser{
-				startDelim: DefaultStartDelimiter,
-				endDelim:   DefaultEndDelimiter,
-				trimChars:  DefaultTrimChars,
+				startDelim: "${",
+				endDelim:   "}",
 			}.parse(tc.raw)
 
 			// Assert
@@ -233,7 +232,7 @@ func TestInject(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Act
-			tpl, err := NewParser().Parse(tc.raw)
+			tpl, err := NewParser("${", "}").Parse(tc.raw)
 			assert.OK(t, err)
 			actual, err := tpl.Inject(tc.secrets)
 

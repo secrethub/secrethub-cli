@@ -89,7 +89,12 @@ func (cmd *RunCommand) Run() error {
 
 	if cmd.template == "" {
 		const defaultTemplate = "secrethub.env"
-		if _, err := os.Stat(defaultTemplate); err == nil {
+		_, err := os.Stat(defaultTemplate)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return fmt.Errorf("could not read default run template: %s", err)
+			}
+		} else {
 			cmd.template = defaultTemplate
 		}
 	}

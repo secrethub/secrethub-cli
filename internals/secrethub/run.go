@@ -87,6 +87,13 @@ func (cmd *RunCommand) Run() error {
 	}
 	envSources = append(envSources, flagSource)
 
+	if cmd.template == "" {
+		const defaultTemplate = "secrethub.env"
+		if _, err := os.Stat(defaultTemplate); err == nil {
+			cmd.template = defaultTemplate
+		}
+	}
+
 	if cmd.template != "" {
 		tplSource, err := NewEnvFile(cmd.template)
 		if err != nil {

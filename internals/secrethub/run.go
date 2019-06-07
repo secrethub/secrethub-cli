@@ -101,7 +101,7 @@ func (cmd *RunCommand) Run() error {
 
 	for k, v := range osEnv {
 		if strings.HasPrefix(k, "SECRETHUB_VAR_") {
-			k = strings.TrimLeft(k, "SECRETHUB_VAR_")
+			k = strings.TrimPrefix(k, "SECRETHUB_VAR_")
 			templateVars[k] = v
 		}
 	}

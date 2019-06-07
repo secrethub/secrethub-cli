@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-	"github.com/secrethub/secrethub-go/internals/assert"
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func Test(t *testing.T) {

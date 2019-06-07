@@ -87,6 +87,18 @@ func (cmd *RunCommand) Run() error {
 	}
 	envSources = append(envSources, flagSource)
 
+	if cmd.template == "" {
+		const defaultTemplate = "secrethub.env"
+		_, err := os.Stat(defaultTemplate)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return fmt.Errorf("could not read default run template: %s", err)
+			}
+		} else {
+			cmd.template = defaultTemplate
+		}
+	}
+
 	if cmd.template != "" {
 		tplSource, err := NewEnvFile(cmd.template)
 		if err != nil {

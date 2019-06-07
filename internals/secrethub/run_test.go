@@ -23,6 +23,12 @@ func TestParseEnv(t *testing.T) {
 				"baz": "${path/to/secret}",
 			},
 		},
+		"success with spaces": {
+			raw: "key = value",
+			expected: map[string]string{
+				"key": "value",
+			},
+		},
 		"= sign in value": {
 			raw: "foo=foo=bar",
 			expected: map[string]string{

@@ -383,8 +383,8 @@ func parseEnv(raw string) (envTemplate, error) {
 			return envTemplate{}, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
 
-		key := parts[0]
-		value := parts[1]
+		key := strings.TrimRight(parts[0], " ")
+		value := strings.TrimLeft(parts[1], " ")
 
 		t, err := tplParser.Parse(value)
 		if err != nil {

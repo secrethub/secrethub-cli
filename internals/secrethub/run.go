@@ -92,14 +92,32 @@ func (cmd *RunCommand) Run() error {
 	}
 	envSources = append(envSources, flagSource)
 
-	for k := range cmd.templateVars {
+	osEnv, err := parseKeyValueStringsToMap(os.Environ())
+	if err != nil {
+		return errio.Error(err)
+	}
+
+	templateVars := make(map[string]string)
+
+	for k, v := range osEnv {
+		if strings.HasPrefix(k, "SECRETHUB_VAR_") {
+			k = strings.TrimLeft(k, "SECRETHUB_VAR_")
+			templateVars[k] = v
+		}
+	}
+
+	for k, v := range cmd.templateVars {
+		templateVars[k] = v
+	}
+
+	for k := range templateVars {
 		if !validation.IsEnvarNamePosix(k) {
 			return ErrInvalidTemplateVar(k)
 		}
 	}
 
 	if cmd.template != "" {
-		tplSource, err := NewEnvFile(cmd.template, cmd.templateVars)
+		tplSource, err := NewEnvFile(cmd.template, templateVars)
 		if err != nil {
 			return err
 		}
@@ -155,11 +173,6 @@ func (cmd *RunCommand) Run() error {
 	}
 
 	// Finally, source the remaining envars from the OS environment.
-	osEnv, err := parseKeyValueStringsToMap(os.Environ())
-	if err != nil {
-		return errio.Error(err)
-	}
-
 	for key, value := range osEnv {
 		// Only set a variable if it wasn't set by a configured source.
 		_, found := environment[key]

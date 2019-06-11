@@ -43,9 +43,9 @@ func TestParseEnv(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseEnv(tc.raw)
 
-			expected := map[string]secrethubtpl.Template{}
+			expected := map[string]secrethubtpl.VarTemplate{}
 			for k, v := range tc.expected {
-				template, err := secrethubtpl.Parse(v)
+				template, err := secrethubtpl.NewV2Parser().Parse(v)
 				assert.OK(t, err)
 				expected[k] = template
 			}

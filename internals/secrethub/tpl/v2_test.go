@@ -8,7 +8,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
-func Test(t *testing.T) {
+func TestV2(t *testing.T) {
 	cases := map[string]struct {
 		raw     string
 		vars    map[string]string
@@ -52,7 +52,7 @@ func Test(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			parsed, err := tpl.Parse(tc.raw)
+			parsed, err := tpl.NewV2Parser().Parse(tc.raw)
 			assert.Equal(t, err, tc.parseErr)
 
 			if err != nil {

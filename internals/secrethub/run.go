@@ -424,8 +424,8 @@ func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
 	}, nil
 }
 
-func parseEnv(raw string) (map[string]secrethubtpl.Template, error) {
-	vars := map[string]secrethubtpl.Template{}
+func parseEnv(raw string) (map[string]secrethubtpl.VarTemplate, error) {
+	vars := map[string]secrethubtpl.VarTemplate{}
 	scanner := bufio.NewScanner(strings.NewReader(raw))
 
 	i := 1
@@ -439,7 +439,7 @@ func parseEnv(raw string) (map[string]secrethubtpl.Template, error) {
 		key := parts[0]
 		value := parts[1]
 
-		t, err := secrethubtpl.Parse(value)
+		t, err := secrethubtpl.NewParser().Parse(value)
 		if err != nil {
 			return nil, ErrTemplate(i, err)
 		}

@@ -21,7 +21,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Errors
@@ -400,22 +400,28 @@ func (e EnvFile) Secrets() []string {
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
 func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
-	templates, err := parseEnv(raw)
+	env, parser, err := parseEnvironment(raw)
 	if err != nil {
-		template, ymlErr := parseYML(raw)
-		if ymlErr != nil {
-			return nil, err
-		}
-		return template, nil
+		return nil, err
 	}
 
-	secretTemplates := make(map[string]tpl.SecretTemplate, len(templates))
-	for k, template := range templates {
+	secretTemplates := make(map[string]tpl.SecretTemplate, len(env))
+	for _, envvar := range env {
+		err = validation.ValidateEnvarName(envvar.key)
+		if err != nil {
+			return nil, templateError(envvar, err)
+		}
+
+		template, err := parser.Parse(envvar.value)
+		if err != nil {
+			return nil, templateError(envvar, err)
+		}
+
 		injected, err := template.InjectVars(vars)
 		if err != nil {
-			return nil, err
+			return nil, templateError(envvar, err)
 		}
-		secretTemplates[k] = injected
+		secretTemplates[envvar.key] = injected
 	}
 
 	return envTemplate{
@@ -423,8 +429,39 @@ func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
 	}, nil
 }
 
-func parseEnv(raw string) (map[string]tpl.VarTemplate, error) {
-	vars := map[string]tpl.VarTemplate{}
+func templateError(envvar envvar, err error) error {
+	if envvar.lineNumber > 0 {
+		return ErrTemplate(envvar.lineNumber, err)
+	}
+	return err
+}
+
+type envvar struct {
+	key        string
+	value      string
+	lineNumber int
+}
+
+// parseEnvironment parses envvars from a string.
+// It first tries the key=value format. When that returns an error,
+// the yml format is tried.
+// The default parser to be used with the format is also returned.
+func parseEnvironment(raw string) ([]envvar, tpl.Parser, error) {
+	parser := tpl.NewV2Parser()
+	env, err := parseEnv(raw)
+	if err != nil {
+		var ymlErr error
+		parser = tpl.NewV1Parser()
+		env, ymlErr = parseYML(raw)
+		if ymlErr != nil {
+			return nil, nil, err
+		}
+	}
+	return env, parser, nil
+}
+
+func parseEnv(raw string) ([]envvar, error) {
+	vars := map[string]envvar{}
 	scanner := bufio.NewScanner(strings.NewReader(raw))
 
 	i := 1
@@ -438,55 +475,41 @@ func parseEnv(raw string) (map[string]tpl.VarTemplate, error) {
 		key := parts[0]
 		value := parts[1]
 
-		t, err := tpl.NewParser().Parse(value)
-		if err != nil {
-			return nil, ErrTemplate(i, err)
-		}
-
-		err = validation.ValidateEnvarName(key)
-		if err != nil {
-			return nil, ErrTemplate(i, err)
-		}
-
-		vars[key] = t
+		vars[key] = envvar{
+			key:        key,
+			value:      value,
+			lineNumber: i}
 		i++
 	}
 
-	return vars, nil
+	i = 0
+	res := make([]envvar, len(vars))
+	for _, envvar := range vars {
+		res[i] = envvar
+		i++
+	}
+
+	return res, nil
 }
 
-func parseYML(raw string) (ymlTemplate, error) {
+func parseYML(raw string) ([]envvar, error) {
 	pairs := make(map[string]string)
 	err := yaml.Unmarshal([]byte(raw), pairs)
 	if err != nil {
-		return ymlTemplate{}, err
+		return nil, err
 	}
 
-	tplParser := tpl.NewV1Parser()
-
-	vars := map[string]tpl.SecretTemplate{}
+	vars := make([]envvar, len(pairs))
+	i := 0
 	for key, value := range pairs {
-		err = validation.ValidateEnvarName(key)
-		if err != nil {
-			return ymlTemplate{}, err
+		vars[i] = envvar{
+			key:        key,
+			value:      value,
+			lineNumber: -1,
 		}
-
-		t, err := tplParser.Parse(value)
-		if err != nil {
-			return ymlTemplate{}, err
-		}
-
-		template, err := t.InjectVars(map[string]string{})
-		if err != nil {
-			return ymlTemplate{}, err
-		}
-
-		vars[key] = template
+		i++
 	}
-
-	return ymlTemplate{
-		vars: vars,
-	}, nil
+	return vars, nil
 }
 
 // EnvDir defines environment variables sourced from files in a directory.

@@ -4,8 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -14,43 +12,44 @@ import (
 func TestParseEnv(t *testing.T) {
 	cases := map[string]struct {
 		raw      string
-		expected map[string]string
+		expected []envvar
 		err      error
 	}{
 		"success": {
 			raw: "foo=bar\nbaz={{path/to/secret}}",
-			expected: map[string]string{
-				"foo": "bar",
-				"baz": "{{path/to/secret}}",
+			expected: []envvar{
+				{
+					key:        "foo",
+					value:      "bar",
+					lineNumber: 1,
+				},
+				{
+					key:        "baz",
+					value:      "{{path/to/secret}}",
+					lineNumber: 2,
+				},
 			},
 		},
 		"= sign in value": {
 			raw: "foo=foo=bar",
-			expected: map[string]string{
-				"foo": "foo=bar",
+			expected:[]envvar{
+				{
+					key:        "foo",
+					value:      "foo=bar",
+					lineNumber: 1,
+				},
 			},
 		},
-		"inject not closed": {
-			raw: "foo={{path/to/secret",
-			err: ErrTemplate(1, generictpl.ErrTagNotClosed("}}")),
-		},
-		"invalid key": {
-			raw: "FOO\000=bar",
-			err: ErrTemplate(1, validation.ErrInvalidEnvarName("FOO\000")),
+		"invalid": {
+			raw: "foobar",
+			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
 		},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseEnv(tc.raw)
 
-			expected := map[string]tpl.VarTemplate{}
-			for k, v := range tc.expected {
-				template, err := tpl.NewV2Parser().Parse(v)
-				assert.OK(t, err)
-				expected[k] = template
-			}
-
-			assert.Equal(t, actual, expected)
+			assert.Equal(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)
 		})
 	}
@@ -59,34 +58,42 @@ func TestParseEnv(t *testing.T) {
 func TestParseYML(t *testing.T) {
 	cases := map[string]struct {
 		raw      string
-		expected map[string]string
+		expected []envvar
 		err      error
 	}{
 		"success": {
 			raw: "foo: bar\nbaz: ${path/to/secret}",
-			expected: map[string]string{
-				"foo": "bar",
-				"baz": "${path/to/secret}",
+			expected: []envvar{
+				{
+					key:        "foo",
+					value:      "bar",
+					lineNumber: -1,
+				},
+				{
+					key:        "baz",
+					value:      "${path/to/secret}",
+					lineNumber: -1,
+				},
 			},
 		},
 		"= in value": {
 			raw: "foo: foo=bar\nbar: baz",
-			expected: map[string]string{
-				"foo": "foo=bar",
-				"bar": "baz",
+			expected: []envvar{
+				{
+					key:        "foo",
+					value:      "foo=bar",
+					lineNumber: -1,
+				},
+				{
+					key:        "bar",
+					value:      "baz",
+					lineNumber: -1,
+				},
 			},
-		},
-		"inject not closed": {
-			raw: "foo: ${path/to/secret",
-			err: generictpl.ErrTagNotClosed("}"),
 		},
 		"nested yml": {
 			raw: "ROOT:\n\tSUB\n\t\tNAME: val1",
 			err: errors.New("yaml: line 2: found character that cannot start any token"),
-		},
-		"invalid key yml": {
-			raw: "FOO=: bar",
-			err: validation.ErrInvalidEnvarName("FOO="),
 		},
 	}
 
@@ -94,16 +101,7 @@ func TestParseYML(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseYML(tc.raw)
 
-			expected := map[string]tpl.SecretTemplate{}
-			for k, v := range tc.expected {
-				template, err := tpl.NewV1Parser().Parse(v)
-				assert.OK(t, err)
-				secretTemplate, err := template.InjectVars(map[string]string{})
-				assert.OK(t, err)
-				expected[k] = secretTemplate
-			}
-
-			assert.Equal(t, actual, ymlTemplate{vars: expected})
+			assert.Equal(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)
 		})
 	}
@@ -150,9 +148,13 @@ func TestNewEnv(t *testing.T) {
 				"baz": "val",
 			},
 		},
-		"yml error": {
-			raw: "foo: ${path/to/secret",
+		"yml template error": {
+			raw: "foo: bar: baz",
 			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
+		},
+		"yml secret template error": {
+			raw: "foo: ${path/to/secret",
+			err: generictpl.ErrTagNotClosed("}"),
 		},
 		"env error": {
 			raw: "foo={{path/to/secret",

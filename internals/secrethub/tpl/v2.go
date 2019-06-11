@@ -2,6 +2,7 @@ package tpl
 
 import (
 	"fmt"
+
 	"github.com/secrethub/secrethub-cli/internals/tpl"
 )
 

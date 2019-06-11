@@ -24,10 +24,11 @@ var (
 type App struct {
 	*kingpin.Application
 
-	name         string
-	delimiters   []string
-	separator    string
-	knownEnvVars map[string]struct{}
+	name          string
+	delimiters    []string
+	separator     string
+	knownEnvVars  map[string]struct{}
+	isExtraEnvVar func(key string) bool
 }
 
 // NewApp defines a new command-line application.
@@ -38,6 +39,9 @@ func NewApp(name, help string) *App {
 		delimiters:   DefaultCommandDelimiters,
 		separator:    DefaultEnvSeparator,
 		knownEnvVars: make(map[string]struct{}),
+		isExtraEnvVar: func(key string) bool {
+			return false
+		},
 	}
 }
 
@@ -79,6 +83,18 @@ func (a *App) unregisterEnvVar(name string) {
 	delete(a.knownEnvVars, strings.ToUpper(name))
 }
 
+// ExtraEnvVarFunc takes a function that determines additional environment variables
+// recognized by the application.
+func (a *App) ExtraEnvVarFunc(f func(key string) bool) *App {
+	isExtraEnvVar := a.isExtraEnvVar
+	if f != nil {
+		a.isExtraEnvVar = func(key string) bool {
+			return isExtraEnvVar(key) || f(key)
+		}
+	}
+	return a
+}
+
 // PrintEnv reads all environment variables starting with the app name and writes
 // a table with the keys and their status: set, empty, unrecognized. The value
 // of environment variables are not printed out for security reasons. The list
@@ -93,8 +109,8 @@ func (a *App) PrintEnv(w io.Writer, verbose bool) error {
 		key, _, match := splitVar(a.name, a.separator, envVar)
 		key = strings.ToUpper(key)
 		if match {
-			_, isSet := a.knownEnvVars[key]
-			if isSet {
+			_, isKnown := a.knownEnvVars[key]
+			if isKnown || a.isExtraEnvVar(key) {
 				envVarStatus[key] = "set"
 			} else {
 				envVarStatus[key] = "unrecognized"

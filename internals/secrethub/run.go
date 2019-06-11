@@ -15,9 +15,8 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-	secrethubtpl "github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	"github.com/secrethub/secrethub-cli/internals/secretspec"
-	"github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -291,7 +290,7 @@ type EnvSource interface {
 }
 
 type ymlTemplate struct {
-	vars map[string]tpl.Template
+	vars map[string]tpl.SecretTemplate
 }
 
 // Env injects the given secrets in the environment values and returns
@@ -299,7 +298,7 @@ type ymlTemplate struct {
 func (t ymlTemplate) Env(secrets map[string]string) (map[string]string, error) {
 	result := make(map[string]string)
 	for key, template := range t.vars {
-		value, err := template.Inject(secrets)
+		value, err := template.InjectSecrets(secrets)
 		if err != nil {
 			return nil, err
 		}
@@ -312,7 +311,7 @@ func (t ymlTemplate) Env(secrets map[string]string) (map[string]string, error) {
 func (t ymlTemplate) Secrets() []string {
 	set := map[string]struct{}{}
 	for _, template := range t.vars {
-		for _, k := range template.Keys() {
+		for _, k := range template.Secrets() {
 			set[k] = struct{}{}
 		}
 	}
@@ -327,7 +326,7 @@ func (t ymlTemplate) Secrets() []string {
 }
 
 type envTemplate struct {
-	envVars map[string]secrethubtpl.SecretTemplate
+	envVars map[string]tpl.SecretTemplate
 }
 
 // Env injects the given secrets in the environment values and returns
@@ -410,7 +409,7 @@ func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
 		return template, nil
 	}
 
-	secretTemplates := make(map[string]secrethubtpl.SecretTemplate, len(templates))
+	secretTemplates := make(map[string]tpl.SecretTemplate, len(templates))
 	for k, template := range templates {
 		injected, err := template.InjectVars(vars)
 		if err != nil {
@@ -424,8 +423,8 @@ func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
 	}, nil
 }
 
-func parseEnv(raw string) (map[string]secrethubtpl.VarTemplate, error) {
-	vars := map[string]secrethubtpl.VarTemplate{}
+func parseEnv(raw string) (map[string]tpl.VarTemplate, error) {
+	vars := map[string]tpl.VarTemplate{}
 	scanner := bufio.NewScanner(strings.NewReader(raw))
 
 	i := 1
@@ -439,7 +438,7 @@ func parseEnv(raw string) (map[string]secrethubtpl.VarTemplate, error) {
 		key := parts[0]
 		value := parts[1]
 
-		t, err := secrethubtpl.NewParser().Parse(value)
+		t, err := tpl.NewParser().Parse(value)
 		if err != nil {
 			return nil, ErrTemplate(i, err)
 		}
@@ -463,9 +462,9 @@ func parseYML(raw string) (ymlTemplate, error) {
 		return ymlTemplate{}, err
 	}
 
-	tplParser := tpl.NewParser("${", "}")
+	tplParser := tpl.NewV1Parser()
 
-	vars := map[string]tpl.Template{}
+	vars := map[string]tpl.SecretTemplate{}
 	for key, value := range pairs {
 		err = validation.ValidateEnvarName(key)
 		if err != nil {
@@ -476,7 +475,13 @@ func parseYML(raw string) (ymlTemplate, error) {
 		if err != nil {
 			return ymlTemplate{}, err
 		}
-		vars[key] = t
+
+		template, err := t.InjectVars(map[string]string{})
+		if err != nil {
+			return ymlTemplate{}, err
+		}
+
+		vars[key] = template
 	}
 
 	return ymlTemplate{

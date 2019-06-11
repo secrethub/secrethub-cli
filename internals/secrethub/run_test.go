@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-	secrethubtpl "github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-	"github.com/secrethub/secrethub-cli/internals/tpl"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
@@ -32,7 +32,7 @@ func TestParseEnv(t *testing.T) {
 		},
 		"inject not closed": {
 			raw: "foo={{path/to/secret",
-			err: ErrTemplate(1, tpl.ErrTagNotClosed("}}")),
+			err: ErrTemplate(1, generictpl.ErrTagNotClosed("}}")),
 		},
 		"invalid key": {
 			raw: "FOO\000=bar",
@@ -43,9 +43,9 @@ func TestParseEnv(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseEnv(tc.raw)
 
-			expected := map[string]secrethubtpl.VarTemplate{}
+			expected := map[string]tpl.VarTemplate{}
 			for k, v := range tc.expected {
-				template, err := secrethubtpl.NewV2Parser().Parse(v)
+				template, err := tpl.NewV2Parser().Parse(v)
 				assert.OK(t, err)
 				expected[k] = template
 			}
@@ -78,7 +78,7 @@ func TestParseYML(t *testing.T) {
 		},
 		"inject not closed": {
 			raw: "foo: ${path/to/secret",
-			err: tpl.ErrTagNotClosed("}"),
+			err: generictpl.ErrTagNotClosed("}"),
 		},
 		"nested yml": {
 			raw: "ROOT:\n\tSUB\n\t\tNAME: val1",
@@ -94,11 +94,13 @@ func TestParseYML(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseYML(tc.raw)
 
-			expected := map[string]tpl.Template{}
+			expected := map[string]tpl.SecretTemplate{}
 			for k, v := range tc.expected {
-				template, err := tpl.NewParser("${", "}").Parse(v)
+				template, err := tpl.NewV1Parser().Parse(v)
 				assert.OK(t, err)
-				expected[k] = template
+				secretTemplate, err := template.InjectVars(map[string]string{})
+				assert.OK(t, err)
+				expected[k] = secretTemplate
 			}
 
 			assert.Equal(t, actual, ymlTemplate{vars: expected})
@@ -154,7 +156,7 @@ func TestNewEnv(t *testing.T) {
 		},
 		"env error": {
 			raw: "foo={{path/to/secret",
-			err: ErrTemplate(1, tpl.ErrTagNotClosed("}}")),
+			err: ErrTemplate(1, generictpl.ErrTagNotClosed("}}")),
 		},
 	}
 

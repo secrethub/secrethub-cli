@@ -294,6 +294,8 @@ type ymlTemplate struct {
 	vars map[string]tpl.Template
 }
 
+// Env injects the given secrets in the environment values and returns
+// a map of the resulting environment.
 func (t ymlTemplate) Env(secrets map[string]string) (map[string]string, error) {
 	result := make(map[string]string)
 	for key, template := range t.vars {
@@ -328,6 +330,8 @@ type envTemplate struct {
 	envVars map[string]secrethubtpl.SecretTemplate
 }
 
+// Env injects the given secrets in the environment values and returns
+// a map of the resulting environment.
 func (t envTemplate) Env(secrets map[string]string) (map[string]string, error) {
 	result := make(map[string]string)
 	for key, template := range t.envVars {

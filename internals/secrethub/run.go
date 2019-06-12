@@ -289,42 +289,6 @@ type EnvSource interface {
 	Secrets() []string
 }
 
-type ymlTemplate struct {
-	vars map[string]tpl.SecretTemplate
-}
-
-// Env injects the given secrets in the environment values and returns
-// a map of the resulting environment.
-func (t ymlTemplate) Env(secrets map[string]string) (map[string]string, error) {
-	result := make(map[string]string)
-	for key, template := range t.vars {
-		value, err := template.InjectSecrets(secrets)
-		if err != nil {
-			return nil, err
-		}
-		result[key] = value
-	}
-	return result, nil
-}
-
-// Secrets returns a list of paths to secrets that are used in the environment.
-func (t ymlTemplate) Secrets() []string {
-	set := map[string]struct{}{}
-	for _, template := range t.vars {
-		for _, k := range template.Secrets() {
-			set[k] = struct{}{}
-		}
-	}
-
-	result := make([]string, len(set))
-	i := 0
-	for k := range set {
-		result[i] = k
-		i++
-	}
-	return result
-}
-
 type envTemplate struct {
 	envVars map[string]tpl.SecretTemplate
 }

@@ -24,24 +24,22 @@ var (
 type App struct {
 	*kingpin.Application
 
-	name          string
-	delimiters    []string
-	separator     string
-	knownEnvVars  map[string]struct{}
-	isExtraEnvVar func(key string) bool
+	name             string
+	delimiters       []string
+	separator        string
+	knownEnvVars     map[string]struct{}
+	extraEnvVarFuncs [](func(key string) bool)
 }
 
 // NewApp defines a new command-line application.
 func NewApp(name, help string) *App {
 	return &App{
-		Application:  kingpin.New(name, help),
-		name:         formatName(name, "", DefaultEnvSeparator, DefaultCommandDelimiters...),
-		delimiters:   DefaultCommandDelimiters,
-		separator:    DefaultEnvSeparator,
-		knownEnvVars: make(map[string]struct{}),
-		isExtraEnvVar: func(key string) bool {
-			return false
-		},
+		Application:      kingpin.New(name, help),
+		name:             formatName(name, "", DefaultEnvSeparator, DefaultCommandDelimiters...),
+		delimiters:       DefaultCommandDelimiters,
+		separator:        DefaultEnvSeparator,
+		knownEnvVars:     make(map[string]struct{}),
+		extraEnvVarFuncs: [](func(string) bool){},
 	}
 }
 
@@ -86,13 +84,19 @@ func (a *App) unregisterEnvVar(name string) {
 // ExtraEnvVarFunc takes a function that determines additional environment variables
 // recognized by the application.
 func (a *App) ExtraEnvVarFunc(f func(key string) bool) *App {
-	isExtraEnvVar := a.isExtraEnvVar
 	if f != nil {
-		a.isExtraEnvVar = func(key string) bool {
-			return isExtraEnvVar(key) || f(key)
-		}
+		a.extraEnvVarFuncs = append(a.extraEnvVarFuncs, f)
 	}
 	return a
+}
+
+func (a *App) isExtraEnvVar(key string) bool {
+	for _, check := range a.extraEnvVarFuncs {
+		if check(key) {
+			return true
+		}
+	}
+	return false
 }
 
 // PrintEnv reads all environment variables starting with the app name and writes

@@ -97,11 +97,33 @@ func TestParseYML(t *testing.T) {
 		},
 	}
 
+	elemEqual := func(t *testing.T, actual []envvar, expected []envvar) {
+	isExpected:
+		for _, a := range actual {
+			for _, e := range expected {
+				if a == e {
+					continue isExpected
+				}
+			}
+			t.Errorf("%+v encountered but not expected", a)
+		}
+
+	isEncountered:
+		for _, e := range expected {
+			for _, a := range actual {
+				if a == e {
+					continue isEncountered
+				}
+			}
+			t.Errorf("%+v expected but not encountered", e)
+		}
+	}
+
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseYML(tc.raw)
 
-			assert.Equal(t, actual, tc.expected)
+			elemEqual(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)
 		})
 	}

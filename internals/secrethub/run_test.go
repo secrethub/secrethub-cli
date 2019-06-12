@@ -32,7 +32,7 @@ func TestParseEnv(t *testing.T) {
 		},
 		"= sign in value": {
 			raw: "foo=foo=bar",
-			expected:[]envvar{
+			expected: []envvar{
 				{
 					key:        "foo",
 					value:      "foo=bar",

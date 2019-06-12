@@ -5,7 +5,10 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
-var ErrTemplateVarsNotSupported = errio.Namespace("template").Code("template_vars_not_supported").Error("the v1 template syntax does not support template variables")
+// Errors
+var (
+	ErrTemplateVarsNotSupported = errio.Namespace("template").Code("template_vars_not_supported").Error("the v1 template syntax does not support template variables")
+)
 
 // NewV1Parser returns a parser for the v1 template syntax.
 //
@@ -36,8 +39,7 @@ func (p parserV1) Parse(raw string) (VarTemplate, error) {
 	}, nil
 }
 
-// secretTemplateV2 is a template that only contains secret keys. Template variables
-// are already replaced.
+// secretTemplateV1 is a template that only contains secret keys.
 type secretTemplateV1 struct {
 	template tpl.Template
 }

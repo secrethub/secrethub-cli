@@ -40,6 +40,16 @@ func TestParseEnv(t *testing.T) {
 				},
 			},
 		},
+		"success with multiple spaces": {
+			raw: "key    = value",
+			expected: []envvar{
+				{
+					key:        "key",
+					value:      "value",
+					lineNumber: 1,
+				},
+			},
+		},
 		"= sign in value": {
 			raw: "foo=foo=bar",
 			expected: []envvar{

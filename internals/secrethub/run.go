@@ -15,14 +15,13 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-	secrethubtpl "github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	"github.com/secrethub/secrethub-cli/internals/secretspec"
-	"github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Errors
@@ -71,7 +70,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
-	clause.Flag("var", "Set variables to be used in templates.").StringMapVar(&cmd.templateVars)
+	clause.Flag("var", "Set variables to be used in templates.").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
 	clause.Flag("masking-timeout", "The time to wait for a partial secret that is written to stdout or stderr to be completed for masking.").Default("1s").DurationVar(&cmd.maskingTimeout)
@@ -113,6 +112,18 @@ func (cmd *RunCommand) Run() error {
 	for k := range templateVars {
 		if !validation.IsEnvarNamePosix(k) {
 			return ErrInvalidTemplateVar(k)
+		}
+	}
+
+	if cmd.template == "" {
+		const defaultTemplate = "secrethub.env"
+		_, err := os.Stat(defaultTemplate)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return fmt.Errorf("could not read default run template: %s", err)
+			}
+		} else {
+			cmd.template = defaultTemplate
 		}
 	}
 
@@ -310,44 +321,12 @@ type EnvSource interface {
 	Secrets() []string
 }
 
-type ymlTemplate struct {
-	vars map[string]tpl.Template
-}
-
-func (t ymlTemplate) Env(secrets map[string]string) (map[string]string, error) {
-	result := make(map[string]string)
-	for key, template := range t.vars {
-		value, err := template.Inject(secrets)
-		if err != nil {
-			return nil, err
-		}
-		result[key] = value
-	}
-	return result, nil
-}
-
-// Secrets returns a list of paths to secrets that are used in the environment.
-func (t ymlTemplate) Secrets() []string {
-	set := map[string]struct{}{}
-	for _, template := range t.vars {
-		for _, k := range template.Keys() {
-			set[k] = struct{}{}
-		}
-	}
-
-	result := make([]string, len(set))
-	i := 0
-	for k := range set {
-		result[i] = k
-		i++
-	}
-	return result
-}
-
 type envTemplate struct {
-	envVars map[string]secrethubtpl.SecretTemplate
+	envVars map[string]tpl.SecretTemplate
 }
 
+// Env injects the given secrets in the environment values and returns
+// a map of the resulting environment.
 func (t envTemplate) Env(secrets map[string]string) (map[string]string, error) {
 	result := make(map[string]string)
 	for key, template := range t.envVars {
@@ -417,22 +396,28 @@ func (e EnvFile) Secrets() []string {
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
 func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
-	templates, err := parseEnv(raw)
+	env, parser, err := parseEnvironment(raw)
 	if err != nil {
-		template, ymlErr := parseYML(raw)
-		if ymlErr != nil {
-			return nil, err
-		}
-		return template, nil
+		return nil, err
 	}
 
-	secretTemplates := make(map[string]secrethubtpl.SecretTemplate, len(templates))
-	for k, template := range templates {
+	secretTemplates := make(map[string]tpl.SecretTemplate, len(env))
+	for _, envvar := range env {
+		err = validation.ValidateEnvarName(envvar.key)
+		if err != nil {
+			return nil, templateError(envvar, err)
+		}
+
+		template, err := parser.Parse(envvar.value)
+		if err != nil {
+			return nil, templateError(envvar, err)
+		}
+
 		injected, err := template.InjectVars(vars)
 		if err != nil {
-			return nil, err
+			return nil, templateError(envvar, err)
 		}
-		secretTemplates[k] = injected
+		secretTemplates[envvar.key] = injected
 	}
 
 	return envTemplate{
@@ -440,8 +425,39 @@ func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
 	}, nil
 }
 
-func parseEnv(raw string) (map[string]secrethubtpl.Template, error) {
-	vars := map[string]secrethubtpl.Template{}
+func templateError(envvar envvar, err error) error {
+	if envvar.lineNumber > 0 {
+		return ErrTemplate(envvar.lineNumber, err)
+	}
+	return err
+}
+
+type envvar struct {
+	key        string
+	value      string
+	lineNumber int
+}
+
+// parseEnvironment parses envvars from a string.
+// It first tries the key=value format. When that returns an error,
+// the yml format is tried.
+// The default parser to be used with the format is also returned.
+func parseEnvironment(raw string) ([]envvar, tpl.Parser, error) {
+	parser := tpl.NewV2Parser()
+	env, err := parseEnv(raw)
+	if err != nil {
+		var ymlErr error
+		parser = tpl.NewV1Parser()
+		env, ymlErr = parseYML(raw)
+		if ymlErr != nil {
+			return nil, nil, err
+		}
+	}
+	return env, parser, nil
+}
+
+func parseEnv(raw string) ([]envvar, error) {
+	vars := map[string]envvar{}
 	scanner := bufio.NewScanner(strings.NewReader(raw))
 
 	i := 1
@@ -452,52 +468,45 @@ func parseEnv(raw string) (map[string]secrethubtpl.Template, error) {
 			return nil, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
 
-		key := parts[0]
-		value := parts[1]
+		key := strings.TrimRight(parts[0], " ")
+		value := strings.TrimLeft(parts[1], " ")
 
-		t, err := secrethubtpl.Parse(value)
-		if err != nil {
-			return nil, ErrTemplate(i, err)
+		vars[key] = envvar{
+			key:        key,
+			value:      value,
+			lineNumber: i,
 		}
-
-		err = validation.ValidateEnvarName(key)
-		if err != nil {
-			return nil, ErrTemplate(i, err)
-		}
-
-		vars[key] = t
 		i++
 	}
 
-	return vars, nil
+	i = 0
+	res := make([]envvar, len(vars))
+	for _, envvar := range vars {
+		res[i] = envvar
+		i++
+	}
+
+	return res, nil
 }
 
-func parseYML(raw string) (ymlTemplate, error) {
+func parseYML(raw string) ([]envvar, error) {
 	pairs := make(map[string]string)
 	err := yaml.Unmarshal([]byte(raw), pairs)
 	if err != nil {
-		return ymlTemplate{}, err
+		return nil, err
 	}
 
-	tplParser := tpl.NewParser("${", "}")
-
-	vars := map[string]tpl.Template{}
+	vars := make([]envvar, len(pairs))
+	i := 0
 	for key, value := range pairs {
-		err = validation.ValidateEnvarName(key)
-		if err != nil {
-			return ymlTemplate{}, err
+		vars[i] = envvar{
+			key:        key,
+			value:      value,
+			lineNumber: -1,
 		}
-
-		t, err := tplParser.Parse(value)
-		if err != nil {
-			return ymlTemplate{}, err
-		}
-		vars[key] = t
+		i++
 	}
-
-	return ymlTemplate{
-		vars: vars,
-	}, nil
+	return vars, nil
 }
 
 // EnvDir defines environment variables sourced from files in a directory.

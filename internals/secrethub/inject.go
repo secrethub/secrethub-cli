@@ -11,7 +11,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/tpl"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -29,6 +29,7 @@ type InjectCommand struct {
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
 	newClient           newClientFunc
+	templateVars        map[string]string
 }
 
 // NewInjectCommand creates a new InjectCommand.
@@ -38,6 +39,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 		clearClipboardAfter: defaultClearClipboardAfter,
 		io:                  io,
 		newClient:           newClient,
+		templateVars:        make(map[string]string),
 	}
 }
 
@@ -76,15 +78,20 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	tpl, err := tpl.NewParser("${", "}").Parse(string(raw))
+	varTemplate, err := tpl.NewV1Parser().Parse(string(raw))
 	if err != nil {
 		return errio.Error(err)
+	}
+
+	secretTemplate, err := varTemplate.InjectVars(cmd.templateVars)
+	if err != nil {
+		return err
 	}
 
 	secrets := make(map[string]string)
 
 	var client secrethub.Client
-	secretPaths := tpl.Keys()
+	secretPaths := secretTemplate.Secrets()
 	if len(secretPaths) > 0 {
 		client, err = cmd.newClient()
 		if err != nil {
@@ -100,7 +107,7 @@ func (cmd *InjectCommand) Run() error {
 		secrets[path] = string(secret.Data)
 	}
 
-	injected, err := tpl.Inject(secrets)
+	injected, err := secretTemplate.InjectSecrets(secrets)
 	if err != nil {
 		return errio.Error(err)
 	}

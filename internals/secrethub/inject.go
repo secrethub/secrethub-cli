@@ -19,6 +19,11 @@ import (
 	"github.com/docker/go-units"
 )
 
+// Errors
+var (
+	ErrUnknownTemplateVersion = errMain.Code("unknown_template_version").ErrorPref("unkown template version: '%s' supported versions are 1, 2 and latest")
+)
+
 // InjectCommand is a command to read a secret.
 type InjectCommand struct {
 	file                string
@@ -30,6 +35,7 @@ type InjectCommand struct {
 	clipper             clip.Clipper
 	newClient           newClientFunc
 	templateVars        map[string]string
+	templateVersion     string
 }
 
 // NewInjectCommand creates a new InjectCommand.
@@ -56,6 +62,7 @@ func (cmd *InjectCommand) Register(r Registerer) {
 	).Short('c').BoolVar(&cmd.useClipboard)
 	clause.Flag("file", "Write the injected template to a file instead of stdout.").StringVar(&cmd.file)
 	clause.Flag("file-mode", "Set filemode for the file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --file flag.").Default("0600").SetValue(&cmd.fileMode)
+	clause.Flag("template-version", "The template syntax version to be used.").Default("latest").StringVar(&cmd.templateVersion)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	BindAction(clause, cmd.Run)
@@ -78,7 +85,19 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	varTemplate, err := tpl.NewV1Parser().Parse(string(raw))
+	var parser tpl.Parser
+	switch cmd.templateVersion {
+	case "1":
+		parser = tpl.NewV1Parser()
+	case "2":
+		parser = tpl.NewV2Parser()
+	case "latest":
+		parser = tpl.NewParser()
+	default:
+		return ErrUnknownTemplateVersion(cmd.templateVersion)
+	}
+
+	varTemplate, err := parser.Parse(string(raw))
 	if err != nil {
 		return errio.Error(err)
 	}

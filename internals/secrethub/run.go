@@ -454,7 +454,8 @@ func parseEnv(raw string) ([]envvar, error) {
 		vars[key] = envvar{
 			key:        key,
 			value:      value,
-			lineNumber: i}
+			lineNumber: i,
+		}
 		i++
 	}
 

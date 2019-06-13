@@ -91,6 +91,18 @@ func (cmd *RunCommand) Run() error {
 	}
 	envSources = append(envSources, flagSource)
 
+	if cmd.template == "" {
+		const defaultTemplate = "secrethub.env"
+		_, err := os.Stat(defaultTemplate)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return fmt.Errorf("could not read default run template: %s", err)
+			}
+		} else {
+			cmd.template = defaultTemplate
+		}
+	}
+
 	osEnv, err := parseKeyValueStringsToMap(os.Environ())
 	if err != nil {
 		return errio.Error(err)
@@ -112,18 +124,6 @@ func (cmd *RunCommand) Run() error {
 	for k := range templateVars {
 		if !validation.IsEnvarNamePosix(k) {
 			return ErrInvalidTemplateVar(k)
-		}
-	}
-
-	if cmd.template == "" {
-		const defaultTemplate = "secrethub.env"
-		_, err := os.Stat(defaultTemplate)
-		if err != nil {
-			if !os.IsNotExist(err) {
-				return fmt.Errorf("could not read default run template: %s", err)
-			}
-		} else {
-			cmd.template = defaultTemplate
 		}
 	}
 

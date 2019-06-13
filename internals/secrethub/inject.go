@@ -64,7 +64,7 @@ func (cmd *InjectCommand) Register(r Registerer) {
 	).Short('c').BoolVar(&cmd.useClipboard)
 	clause.Flag("file", "Write the injected template to a file instead of stdout.").StringVar(&cmd.file)
 	clause.Flag("file-mode", "Set filemode for the file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --file flag.").Default("0600").SetValue(&cmd.fileMode)
-	clause.Flag("var", "Set variables to be used in templates.").Short('v').StringMapVar(&cmd.templateVars)
+	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("template-version", "The template syntax version to be used.").Default("latest").StringVar(&cmd.templateVersion)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 

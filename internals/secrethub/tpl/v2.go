@@ -16,6 +16,10 @@ import (
 // For example:
 // {{ ${app}/db/secret }}
 // Variables cannot be used outside of secret paths.
+//
+// Spaces directly after opening delimiters (`{{` and `${`) and directly
+// before closing delimiters (`}}`, `}`) are ignored. They are not
+// included in the secret pahts and variable names.
 func NewV2Parser() Parser {
 	return parserV2{}
 }

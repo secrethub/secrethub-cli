@@ -87,6 +87,21 @@ func TestParseEnv(t *testing.T) {
 				},
 			},
 		},
+		"success empty lines": {
+			raw: "foo=bar\n\nbar=baz",
+			expected: []envvar{
+				{
+					key:        "foo",
+					value:      "bar",
+					lineNumber: 1,
+				},
+				{
+					key:        "bar",
+					value:      "baz",
+					lineNumber: 3,
+				},
+			},
+		},
 		"= sign in value": {
 			raw: "foo=foo=bar",
 			expected: []envvar{

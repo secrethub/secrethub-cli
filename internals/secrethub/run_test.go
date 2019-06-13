@@ -32,8 +32,12 @@ func TestParseEnv(t *testing.T) {
 		},
 		"success with spaces": {
 			raw: "key = value",
-			expected: map[string]string{
-				"key": "value",
+			expected: []envvar{
+				{
+					key:        "key",
+					value:      "value",
+					lineNumber: 1,
+				},
 			},
 		},
 		"= sign in value": {
@@ -51,6 +55,7 @@ func TestParseEnv(t *testing.T) {
 			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
 		},
 	}
+
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseEnv(tc.raw)

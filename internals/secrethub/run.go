@@ -90,6 +90,18 @@ func (cmd *RunCommand) Run() error {
 	}
 	envSources = append(envSources, flagSource)
 
+	if cmd.template == "" {
+		const defaultTemplate = "secrethub.env"
+		_, err := os.Stat(defaultTemplate)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return fmt.Errorf("could not read default run template: %s", err)
+			}
+		} else {
+			cmd.template = defaultTemplate
+		}
+	}
+
 	if cmd.template != "" {
 		tplSource, err := NewEnvFile(cmd.template, cmd.templateVars)
 		if err != nil {
@@ -436,8 +448,8 @@ func parseEnv(raw string) ([]envvar, error) {
 			return nil, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
 
-		key := parts[0]
-		value := parts[1]
+		key := strings.TrimRight(parts[0], " ")
+		value := strings.TrimLeft(parts[1], " ")
 
 		vars[key] = envvar{
 			key:        key,

@@ -30,6 +30,12 @@ func TestParseEnv(t *testing.T) {
 				},
 			},
 		},
+		"success with spaces": {
+			raw: "key = value",
+			expected: map[string]string{
+				"key": "value",
+			},
+		},
 		"= sign in value": {
 			raw: "foo=foo=bar",
 			expected: []envvar{

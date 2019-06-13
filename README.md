@@ -6,7 +6,7 @@
 </h1>
 
 [![GoDoc](https://godoc.org/github.com/secrethub/secrethub-cli?status.svg)][godoc]
-[![Travis CI](https://travis-ci.org/secrethub/secrethub-cli.svg?branch=master)][travis-ci]
+[![CircleCI](https://circleci.com/gh/secrethub/secrethub-cli.svg?style=shield)][circle-ci]
 [![GolangCI](https://golangci.com/badges/github.com/secrethub/secrethub-cli.svg)][golang-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
 [![Version]( https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
@@ -103,5 +103,5 @@ Run a single test:
 [godoc]: http://godoc.org/github.com/secrethub/secrethub-cli
 [golang-ci]: https://golangci.com/r/github.com/secrethub/secrethub-cli
 [goreportcard]: https://goreportcard.com/report/github.com/secrethub/secrethub-cli
-[travis-ci]: https://travis-ci.org/secrethub/secrethub-cli
+[circle-ci]: https://circleci.com/gh/secrethub/secrethub-cli
 [discord]: https://discord.gg/gyQXAFU

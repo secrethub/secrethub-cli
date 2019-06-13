@@ -24,20 +24,22 @@ var (
 type App struct {
 	*kingpin.Application
 
-	name         string
-	delimiters   []string
-	separator    string
-	knownEnvVars map[string]struct{}
+	name             string
+	delimiters       []string
+	separator        string
+	knownEnvVars     map[string]struct{}
+	extraEnvVarFuncs [](func(key string) bool)
 }
 
 // NewApp defines a new command-line application.
 func NewApp(name, help string) *App {
 	return &App{
-		Application:  kingpin.New(name, help),
-		name:         formatName(name, "", DefaultEnvSeparator, DefaultCommandDelimiters...),
-		delimiters:   DefaultCommandDelimiters,
-		separator:    DefaultEnvSeparator,
-		knownEnvVars: make(map[string]struct{}),
+		Application:      kingpin.New(name, help),
+		name:             formatName(name, "", DefaultEnvSeparator, DefaultCommandDelimiters...),
+		delimiters:       DefaultCommandDelimiters,
+		separator:        DefaultEnvSeparator,
+		knownEnvVars:     make(map[string]struct{}),
+		extraEnvVarFuncs: [](func(string) bool){},
 	}
 }
 
@@ -79,6 +81,24 @@ func (a *App) unregisterEnvVar(name string) {
 	delete(a.knownEnvVars, strings.ToUpper(name))
 }
 
+// ExtraEnvVarFunc takes a function that determines additional environment variables
+// recognized by the application.
+func (a *App) ExtraEnvVarFunc(f func(key string) bool) *App {
+	if f != nil {
+		a.extraEnvVarFuncs = append(a.extraEnvVarFuncs, f)
+	}
+	return a
+}
+
+func (a *App) isExtraEnvVar(key string) bool {
+	for _, check := range a.extraEnvVarFuncs {
+		if check(key) {
+			return true
+		}
+	}
+	return false
+}
+
 // PrintEnv reads all environment variables starting with the app name and writes
 // a table with the keys and their status: set, empty, unrecognized. The value
 // of environment variables are not printed out for security reasons. The list
@@ -93,8 +113,8 @@ func (a *App) PrintEnv(w io.Writer, verbose bool) error {
 		key, _, match := splitVar(a.name, a.separator, envVar)
 		key = strings.ToUpper(key)
 		if match {
-			_, isSet := a.knownEnvVars[key]
-			if isSet {
+			_, isKnown := a.knownEnvVars[key]
+			if isKnown || a.isExtraEnvVar(key) {
 				envVarStatus[key] = "set"
 			} else {
 				envVarStatus[key] = "unrecognized"

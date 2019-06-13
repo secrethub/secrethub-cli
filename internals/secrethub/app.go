@@ -94,7 +94,11 @@ func NewApp() *App {
 		"Options set on the command-line take precedence over those set in the environment. " +
 		"The format for environment variables is `SECRETHUB_[COMMAND_]FLAG_NAME`."
 	return &App{
-		cli:             cli.NewApp(ApplicationName, help),
+		cli: cli.NewApp(ApplicationName, help).ExtraEnvVarFunc(
+			func(key string) bool {
+				return strings.HasPrefix(key, "SECRETHUB_VAR_")
+			},
+		),
 		credentialStore: store,
 		clientFactory:   NewClientFactory(store),
 		io:              io,

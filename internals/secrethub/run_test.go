@@ -219,3 +219,36 @@ func TestNewEnv(t *testing.T) {
 		})
 	}
 }
+
+func TestRunCommand_Run(t *testing.T) {
+	cases := map[string]struct {
+		command RunCommand
+		err     error
+	}{
+		"invalid template var: start with a number": {
+			command: RunCommand{
+				templateVars: map[string]string{
+					"0foo": "value",
+				},
+				envar: map[string]string{},
+			},
+			err: ErrInvalidTemplateVar("0foo"),
+		},
+		"invalid template var: illegal character": {
+			command: RunCommand{
+				templateVars: map[string]string{
+					"foo@bar": "value",
+				},
+				envar: map[string]string{},
+			},
+			err: ErrInvalidTemplateVar("foo@bar"),
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			err := tc.command.Run()
+			assert.Equal(t, err, tc.err)
+		})
+	}
+}

@@ -72,6 +72,21 @@ func TestParseEnv(t *testing.T) {
 				},
 			},
 		},
+		"success comment": {
+			raw: "# database\nDB_USER = user\nDB_PASS = pass",
+			expected: []envvar{
+				{
+					key:        "DB_USER",
+					value:      "user",
+					lineNumber: 2,
+				},
+				{
+					key:        "DB_PASS",
+					value:      "pass",
+					lineNumber: 3,
+				},
+			},
+		},
 		"= sign in value": {
 			raw: "foo=foo=bar",
 			expected: []envvar{

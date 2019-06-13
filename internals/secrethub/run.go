@@ -460,9 +460,15 @@ func parseEnv(raw string) ([]envvar, error) {
 	vars := map[string]envvar{}
 	scanner := bufio.NewScanner(strings.NewReader(raw))
 
-	i := 1
+	i := 0
 	for scanner.Scan() {
+		i++
 		line := scanner.Text()
+
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) != 2 {
 			return nil, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
@@ -476,7 +482,6 @@ func parseEnv(raw string) ([]envvar, error) {
 			value:      value,
 			lineNumber: i,
 		}
-		i++
 	}
 
 	i = 0

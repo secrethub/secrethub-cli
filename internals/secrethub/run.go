@@ -39,6 +39,9 @@ var (
 
 const (
 	maskString = "<redacted by SecretHub>"
+	// templateVarEnvVarPrefix is used to prefix environment variables
+	// that should be used as template variables.
+	templateVarEnvVarPrefix = "SECRETHUB_VAR_"
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -70,7 +73,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
-	clause.Flag("var", "Set variables to be used in templates.").Short('v').StringMapVar(&cmd.templateVars)
+	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
 	clause.Flag("masking-timeout", "The time to wait for a partial secret that is written to stdout or stderr to be completed for masking.").Default("1s").DurationVar(&cmd.maskingTimeout)
@@ -111,8 +114,8 @@ func (cmd *RunCommand) Run() error {
 	templateVars := make(map[string]string)
 
 	for k, v := range osEnv {
-		if strings.HasPrefix(k, "SECRETHUB_VAR_") {
-			k = strings.TrimPrefix(k, "SECRETHUB_VAR_")
+		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
+			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
 			templateVars[k] = v
 		}
 	}

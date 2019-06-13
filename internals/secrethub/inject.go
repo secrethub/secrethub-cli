@@ -5,18 +5,25 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
 	"github.com/docker/go-units"
+)
+
+// Errors
+var (
+	ErrUnknownTemplateVersion = errMain.Code("unknown_template_version").ErrorPref("unknown template version: '%s' supported versions are 1, 2 and latest")
 )
 
 // InjectCommand is a command to read a secret.
@@ -30,6 +37,7 @@ type InjectCommand struct {
 	clipper             clip.Clipper
 	newClient           newClientFunc
 	templateVars        map[string]string
+	templateVersion     string
 }
 
 // NewInjectCommand creates a new InjectCommand.
@@ -56,6 +64,8 @@ func (cmd *InjectCommand) Register(r Registerer) {
 	).Short('c').BoolVar(&cmd.useClipboard)
 	clause.Flag("file", "Write the injected template to a file instead of stdout.").StringVar(&cmd.file)
 	clause.Flag("file-mode", "Set filemode for the file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --file flag.").Default("0600").SetValue(&cmd.fileMode)
+	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
+	clause.Flag("template-version", "The template syntax version to be used.").Default("latest").StringVar(&cmd.templateVersion)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	BindAction(clause, cmd.Run)
@@ -78,12 +88,48 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	varTemplate, err := tpl.NewV1Parser().Parse(string(raw))
+	templateVars := make(map[string]string)
+
+	osEnv, err := parseKeyValueStringsToMap(os.Environ())
 	if err != nil {
 		return errio.Error(err)
 	}
 
-	secretTemplate, err := varTemplate.InjectVars(cmd.templateVars)
+	for k, v := range osEnv {
+		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
+			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
+			templateVars[k] = v
+		}
+	}
+
+	for k, v := range cmd.templateVars {
+		templateVars[k] = v
+	}
+
+	for k := range templateVars {
+		if !validation.IsEnvarNamePosix(k) {
+			return ErrInvalidTemplateVar(k)
+		}
+	}
+
+	var parser tpl.Parser
+	switch cmd.templateVersion {
+	case "1":
+		parser = tpl.NewV1Parser()
+	case "2":
+		parser = tpl.NewV2Parser()
+	case "latest":
+		parser = tpl.NewParser()
+	default:
+		return ErrUnknownTemplateVersion(cmd.templateVersion)
+	}
+
+	varTemplate, err := parser.Parse(string(raw))
+	if err != nil {
+		return errio.Error(err)
+	}
+
+	secretTemplate, err := varTemplate.InjectVars(templateVars)
 	if err != nil {
 		return err
 	}

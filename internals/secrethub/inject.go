@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
@@ -87,7 +88,25 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	for k := range cmd.templateVars {
+	templateVars := make(map[string]string)
+
+	osEnv, err := parseKeyValueStringsToMap(os.Environ())
+	if err != nil {
+		return errio.Error(err)
+	}
+
+	for k, v := range osEnv {
+		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
+			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
+			templateVars[k] = v
+		}
+	}
+
+	for k, v := range cmd.templateVars {
+		templateVars[k] = v
+	}
+
+	for k := range templateVars {
 		if !validation.IsEnvarNamePosix(k) {
 			return ErrInvalidTemplateVar(k)
 		}
@@ -110,7 +129,7 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	secretTemplate, err := varTemplate.InjectVars(cmd.templateVars)
+	secretTemplate, err := varTemplate.InjectVars(templateVars)
 	if err != nil {
 		return err
 	}

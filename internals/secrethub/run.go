@@ -39,6 +39,9 @@ var (
 
 const (
 	maskString = "<redacted by SecretHub>"
+	// templateVarEnvVarPrefix is used to prefix environment variables
+	// that should be used as template variables.
+	templateVarEnvVarPrefix = "SECRETHUB_VAR_"
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -111,8 +114,8 @@ func (cmd *RunCommand) Run() error {
 	templateVars := make(map[string]string)
 
 	for k, v := range osEnv {
-		if strings.HasPrefix(k, "SECRETHUB_VAR_") {
-			k = strings.TrimPrefix(k, "SECRETHUB_VAR_")
+		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
+			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
 			templateVars[k] = v
 		}
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -84,6 +85,12 @@ func (cmd *InjectCommand) Run() error {
 	raw, err := ioutil.ReadAll(cmd.io.Stdin())
 	if err != nil {
 		return errio.Error(err)
+	}
+
+	for k := range cmd.templateVars {
+		if !validation.IsEnvarNamePosix(k) {
+			return ErrInvalidTemplateVar(k)
+		}
 	}
 
 	var parser tpl.Parser

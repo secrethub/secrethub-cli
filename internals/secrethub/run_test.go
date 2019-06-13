@@ -9,6 +9,28 @@ import (
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
+func elemEqual(t *testing.T, actual []envvar, expected []envvar) {
+isExpected:
+	for _, a := range actual {
+		for _, e := range expected {
+			if a == e {
+				continue isExpected
+			}
+		}
+		t.Errorf("%+v encountered but not expected", a)
+	}
+
+isEncountered:
+	for _, e := range expected {
+		for _, a := range actual {
+			if a == e {
+				continue isEncountered
+			}
+		}
+		t.Errorf("%+v expected but not encountered", e)
+	}
+}
+
 func TestParseEnv(t *testing.T) {
 	cases := map[string]struct {
 		raw      string
@@ -70,7 +92,7 @@ func TestParseEnv(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual, err := parseEnv(tc.raw)
 
-			assert.Equal(t, actual, tc.expected)
+			elemEqual(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)
 		})
 	}
@@ -116,28 +138,6 @@ func TestParseYML(t *testing.T) {
 			raw: "ROOT:\n\tSUB\n\t\tNAME: val1",
 			err: errors.New("yaml: line 2: found character that cannot start any token"),
 		},
-	}
-
-	elemEqual := func(t *testing.T, actual []envvar, expected []envvar) {
-	isExpected:
-		for _, a := range actual {
-			for _, e := range expected {
-				if a == e {
-					continue isExpected
-				}
-			}
-			t.Errorf("%+v encountered but not expected", a)
-		}
-
-	isEncountered:
-		for _, e := range expected {
-			for _, a := range actual {
-				if a == e {
-					continue isEncountered
-				}
-			}
-			t.Errorf("%+v expected but not encountered", e)
-		}
 	}
 
 	for name, tc := range cases {

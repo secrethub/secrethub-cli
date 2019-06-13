@@ -23,7 +23,7 @@ import (
 
 // Errors
 var (
-	ErrUnknownTemplateVersion = errMain.Code("unknown_template_version").ErrorPref("unkown template version: '%s' supported versions are 1, 2 and latest")
+	ErrUnknownTemplateVersion = errMain.Code("unknown_template_version").ErrorPref("unknown template version: '%s' supported versions are 1, 2 and latest")
 )
 
 // InjectCommand is a command to read a secret.

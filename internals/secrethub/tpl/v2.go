@@ -11,11 +11,11 @@ import (
 // V2 templates can contain secret paths between brackets:
 // {{ path/to/secret }}
 //
-// Secret paths can contain variables between ${}:
-// ${ var }
-//
-// Combined this can look like:
+// Within secret paths, variables can be used. Variables are
+// given between `${` and `}`.
+// For example:
 // {{ ${app}/db/secret }}
+// Variables cannot be used outside of secret paths.
 func NewV2Parser() Parser {
 	return parserV2{}
 }

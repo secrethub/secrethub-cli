@@ -465,7 +465,8 @@ func parseEnv(raw string) ([]envvar, error) {
 		i++
 		line := scanner.Text()
 
-		if line == "" || strings.HasPrefix(line, "#") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue
 		}
 

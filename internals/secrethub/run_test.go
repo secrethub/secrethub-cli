@@ -87,8 +87,53 @@ func TestParseEnv(t *testing.T) {
 				},
 			},
 		},
+		"success comment prefixed with spaces": {
+			raw: "    # database\nDB_USER = user\nDB_PASS = pass",
+			expected: []envvar{
+				{
+					key:        "DB_USER",
+					value:      "user",
+					lineNumber: 2,
+				},
+				{
+					key:        "DB_PASS",
+					value:      "pass",
+					lineNumber: 3,
+				},
+			},
+		},
+		"success comment prefixed with a tab": {
+			raw: "\t# database\nDB_USER = user\nDB_PASS = pass",
+			expected: []envvar{
+				{
+					key:        "DB_USER",
+					value:      "user",
+					lineNumber: 2,
+				},
+				{
+					key:        "DB_PASS",
+					value:      "pass",
+					lineNumber: 3,
+				},
+			},
+		},
 		"success empty lines": {
 			raw: "foo=bar\n\nbar=baz",
+			expected: []envvar{
+				{
+					key:        "foo",
+					value:      "bar",
+					lineNumber: 1,
+				},
+				{
+					key:        "bar",
+					value:      "baz",
+					lineNumber: 3,
+				},
+			},
+		},
+		"success line with only spaces": {
+			raw: "foo=bar\n    \nbar = baz",
 			expected: []envvar{
 				{
 					key:        "foo",

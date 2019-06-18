@@ -3,7 +3,7 @@ package cli
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestSplitVar(t *testing.T) {

@@ -16,7 +16,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
 	"github.com/docker/go-units"
 )
@@ -124,36 +123,17 @@ func (cmd *InjectCommand) Run() error {
 		return ErrUnknownTemplateVersion(cmd.templateVersion)
 	}
 
-	varTemplate, err := parser.Parse(string(raw))
+	template, err := parser.Parse(string(raw), 1,1)
 	if err != nil {
 		return errio.Error(err)
 	}
 
-	secretTemplate, err := varTemplate.InjectVars(templateVars)
+	client, err := cmd.newClient()
 	if err != nil {
 		return err
 	}
 
-	secrets := make(map[string]string)
-
-	var client secrethub.Client
-	secretPaths := secretTemplate.Secrets()
-	if len(secretPaths) > 0 {
-		client, err = cmd.newClient()
-		if err != nil {
-			return errio.Error(err)
-		}
-	}
-
-	for _, path := range secretPaths {
-		secret, err := client.Secrets().Versions().GetWithData(path)
-		if err != nil {
-			return errio.Error(err)
-		}
-		secrets[path] = string(secret.Data)
-	}
-
-	injected, err := secretTemplate.InjectSecrets(secrets)
+	injected, err := template.Evaluate(templateVars, newSecretReader(client))
 	if err != nil {
 		return errio.Error(err)
 	}

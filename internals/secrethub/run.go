@@ -130,8 +130,13 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
+	client, err := cmd.newClient()
+	if err != nil {
+		return errio.Error(err)
+	}
+
 	if cmd.template != "" {
-		tplSource, err := NewEnvFile(cmd.template, templateVars)
+		tplSource, err := NewEnvFile(cmd.template, templateVars, newSecretReader(client))
 		if err != nil {
 			return err
 		}
@@ -154,11 +159,6 @@ func (cmd *RunCommand) Run() error {
 		for _, path := range source.Secrets() {
 			secrets[path] = ""
 		}
-	}
-
-	client, err := cmd.newClient()
-	if err != nil {
-		return errio.Error(err)
 	}
 
 	for path := range secrets {
@@ -325,7 +325,9 @@ type EnvSource interface {
 }
 
 type envTemplate struct {
-	envVars map[string]tpl.SecretTemplate
+	envVars      map[string]tpl.Template
+	templateVars map[string]string
+	secretReader tpl.SecretReader
 }
 
 // Env injects the given secrets in the environment values and returns
@@ -333,7 +335,7 @@ type envTemplate struct {
 func (t envTemplate) Env(secrets map[string]string) (map[string]string, error) {
 	result := make(map[string]string)
 	for key, template := range t.envVars {
-		value, err := template.InjectSecrets(secrets)
+		value, err := template.Evaluate(t.templateVars, t.secretReader)
 		if err != nil {
 			return nil, err
 		}
@@ -342,31 +344,19 @@ func (t envTemplate) Env(secrets map[string]string) (map[string]string, error) {
 	return result, nil
 }
 
-// Secrets returns a list of paths to secrets that are used in the environment.
+// Secrets implements the EnvSource.Secrets function.
+// The envTemplate fetches its secrets using a tpl.SecretReader.
 func (t envTemplate) Secrets() []string {
-	set := map[string]struct{}{}
-	for _, template := range t.envVars {
-		for _, secretpath := range template.Secrets() {
-			set[secretpath] = struct{}{}
-		}
-	}
-
-	result := make([]string, len(set))
-	i := 0
-	for secretpath := range set {
-		result[i] = secretpath
-		i++
-	}
-	return result
+	return []string{}
 }
 
 // NewEnvFile returns an new environment from a file.
-func NewEnvFile(filepath string, vars map[string]string) (EnvFile, error) {
+func NewEnvFile(filepath string, vars map[string]string, sr tpl.SecretReader) (EnvFile, error) {
 	content, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return EnvFile{}, ErrCannotReadFile(filepath, err)
 	}
-	env, err := NewEnv(string(content), vars)
+	env, err := NewEnv(string(content), vars, sr)
 	if err != nil {
 		return EnvFile{}, err
 	}
@@ -398,33 +388,30 @@ func (e EnvFile) Secrets() []string {
 
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
-func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
+func NewEnv(raw string, vars map[string]string, sr tpl.SecretReader) (EnvSource, error) {
 	env, parser, err := parseEnvironment(raw)
 	if err != nil {
 		return nil, err
 	}
 
-	secretTemplates := make(map[string]tpl.SecretTemplate, len(env))
+	secretTemplates := make(map[string]tpl.Template, len(env))
 	for _, envvar := range env {
 		err = validation.ValidateEnvarName(envvar.key)
 		if err != nil {
 			return nil, templateError(envvar, err)
 		}
 
-		template, err := parser.Parse(envvar.value)
+		template, err := parser.Parse(envvar.value, envvar.lineNumber, envvar.columnNumber)
 		if err != nil {
-			return nil, templateError(envvar, err)
+			return nil, err
 		}
-
-		injected, err := template.InjectVars(vars)
-		if err != nil {
-			return nil, templateError(envvar, err)
-		}
-		secretTemplates[envvar.key] = injected
+		secretTemplates[envvar.key] = template
 	}
 
 	return envTemplate{
-		envVars: secretTemplates,
+		envVars:      secretTemplates,
+		templateVars: vars,
+		secretReader: sr,
 	}, nil
 }
 
@@ -436,9 +423,10 @@ func templateError(envvar envvar, err error) error {
 }
 
 type envvar struct {
-	key        string
-	value      string
-	lineNumber int
+	key          string
+	value        string
+	lineNumber   int
+	columnNumber int
 }
 
 // parseEnvironment parses envvars from a string.
@@ -478,6 +466,7 @@ func parseEnv(raw string) ([]envvar, error) {
 			key:        key,
 			value:      value,
 			lineNumber: i,
+			columnNumber: len(parts[0]) + 1 + len(parts[1])-len(value) + 1, // the length of the key (including extra spaces) + the length of the = char + the length of the spaces before the value + 1 for the current char
 		}
 		i++
 	}

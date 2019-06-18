@@ -4,6 +4,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
+
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -41,14 +45,16 @@ func TestParseEnv(t *testing.T) {
 			raw: "foo=bar\nbaz={{path/to/secret}}",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:          "foo",
+					value:        "bar",
+					lineNumber:   1,
+					columnNumber: 5,
 				},
 				{
-					key:        "baz",
-					value:      "{{path/to/secret}}",
-					lineNumber: 2,
+					key:          "baz",
+					value:        "{{path/to/secret}}",
+					lineNumber:   2,
+					columnNumber: 5,
 				},
 			},
 		},
@@ -56,9 +62,10 @@ func TestParseEnv(t *testing.T) {
 			raw: "key = value",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 7,
 				},
 			},
 		},
@@ -66,9 +73,10 @@ func TestParseEnv(t *testing.T) {
 			raw: "key    = value",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 10,
 				},
 			},
 		},
@@ -76,9 +84,10 @@ func TestParseEnv(t *testing.T) {
 			raw: "foo=foo=bar",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "foo=bar",
-					lineNumber: 1,
+					key:          "foo",
+					value:        "foo=bar",
+					lineNumber:   1,
+					columnNumber: 5,
 				},
 			},
 		},
@@ -199,19 +208,23 @@ func TestNewEnv(t *testing.T) {
 			raw: "foo: ${path/to/secret",
 			err: generictpl.ErrTagNotClosed("}"),
 		},
-		"env error": {
+		"secret template error": {
 			raw: "foo={{path/to/secret",
-			err: ErrTemplate(1, generictpl.ErrTagNotClosed("}}")),
+			err: tpl.ErrSecretTagNotClosed(1, 21),
+		},
+		"secret template error second line": {
+			raw: "foo=bar\nbar={{ error@secretpath }}",
+			err: tpl.ErrIllegalSecretCharacter('@', 2, 13),
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			env, err := NewEnv(tc.raw, tc.templateVars)
+			env, err := NewEnv(tc.raw, tc.templateVars, fakes.FakeSecretReader{Secrets: tc.replacements})
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {
-				actual, err := env.Env(tc.replacements)
+				actual, err := env.Env(map[string]string{})
 				assert.Equal(t, err, tc.err)
 
 				assert.Equal(t, actual, tc.expected)

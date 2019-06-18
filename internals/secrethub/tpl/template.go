@@ -1,21 +1,20 @@
 package tpl
 
+import "github.com/secrethub/secrethub-go/internals/errio"
+
+// Errors
+var (
+	tplError = errio.Namespace("template")
+)
+
 // Parser parses a raw string to a template.
 type Parser interface {
-	Parse(raw string) (VarTemplate, error)
+	Parse(raw string, column, line int) (Template, error)
 }
 
-// VarTemplate is a template containing variables. Once variables are injected,
-// secret paths can be retrieved and injected as well to retrieve the resulting string.
-type VarTemplate interface {
-	InjectVars(vars map[string]string) (SecretTemplate, error)
-}
-
-// SecretTemplate is a template containing secret paths. The plaintext values corresponding
-// to these paths can be injected to retrieve the resulting string.
-type SecretTemplate interface {
-	InjectSecrets(secrets map[string]string) (string, error)
-	Secrets() []string
+// Template contains secret and variable references. It can be evaluated to resolve to a string.
+type Template interface {
+	Evaluate(vars map[string]string, sr SecretReader) (string, error)
 }
 
 // NewParser returns a parser for the latest template syntax.

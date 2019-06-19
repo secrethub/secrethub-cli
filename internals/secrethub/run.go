@@ -479,7 +479,7 @@ func parseEnv(raw string) ([]envvar, error) {
 		}
 
 		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
+		value := trimQuotes(strings.TrimSpace(parts[1]))
 
 		vars[key] = envvar{
 			key:        key,
@@ -496,6 +496,32 @@ func parseEnv(raw string) ([]envvar, error) {
 	}
 
 	return res, nil
+}
+
+const (
+	doubleQuoteChar = '\u0022'
+	singleQuoteChar = '\u0027'
+)
+
+// trimQuotes removes a leading and trailing quote from the given string value if
+// it is wrapped in either single or double quotes.
+//
+// Rules:
+// - Empty values become empty values (e.g. `''`and `""` both evaluate to the empty string ``).
+// - Inner quotes are maintained (e.g. `{"foo":"bar"}` remains unchanged).
+// - Single and double quoted values are escaped (e.g. `'foo'` and `"foo"` both evaluate to `foo`).
+// - Single and double qouted values maintain whitespace from both ends (e.g. `" foo "` becomes ` foo `)
+// - Inputs with either leading or trailing whitespace are considered unquoted,
+//   so make sure you sanitize your inputs before calling this function.
+func trimQuotes(s string) string {
+	n := len(s)
+	if n > 1 &&
+		(s[0] == singleQuoteChar && s[n-1] == singleQuoteChar ||
+			s[0] == doubleQuoteChar && s[n-1] == doubleQuoteChar) {
+		return s[1 : n-1]
+	}
+
+	return s
 }
 
 func parseYML(raw string) ([]envvar, error) {

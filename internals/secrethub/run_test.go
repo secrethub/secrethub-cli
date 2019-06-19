@@ -82,6 +82,36 @@ func TestParseEnv(t *testing.T) {
 				},
 			},
 		},
+		"success with single quotes": {
+			raw: "key='value'",
+			expected: []envvar{
+				{
+					key:        "key",
+					value:      "value",
+					lineNumber: 1,
+				},
+			},
+		},
+		"success with double quotes": {
+			raw: `key="value"`,
+			expected: []envvar{
+				{
+					key:        "key",
+					value:      "value",
+					lineNumber: 1,
+				},
+			},
+		},
+		"success with quotes and whitespace": {
+			raw: "key = 'value'",
+			expected: []envvar{
+				{
+					key:        "key",
+					value:      "value",
+					lineNumber: 1,
+				},
+			},
+		},
 		"success comment": {
 			raw: "# database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
@@ -334,6 +364,113 @@ func TestRunCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := tc.command.Run()
 			assert.Equal(t, err, tc.err)
+		})
+	}
+}
+
+func TestTrimQuotes(t *testing.T) {
+	cases := map[string]struct {
+		in       string
+		expected string
+	}{
+		"unquoted": {
+			in:       `foo`,
+			expected: `foo`,
+		},
+		"single quoted": {
+			in:       `'foo'`,
+			expected: `foo`,
+		},
+		"double quoted": {
+			in:       `"foo"`,
+			expected: `foo`,
+		},
+		"empty string": {
+			in:       "",
+			expected: "",
+		},
+		"single quoted empty string": {
+			in:       `''`,
+			expected: ``,
+		},
+		"double qouted empty string": {
+			in:       `""`,
+			expected: ``,
+		},
+		"single quote wrapped in single quote": {
+			in:       `''foo''`,
+			expected: `'foo'`,
+		},
+		"single quote wrapped in double quote": {
+			in:       `"'foo'"`,
+			expected: `'foo'`,
+		},
+		"double quote wrapped in double quote": {
+			in:       `""foo""`,
+			expected: `"foo"`,
+		},
+		"double quote wrapped in single quote": {
+			in:       `'"foo"'`,
+			expected: `"foo"`,
+		},
+		"single quote opened but not closed": {
+			in:       `'foo`,
+			expected: `'foo`,
+		},
+		"double quote opened but not closed": {
+			in:       `"foo`,
+			expected: `"foo`,
+		},
+		"single quote closed but not opened": {
+			in:       `foo'`,
+			expected: `foo'`,
+		},
+		"double quote closed but not opened": {
+			in:       `foo"`,
+			expected: `foo"`,
+		},
+
+		"single quoted with inner leading whitespace": {
+			in:       `' foo'`,
+			expected: ` foo`,
+		},
+		"double quoted with inner leading whitespace": {
+			in:       `" foo"`,
+			expected: ` foo`,
+		},
+		"single quoted with inner trailing whitespace": {
+			in:       `'foo '`,
+			expected: `foo `,
+		},
+		"double quoted with inner trailing whitespace": {
+			in:       `"foo "`,
+			expected: `foo `,
+		},
+
+		// Trimming OUTER whitespace is explicitly not the responsibility of this function.
+		"single quoted with outer leading whitespace": {
+			in:       ` 'foo'`,
+			expected: ` 'foo'`,
+		},
+		"double quoted with outer leading whitespace": {
+			in:       ` "foo"`,
+			expected: ` "foo"`,
+		},
+		"single quoted with outer trailing whitespace": {
+			in:       `'foo' `,
+			expected: `'foo' `,
+		},
+		"double quoted with outer trailing whitespace": {
+			in:       `"foo" `,
+			expected: `"foo" `,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			actual := trimQuotes(tc.in)
+
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

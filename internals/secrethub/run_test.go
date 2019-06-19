@@ -72,6 +72,16 @@ func TestParseEnv(t *testing.T) {
 				},
 			},
 		},
+		"success with tabs": {
+			raw: "key\t=\tvalue",
+			expected: []envvar{
+				{
+					key:        "key",
+					value:      "value",
+					lineNumber: 1,
+				},
+			},
+		},
 		"success comment": {
 			raw: "# database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{

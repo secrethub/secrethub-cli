@@ -478,8 +478,8 @@ func parseEnv(raw string) ([]envvar, error) {
 			return nil, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
 
-		key := strings.TrimRight(parts[0], " ")
-		value := strings.TrimLeft(parts[1], " ")
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
 
 		vars[key] = envvar{
 			key:        key,

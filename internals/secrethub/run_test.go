@@ -72,6 +72,26 @@ func TestParseEnv(t *testing.T) {
 				},
 			},
 		},
+		"success with leading space": {
+			raw: " key = value",
+			expected: []envvar{
+				{
+					key:        "key",
+					value:      "value",
+					lineNumber: 1,
+				},
+			},
+		},
+		"success with trailing space": {
+			raw: "key = value ",
+			expected: []envvar{
+				{
+					key:        "key",
+					value:      "value",
+					lineNumber: 1,
+				},
+			},
+		},
 		"success with tabs": {
 			raw: "key\t=\tvalue",
 			expected: []envvar{
@@ -385,6 +405,10 @@ func TestTrimQuotes(t *testing.T) {
 			in:       `"foo"`,
 			expected: `foo`,
 		},
+		"maintain quotes inside unquoted value": {
+			in:       `{"foo":"bar"}`,
+			expected: `{"foo":"bar"}`,
+		},
 		"empty string": {
 			in:       "",
 			expected: "",
@@ -429,7 +453,6 @@ func TestTrimQuotes(t *testing.T) {
 			in:       `foo"`,
 			expected: `foo"`,
 		},
-
 		"single quoted with inner leading whitespace": {
 			in:       `' foo'`,
 			expected: ` foo`,

@@ -499,8 +499,8 @@ func parseEnv(raw string) ([]envvar, error) {
 }
 
 const (
-	doubleQuoteChar = '\u0022'
-	singleQuoteChar = '\u0027'
+	doubleQuoteChar = '\u0022' // "
+	singleQuoteChar = '\u0027' // '
 )
 
 // trimQuotes removes a leading and trailing quote from the given string value if

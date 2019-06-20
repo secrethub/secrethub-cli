@@ -60,6 +60,7 @@ func (s secret) evaluate(ctx context) (string, error) {
 		if err != nil {
 			return "", err
 		}
+
 		buffer.WriteString(eval)
 	}
 	return ctx.secret(buffer.String())
@@ -108,10 +109,12 @@ type parserV2 struct{}
 // Variable tags cannot contain variable tags (they cannot be nested).
 func (p parserV2) Parse(raw string, line, column int) (Template, error) {
 	parser := newV2Parser(bytes.NewBufferString(raw), line, column)
+
 	nodes, err := parser.parse()
 	if err != nil {
 		return nil, err
 	}
+
 	return templateV2{
 		nodes: nodes,
 	}, nil
@@ -154,6 +157,7 @@ func (p *v2Parser) readRune() error {
 
 func (p *v2Parser) parse() ([]node, error) {
 	res := []node{}
+
 	err := p.readRune()
 	if err == io.EOF {
 		return res, nil
@@ -179,6 +183,7 @@ func (p *v2Parser) parse() ([]node, error) {
 				if err != nil {
 					return nil, err
 				}
+
 				res = append(res, variable)
 
 				err = p.readRune()
@@ -196,6 +201,7 @@ func (p *v2Parser) parse() ([]node, error) {
 				if unicode.IsLetter(p.next) || p.next == '_' {
 					return nil, ErrUnexpectedDollar(p.lineNo, p.columnNo)
 				}
+
 				res = append(res, character(p.current))
 				continue
 			}
@@ -206,6 +212,7 @@ func (p *v2Parser) parse() ([]node, error) {
 				if err != nil {
 					return nil, err
 				}
+
 				res = append(res, secret)
 
 				err = p.readRune()
@@ -215,6 +222,7 @@ func (p *v2Parser) parse() ([]node, error) {
 				if err != nil {
 					return nil, err
 				}
+
 				continue
 			default:
 				res = append(res, character(p.current))
@@ -228,8 +236,10 @@ func (p *v2Parser) parse() ([]node, error) {
 					break
 				}
 			}
+
 			if isSpecialChar {
 				res = append(res, character(p.next))
+
 				err = p.readRune()
 				if err == io.EOF {
 					return res, nil
@@ -240,6 +250,7 @@ func (p *v2Parser) parse() ([]node, error) {
 			} else {
 				res = append(res, character(p.current))
 			}
+
 			continue
 		default:
 			res = append(res, character(p.current))
@@ -287,11 +298,13 @@ func (p *v2Parser) parseVar() (node, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			if p.next == '}' {
 				return variable{
 					key: buffer.String(),
 				}, nil
 			}
+
 			return nil, ErrIllegalVariableCharacter(p.current, p.lineNo, p.columnNo)
 		}
 		if p.isVariableRune(p.next) {
@@ -304,6 +317,7 @@ func (p *v2Parser) parseVar() (node, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			continue
 		}
 		return nil, ErrIllegalVariableCharacter(p.next, p.lineNo, p.columnNo+1)
@@ -318,6 +332,7 @@ func (p *v2Parser) parseVar() (node, error) {
 // of the closing delimiter of the secret tag ('}').
 func (p *v2Parser) parseSecret() (node, error) {
 	path := []node{}
+
 	err := p.readRune()
 	if err == io.EOF {
 		return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
@@ -349,6 +364,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 				if err != nil {
 					return nil, err
 				}
+
 				path = append(path, variable)
 
 				err = p.readRune()
@@ -358,6 +374,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 				if err != nil {
 					return nil, err
 				}
+
 				continue
 			}
 			return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
@@ -370,9 +387,11 @@ func (p *v2Parser) parseSecret() (node, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			if p.next != '}' {
 				return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 			}
+
 			err = p.readRune()
 			if err == io.EOF {
 				return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
@@ -384,22 +403,27 @@ func (p *v2Parser) parseSecret() (node, error) {
 			if p.next != '}' {
 				return nil, ErrIllegalSecretCharacter(' ', p.lineNo, p.columnNo-1)
 			}
+
 			return secret{
 				path: path,
 			}, nil
 		}
+
 		if p.current == '}' {
 			if p.next == '}' {
 				return secret{
 					path: path,
 				}, nil
 			}
+
 			return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 		}
+
 		if p.isSecretPathRune(p.current) {
 			path = append(path, character(p.current))
 			continue
 		}
+
 		return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 	}
 }
@@ -450,7 +474,9 @@ func (t templateV2) Evaluate(vars map[string]string, sr SecretReader) (string, e
 		if err != nil {
 			return "", err
 		}
+
 		buffer.WriteString(eval)
 	}
+
 	return buffer.String(), nil
 }

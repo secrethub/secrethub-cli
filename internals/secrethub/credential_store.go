@@ -25,11 +25,11 @@ type CredentialStore interface {
 	// Set stores a credential that is returned on Get.
 	// The credential is only stored in memory. Save
 	// should be called to persist the credential.
-	Set(credential secrethub.Credential)
+	Set(credential *secrethub.RSACredential)
 	// Save persists the credential.
 	Save() error
 	// Get retrieves a credential from the store.
-	Get() (secrethub.RSACredential, error)
+	Get() (*secrethub.RSACredential, error)
 	Register(FlagRegisterer)
 }
 
@@ -45,7 +45,7 @@ type credentialStore struct {
 	AccountCredential            string
 	credentialPassphrase         string
 	CredentialPassphraseCacheTTL time.Duration
-	credential                   secrethub.Credential
+	credential                   *secrethub.RSACredential
 	io                           ui.IO
 }
 
@@ -71,7 +71,7 @@ func (store *credentialStore) SetPassphrase(passphrase string) {
 
 // Set stores a credential that is returned on Get.
 // The credential is not persisted yet in a file.
-func (store *credentialStore) Set(credential secrethub.Credential) {
+func (store *credentialStore) Set(credential *secrethub.RSACredential) {
 	store.credential = credential
 }
 
@@ -97,7 +97,7 @@ func (store *credentialStore) CredentialExists() (bool, error) {
 // Get retrieves a credential from the store.
 // When a credential is set, that credential is returned,
 // otherwise the credential is read from the configured file.
-func (store *credentialStore) Get() (secrethub.RSACredential, error) {
+func (store *credentialStore) Get() (*secrethub.RSACredential, error) {
 	if store.credential != nil {
 		return store.credential, nil
 	}

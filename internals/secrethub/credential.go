@@ -23,20 +23,20 @@ var (
 
 // CredentialReader reads a credential.
 type CredentialReader interface {
-	Read() (secrethub.RSACredential, error)
+	Read() (*secrethub.RSACredential, error)
 }
 
 // CredentialReaderFunc is a helper function that implements the CredentialReader interface.
-type CredentialReaderFunc func() (secrethub.RSACredential, error)
+type CredentialReaderFunc func() (*secrethub.RSACredential, error)
 
 // Read reads a credential.
-func (fn CredentialReaderFunc) Read() (secrethub.RSACredential, error) {
+func (fn CredentialReaderFunc) Read() (*secrethub.RSACredential, error) {
 	return fn()
 }
 
 // NewCredentialReader creates a new credential reader.
 func NewCredentialReader(io ui.IO, profileDir ProfileDir, flagValue string, passReader PassphraseReader) CredentialReader {
-	fn := func() (secrethub.RSACredential, error) {
+	fn := func() (*secrethub.RSACredential, error) {
 		if flagValue != "" {
 			return parseCredential(flagValue, passReader)
 		}
@@ -63,12 +63,12 @@ func NewCredentialReader(io ui.IO, profileDir ProfileDir, flagValue string, pass
 }
 
 // parseCredential parses and decodes a credential, optionally unarmoring it.
-func parseCredential(raw string, reader PassphraseReader) (secrethub.RSACredential, error) {
+func parseCredential(raw string, reader PassphraseReader) (*secrethub.RSACredential, error) {
 	parser := secrethub.NewCredentialParser(secrethub.DefaultCredentialDecoders)
 
 	encoded, err := parser.Parse(raw)
 	if err != nil {
-		return secrethub.RSACredential{}, errio.Error(err)
+		return nil, errio.Error(err)
 	}
 
 	if encoded.IsEncrypted() {
@@ -76,24 +76,24 @@ func parseCredential(raw string, reader PassphraseReader) (secrethub.RSACredenti
 
 		passphrase, err := reader.Get(id)
 		if err != nil {
-			return secrethub.RSACredential{}, errio.Error(err)
+			return nil, errio.Error(err)
 		}
 
 		passBasedKey, err := secrethub.NewPassBasedKey(passphrase)
 		if err != nil {
-			return secrethub.RSACredential{}, err
+			return nil, err
 		}
 
 		credential, err := encoded.DecodeEncrypted(passBasedKey)
 		if crypto.IsWrongKey(err) {
 			incorrectErr := reader.IncorrectPassphrase(id)
 			if incorrectErr != nil {
-				return secrethub.RSACredential{}, ErrIncorrectPassphraseNotCleared(err, incorrectErr)
+				return nil, ErrIncorrectPassphraseNotCleared(err, incorrectErr)
 			}
 
-			return secrethub.RSACredential{}, ErrCannotDecryptCredential
+			return nil, ErrCannotDecryptCredential
 		} else if err != nil {
-			return secrethub.RSACredential{}, errio.Error(err)
+			return nil, errio.Error(err)
 		}
 
 		return credential, nil
@@ -110,7 +110,7 @@ func getEncryptedCredentialID(encrypted []byte) string {
 }
 
 // readOldCredential reads an old configuration into a Credential.
-func readOldCredential(io ui.IO, profileDir ProfileDir, passReader PassphraseReader) (secrethub.RSACredential, error) {
+func readOldCredential(io ui.IO, profileDir ProfileDir, passReader PassphraseReader) (*secrethub.RSACredential, error) {
 	config, err := LoadConfig(io, profileDir.oldConfigFile())
 	if err != nil {
 		return nil, errio.Error(err)
@@ -120,7 +120,7 @@ func readOldCredential(io ui.IO, profileDir ProfileDir, passReader PassphraseRea
 }
 
 // Credential ports the old configuration to a Credential.
-func (c *Config) toCredential(passReader PassphraseReader) (secrethub.Credential, error) {
+func (c *Config) toCredential(passReader PassphraseReader) (*secrethub.RSACredential, error) {
 	if c.Type == ConfigUserType {
 		key, err := ioutil.ReadFile(c.User.KeyFile)
 		if err != nil {
@@ -136,7 +136,7 @@ func (c *Config) toCredential(passReader PassphraseReader) (secrethub.Credential
 }
 
 // loadPEMKey loads a PEM encoded key, optionally decrypting it when necessary.
-func loadPEMKey(key []byte, passReader PassphraseReader) (secrethub.Credential, error) {
+func loadPEMKey(key []byte, passReader PassphraseReader) (*secrethub.RSACredential, error) {
 	pemKey, err := crypto.ReadPEM(key)
 	if err != nil {
 		return nil, errio.Error(err)
@@ -173,5 +173,5 @@ func loadPEMKey(key []byte, passReader PassphraseReader) (secrethub.Credential, 
 		}
 	}
 
-	return secrethub.RSACredential{RSAPrivateKey: clientKey}, nil
+	return &secrethub.RSACredential{RSAPrivateKey: clientKey}, nil
 }

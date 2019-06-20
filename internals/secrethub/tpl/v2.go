@@ -15,7 +15,12 @@ var (
 	ErrSecretTagNotClosed       = tplError.Code("secret_tag_not_closed").ErrorPref("Expected the closing of a secret tag `}}` at line %d column %d, but reached the end of the template.")
 	ErrVariableTagNotClosed     = tplError.Code("variable_tag_not_closed").ErrorPref("Expected the closing of a variable tag `}` at line %d column %d, but reached the end of the template.")
 
-	specialChars = []rune{'$', '{', '}', '\\'}
+	specialChars = map[rune]struct{}{
+		'$':  {},
+		'{':  {},
+		'}':  {},
+		'\\': {},
+	}
 )
 
 // NewV2Parser returns a parser for the v2 template syntax.
@@ -229,14 +234,7 @@ func (p *v2Parser) parse() ([]node, error) {
 				continue
 			}
 		case '\\':
-			isSpecialChar := false
-			for _, specialChar := range specialChars {
-				if p.next == specialChar {
-					isSpecialChar = true
-					break
-				}
-			}
-
+			_, isSpecialChar := specialChars[p.next]
 			if isSpecialChar {
 				res = append(res, character(p.next))
 

@@ -123,7 +123,7 @@ func newV2Parser(buf *bytes.Buffer, line, column int) v2Parser {
 		buf:    buf,
 		lineNo: line,
 		// The column number indicates the index (starting at 1) of the current rune.
-		// We subtract 2 of the given value. One bacause we have not read the current rune yet and
+		// We subtract 2 of the given value. One because we have not read the current rune yet and
 		// one more because we are reading the next rune in advance (which we don't want to count).
 		columnNo: column - 2,
 	}

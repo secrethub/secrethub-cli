@@ -131,7 +131,7 @@ func (cmd *RunCommand) Run() error {
 	}
 
 	if cmd.template != "" {
-		envFile, err := NewEnvFile(cmd.template, templateVars)
+		envFile, err := ReadEnvFile(cmd.template, templateVars)
 		if err != nil {
 			return err
 		}
@@ -350,8 +350,8 @@ func (t envTemplate) Secrets() []string {
 	return []string{}
 }
 
-// NewEnvFile returns an new environment from a file.
-func NewEnvFile(filepath string, vars map[string]string) (EnvFile, error) {
+// ReadEnvFile reads and parses a .env file.
+func ReadEnvFile(filepath string, vars map[string]string) (EnvFile, error) {
 	content, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return EnvFile{}, ErrCannotReadFile(filepath, err)

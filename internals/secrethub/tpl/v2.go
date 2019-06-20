@@ -12,7 +12,7 @@ var (
 	ErrTemplateVarNotFound      = tplError.Code("template_var_not_found").ErrorPref("no value was supplied for template variable '%s'")
 	ErrUnexpectedDollar         = tplError.Code("unexpected_character").ErrorPref("unexpected '$' at line %d column %d. Use '\\$' if you want to output a dollar sign.")
 	ErrIllegalVariableCharacter = tplError.Code("illegal_variable_character").ErrorPref("Illegal character '%s' at line %d column %d. Variable names can only contain letters, digits and underscores.")
-	ErrIllegalSecretCharacter   = tplError.Code("illegal_secret_character").ErrorPref("Illegel character '%s' at line %d column %d. Secret paths can only contain letters, digits, underscores, hypens, dots, slashes and a colon.")
+	ErrIllegalSecretCharacter   = tplError.Code("illegal_secret_character").ErrorPref("Illegal character '%s' at line %d column %d. Secret paths can only contain letters, digits, underscores, hypens, dots, slashes and a colon.")
 	ErrSecretTagNotClosed       = tplError.Code("secret_tag_not_closed").ErrorPref("Expected the closing of a secret tag `}}` at line %d column %d, but reached the end of the template.")
 	ErrVariableTagNotClosed     = tplError.Code("variable_tag_not_closed").ErrorPref("Expected the closing of a variable tag `}` at line %d column %d, but reached the end of the template.")
 

@@ -175,14 +175,6 @@ func (p *v2Parser) parse() ([]node, error) {
 		case '$':
 			switch p.next {
 			case '{':
-				err = p.readRune()
-				if err == io.EOF {
-					return res, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
-				}
-				if err != nil {
-					return nil, err
-				}
-
 				variable, err := p.parseVar()
 				if err != nil {
 					return nil, err
@@ -257,15 +249,23 @@ func (p *v2Parser) parse() ([]node, error) {
 }
 
 // parseVar parses the contents of a template variable up to the closing delimiter.
-// parseVar should be called after the opening delimiter has been read. The next
-// character from the buffer should be the first character of the contents.
+// The next character should be the last character of the opening delimiter ('{')
+// when parseVar is called.
 //
-// when parseVar returns, the next character in the buffer is the first character
-// after the closing delimiter of the template variable.
+// When parseVar returns, the next character in the buffer is the closing delimiter
+// of the template variable ('}').
 func (p *v2Parser) parseVar() (node, error) {
 	var buffer bytes.Buffer
 
-	err := p.skipWhiteSpace()
+	err := p.readRune()
+	if err == io.EOF {
+		return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	err = p.skipWhiteSpace()
 	if err == io.EOF {
 		return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
 	}
@@ -311,11 +311,11 @@ func (p *v2Parser) parseVar() (node, error) {
 }
 
 // parseSecret parses the contents of a secret tag up to the closing delimiter.
-// parseSecret should be called after the opening delimiter has been read. The next
-// character from the buffer should be the first character of the contents.
+// The next character should be the last character of the opening delimiter ('{')
+// when parseSecret is called.
 //
-// When parseSecret returns, the next character in the buffer is the first character
-// after the closing delimiter of the secret tag.
+// When parseSecret returns, the next character in the buffer is the last character
+// of the closing delimiter of the secret tag ('}').
 func (p *v2Parser) parseSecret() (node, error) {
 	path := []node{}
 	err := p.readRune()
@@ -345,13 +345,6 @@ func (p *v2Parser) parseSecret() (node, error) {
 
 		if p.current == '$' {
 			if p.next == '{' {
-				err = p.readRune()
-				if err == io.EOF {
-					return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
-				}
-				if err != nil {
-					return nil, err
-				}
 				variable, err := p.parseVar()
 				if err != nil {
 					return nil, err

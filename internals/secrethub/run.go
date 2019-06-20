@@ -437,7 +437,7 @@ type envvar struct {
 func parseEnvironment(r io.Reader) ([]envvar, tpl.Parser, error) {
 	parser := tpl.NewV2Parser()
 	var ymlReader bytes.Buffer
-	env, err := parseEnv(io.TeeReader(r, &ymlReader))
+	env, err := parseDotEnv(io.TeeReader(r, &ymlReader))
 	if err != nil {
 		var ymlErr error
 		parser = tpl.NewV1Parser()
@@ -449,7 +449,8 @@ func parseEnvironment(r io.Reader) ([]envvar, tpl.Parser, error) {
 	return env, parser, nil
 }
 
-func parseEnv(r io.Reader) ([]envvar, error) {
+// parseDotEnv parses key-value pairs in the .env syntax (key=value).
+func parseDotEnv(r io.Reader) ([]envvar, error) {
 	vars := map[string]envvar{}
 	scanner := bufio.NewScanner(r)
 

@@ -36,7 +36,7 @@ isEncountered:
 	}
 }
 
-func TestParseEnv(t *testing.T) {
+func TestParseDotEnv(t *testing.T) {
 	cases := map[string]struct {
 		raw      string
 		expected []envvar
@@ -100,7 +100,7 @@ func TestParseEnv(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			actual, err := parseEnv(strings.NewReader(tc.raw))
+			actual, err := parseDotEnv(strings.NewReader(tc.raw))
 
 			elemEqual(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)

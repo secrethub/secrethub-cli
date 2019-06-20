@@ -2,8 +2,10 @@ package secrethub
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -352,11 +354,11 @@ func (t envTemplate) Secrets() []string {
 
 // ReadEnvFile reads and parses a .env file.
 func ReadEnvFile(filepath string, vars map[string]string) (EnvFile, error) {
-	content, err := ioutil.ReadFile(filepath)
+	r, err := os.Open(filepath)
 	if err != nil {
 		return EnvFile{}, ErrCannotReadFile(filepath, err)
 	}
-	env, err := NewEnv(string(content), vars)
+	env, err := NewEnv(r, vars)
 	if err != nil {
 		return EnvFile{}, err
 	}
@@ -388,8 +390,8 @@ func (e EnvFile) Secrets() []string {
 
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
-func NewEnv(raw string, vars map[string]string) (EnvSource, error) {
-	env, parser, err := parseEnvironment(raw)
+func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
+	env, parser, err := parseEnvironment(r)
 	if err != nil {
 		return nil, err
 	}
@@ -432,13 +434,14 @@ type envvar struct {
 // It first tries the key=value format. When that returns an error,
 // the yml format is tried.
 // The default parser to be used with the format is also returned.
-func parseEnvironment(raw string) ([]envvar, tpl.Parser, error) {
+func parseEnvironment(r io.Reader) ([]envvar, tpl.Parser, error) {
 	parser := tpl.NewV2Parser()
-	env, err := parseEnv(raw)
+	var ymlReader bytes.Buffer
+	env, err := parseEnv(io.TeeReader(r, &ymlReader))
 	if err != nil {
 		var ymlErr error
 		parser = tpl.NewV1Parser()
-		env, ymlErr = parseYML(raw)
+		env, ymlErr = parseYML(&ymlReader)
 		if ymlErr != nil {
 			return nil, nil, err
 		}
@@ -446,9 +449,9 @@ func parseEnvironment(raw string) ([]envvar, tpl.Parser, error) {
 	return env, parser, nil
 }
 
-func parseEnv(raw string) ([]envvar, error) {
+func parseEnv(r io.Reader) ([]envvar, error) {
 	vars := map[string]envvar{}
-	scanner := bufio.NewScanner(strings.NewReader(raw))
+	scanner := bufio.NewScanner(r)
 
 	i := 1
 	for scanner.Scan() {
@@ -480,9 +483,14 @@ func parseEnv(raw string) ([]envvar, error) {
 	return res, nil
 }
 
-func parseYML(raw string) ([]envvar, error) {
+func parseYML(r io.Reader) ([]envvar, error) {
+	contents, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
 	pairs := make(map[string]string)
-	err := yaml.Unmarshal([]byte(raw), pairs)
+	err = yaml.Unmarshal(contents, pairs)
 	if err != nil {
 		return nil, err
 	}

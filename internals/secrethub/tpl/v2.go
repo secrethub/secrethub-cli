@@ -284,7 +284,7 @@ func (p *v2Parser) parseVar() (node, error) {
 			}, nil
 		case ' ':
 			errIllegalVariableSpace := ErrIllegalVariableCharacter(p.next, p.lineNo, p.columnNo+1)
-			err := p.forwardToClosing([]rune("}"))
+			err := p.forwardToClosing('}')
 			if err == io.EOF {
 				return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
 			}
@@ -374,7 +374,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 				return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 			}
 		case ' ':
-			err := p.forwardToClosing([]rune("}}"))
+			err := p.forwardToClosing('}', '}')
 			if err != nil {
 				return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 			}
@@ -403,10 +403,10 @@ func (p *v2Parser) parseSecret() (node, error) {
 // forwardToClosing skips all spaces up to the closing delimiter.
 // It returns an error when characters other than spaces occur before the complete
 // closing delimiter occurs.
-func (p *v2Parser) forwardToClosing(delim []rune) error {
-	if len(delim) == 0 {
-		return errors.New("delim should be at least one character long")
-	}
+func (p *v2Parser) forwardToClosing(firstDelimRune rune, moreDelimRunes ...rune) error {
+	delimRunes := make([]rune, 0, len(moreDelimRunes)+1)
+	delimRunes = append(delimRunes, firstDelimRune)
+	delimRunes = append(delimRunes, moreDelimRunes...)
 	for p.next == ' ' {
 		err := p.readRune()
 		if err != nil {
@@ -415,11 +415,11 @@ func (p *v2Parser) forwardToClosing(delim []rune) error {
 	}
 	i := 0
 	for {
-		if p.next != delim[i] {
+		if p.next != delimRunes[i] {
 			return errors.New("expected end delimiter")
 		}
 		i++
-		if i < len(delim) {
+		if i < len(delimRunes) {
 			err := p.readRune()
 			if err != nil {
 				return err

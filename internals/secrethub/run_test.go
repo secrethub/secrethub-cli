@@ -220,11 +220,11 @@ func TestNewEnv(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			env, err := NewEnv(tc.raw, tc.templateVars, fakes.FakeSecretReader{Secrets: tc.replacements})
+			env, err := NewEnv(tc.raw, tc.templateVars)
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {
-				actual, err := env.Env(map[string]string{})
+				actual, err := env.Env(map[string]string{}, fakes.FakeSecretReader{Secrets: tc.replacements})
 				assert.Equal(t, err, tc.err)
 
 				assert.Equal(t, actual, tc.expected)

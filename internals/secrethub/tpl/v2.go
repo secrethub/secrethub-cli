@@ -285,6 +285,7 @@ func (p *v2Parser) parseVar() (node, error) {
 				key: buffer.String(),
 			}, nil
 		}
+
 		if p.isAllowedWhiteSpace(p.next) {
 			err := p.skipWhiteSpace()
 			if err == io.EOF {
@@ -302,6 +303,7 @@ func (p *v2Parser) parseVar() (node, error) {
 
 			return nil, ErrIllegalVariableCharacter(p.current, p.lineNo, p.columnNo)
 		}
+
 		if p.isVariableRune(p.next) {
 			buffer.WriteRune(p.next)
 
@@ -315,6 +317,7 @@ func (p *v2Parser) parseVar() (node, error) {
 
 			continue
 		}
+
 		return nil, ErrIllegalVariableCharacter(p.next, p.lineNo, p.columnNo+1)
 	}
 }

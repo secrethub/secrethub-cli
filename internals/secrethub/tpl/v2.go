@@ -316,7 +316,7 @@ func (p *v2Parser) parseVar() (node, error) {
 // parseSecret should be called after the opening delimiter has been read. The next
 // character from the buffer should be the first character of the contents.
 //
-// when parseSecret returns, the next character in the buffer is the first character
+// When parseSecret returns, the next character in the buffer is the first character
 // after the closing delimiter of the secret tag.
 func (p *v2Parser) parseSecret() (node, error) {
 	path := []node{}

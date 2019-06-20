@@ -377,6 +377,10 @@ func (p *v2Parser) parseSecret() (node, error) {
 			if err == io.EOF {
 				return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
 			}
+			if err != nil {
+				return nil, err
+			}
+
 			if p.next != '}' {
 				return nil, ErrIllegalSecretCharacter(' ', p.lineNo, p.columnNo-1)
 			}

@@ -97,21 +97,18 @@ type parserV2 struct{}
 
 // Parse parses a secret template from a raw string.
 //
-// A secret template can contain references to secrets in secret tags.
-// A secret tag is enclosed in double brackets: `{{ <path> }}`.
-//
-// A secret template can contain references to variables in variable tags.
-// A variable tag is enclosed in `${ <variable key> }`.
-//
-// Secret tags can contain variable tags:
-// `{{ path/with/${var}/to/secret }}`
-//
-// Extra spaces can be added just after the opening delimiter and just before the closing delimiter of a tag:
-// {{ path/to/secret }} has the same output as {{path/to/secret}} has.
-//
-// Variable tags cannot contain secret tags.
-// Secret tags cannot contain secret tags (they cannot be nested).
-// Variable tags cannot contain variable tags (they cannot be nested).
+// Syntax rules:
+// - A secret template can contain references to secrets in secret tags. A
+//   secret tag is enclosed in double brackets: `{{ path/to/secret }}`.
+// - A secret template can contain references to variables in variable tags. A
+//   variable tag is enclosed between ${ and }: `${ variable }`.
+// - Extra spaces can be added just after the opening delimiter and just before the
+//   closing delimiter of a tag: {{ path/to/secret }} has the same output as
+//   {{path/to/secret}} has.
+// - Secret tags can also contain variable tags: `{{ path/with/${var}/to/secret }}`
+// - Variable tags cannot contain secret tags.
+// - Secret tags cannot contain secret tags (they cannot be nested).
+// - Variable tags cannot contain variable tags (they cannot be nested).
 func (p parserV2) Parse(raw string, line, column int) (Template, error) {
 	parser := newV2Parser(bytes.NewBufferString(raw), line, column)
 

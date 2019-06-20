@@ -2,7 +2,6 @@ package tpl
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"unicode"
 )
@@ -266,49 +265,48 @@ func (p *v2Parser) parse() ([]node, error) {
 func (p *v2Parser) parseVar() (node, error) {
 	var buffer bytes.Buffer
 
-	for p.next == ' ' {
-		err := p.readRune()
-		if err == io.EOF {
-			return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
-		}
-		if err != nil {
-			return nil, err
-		}
+	err := p.skipWhiteSpace()
+	if err == io.EOF {
+		return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	for {
-		switch p.next {
-		case '}':
+		if p.next == '}' {
 			return variable{
 				key: buffer.String(),
 			}, nil
-		case ' ':
-			errIllegalVariableSpace := ErrIllegalVariableCharacter(p.next, p.lineNo, p.columnNo+1)
-			err := p.forwardToClosing('}')
+		}
+		if p.isAllowedWhiteSpace(p.next) {
+			err := p.skipWhiteSpace()
 			if err == io.EOF {
 				return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
 			}
 			if err != nil {
-				return nil, errIllegalVariableSpace
+				return nil, err
 			}
-			return variable{
-				key: buffer.String(),
-			}, nil
-		default:
-			if unicode.IsLetter(p.next) || unicode.IsDigit(p.next) || p.current == '_' {
-				buffer.WriteRune(p.next)
-
-				err := p.readRune()
-				if err == io.EOF {
-					return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
-				}
-				if err != nil {
-					return nil, err
-				}
-				continue
+			if p.next == '}' {
+				return variable{
+					key: buffer.String(),
+				}, nil
 			}
-			return nil, ErrIllegalVariableCharacter(p.next, p.lineNo, p.columnNo+1)
+			return nil, ErrIllegalVariableCharacter(p.current, p.lineNo, p.columnNo)
 		}
+		if unicode.IsLetter(p.next) || unicode.IsDigit(p.next) || p.current == '_' {
+			buffer.WriteRune(p.next)
+
+			err := p.readRune()
+			if err == io.EOF {
+				return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
+			}
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+		return nil, ErrIllegalVariableCharacter(p.next, p.lineNo, p.columnNo+1)
 	}
 }
 
@@ -327,14 +325,13 @@ func (p *v2Parser) parseSecret() (node, error) {
 	if err != nil {
 		return nil, err
 	}
-	for p.next == ' ' {
-		err = p.readRune()
-		if err == io.EOF {
-			return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
-		}
-		if err != nil {
-			return nil, err
-		}
+
+	err = p.skipWhiteSpace()
+	if err == io.EOF {
+		return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	for {
@@ -346,10 +343,8 @@ func (p *v2Parser) parseSecret() (node, error) {
 			return nil, err
 		}
 
-		switch p.current {
-		case '$':
-			switch p.next {
-			case '{':
+		if p.current == '$' {
+			if p.next == '{' {
 				err = p.readRune()
 				if err == io.EOF {
 					return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
@@ -370,64 +365,63 @@ func (p *v2Parser) parseSecret() (node, error) {
 				if err != nil {
 					return nil, err
 				}
-			default:
-				return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
-			}
-		case ' ':
-			err := p.forwardToClosing('}', '}')
-			if err != nil {
-				return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
-			}
-			return secret{
-				path: path,
-			}, nil
-		case '}':
-			switch p.next {
-			case '}':
-				return secret{
-					path: path,
-				}, nil
-			default:
-				return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
-			}
-		default:
-			if unicode.IsLetter(p.current) || unicode.IsDigit(p.current) || p.current == '_' || p.current == '-' || p.current == '.' || p.current == '/' || p.current == ':' {
-				path = append(path, character(p.current))
 				continue
 			}
 			return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 		}
+		if p.isAllowedWhiteSpace(p.current) {
+			err := p.skipWhiteSpace()
+			if err == io.EOF {
+				return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
+			}
+			if err != nil {
+				return nil, err
+			}
+			if p.next != '}' {
+				return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
+			}
+			err = p.readRune()
+			if err == io.EOF {
+				return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
+			}
+			if p.next != '}' {
+				return nil, ErrIllegalSecretCharacter(' ', p.lineNo, p.columnNo-1)
+			}
+			return secret{
+				path: path,
+			}, nil
+		}
+		if p.current == '}' {
+			if p.next == '}' {
+				return secret{
+					path: path,
+				}, nil
+			}
+			return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
+		}
+		if unicode.IsLetter(p.current) || unicode.IsDigit(p.current) || p.current == '_' || p.current == '-' || p.current == '.' || p.current == '/' || p.current == ':' {
+			path = append(path, character(p.current))
+			continue
+		}
+		return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 	}
 }
 
-// forwardToClosing skips all spaces up to the closing delimiter.
-// It returns an error when characters other than spaces occur before the complete
-// closing delimiter occurs.
-func (p *v2Parser) forwardToClosing(firstDelimRune rune, moreDelimRunes ...rune) error {
-	delimRunes := make([]rune, 0, len(moreDelimRunes)+1)
-	delimRunes = append(delimRunes, firstDelimRune)
-	delimRunes = append(delimRunes, moreDelimRunes...)
-	for p.next == ' ' {
+// isAllowedWhiteSpace returns whether the given rune is allowed as extra whitespace
+// just after the opening tag and just before the closing tag.
+func (p *v2Parser) isAllowedWhiteSpace(r rune) bool {
+	return r == ' ' || r == '\t'
+}
+
+// skipWhiteSpace reads new runes until the next rune is not a space or tab.
+func (p *v2Parser) skipWhiteSpace() error {
+	for p.isAllowedWhiteSpace(p.next) {
 		err := p.readRune()
 		if err != nil {
 			return err
 		}
 	}
-	i := 0
-	for {
-		if p.next != delimRunes[i] {
-			return errors.New("expected end delimiter")
-		}
-		i++
-		if i < len(delimRunes) {
-			err := p.readRune()
-			if err != nil {
-				return err
-			}
-		} else {
-			return nil
-		}
-	}
+	return nil
 }
 
 // SecretReader fetches a secret by its path.

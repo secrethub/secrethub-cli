@@ -138,6 +138,21 @@ func TestParserV2_parse(t *testing.T) {
 				character('t'),
 			},
 		},
+		"two secret tags": {
+			input: "{{ a }}{{ b }}",
+			expected: []node{
+				secret{
+					path: []node{
+						character('a'),
+					},
+				},
+				secret{
+					path: []node{
+						character('b'),
+					},
+				},
+			},
+		},
 		"variable in secret path at start": {
 			input: "{{${var}/secret}}",
 			expected: []node{
@@ -382,6 +397,10 @@ func TestParserV2_parse(t *testing.T) {
 			input: "{{ secret with space }}",
 			err:   ErrIllegalSecretCharacter(' ', 1, 10),
 		},
+		"illegal secret space followed by bracket": {
+			input: "{{ secret }with space }}",
+			err:   ErrIllegalSecretCharacter(' ', 1, 10),
+		},
 		"illegal variable character": {
 			input: "${ var@var }",
 			err:   ErrIllegalVariableCharacter('@', 1, 7),
@@ -429,6 +448,10 @@ func TestParserV2_parse(t *testing.T) {
 		"secret tag not closed after space after var": {
 			input: "{{ foo/${var} ",
 			err:   ErrSecretTagNotClosed(1, 15),
+		},
+		"secret tag not closed after first bracket": {
+			input: "{{ foo/bar }",
+			err:   ErrSecretTagNotClosed(1, 13),
 		},
 		"variable tag not closed": {
 			input: "${ var",

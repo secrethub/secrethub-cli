@@ -294,7 +294,7 @@ func (p *v2Parser) parseVar() (node, error) {
 			}
 			return nil, ErrIllegalVariableCharacter(p.current, p.lineNo, p.columnNo)
 		}
-		if unicode.IsLetter(p.next) || unicode.IsDigit(p.next) || p.current == '_' {
+		if p.isVariableRune(p.next) {
 			buffer.WriteRune(p.next)
 
 			err := p.readRune()
@@ -399,12 +399,23 @@ func (p *v2Parser) parseSecret() (node, error) {
 			}
 			return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 		}
-		if unicode.IsLetter(p.current) || unicode.IsDigit(p.current) || p.current == '_' || p.current == '-' || p.current == '.' || p.current == '/' || p.current == ':' {
+		if p.isSecretPathRune(p.current) {
 			path = append(path, character(p.current))
 			continue
 		}
 		return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
 	}
+}
+
+// isSecretPathRune returns whether the given rune is allowed to be used in
+// a secret path.
+func (p *v2Parser) isSecretPathRune(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-' || r == '.' || r == '/' || r == ':'
+}
+
+// isVariableRune returns whether the given rune is allowed to be used in a template variable key.
+func (p *v2Parser) isVariableRune(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_'
 }
 
 // isAllowedWhiteSpace returns whether the given rune is allowed as extra whitespace

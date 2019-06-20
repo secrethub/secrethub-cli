@@ -390,6 +390,10 @@ func TestParserV2_parse(t *testing.T) {
 			input: "{{ a@b }}",
 			err:   ErrIllegalSecretCharacter('@', 1, 5),
 		},
+		"illegal { at start of secret tag": {
+			input: "{{{ path/to/secret }}}",
+			err:   ErrIllegalSecretCharacter('{', 1, 3),
+		},
 		"illegal secret character $": {
 			input: "{{ a$b }}",
 			err:   ErrIllegalSecretCharacter('$', 1, 5),

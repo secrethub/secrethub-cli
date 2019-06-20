@@ -136,11 +136,11 @@ func (cmd *RunCommand) Run() error {
 	}
 
 	if cmd.template != "" {
-		tplSource, err := NewEnvFile(cmd.template, templateVars, newSecretReader(client))
+		envFile, err := NewEnvFile(cmd.template, templateVars, newSecretReader(client))
 		if err != nil {
 			return err
 		}
-		envSources = append(envSources, tplSource)
+		envSources = append(envSources, envFile)
 	}
 
 	envDir := filepath.Join(secretspec.SecretEnvPath, cmd.env)

@@ -24,17 +24,23 @@ func NewClientFactory(store CredentialStore) ClientFactory {
 
 type clientFactory struct {
 	ServerURL *url.URL
+	UseAWS    bool
 	store     CredentialStore
 }
 
 // Register the flags for configuration on a cli application.
 func (f *clientFactory) Register(r FlagRegisterer) {
 	r.Flag("api-remote", "The SecretHub API address, don't set this unless you know what you're doing.").Hidden().URLVar(&f.ServerURL)
+	r.Flag("use-aws", "Use AWS credentials for authentication and account key decryption").BoolVar(&f.UseAWS)
 }
 
 // NewClient returns a new client that is configured to use the remote that
 // is set with the flag.
 func (f *clientFactory) NewClient() (secrethub.Client, error) {
+	if f.UseAWS {
+		return secrethub.NewClientAWS(f.NewClientOptions())
+	}
+
 	credential, err := f.store.Get()
 	if err != nil {
 		return nil, errio.Error(err)

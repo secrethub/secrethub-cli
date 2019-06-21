@@ -397,6 +397,18 @@ func TestParserV2_parse(t *testing.T) {
 			input: "${ va r }",
 			err:   ErrIllegalVariableCharacter(1, 6, ' '),
 		},
+		"illegal double variable space": {
+			input: "${ va  r }",
+			err:   ErrIllegalVariableCharacter(1, 6, ' '),
+		},
+		"illegal variable tab": {
+			input: "${ va\tr }",
+			err:   ErrIllegalVariableCharacter(1, 6, '\t'),
+		},
+		"illegal variable tab followed by space": {
+			input: "${ va\t r }",
+			err:   ErrIllegalVariableCharacter(1, 6, '\t'),
+		},
 		"illegal secret space": {
 			input: "{{ secret with space }}",
 			err:   ErrIllegalSecretCharacter(1, 10, ' '),
@@ -404,6 +416,22 @@ func TestParserV2_parse(t *testing.T) {
 		"illegal secret space followed by bracket": {
 			input: "{{ secret }with space }}",
 			err:   ErrIllegalSecretCharacter(1, 10, ' '),
+		},
+		"illegal secret tab": {
+			input: "{{ secret\twith a tab }}",
+			err:   ErrIllegalSecretCharacter(1, 10, '\t'),
+		},
+		"illegal secret tab followed by bracket": {
+			input: "{{ secret\t}with tab }}",
+			err:   ErrIllegalSecretCharacter(1, 10, '\t'),
+		},
+		"illegal double secret space": {
+			input: "{{ secret  with two spaces }}",
+			err:   ErrIllegalSecretCharacter(1, 10, ' '),
+		},
+		"illegal secret tab followed by space": {
+			input: "{{ secret\t with tab and space }}",
+			err:   ErrIllegalSecretCharacter(1, 10, '\t'),
 		},
 		"illegal variable character": {
 			input: "${ var@var }",

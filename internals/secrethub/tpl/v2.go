@@ -241,6 +241,8 @@ func (p *v2Parser) parseVar() (node, error) {
 		}
 
 		if p.isAllowedWhiteSpace(p.next) {
+			whitespace := p.next
+			columnNo := p.columnNo + 1
 			err := checkError(p.skipWhiteSpace())
 			if err != nil {
 				return nil, err
@@ -252,7 +254,7 @@ func (p *v2Parser) parseVar() (node, error) {
 				}, nil
 			}
 
-			return nil, ErrIllegalVariableCharacter(p.lineNo, p.columnNo, p.current)
+			return nil, ErrIllegalVariableCharacter(p.lineNo, columnNo, whitespace)
 		}
 
 		if p.isVariableRune(p.next) {
@@ -321,13 +323,15 @@ func (p *v2Parser) parseSecret() (node, error) {
 			return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 		}
 		if p.isAllowedWhiteSpace(p.current) {
+			whitespace := p.current
+			columnNo := p.columnNo
 			err := checkError(p.skipWhiteSpace())
 			if err != nil {
 				return nil, err
 			}
 
 			if p.next != token.RBracket {
-				return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
+				return nil, ErrIllegalSecretCharacter(p.lineNo, columnNo, whitespace)
 			}
 
 			err = checkError(p.readRune())
@@ -336,7 +340,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 			}
 
 			if p.next != token.RBracket {
-				return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo-1, ' ')
+				return nil, ErrIllegalSecretCharacter(p.lineNo, columnNo, whitespace)
 			}
 
 			return secret{

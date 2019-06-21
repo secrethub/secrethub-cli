@@ -226,7 +226,7 @@ func TestNewEnv(t *testing.T) {
 		},
 		"secret template error second line": {
 			raw: "foo=bar\nbar={{ error@secretpath }}",
-			err: tpl.ErrIllegalSecretCharacter('@', 2, 13),
+			err: tpl.ErrIllegalSecretCharacter(2, 13, '@'),
 		},
 	}
 

@@ -391,39 +391,39 @@ func TestParserV2_parse(t *testing.T) {
 		},
 		"illegal variable space": {
 			input: "${ va r }",
-			err:   ErrIllegalVariableCharacter(' ', 1, 6),
+			err:   ErrIllegalVariableCharacter(1, 6, ' '),
 		},
 		"illegal secret space": {
 			input: "{{ secret with space }}",
-			err:   ErrIllegalSecretCharacter(' ', 1, 10),
+			err:   ErrIllegalSecretCharacter(1, 10, ' '),
 		},
 		"illegal secret space followed by bracket": {
 			input: "{{ secret }with space }}",
-			err:   ErrIllegalSecretCharacter(' ', 1, 10),
+			err:   ErrIllegalSecretCharacter(1, 10, ' '),
 		},
 		"illegal variable character": {
 			input: "${ var@var }",
-			err:   ErrIllegalVariableCharacter('@', 1, 7),
+			err:   ErrIllegalVariableCharacter(1, 7, '@'),
 		},
 		"illegal secret character": {
 			input: "{{ a@b }}",
-			err:   ErrIllegalSecretCharacter('@', 1, 5),
+			err:   ErrIllegalSecretCharacter(1, 5, '@'),
 		},
 		"illegal { at start of secret tag": {
 			input: "{{{ path/to/secret }}}",
-			err:   ErrIllegalSecretCharacter('{', 1, 3),
+			err:   ErrIllegalSecretCharacter(1, 3, '{'),
 		},
 		"illegal secret character $": {
 			input: "{{ a$b }}",
-			err:   ErrIllegalSecretCharacter('$', 1, 5),
+			err:   ErrIllegalSecretCharacter(1, 5, '$'),
 		},
 		"illegal variable char in secret tag": {
 			input: "{{ path/with/${var@b} }}",
-			err:   ErrIllegalVariableCharacter('@', 1, 19),
+			err:   ErrIllegalVariableCharacter(1, 19, '@'),
 		},
 		"error on new line": {
 			input: "{{ path/to/secret }}\n{{ a%b }}",
-			err:   ErrIllegalSecretCharacter('%', 2, 5),
+			err:   ErrIllegalSecretCharacter(2, 5, '%'),
 		},
 		"secret tag not closed": {
 			input: "{{ path",

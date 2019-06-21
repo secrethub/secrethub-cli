@@ -8,13 +8,6 @@ import (
 
 // Errors
 var (
-	ErrTemplateVarNotFound      = tplError.Code("template_var_not_found").ErrorPref("no value was supplied for template variable '%s'")
-	ErrUnexpectedDollar         = tplError.Code("unexpected_character").ErrorPref("unexpected '$' at line %d column %d. Use '\\$' if you want to output a dollar sign.")
-	ErrIllegalVariableCharacter = tplError.Code("illegal_variable_character").ErrorPref("Illegal character '%s' at line %d column %d. Variable names can only contain letters, digits and underscores.")
-	ErrIllegalSecretCharacter   = tplError.Code("illegal_secret_character").ErrorPref("Illegal character '%s' at line %d column %d. Secret paths can only contain letters, digits, underscores, hypens, dots, slashes and a colon.")
-	ErrSecretTagNotClosed       = tplError.Code("secret_tag_not_closed").ErrorPref("Expected the closing of a secret tag `}}` at line %d column %d, but reached the end of the template.")
-	ErrVariableTagNotClosed     = tplError.Code("variable_tag_not_closed").ErrorPref("Expected the closing of a variable tag `}` at line %d column %d, but reached the end of the template.")
-
 	specialChars = map[rune]struct{}{
 		'$':  {},
 		'{':  {},
@@ -301,7 +294,7 @@ func (p *v2Parser) parseVar() (node, error) {
 				}, nil
 			}
 
-			return nil, ErrIllegalVariableCharacter(p.current, p.lineNo, p.columnNo)
+			return nil, ErrIllegalVariableCharacter(p.lineNo, p.columnNo, p.current)
 		}
 
 		if p.isVariableRune(p.next) {
@@ -318,7 +311,7 @@ func (p *v2Parser) parseVar() (node, error) {
 			continue
 		}
 
-		return nil, ErrIllegalVariableCharacter(p.next, p.lineNo, p.columnNo+1)
+		return nil, ErrIllegalVariableCharacter(p.lineNo, p.columnNo+1, p.next)
 	}
 }
 
@@ -375,7 +368,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 
 				continue
 			}
-			return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
+			return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 		}
 		if p.isAllowedWhiteSpace(p.current) {
 			err := p.skipWhiteSpace()
@@ -387,7 +380,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 			}
 
 			if p.next != '}' {
-				return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
+				return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 			}
 
 			err = p.readRune()
@@ -399,7 +392,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 			}
 
 			if p.next != '}' {
-				return nil, ErrIllegalSecretCharacter(' ', p.lineNo, p.columnNo-1)
+				return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo-1, ' ')
 			}
 
 			return secret{
@@ -414,7 +407,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 				}, nil
 			}
 
-			return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
+			return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 		}
 
 		if p.isSecretPathRune(p.current) {
@@ -422,7 +415,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 			continue
 		}
 
-		return nil, ErrIllegalSecretCharacter(p.current, p.lineNo, p.columnNo)
+		return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 	}
 }
 

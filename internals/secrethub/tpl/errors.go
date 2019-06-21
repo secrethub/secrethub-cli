@@ -40,7 +40,7 @@ func ErrUnexpectedCharacter(lineNo, colNo int, actual, expected rune) error {
 		lineNo: lineNo,
 		colNo:  colNo,
 		code:   "unexpected character",
-		msg:    fmt.Sprintf("unexpected '%c' expected '%c'", actual, expected),
+		msg:    fmt.Sprintf("unexpected '%c', expected '%c'", actual, expected),
 	}
 }
 

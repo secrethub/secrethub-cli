@@ -14,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
@@ -469,14 +470,25 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 			return nil, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
 
+		valColNo := len(parts[0]) + 2 // the length of the key (including spaces and quotes) + one for the = sign and one for the current column.
+		for _, r := range parts[1] {
+			if !unicode.IsSpace(r) {
+				break
+			}
+			valColNo++
+		}
+
 		key := strings.TrimSpace(parts[0])
-		value := trimQuotes(strings.TrimSpace(parts[1]))
+		value, isTrimmed := trimQuotes(strings.TrimSpace(parts[1]))
+		if isTrimmed {
+			valColNo++
+		}
 
 		vars[key] = envvar{
 			key:          key,
 			value:        value,
 			lineNumber:   i,
-			columnNumber: len(parts[0]) + 1 + len(parts[1]) - len(value) + 1, // the length of the key (including extra spaces) + the length of the = char + the length of the spaces before the value + 1 for the current char
+			columnNumber: valColNo,
 		}
 	}
 
@@ -505,15 +517,15 @@ const (
 // - Single and double qouted values maintain whitespace from both ends (e.g. `" foo "` becomes ` foo `)
 // - Inputs with either leading or trailing whitespace are considered unquoted,
 //   so make sure you sanitize your inputs before calling this function.
-func trimQuotes(s string) string {
+func trimQuotes(s string) (string, bool) {
 	n := len(s)
 	if n > 1 &&
 		(s[0] == singleQuoteChar && s[n-1] == singleQuoteChar ||
 			s[0] == doubleQuoteChar && s[n-1] == doubleQuoteChar) {
-		return s[1 : n-1]
+		return s[1 : n-1], true
 	}
 
-	return s
+	return s, false
 }
 
 func parseYML(r io.Reader) ([]envvar, error) {

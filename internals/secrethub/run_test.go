@@ -96,9 +96,10 @@ func TestParseDotEnv(t *testing.T) {
 			raw: " key = value",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 8,
 				},
 			},
 		},
@@ -106,9 +107,10 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "key = value ",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 7,
 				},
 			},
 		},
@@ -116,9 +118,10 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "key\t=\tvalue",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 7,
 				},
 			},
 		},
@@ -126,9 +129,10 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "key='value'",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 6,
 				},
 			},
 		},
@@ -136,9 +140,10 @@ func TestParseDotEnv(t *testing.T) {
 			raw: `key="value"`,
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 6,
 				},
 			},
 		},
@@ -146,9 +151,10 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "key = 'value'",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 8,
 				},
 			},
 		},
@@ -156,14 +162,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "# database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:          "DB_USER",
+					value:        "user",
+					lineNumber:   2,
+					columnNumber: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:          "DB_PASS",
+					value:        "pass",
+					lineNumber:   3,
+					columnNumber: 11,
 				},
 			},
 		},
@@ -171,14 +179,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "    # database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:          "DB_USER",
+					value:        "user",
+					lineNumber:   2,
+					columnNumber: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:          "DB_PASS",
+					value:        "pass",
+					lineNumber:   3,
+					columnNumber: 11,
 				},
 			},
 		},
@@ -186,14 +196,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "\t# database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:          "DB_USER",
+					value:        "user",
+					lineNumber:   2,
+					columnNumber: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:          "DB_PASS",
+					value:        "pass",
+					lineNumber:   3,
+					columnNumber: 11,
 				},
 			},
 		},
@@ -201,14 +213,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "foo=bar\n\nbar=baz",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:          "foo",
+					value:        "bar",
+					lineNumber:   1,
+					columnNumber: 5,
 				},
 				{
-					key:        "bar",
-					value:      "baz",
-					lineNumber: 3,
+					key:          "bar",
+					value:        "baz",
+					lineNumber:   3,
+					columnNumber: 5,
 				},
 			},
 		},
@@ -216,14 +230,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "foo=bar\n    \nbar = baz",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:          "foo",
+					value:        "bar",
+					lineNumber:   1,
+					columnNumber: 5,
 				},
 				{
-					key:        "bar",
-					value:      "baz",
-					lineNumber: 3,
+					key:          "bar",
+					value:        "baz",
+					lineNumber:   3,
+					columnNumber: 7,
 				},
 			},
 		},
@@ -516,7 +532,7 @@ func TestTrimQuotes(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			actual := trimQuotes(tc.in)
+			actual, _ := trimQuotes(tc.in)
 
 			assert.Equal(t, actual, tc.expected)
 		})

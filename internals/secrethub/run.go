@@ -404,7 +404,7 @@ func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
 			return nil, templateError(envvar, err)
 		}
 
-		template, err := parser.Parse(envvar.value, envvar.lineNumber, envvar.columnNumber)
+		template, err := parser.Parse(envvar.value, envvar.lineNo, envvar.valColNo)
 		if err != nil {
 			return nil, err
 		}
@@ -418,17 +418,17 @@ func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
 }
 
 func templateError(envvar envvar, err error) error {
-	if envvar.lineNumber > 0 {
-		return ErrTemplate(envvar.lineNumber, err)
+	if envvar.lineNo > 0 {
+		return ErrTemplate(envvar.lineNo, err)
 	}
 	return err
 }
 
 type envvar struct {
-	key          string
-	value        string
-	lineNumber   int
-	columnNumber int
+	key      string
+	value    string
+	lineNo   int
+	valColNo int
 }
 
 // parseEnvironment parses envvars from a string.
@@ -485,10 +485,10 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 		}
 
 		vars[key] = envvar{
-			key:          key,
-			value:        value,
-			lineNumber:   i,
-			columnNumber: valColNo,
+			key:      key,
+			value:    value,
+			lineNo:   i,
+			valColNo: valColNo,
 		}
 	}
 
@@ -544,9 +544,9 @@ func parseYML(r io.Reader) ([]envvar, error) {
 	i := 0
 	for key, value := range pairs {
 		vars[i] = envvar{
-			key:        key,
-			value:      value,
-			lineNumber: -1,
+			key:    key,
+			value:  value,
+			lineNo: -1,
 		}
 		i++
 	}

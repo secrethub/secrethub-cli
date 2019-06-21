@@ -31,6 +31,19 @@ func ErrUnexpectedDollar(lineNo, colNo int) error {
 	}
 }
 
+// ErrUnexpectedCharacter is returned when expecting a specific character, for example
+// the first character of a closing delimiter after a space occurred in a tag, or
+// the second character of a closing delimiter after the first character of the closing
+// delimiter.
+func ErrUnexpectedCharacter(lineNo, colNo int, actual, expected rune) error {
+	return templateSyntaxError{
+		lineNo: lineNo,
+		colNo:  colNo,
+		code:   "unexpected character",
+		msg:    fmt.Sprintf("unexpected '%c' expected '%c'", actual, expected),
+	}
+}
+
 // ErrIllegalVariableCharacter is returned when a variable tag contains a character that is not allowed.
 func ErrIllegalVariableCharacter(lineNo, colNo int, char rune) error {
 	return templateSyntaxError{

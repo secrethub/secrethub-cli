@@ -395,43 +395,43 @@ func TestParserV2_parse(t *testing.T) {
 		},
 		"illegal variable space": {
 			input: "${ va r }",
-			err:   ErrIllegalVariableCharacter(1, 6, ' '),
+			err:   ErrUnexpectedCharacter(1, 7, 'r', '}'),
 		},
 		"illegal double variable space": {
 			input: "${ va  r }",
-			err:   ErrIllegalVariableCharacter(1, 6, ' '),
+			err:   ErrUnexpectedCharacter(1, 8, 'r', '}'),
 		},
 		"illegal variable tab": {
 			input: "${ va\tr }",
-			err:   ErrIllegalVariableCharacter(1, 6, '\t'),
+			err:   ErrUnexpectedCharacter(1, 7, 'r', '}'),
 		},
 		"illegal variable tab followed by space": {
 			input: "${ va\t r }",
-			err:   ErrIllegalVariableCharacter(1, 6, '\t'),
+			err:   ErrUnexpectedCharacter(1, 8, 'r', '}'),
 		},
 		"illegal secret space": {
 			input: "{{ secret with space }}",
-			err:   ErrIllegalSecretCharacter(1, 10, ' '),
+			err:   ErrUnexpectedCharacter(1, 11, 'w', '}'),
 		},
 		"illegal secret space followed by bracket": {
 			input: "{{ secret }with space }}",
-			err:   ErrIllegalSecretCharacter(1, 10, ' '),
+			err:   ErrUnexpectedCharacter(1, 12, 'w', '}'),
 		},
 		"illegal secret tab": {
 			input: "{{ secret\twith a tab }}",
-			err:   ErrIllegalSecretCharacter(1, 10, '\t'),
+			err:   ErrUnexpectedCharacter(1, 11, 'w', '}'),
 		},
 		"illegal secret tab followed by bracket": {
 			input: "{{ secret\t}with tab }}",
-			err:   ErrIllegalSecretCharacter(1, 10, '\t'),
+			err:   ErrUnexpectedCharacter(1, 12, 'w', '}'),
 		},
 		"illegal double secret space": {
 			input: "{{ secret  with two spaces }}",
-			err:   ErrIllegalSecretCharacter(1, 10, ' '),
+			err:   ErrUnexpectedCharacter(1, 12, 'w', '}'),
 		},
 		"illegal secret tab followed by space": {
 			input: "{{ secret\t with tab and space }}",
-			err:   ErrIllegalSecretCharacter(1, 10, '\t'),
+			err:   ErrUnexpectedCharacter(1, 12, 'w', '}'),
 		},
 		"illegal variable character": {
 			input: "${ var@var }",
@@ -488,6 +488,10 @@ func TestParserV2_parse(t *testing.T) {
 		"secret tag not closed after first bracket": {
 			input: "{{ foo/bar }",
 			err:   ErrSecretTagNotClosed(1, 13),
+		},
+		"secret tag not closed after first bracket, continue": {
+			input: "{{ foo/bar }baz",
+			err:   ErrUnexpectedCharacter(1, 13, 'b', '}'),
 		},
 		"variable tag not closed": {
 			input: "${ var",

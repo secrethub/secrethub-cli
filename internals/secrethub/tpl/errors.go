@@ -37,7 +37,7 @@ func ErrIllegalVariableCharacter(lineNo, colNo int, char rune) error {
 		lineNo: lineNo,
 		colNo:  colNo,
 		code:   "illegal_variable_character",
-		msg:    fmt.Sprintf("Illegal character '%c'. Variable names can only contain letters, digits and underscores.", char),
+		msg:    fmt.Sprintf("illegal character '%c'. Variable names can only contain letters, digits and underscores.", char),
 	}
 }
 
@@ -47,7 +47,7 @@ func ErrIllegalSecretCharacter(lineNo, colNo int, char rune) error {
 		lineNo: lineNo,
 		colNo:  colNo,
 		code:   "illegal_secret_character",
-		msg:    fmt.Sprintf("Illegal character '%c'. Secret paths can only contain letters, digits, underscores, hypens, dots, slashes and a colon.", char),
+		msg:    fmt.Sprintf("illegal character '%c'. Secret paths can only contain letters, digits, underscores, hypens, dots, slashes and a colon.", char),
 	}
 }
 
@@ -57,7 +57,7 @@ func ErrSecretTagNotClosed(lineNo, colNo int) error {
 		lineNo: lineNo,
 		colNo:  colNo,
 		code:   "secret_tag_not_closed",
-		msg:    "Expected the closing of a secret tag `}}`, but reached the end of the template.",
+		msg:    "expected the closing of a secret tag `}}`, but reached the end of the template.",
 	}
 }
 
@@ -67,6 +67,6 @@ func ErrVariableTagNotClosed(lineNo, colNo int) error {
 		lineNo: lineNo,
 		colNo:  colNo,
 		code:   "variable_tag_not_closed",
-		msg:    "Expected the closing of a variable tag `}`, but reached the end of the template.",
+		msg:    "expected the closing of a variable tag `}`, but reached the end of the template.",
 	}
 }

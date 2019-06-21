@@ -113,11 +113,11 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "\tkey = value",
 			expected: []envvar{
 				{
-					key: "key",
-					value: "value",
-					lineNo:1,
-					keyColNo:2,
-					valColNo:8,
+					key:      "key",
+					value:    "value",
+					lineNo:   1,
+					keyColNo: 2,
+					valColNo: 8,
 				},
 			},
 		},
@@ -385,6 +385,15 @@ func TestNewEnv(t *testing.T) {
 			expected: map[string]string{
 				"foo": "bar",
 				"baz": "secret",
+			},
+		},
+		"success with var in key": {
+			raw: "${var}=value",
+			templateVars: map[string]string{
+				"var": "key",
+			},
+			expected: map[string]string{
+				"key": "value",
 			},
 		},
 		"success yml": {

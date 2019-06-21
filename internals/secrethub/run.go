@@ -329,22 +329,46 @@ type EnvSource interface {
 }
 
 type envTemplate struct {
-	envVars      map[string]tpl.Template
+	envVars      []envvarTpls
 	templateVars map[string]string
+}
+
+type envvarTpls struct {
+	key    tpl.Template
+	value  tpl.Template
+	lineNo int
 }
 
 // Env injects the given secrets in the environment values and returns
 // a map of the resulting environment.
 func (t envTemplate) Env(secrets map[string]string, sr tpl.SecretReader) (map[string]string, error) {
 	result := make(map[string]string)
-	for key, template := range t.envVars {
-		value, err := template.Evaluate(t.templateVars, sr)
+	for _, tpls := range t.envVars {
+		key, err := tpls.key.Evaluate(t.templateVars, sr)
 		if err != nil {
 			return nil, err
 		}
+
+		err = validation.ValidateEnvarName(key)
+		if err != nil {
+			return nil, templateError(tpls.lineNo, err)
+		}
+
+		value, err := tpls.value.Evaluate(t.templateVars, sr)
+		if err != nil {
+			return nil, err
+		}
+
 		result[key] = value
 	}
 	return result, nil
+}
+
+func templateError(lineNo int, err error) error {
+	if lineNo > 0 {
+		return ErrTemplate(lineNo, err)
+	}
+	return err
 }
 
 // Secrets implements the EnvSource.Secrets function.
@@ -397,31 +421,29 @@ func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
 		return nil, err
 	}
 
-	secretTemplates := make(map[string]tpl.Template, len(env))
-	for _, envvar := range env {
-		err = validation.ValidateEnvarName(envvar.key)
-		if err != nil {
-			return nil, templateError(envvar, err)
-		}
-
-		template, err := parser.Parse(envvar.value, envvar.lineNo, envvar.valColNo)
+	secretTemplates := make([]envvarTpls, len(env))
+	for i, envvar := range env {
+		keyTpl, err := parser.Parse(envvar.key, envvar.lineNo, envvar.keyColNo)
 		if err != nil {
 			return nil, err
 		}
-		secretTemplates[envvar.key] = template
+
+		valTpl, err := parser.Parse(envvar.value, envvar.lineNo, envvar.valColNo)
+		if err != nil {
+			return nil, err
+		}
+
+		secretTemplates[i] = envvarTpls{
+			key:    keyTpl,
+			value:  valTpl,
+			lineNo: envvar.lineNo,
+		}
 	}
 
 	return envTemplate{
 		envVars:      secretTemplates,
 		templateVars: vars,
 	}, nil
-}
-
-func templateError(envvar envvar, err error) error {
-	if envvar.lineNo > 0 {
-		return ErrTemplate(envvar.lineNo, err)
-	}
-	return err
 }
 
 type envvar struct {

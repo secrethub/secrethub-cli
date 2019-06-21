@@ -162,79 +162,62 @@ func (p *v2Parser) parse() ([]node, error) {
 			return nil, err
 		}
 
-		switch p.current {
-		case token.Dollar:
-			switch p.next {
-			case token.LBracket:
-				variable, err := p.parseVar()
-				if err != nil {
-					return nil, err
-				}
-
-				res = append(res, variable)
-
-				err = p.readRune()
-				if err == io.EOF {
-					return res, nil
-				}
-				if err != nil {
-					return nil, err
-				}
-
-				continue
-			default:
-				// We don't allow dollars before letters and underscores now,
-				// as we might want to use these for $var support (without brackets) later.
-				if unicode.IsLetter(p.next) || p.next == '_' {
-					return nil, ErrUnexpectedDollar(p.lineNo, p.columnNo)
-				}
-
-				res = append(res, character(p.current))
-				continue
-			}
-		case token.LBracket:
-			switch p.next {
-			case token.LBracket:
-				secret, err := p.parseSecret()
-				if err != nil {
-					return nil, err
-				}
-
-				res = append(res, secret)
-
-				err = p.readRune()
-				if err == io.EOF {
-					return res, nil
-				}
-				if err != nil {
-					return nil, err
-				}
-
-				continue
-			default:
-				res = append(res, character(p.current))
-				continue
-			}
-		case token.Backslash:
-			if token.IsToken(p.next) {
-				res = append(res, character(p.next))
-
-				err = p.readRune()
-				if err == io.EOF {
-					return res, nil
-				}
-				if err != nil {
-					return nil, err
-				}
-			} else {
-				res = append(res, character(p.current))
-			}
-
-			continue
-		default:
-			res = append(res, character(p.current))
-			continue
+		n, err := p.parseRoot()
+		if err == io.EOF {
+			return append(res, n), nil
 		}
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, n)
+	}
+}
+
+// parseRoot parses the contents of a template at root level, outside of any
+// tag.
+// The current character should be the character to parse. When parseRoot returns,
+// the current character is the last processed character.
+func (p *v2Parser) parseRoot() (node, error) {
+	switch p.current {
+	case token.Dollar:
+		switch p.next {
+		case token.LBracket:
+			variable, err := p.parseVar()
+			if err != nil {
+				return nil, err
+			}
+
+			return variable, p.readRune()
+		default:
+			// We don't allow dollars before letters and underscores now,
+			// as we might want to use these for $var support (without brackets) later.
+			if unicode.IsLetter(p.next) || p.next == '_' {
+				return nil, ErrUnexpectedDollar(p.lineNo, p.columnNo)
+			}
+
+			return character(p.current), nil
+		}
+	case token.LBracket:
+		switch p.next {
+		case token.LBracket:
+			secret, err := p.parseSecret()
+			if err != nil {
+				return nil, err
+			}
+
+			return secret, p.readRune()
+		default:
+			return character(p.current), nil
+		}
+	case token.Backslash:
+		if token.IsToken(p.next) {
+			token := character(p.next)
+			return token, p.readRune()
+		}
+		return character(p.current), nil
+	default:
+		return character(p.current), nil
 	}
 }
 

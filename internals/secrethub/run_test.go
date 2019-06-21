@@ -2,7 +2,12 @@ package secrethub
 
 import (
 	"errors"
+	"strings"
 	"testing"
+
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
 
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
@@ -31,7 +36,7 @@ isEncountered:
 	}
 }
 
-func TestParseEnv(t *testing.T) {
+func TestParseDotEnv(t *testing.T) {
 	cases := map[string]struct {
 		raw      string
 		expected []envvar
@@ -41,14 +46,16 @@ func TestParseEnv(t *testing.T) {
 			raw: "foo=bar\nbaz={{path/to/secret}}",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:          "foo",
+					value:        "bar",
+					lineNumber:   1,
+					columnNumber: 5,
 				},
 				{
-					key:        "baz",
-					value:      "{{path/to/secret}}",
-					lineNumber: 2,
+					key:          "baz",
+					value:        "{{path/to/secret}}",
+					lineNumber:   2,
+					columnNumber: 5,
 				},
 			},
 		},
@@ -56,19 +63,32 @@ func TestParseEnv(t *testing.T) {
 			raw: "key = value",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 7,
 				},
 			},
 		},
-		"success with multiple spaces": {
+		"success with multiple spaces after key": {
 			raw: "key    = value",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 10,
+				},
+			},
+		},
+		"success with multiple spaces before value": {
+			raw: "key =  value",
+			expected: []envvar{
+				{
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 8,
 				},
 			},
 		},
@@ -151,9 +171,10 @@ func TestParseEnv(t *testing.T) {
 			raw: "foo=foo=bar",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "foo=bar",
-					lineNumber: 1,
+					key:          "foo",
+					value:        "foo=bar",
+					lineNumber:   1,
+					columnNumber: 5,
 				},
 			},
 		},
@@ -165,7 +186,7 @@ func TestParseEnv(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			actual, err := parseEnv(tc.raw)
+			actual, err := parseDotEnv(strings.NewReader(tc.raw))
 
 			elemEqual(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)
@@ -217,7 +238,7 @@ func TestParseYML(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			actual, err := parseYML(tc.raw)
+			actual, err := parseYML(strings.NewReader(tc.raw))
 
 			elemEqual(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)
@@ -274,19 +295,23 @@ func TestNewEnv(t *testing.T) {
 			raw: "foo: ${path/to/secret",
 			err: generictpl.ErrTagNotClosed("}"),
 		},
-		"env error": {
+		"secret template error": {
 			raw: "foo={{path/to/secret",
-			err: ErrTemplate(1, generictpl.ErrTagNotClosed("}}")),
+			err: tpl.ErrSecretTagNotClosed(1, 21),
+		},
+		"secret template error second line": {
+			raw: "foo=bar\nbar={{ error@secretpath }}",
+			err: tpl.ErrIllegalSecretCharacter(2, 13, '@'),
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			env, err := NewEnv(tc.raw, tc.templateVars)
+			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVars)
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {
-				actual, err := env.Env(tc.replacements)
+				actual, err := env.Env(map[string]string{}, fakes.FakeSecretReader{Secrets: tc.replacements})
 				assert.Equal(t, err, tc.err)
 
 				assert.Equal(t, actual, tc.expected)

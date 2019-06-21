@@ -92,18 +92,86 @@ func TestParseDotEnv(t *testing.T) {
 				},
 			},
 		},
+		"success with leading space": {
+			raw: " key = value",
+			expected: []envvar{
+				{
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 8,
+				},
+			},
+		},
+		"success with trailing space": {
+			raw: "key = value ",
+			expected: []envvar{
+				{
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 7,
+				},
+			},
+		},
+		"success with tabs": {
+			raw: "key\t=\tvalue",
+			expected: []envvar{
+				{
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 7,
+				},
+			},
+		},
+		"success with single quotes": {
+			raw: "key='value'",
+			expected: []envvar{
+				{
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 6,
+				},
+			},
+		},
+		"success with double quotes": {
+			raw: `key="value"`,
+			expected: []envvar{
+				{
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 6,
+				},
+			},
+		},
+		"success with quotes and whitespace": {
+			raw: "key = 'value'",
+			expected: []envvar{
+				{
+					key:          "key",
+					value:        "value",
+					lineNumber:   1,
+					columnNumber: 8,
+				},
+			},
+		},
 		"success comment": {
 			raw: "# database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:          "DB_USER",
+					value:        "user",
+					lineNumber:   2,
+					columnNumber: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:          "DB_PASS",
+					value:        "pass",
+					lineNumber:   3,
+					columnNumber: 11,
 				},
 			},
 		},
@@ -111,14 +179,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "    # database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:          "DB_USER",
+					value:        "user",
+					lineNumber:   2,
+					columnNumber: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:          "DB_PASS",
+					value:        "pass",
+					lineNumber:   3,
+					columnNumber: 11,
 				},
 			},
 		},
@@ -126,14 +196,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "\t# database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:          "DB_USER",
+					value:        "user",
+					lineNumber:   2,
+					columnNumber: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:          "DB_PASS",
+					value:        "pass",
+					lineNumber:   3,
+					columnNumber: 11,
 				},
 			},
 		},
@@ -141,14 +213,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "foo=bar\n\nbar=baz",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:          "foo",
+					value:        "bar",
+					lineNumber:   1,
+					columnNumber: 5,
 				},
 				{
-					key:        "bar",
-					value:      "baz",
-					lineNumber: 3,
+					key:          "bar",
+					value:        "baz",
+					lineNumber:   3,
+					columnNumber: 5,
 				},
 			},
 		},
@@ -156,14 +230,16 @@ func TestParseDotEnv(t *testing.T) {
 			raw: "foo=bar\n    \nbar = baz",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:          "foo",
+					value:        "bar",
+					lineNumber:   1,
+					columnNumber: 5,
 				},
 				{
-					key:        "bar",
-					value:      "baz",
-					lineNumber: 3,
+					key:          "bar",
+					value:        "baz",
+					lineNumber:   3,
+					columnNumber: 7,
 				},
 			},
 		},
@@ -349,6 +425,116 @@ func TestRunCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := tc.command.Run()
 			assert.Equal(t, err, tc.err)
+		})
+	}
+}
+
+func TestTrimQuotes(t *testing.T) {
+	cases := map[string]struct {
+		in       string
+		expected string
+	}{
+		"unquoted": {
+			in:       `foo`,
+			expected: `foo`,
+		},
+		"single quoted": {
+			in:       `'foo'`,
+			expected: `foo`,
+		},
+		"double quoted": {
+			in:       `"foo"`,
+			expected: `foo`,
+		},
+		"maintain quotes inside unquoted value": {
+			in:       `{"foo":"bar"}`,
+			expected: `{"foo":"bar"}`,
+		},
+		"empty string": {
+			in:       "",
+			expected: "",
+		},
+		"single quoted empty string": {
+			in:       `''`,
+			expected: ``,
+		},
+		"double qouted empty string": {
+			in:       `""`,
+			expected: ``,
+		},
+		"single quote wrapped in single quote": {
+			in:       `''foo''`,
+			expected: `'foo'`,
+		},
+		"single quote wrapped in double quote": {
+			in:       `"'foo'"`,
+			expected: `'foo'`,
+		},
+		"double quote wrapped in double quote": {
+			in:       `""foo""`,
+			expected: `"foo"`,
+		},
+		"double quote wrapped in single quote": {
+			in:       `'"foo"'`,
+			expected: `"foo"`,
+		},
+		"single quote opened but not closed": {
+			in:       `'foo`,
+			expected: `'foo`,
+		},
+		"double quote opened but not closed": {
+			in:       `"foo`,
+			expected: `"foo`,
+		},
+		"single quote closed but not opened": {
+			in:       `foo'`,
+			expected: `foo'`,
+		},
+		"double quote closed but not opened": {
+			in:       `foo"`,
+			expected: `foo"`,
+		},
+		"single quoted with inner leading whitespace": {
+			in:       `' foo'`,
+			expected: ` foo`,
+		},
+		"double quoted with inner leading whitespace": {
+			in:       `" foo"`,
+			expected: ` foo`,
+		},
+		"single quoted with inner trailing whitespace": {
+			in:       `'foo '`,
+			expected: `foo `,
+		},
+		"double quoted with inner trailing whitespace": {
+			in:       `"foo "`,
+			expected: `foo `,
+		},
+
+		// Trimming OUTER whitespace is explicitly not the responsibility of this function.
+		"single quoted with outer leading whitespace": {
+			in:       ` 'foo'`,
+			expected: ` 'foo'`,
+		},
+		"double quoted with outer leading whitespace": {
+			in:       ` "foo"`,
+			expected: ` "foo"`,
+		},
+		"single quoted with outer trailing whitespace": {
+			in:       `'foo' `,
+			expected: `'foo' `,
+		},
+		"double quoted with outer trailing whitespace": {
+			in:       `"foo" `,
+			expected: `"foo" `,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			actual, _ := trimQuotes(tc.in)
+
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

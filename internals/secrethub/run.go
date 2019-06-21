@@ -14,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
@@ -469,14 +470,25 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 			return nil, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
 
-		key := strings.TrimRight(parts[0], " ")
-		value := strings.TrimLeft(parts[1], " ")
+		valColNo := len(parts[0]) + 2 // the length of the key (including spaces and quotes) + one for the = sign and one for the current column.
+		for _, r := range parts[1] {
+			if !unicode.IsSpace(r) {
+				break
+			}
+			valColNo++
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value, isTrimmed := trimQuotes(strings.TrimSpace(parts[1]))
+		if isTrimmed {
+			valColNo++
+		}
 
 		vars[key] = envvar{
 			key:          key,
 			value:        value,
 			lineNumber:   i,
-			columnNumber: len(parts[0]) + 1 + len(parts[1]) - len(value) + 1, // the length of the key (including extra spaces) + the length of the = char + the length of the spaces before the value + 1 for the current char
+			columnNumber: valColNo,
 		}
 	}
 
@@ -488,6 +500,32 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 	}
 
 	return res, nil
+}
+
+const (
+	doubleQuoteChar = '\u0022' // "
+	singleQuoteChar = '\u0027' // '
+)
+
+// trimQuotes removes a leading and trailing quote from the given string value if
+// it is wrapped in either single or double quotes.
+//
+// Rules:
+// - Empty values become empty values (e.g. `''`and `""` both evaluate to the empty string ``).
+// - Inner quotes are maintained (e.g. `{"foo":"bar"}` remains unchanged).
+// - Single and double quoted values are escaped (e.g. `'foo'` and `"foo"` both evaluate to `foo`).
+// - Single and double qouted values maintain whitespace from both ends (e.g. `" foo "` becomes ` foo `)
+// - Inputs with either leading or trailing whitespace are considered unquoted,
+//   so make sure you sanitize your inputs before calling this function.
+func trimQuotes(s string) (string, bool) {
+	n := len(s)
+	if n > 1 &&
+		(s[0] == singleQuoteChar && s[n-1] == singleQuoteChar ||
+			s[0] == doubleQuoteChar && s[n-1] == doubleQuoteChar) {
+		return s[1 : n-1], true
+	}
+
+	return s, false
 }
 
 func parseYML(r io.Reader) ([]envvar, error) {

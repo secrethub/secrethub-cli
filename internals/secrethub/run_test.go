@@ -406,6 +406,10 @@ func TestNewEnv(t *testing.T) {
 				"baz": "val",
 			},
 		},
+		"secret not allowed in key": {
+			raw: "{{ path/to/secret }}key=value",
+			err: ErrSecretsNotAllowedInKey,
+		},
 		"yml template error": {
 			raw: "foo: bar: baz",
 			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),

@@ -179,46 +179,32 @@ func (p *v2Parser) parse() ([]node, error) {
 // The current character should be the character to parse. When parseRoot returns,
 // the current character is the last processed character.
 func (p *v2Parser) parseRoot() (node, error) {
-	switch p.current {
-	case token.Dollar:
-		switch p.next {
-		case token.LBracket:
-			variable, err := p.parseVar()
-			if err != nil {
-				return nil, err
-			}
-
-			return variable, p.readRune()
-		default:
-			// We don't allow dollars before letters and underscores now,
-			// as we might want to use these for $var support (without brackets) later.
-			if unicode.IsLetter(p.next) || p.next == '_' {
-				return nil, ErrUnexpectedDollar(p.lineNo, p.columnNo)
-			}
-
-			return character(p.current), nil
+	if p.current == token.Dollar && p.next == token.LBracket {
+		variable, err := p.parseVar()
+		if err != nil {
+			return nil, err
 		}
-	case token.LBracket:
-		switch p.next {
-		case token.LBracket:
-			secret, err := p.parseSecret()
-			if err != nil {
-				return nil, err
-			}
-
-			return secret, p.readRune()
-		default:
-			return character(p.current), nil
-		}
-	case token.Backslash:
-		if token.IsToken(p.next) {
-			token := character(p.next)
-			return token, p.readRune()
-		}
-		return character(p.current), nil
-	default:
-		return character(p.current), nil
+		return variable, p.readRune()
 	}
+
+	if p.current == token.Dollar && (unicode.IsLetter(p.next) || p.next == '_') {
+		return nil, ErrUnexpectedDollar(p.lineNo, p.columnNo)
+	}
+
+	if p.current == token.LBracket && p.next == token.LBracket {
+		secret, err := p.parseSecret()
+		if err != nil {
+			return nil, err
+		}
+		return secret, p.readRune()
+	}
+
+	if p.current == token.Backslash && token.IsToken(p.next) {
+		token := character(p.next)
+		return token, p.readRune()
+	}
+
+	return character(p.current), nil
 }
 
 // parseVar parses the contents of a template variable up to the closing delimiter.

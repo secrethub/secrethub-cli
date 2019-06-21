@@ -265,7 +265,7 @@ func (p *v2Parser) parseVar() (node, error) {
 	}
 
 	for {
-		if token.IsRBracket(p.next) {
+		if p.next == token.RBracket {
 			return variable{
 				key: buffer.String(),
 			}, nil
@@ -277,7 +277,7 @@ func (p *v2Parser) parseVar() (node, error) {
 				return nil, err
 			}
 
-			if token.IsRBracket(p.next) {
+			if p.next == token.RBracket {
 				return variable{
 					key: buffer.String(),
 				}, nil
@@ -333,8 +333,8 @@ func (p *v2Parser) parseSecret() (node, error) {
 			return nil, err
 		}
 
-		if token.IsDollar(p.current) {
-			if token.IsLBracket(p.next) {
+		if p.current == token.Dollar {
+			if p.next == token.LBracket {
 				variable, err := p.parseVar()
 				if err != nil {
 					return nil, err
@@ -357,7 +357,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 				return nil, err
 			}
 
-			if !token.IsRBracket(p.next) {
+			if p.next != token.RBracket {
 				return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 			}
 
@@ -366,7 +366,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 				return nil, err
 			}
 
-			if !token.IsRBracket(p.next) {
+			if p.next != token.RBracket {
 				return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo-1, ' ')
 			}
 
@@ -375,8 +375,8 @@ func (p *v2Parser) parseSecret() (node, error) {
 			}, nil
 		}
 
-		if token.IsRBracket(p.current) {
-			if token.IsRBracket(p.next) {
+		if p.current == token.RBracket {
+			if p.next == token.RBracket {
 				return secret{
 					path: path,
 				}, nil

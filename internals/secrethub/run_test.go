@@ -70,7 +70,7 @@ func TestParseDotEnv(t *testing.T) {
 				},
 			},
 		},
-		"success with multiple spaces before key": {
+		"success with multiple spaces after key": {
 			raw: "key    = value",
 			expected: []envvar{
 				{

@@ -247,18 +247,19 @@ func (p *v2Parser) parse() ([]node, error) {
 func (p *v2Parser) parseVar() (node, error) {
 	var buffer bytes.Buffer
 
-	err := p.readRune()
-	if err == io.EOF {
-		return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
+	checkError := func(err error) error {
+		if err == io.EOF {
+			return ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
+		}
+		return err
 	}
+
+	err := checkError(p.readRune())
 	if err != nil {
 		return nil, err
 	}
 
-	err = p.skipWhiteSpace()
-	if err == io.EOF {
-		return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
-	}
+	err = checkError(p.skipWhiteSpace())
 	if err != nil {
 		return nil, err
 	}
@@ -271,10 +272,7 @@ func (p *v2Parser) parseVar() (node, error) {
 		}
 
 		if p.isAllowedWhiteSpace(p.next) {
-			err := p.skipWhiteSpace()
-			if err == io.EOF {
-				return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
-			}
+			err := checkError(p.skipWhiteSpace())
 			if err != nil {
 				return nil, err
 			}
@@ -291,10 +289,7 @@ func (p *v2Parser) parseVar() (node, error) {
 		if p.isVariableRune(p.next) {
 			buffer.WriteRune(p.next)
 
-			err := p.readRune()
-			if err == io.EOF {
-				return nil, ErrVariableTagNotClosed(p.lineNo, p.columnNo+1)
-			}
+			err := checkError(p.readRune())
 			if err != nil {
 				return nil, err
 			}
@@ -315,27 +310,25 @@ func (p *v2Parser) parseVar() (node, error) {
 func (p *v2Parser) parseSecret() (node, error) {
 	path := []node{}
 
-	err := p.readRune()
-	if err == io.EOF {
-		return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
+	checkError := func(err error) error {
+		if err == io.EOF {
+			return ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
+		}
+		return err
 	}
+
+	err := checkError(p.readRune())
 	if err != nil {
 		return nil, err
 	}
 
-	err = p.skipWhiteSpace()
-	if err == io.EOF {
-		return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
-	}
+	err = checkError(p.skipWhiteSpace())
 	if err != nil {
 		return nil, err
 	}
 
 	for {
-		err = p.readRune()
-		if err == io.EOF {
-			return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
-		}
+		err = checkError(p.readRune())
 		if err != nil {
 			return nil, err
 		}
@@ -349,10 +342,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 
 				path = append(path, variable)
 
-				err = p.readRune()
-				if err == io.EOF {
-					return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
-				}
+				err = checkError(p.readRune())
 				if err != nil {
 					return nil, err
 				}
@@ -362,10 +352,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 			return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 		}
 		if p.isAllowedWhiteSpace(p.current) {
-			err := p.skipWhiteSpace()
-			if err == io.EOF {
-				return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
-			}
+			err := checkError(p.skipWhiteSpace())
 			if err != nil {
 				return nil, err
 			}
@@ -374,10 +361,7 @@ func (p *v2Parser) parseSecret() (node, error) {
 				return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 			}
 
-			err = p.readRune()
-			if err == io.EOF {
-				return nil, ErrSecretTagNotClosed(p.lineNo, p.columnNo+1)
-			}
+			err = checkError(p.readRune())
 			if err != nil {
 				return nil, err
 			}

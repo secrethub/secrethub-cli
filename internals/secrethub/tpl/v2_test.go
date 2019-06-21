@@ -15,6 +15,10 @@ func TestParserV2_parse(t *testing.T) {
 		expected []node
 		err      error
 	}{
+		"empty input": {
+			input:    "",
+			expected: []node{},
+		},
 		"no vars, no secrets": {
 			input: "hello world",
 			expected: []node{
@@ -432,6 +436,10 @@ func TestParserV2_parse(t *testing.T) {
 		"secret tag not closed after space at end": {
 			input: "{{ path ",
 			err:   ErrSecretTagNotClosed(1, 9),
+		},
+		"secret tag not closed after multiple space at end": {
+			input: "{{ path  ",
+			err:   ErrSecretTagNotClosed(1, 10),
 		},
 		"secret tag not closed after space at start": {
 			input: "{{ ",

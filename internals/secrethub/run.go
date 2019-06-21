@@ -428,6 +428,7 @@ type envvar struct {
 	key      string
 	value    string
 	lineNo   int
+	keyColNo int
 	valColNo int
 }
 
@@ -478,7 +479,16 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 			valColNo++
 		}
 
+		keyColNo := 1 // one for the current column.
+		for _, r := range parts[0] {
+			if !unicode.IsSpace(r) {
+				break
+			}
+			keyColNo++
+		}
+
 		key := strings.TrimSpace(parts[0])
+
 		value, isTrimmed := trimQuotes(strings.TrimSpace(parts[1]))
 		if isTrimmed {
 			valColNo++
@@ -489,6 +499,7 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 			value:    value,
 			lineNo:   i,
 			valColNo: valColNo,
+			keyColNo: keyColNo,
 		}
 	}
 

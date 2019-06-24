@@ -83,6 +83,14 @@ func TestParserV2_parse(t *testing.T) {
 				character('d'),
 			},
 		},
+		"uppercase var": {
+			input: "${ VAR }",
+			expected: []node{
+				variable{
+					key: "var",
+				},
+			},
+		},
 		"secret path": {
 			input: "{{path/to/secret}}",
 			expected: []node{

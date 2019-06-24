@@ -430,12 +430,12 @@ func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
 
 	secretTemplates := make([]envvarTpls, len(env))
 	for i, envvar := range env {
-		keyTpl, err := parser.Parse(envvar.key, envvar.lineNo, envvar.keyColNo)
+		keyTpl, err := parser.Parse(envvar.key, envvar.lineNumber, envvar.columnNumberKey)
 		if err != nil {
 			return nil, err
 		}
 
-		valTpl, err := parser.Parse(envvar.value, envvar.lineNo, envvar.valColNo)
+		valTpl, err := parser.Parse(envvar.value, envvar.lineNumber, envvar.ColumnNumberValue)
 		if err != nil {
 			return nil, err
 		}
@@ -443,7 +443,7 @@ func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
 		secretTemplates[i] = envvarTpls{
 			key:    keyTpl,
 			value:  valTpl,
-			lineNo: envvar.lineNo,
+			lineNo: envvar.lineNumber,
 		}
 	}
 
@@ -454,11 +454,11 @@ func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
 }
 
 type envvar struct {
-	key      string
-	value    string
-	lineNo   int
-	keyColNo int
-	valColNo int
+	key               string
+	value             string
+	lineNumber        int
+	columnNumberKey   int
+	ColumnNumberValue int
 }
 
 // parseEnvironment parses envvars from a string.
@@ -500,35 +500,35 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 			return nil, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
 
-		valColNo := len(parts[0]) + 2 // the length of the key (including spaces and quotes) + one for the = sign and one for the current column.
+		columnNumberValue := len(parts[0]) + 2 // the length of the key (including spaces and quotes) + one for the = sign and one for the current column.
 		for _, r := range parts[1] {
 			if !unicode.IsSpace(r) {
 				break
 			}
-			valColNo++
+			columnNumberValue++
 		}
 
-		keyColNo := 1 // one for the current column.
+		columnNumberKey := 1 // one for the current column.
 		for _, r := range parts[0] {
 			if !unicode.IsSpace(r) {
 				break
 			}
-			keyColNo++
+			columnNumberKey++
 		}
 
 		key := strings.TrimSpace(parts[0])
 
 		value, isTrimmed := trimQuotes(strings.TrimSpace(parts[1]))
 		if isTrimmed {
-			valColNo++
+			columnNumberValue++
 		}
 
 		vars[key] = envvar{
-			key:      key,
-			value:    value,
-			lineNo:   i,
-			valColNo: valColNo,
-			keyColNo: keyColNo,
+			key:               key,
+			value:             value,
+			lineNumber:        i,
+			ColumnNumberValue: columnNumberValue,
+			columnNumberKey:   columnNumberKey,
 		}
 	}
 
@@ -584,9 +584,9 @@ func parseYML(r io.Reader) ([]envvar, error) {
 	i := 0
 	for key, value := range pairs {
 		vars[i] = envvar{
-			key:    key,
-			value:  value,
-			lineNo: -1,
+			key:        key,
+			value:      value,
+			lineNumber: -1,
 		}
 		i++
 	}

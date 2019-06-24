@@ -49,12 +49,12 @@ const (
 )
 
 // RunCommand runs a program and passes environment variables to it that are
-// defined with --envar or --template flags and secrets.yml files.
+// defined with --envar or --env-file flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
 	command         []string
 	envar           map[string]string
-	template        string
+	envFile         string
 	templateVars    map[string]string
 	templateVersion string
 	env             string
@@ -77,7 +77,8 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause := r.Command("run", "Pass secrets as environment variables to a process.")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
-	clause.Flag("template", "The path to a .yml template file with environment variable mappings of the form `NAME: value`. Templates are automatically injected with secrets when referenced.").StringVar(&cmd.template)
+	clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&cmd.envFile)
+	clause.Flag("template", "").Hidden().StringVar(&cmd.envFile)
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
@@ -100,15 +101,15 @@ func (cmd *RunCommand) Run() error {
 	}
 	envSources = append(envSources, flagSource)
 
-	if cmd.template == "" {
-		const defaultTemplate = "secrethub.env"
-		_, err := os.Stat(defaultTemplate)
+	if cmd.envFile == "" {
+		const defaultEnvFile = "secrethub.env"
+		_, err := os.Stat(defaultEnvFile)
 		if err != nil {
 			if !os.IsNotExist(err) {
-				return fmt.Errorf("could not read default run template: %s", err)
+				return fmt.Errorf("could not read default run env-file %s: %s", defaultEnvFile, err)
 			}
 		} else {
-			cmd.template = defaultTemplate
+			cmd.envFile = defaultEnvFile
 		}
 	}
 
@@ -153,8 +154,8 @@ func (cmd *RunCommand) Run() error {
 		return ErrUnknownTemplateVersion(cmd.templateVersion)
 	}
 
-	if cmd.template != "" {
-		envFile, err := ReadEnvFile(cmd.template, templateVars, parser)
+	if cmd.envFile != "" {
+		envFile, err := ReadEnvFile(cmd.envFile, templateVars, parser)
 		if err != nil {
 			return err
 		}

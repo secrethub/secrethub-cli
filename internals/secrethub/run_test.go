@@ -383,7 +383,7 @@ func TestNewEnv(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVars)
+			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVars, nil)
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {

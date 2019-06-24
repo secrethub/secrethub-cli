@@ -23,11 +23,13 @@ import (
 // Errors
 var (
 	ErrUnknownTemplateVersion = errMain.Code("unknown_template_version").ErrorPref("unknown template version: '%s' supported versions are 1, 2 and latest")
+	ErrReadFile               = errMain.Code("in_file_read_error").ErrorPref("could not read the input file %s: %s")
 )
 
 // InjectCommand is a command to read a secret.
 type InjectCommand struct {
 	outFile             string
+	inFile              string
 	fileMode            filemode.FileMode
 	force               bool
 	io                  ui.IO
@@ -61,6 +63,7 @@ func (cmd *InjectCommand) Register(r Registerer) {
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
 	).Short('c').BoolVar(&cmd.useClipboard)
+	clause.Flag("in-file", "The filename of a template file to inject.").StringVar(&cmd.inFile)
 	clause.Flag("out-file", "Write the injected template to a file instead of stdout.").StringVar(&cmd.outFile)
 	clause.Flag("file", "").Hidden().StringVar(&cmd.outFile)
 	clause.Flag("file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
@@ -78,14 +81,22 @@ func (cmd *InjectCommand) Run() error {
 	}
 
 	var err error
+	var raw []byte
 
-	if !cmd.io.Stdin().IsPiped() {
-		return ErrNoDataOnStdin
-	}
+	if cmd.inFile != "" {
+		raw, err = ioutil.ReadFile(cmd.inFile)
+		if err != nil {
+			return ErrReadFile(cmd.inFile, err)
+		}
+	} else {
+		if !cmd.io.Stdin().IsPiped() {
+			return ErrNoDataOnStdin
+		}
 
-	raw, err := ioutil.ReadAll(cmd.io.Stdin())
-	if err != nil {
-		return errio.Error(err)
+		raw, err = ioutil.ReadAll(cmd.io.Stdin())
+		if err != nil {
+			return errio.Error(err)
+		}
 	}
 
 	templateVars := make(map[string]string)

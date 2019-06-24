@@ -223,14 +223,14 @@ func (p *v2Parser) parseVar() (node, error) {
 		return err
 	}
 
-	err := checkError(p.readRune())
+	err := p.readRune()
 	if err != nil {
-		return nil, err
+		return nil, checkError(err)
 	}
 
-	err = checkError(p.skipWhiteSpace())
+	err = p.skipWhiteSpace()
 	if err != nil {
-		return nil, err
+		return nil, checkError(err)
 	}
 
 	for {
@@ -241,9 +241,9 @@ func (p *v2Parser) parseVar() (node, error) {
 		}
 
 		if p.isAllowedWhiteSpace(p.next) {
-			err := checkError(p.skipWhiteSpace())
+			err := p.skipWhiteSpace()
 			if err != nil {
-				return nil, err
+				return nil, checkError(err)
 			}
 
 			if p.next == token.RBracket {
@@ -258,9 +258,9 @@ func (p *v2Parser) parseVar() (node, error) {
 		if p.isVariableRune(p.next) {
 			buffer.WriteRune(p.next)
 
-			err := checkError(p.readRune())
+			err := p.readRune()
 			if err != nil {
-				return nil, err
+				return nil, checkError(err)
 			}
 
 			continue
@@ -286,20 +286,20 @@ func (p *v2Parser) parseSecret() (node, error) {
 		return err
 	}
 
-	err := checkError(p.readRune())
+	err := p.readRune()
 	if err != nil {
-		return nil, err
+		return nil, checkError(err)
 	}
 
-	err = checkError(p.skipWhiteSpace())
+	err = p.skipWhiteSpace()
 	if err != nil {
-		return nil, err
+		return nil, checkError(err)
 	}
 
 	for {
-		err = checkError(p.readRune())
+		err = p.readRune()
 		if err != nil {
-			return nil, err
+			return nil, checkError(err)
 		}
 
 		if p.current == token.Dollar {
@@ -311,9 +311,9 @@ func (p *v2Parser) parseSecret() (node, error) {
 
 				path = append(path, variable)
 
-				err = checkError(p.readRune())
+				err = p.readRune()
 				if err != nil {
-					return nil, err
+					return nil, checkError(err)
 				}
 
 				continue
@@ -322,18 +322,18 @@ func (p *v2Parser) parseSecret() (node, error) {
 		}
 
 		if p.isAllowedWhiteSpace(p.current) {
-			err := checkError(p.skipWhiteSpace())
+			err := p.skipWhiteSpace()
 			if err != nil {
-				return nil, err
+				return nil, checkError(err)
 			}
 
 			if p.next != token.RBracket {
 				return nil, ErrUnexpectedCharacter(p.lineNo, p.columnNo+1, p.next, token.RBracket)
 			}
 
-			err = checkError(p.readRune())
+			err = p.readRune()
 			if err != nil {
-				return nil, err
+				return nil, checkError(err)
 			}
 
 			if p.next != token.RBracket {

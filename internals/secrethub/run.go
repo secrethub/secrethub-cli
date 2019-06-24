@@ -142,13 +142,9 @@ func (cmd *RunCommand) Run() error {
 		// The latest version is used for .env formatted environment files, v1 is used
 		// for yml formatted environment files.
 		parser = nil
-	case "1":
+	case "1", "v1":
 		parser = tpl.NewV1Parser()
-	case "v1":
-		parser = tpl.NewV1Parser()
-	case "2":
-		parser = tpl.NewV2Parser()
-	case "v2":
+	case "2", "v2":
 		parser = tpl.NewV2Parser()
 	case "latest":
 		parser = tpl.NewParser()

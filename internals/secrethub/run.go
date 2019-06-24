@@ -119,12 +119,12 @@ func (cmd *RunCommand) Run() error {
 	for k, v := range osEnv {
 		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
 			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
-			templateVars[k] = v
+			templateVars[strings.ToLower(k)] = v
 		}
 	}
 
 	for k, v := range cmd.templateVars {
-		templateVars[k] = v
+		templateVars[strings.ToLower(k)] = v
 	}
 
 	for k := range templateVars {

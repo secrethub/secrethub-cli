@@ -3,6 +3,7 @@ package tpl
 import (
 	"bytes"
 	"io"
+	"strings"
 	"unicode"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/internal/token"
@@ -236,7 +237,7 @@ func (p *v2Parser) parseVar() (node, error) {
 	for {
 		if p.next == token.RBracket {
 			return variable{
-				key: buffer.String(),
+				key: strings.ToLower(buffer.String()),
 			}, nil
 		}
 
@@ -248,7 +249,7 @@ func (p *v2Parser) parseVar() (node, error) {
 
 			if p.next == token.RBracket {
 				return variable{
-					key: buffer.String(),
+					key: strings.ToLower(buffer.String()),
 				}, nil
 			}
 
@@ -397,6 +398,7 @@ type SecretReader interface {
 }
 
 // Evaluate renders a template. It replaces all variable- and secret tags in the template.
+// The supplied variables should have lowercase keys.
 func (t templateV2) Evaluate(vars map[string]string, sr SecretReader) (string, error) {
 	ctx := context{
 		vars:         vars,

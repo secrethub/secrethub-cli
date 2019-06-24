@@ -52,14 +52,15 @@ const (
 // defined with --envar or --template flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
-	command        []string
-	envar          map[string]string
-	template       string
-	templateVars   map[string]string
-	env            string
-	noMasking      bool
-	maskingTimeout time.Duration
-	newClient      newClientFunc
+	command         []string
+	envar           map[string]string
+	template        string
+	templateVars    map[string]string
+	templateVersion string
+	env             string
+	noMasking       bool
+	maskingTimeout  time.Duration
+	newClient       newClientFunc
 }
 
 // NewRunCommand creates a new RunCommand.
@@ -81,6 +82,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
 	clause.Flag("masking-timeout", "The time to wait for a partial secret that is written to stdout or stderr to be completed for masking.").Default("1s").DurationVar(&cmd.maskingTimeout)
+	clause.Flag("template-version", "The template syntax version to be used. By default, the latest version is used for .env formatted templates, v1 is used for yaml formatted files.").Default("auto").StringVar(&cmd.templateVersion)
 
 	BindAction(clause, cmd.Run)
 }
@@ -120,12 +122,12 @@ func (cmd *RunCommand) Run() error {
 	for k, v := range osEnv {
 		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
 			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
-			templateVars[k] = v
+			templateVars[strings.ToLower(k)] = v
 		}
 	}
 
 	for k, v := range cmd.templateVars {
-		templateVars[k] = v
+		templateVars[strings.ToLower(k)] = v
 	}
 
 	for k := range templateVars {
@@ -134,8 +136,25 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
+	var parser tpl.Parser
+	switch cmd.templateVersion {
+	case "auto":
+		// Leave it up to the env file parser to detect the template version to use;
+		// The latest version is used for .env formatted environment files, v1 is used
+		// for yml formatted environment files.
+		parser = nil
+	case "1", "v1":
+		parser = tpl.NewV1Parser()
+	case "2", "v2":
+		parser = tpl.NewV2Parser()
+	case "latest":
+		parser = tpl.NewParser()
+	default:
+		return ErrUnknownTemplateVersion(cmd.templateVersion)
+	}
+
 	if cmd.template != "" {
-		envFile, err := ReadEnvFile(cmd.template, templateVars)
+		envFile, err := ReadEnvFile(cmd.template, templateVars, parser)
 		if err != nil {
 			return err
 		}
@@ -385,12 +404,12 @@ func (t envTemplate) Secrets() []string {
 }
 
 // ReadEnvFile reads and parses a .env file.
-func ReadEnvFile(filepath string, vars map[string]string) (EnvFile, error) {
+func ReadEnvFile(filepath string, vars map[string]string, parser tpl.Parser) (EnvFile, error) {
 	r, err := os.Open(filepath)
 	if err != nil {
 		return EnvFile{}, ErrCannotReadFile(filepath, err)
 	}
-	env, err := NewEnv(r, vars)
+	env, err := NewEnv(r, vars, parser)
 	if err != nil {
 		return EnvFile{}, err
 	}
@@ -422,15 +441,24 @@ func (e EnvFile) Secrets() []string {
 
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
-func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
-	env, parser, err := parseEnvironment(r)
+func NewEnv(r io.Reader, vars map[string]string, parser tpl.Parser) (EnvSource, error) {
+	env, defaultParser, err := parseEnvironment(r)
 	if err != nil {
 		return nil, err
+	}
+
+	if parser == nil {
+		parser = defaultParser
 	}
 
 	secretTemplates := make([]envvarTpls, len(env))
 	for i, envvar := range env {
 		keyTpl, err := parser.Parse(envvar.key, envvar.lineNumber, envvar.columnNumberKey)
+		if err != nil {
+			return nil, err
+		}
+
+		err = validation.ValidateEnvarName(envvar.key)
 		if err != nil {
 			return nil, err
 		}
@@ -466,7 +494,7 @@ type envvar struct {
 // the yml format is tried.
 // The default parser to be used with the format is also returned.
 func parseEnvironment(r io.Reader) ([]envvar, tpl.Parser, error) {
-	parser := tpl.NewV2Parser()
+	parser := tpl.NewParser()
 	var ymlReader bytes.Buffer
 	env, err := parseDotEnv(io.TeeReader(r, &ymlReader))
 	if err != nil {

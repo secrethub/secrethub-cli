@@ -14,6 +14,8 @@ type Parser interface {
 
 // Template contains secret and variable references. It can be evaluated to resolve to a string.
 type Template interface {
+	// Evaluate renders a template. It replaces all variable- and secret tags in the template.
+	// The supplied variables should have lowercase keys.
 	Evaluate(vars map[string]string, sr SecretReader) (string, error)
 }
 

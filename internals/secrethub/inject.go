@@ -97,12 +97,12 @@ func (cmd *InjectCommand) Run() error {
 	for k, v := range osEnv {
 		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
 			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
-			templateVars[k] = v
+			templateVars[strings.ToLower(k)] = v
 		}
 	}
 
 	for k, v := range cmd.templateVars {
-		templateVars[k] = v
+		templateVars[strings.ToLower(k)] = v
 	}
 
 	for k := range templateVars {
@@ -113,9 +113,9 @@ func (cmd *InjectCommand) Run() error {
 
 	var parser tpl.Parser
 	switch cmd.templateVersion {
-	case "1":
+	case "1", "v1":
 		parser = tpl.NewV1Parser()
-	case "2":
+	case "2", "v2":
 		parser = tpl.NewV2Parser()
 	case "latest":
 		parser = tpl.NewParser()

@@ -63,8 +63,8 @@ func (cmd *InjectCommand) Register(r Registerer) {
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
 	).Short('c').BoolVar(&cmd.useClipboard)
-	clause.Flag("in-file", "The filename of a template file to inject.").StringVar(&cmd.inFile)
-	clause.Flag("out-file", "Write the injected template to a file instead of stdout.").StringVar(&cmd.outFile)
+	clause.Flag("in-file", "The filename of a template file to inject.").Short('i').StringVar(&cmd.inFile)
+	clause.Flag("out-file", "Write the injected template to a file instead of stdout.").Short('o').StringVar(&cmd.outFile)
 	clause.Flag("file", "").Hidden().StringVar(&cmd.outFile)
 	clause.Flag("file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)

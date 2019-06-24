@@ -128,12 +128,7 @@ func (cmd *InjectCommand) Run() error {
 		return errio.Error(err)
 	}
 
-	client, err := cmd.newClient()
-	if err != nil {
-		return err
-	}
-
-	injected, err := template.Evaluate(templateVars, newSecretReader(client))
+	injected, err := template.Evaluate(templateVars, newSecretReader(cmd.newClient))
 	if err != nil {
 		return errio.Error(err)
 	}

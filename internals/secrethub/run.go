@@ -174,9 +174,8 @@ func (cmd *RunCommand) Run() error {
 
 	// Construct the environment, sourcing variables from the configured sources.
 	environment := make(map[string]string)
-	sr := newSecretReader(client)
 	for _, source := range envSources {
-		pairs, err := source.Env(secrets, sr)
+		pairs, err := source.Env(secrets, newSecretReader(cmd.newClient))
 		if err != nil {
 			return errio.Error(err)
 		}

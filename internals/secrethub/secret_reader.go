@@ -7,8 +7,8 @@ type secretReader struct {
 }
 
 // newSecretReader wraps a client to implement tpl.SecretReader.
-func newSecretReader(client secrethub.Client) secretReader {
-	return secretReader{client: client}
+func newSecretReader(client secrethub.Client) *secretReader {
+	return &secretReader{client: client}
 }
 
 // ReadSecret reads the secret using the provided client.

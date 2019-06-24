@@ -115,7 +115,11 @@ func (cmd *InjectCommand) Run() error {
 	switch cmd.templateVersion {
 	case "1":
 		parser = tpl.NewV1Parser()
+	case "v1":
+		parser = tpl.NewV1Parser()
 	case "2":
+		parser = tpl.NewV2Parser()
+	case "v2":
 		parser = tpl.NewV2Parser()
 	case "latest":
 		parser = tpl.NewParser()

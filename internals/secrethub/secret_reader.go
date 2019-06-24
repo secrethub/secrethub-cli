@@ -1,21 +1,27 @@
 package secrethub
 
-import "github.com/secrethub/secrethub-go/pkg/secrethub"
-
 type secretReader struct {
-	client secrethub.Client
+	newClient newClientFunc
 }
 
 // newSecretReader wraps a client to implement tpl.SecretReader.
-func newSecretReader(client secrethub.Client) secretReader {
-	return secretReader{client: client}
+func newSecretReader(newClient newClientFunc) *secretReader {
+	return &secretReader{
+		newClient: newClient,
+	}
 }
 
 // ReadSecret reads the secret using the provided client.
 func (sr secretReader) ReadSecret(path string) (string, error) {
-	secret, err := sr.client.Secrets().Versions().GetWithData(path)
+	client, err := sr.newClient()
 	if err != nil {
 		return "", err
 	}
+
+	secret, err := client.Secrets().Versions().GetWithData(path)
+	if err != nil {
+		return "", err
+	}
+
 	return string(secret.Data), nil
 }

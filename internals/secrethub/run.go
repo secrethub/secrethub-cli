@@ -29,15 +29,16 @@ import (
 
 // Errors
 var (
-	errRun                = errio.Namespace("run")
-	ErrStartFailed        = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
-	ErrSignalFailed       = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
-	ErrReadEnvDir         = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
-	ErrReadEnvFile        = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
-	ErrEnvDirNotFound     = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
-	ErrTemplate           = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
-	ErrTemplateFile       = errRun.Code("invalid_template_file").ErrorPref("template file '%s' is invalid: %s")
-	ErrInvalidTemplateVar = errRun.Code("invalid_template_var").ErrorPref("template variable '%s' is invalid: template variables may only contain uppercase letters, digits, and the '_' (underscore) and are not allowed to start with a number")
+	errRun                    = errio.Namespace("run")
+	ErrStartFailed            = errRun.Code("start_failed").ErrorPref("error while starting process: %s")
+	ErrSignalFailed           = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
+	ErrReadEnvDir             = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
+	ErrReadEnvFile            = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
+	ErrEnvDirNotFound         = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
+	ErrTemplate               = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
+	ErrTemplateFile           = errRun.Code("invalid_template_file").ErrorPref("template file '%s' is invalid: %s")
+	ErrInvalidTemplateVar     = errRun.Code("invalid_template_var").ErrorPref("template variable '%s' is invalid: template variables may only contain uppercase letters, digits, and the '_' (underscore) and are not allowed to start with a number")
+	ErrSecretsNotAllowedInKey = errRun.Code("secret_in_key").Error("secrets are not allowed in run template keys")
 )
 
 const (
@@ -348,22 +349,52 @@ type EnvSource interface {
 }
 
 type envTemplate struct {
-	envVars      map[string]tpl.Template
+	envVars      []envvarTpls
 	templateVars map[string]string
+}
+
+type envvarTpls struct {
+	key    tpl.Template
+	value  tpl.Template
+	lineNo int
+}
+
+type secretReaderNotAllowed struct{}
+
+func (sr secretReaderNotAllowed) ReadSecret(path string) (string, error) {
+	return "", ErrSecretsNotAllowedInKey
 }
 
 // Env injects the given secrets in the environment values and returns
 // a map of the resulting environment.
 func (t envTemplate) Env(secrets map[string]string, sr tpl.SecretReader) (map[string]string, error) {
 	result := make(map[string]string)
-	for key, template := range t.envVars {
-		value, err := template.Evaluate(t.templateVars, sr)
+	for _, tpls := range t.envVars {
+		key, err := tpls.key.Evaluate(t.templateVars, secretReaderNotAllowed{})
 		if err != nil {
 			return nil, err
 		}
+
+		err = validation.ValidateEnvarName(key)
+		if err != nil {
+			return nil, templateError(tpls.lineNo, err)
+		}
+
+		value, err := tpls.value.Evaluate(t.templateVars, sr)
+		if err != nil {
+			return nil, err
+		}
+
 		result[key] = value
 	}
 	return result, nil
+}
+
+func templateError(lineNo int, err error) error {
+	if lineNo > 0 {
+		return ErrTemplate(lineNo, err)
+	}
+	return err
 }
 
 // Secrets implements the EnvSource.Secrets function.
@@ -420,18 +451,28 @@ func NewEnv(r io.Reader, vars map[string]string, parser tpl.Parser) (EnvSource, 
 		parser = defaultParser
 	}
 
-	secretTemplates := make(map[string]tpl.Template, len(env))
-	for _, envvar := range env {
-		err = validation.ValidateEnvarName(envvar.key)
-		if err != nil {
-			return nil, templateError(envvar, err)
-		}
-
-		template, err := parser.Parse(envvar.value, envvar.lineNumber, envvar.columnNumber)
+	secretTemplates := make([]envvarTpls, len(env))
+	for i, envvar := range env {
+		keyTpl, err := parser.Parse(envvar.key, envvar.lineNumber, envvar.columnNumberKey)
 		if err != nil {
 			return nil, err
 		}
-		secretTemplates[envvar.key] = template
+
+		err = validation.ValidateEnvarName(envvar.key)
+		if err != nil {
+			return nil, err
+		}
+
+		valTpl, err := parser.Parse(envvar.value, envvar.lineNumber, envvar.columnNumberValue)
+		if err != nil {
+			return nil, err
+		}
+
+		secretTemplates[i] = envvarTpls{
+			key:    keyTpl,
+			value:  valTpl,
+			lineNo: envvar.lineNumber,
+		}
 	}
 
 	return envTemplate{
@@ -440,18 +481,12 @@ func NewEnv(r io.Reader, vars map[string]string, parser tpl.Parser) (EnvSource, 
 	}, nil
 }
 
-func templateError(envvar envvar, err error) error {
-	if envvar.lineNumber > 0 {
-		return ErrTemplate(envvar.lineNumber, err)
-	}
-	return err
-}
-
 type envvar struct {
-	key          string
-	value        string
-	lineNumber   int
-	columnNumber int
+	key               string
+	value             string
+	lineNumber        int
+	columnNumberKey   int
+	columnNumberValue int
 }
 
 // parseEnvironment parses envvars from a string.
@@ -493,25 +528,35 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 			return nil, ErrTemplate(i, errors.New("template is not formatted as key=value pairs"))
 		}
 
-		valColNo := len(parts[0]) + 2 // the length of the key (including spaces and quotes) + one for the = sign and one for the current column.
+		columnNumberValue := len(parts[0]) + 2 // the length of the key (including spaces and quotes) + one for the = sign and one for the current column.
 		for _, r := range parts[1] {
 			if !unicode.IsSpace(r) {
 				break
 			}
-			valColNo++
+			columnNumberValue++
+		}
+
+		columnNumberKey := 1 // one for the current column.
+		for _, r := range parts[0] {
+			if !unicode.IsSpace(r) {
+				break
+			}
+			columnNumberKey++
 		}
 
 		key := strings.TrimSpace(parts[0])
+
 		value, isTrimmed := trimQuotes(strings.TrimSpace(parts[1]))
 		if isTrimmed {
-			valColNo++
+			columnNumberValue++
 		}
 
 		vars[key] = envvar{
-			key:          key,
-			value:        value,
-			lineNumber:   i,
-			columnNumber: valColNo,
+			key:               key,
+			value:             value,
+			lineNumber:        i,
+			columnNumberValue: columnNumberValue,
+			columnNumberKey:   columnNumberKey,
 		}
 	}
 

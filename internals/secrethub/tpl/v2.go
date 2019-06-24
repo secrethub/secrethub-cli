@@ -188,8 +188,8 @@ func (p *v2Parser) parseRoot() (node, error) {
 		return variable, p.readRune()
 	}
 
-	if p.current == token.Dollar && (unicode.IsLetter(p.next) || p.next == '_') {
-		return nil, ErrUnexpectedDollar(p.lineNo, p.columnNo)
+	if p.current == token.Dollar && p.isVariableStartRune(p.next) {
+		return p.parseVarWithoutBrackets()
 	}
 
 	if p.current == token.LBracket && p.next == token.LBracket {
@@ -206,6 +206,28 @@ func (p *v2Parser) parseRoot() (node, error) {
 	}
 
 	return character(p.current), nil
+}
+
+func (p *v2Parser) parseVarWithoutBrackets() (node, error) {
+	var buffer bytes.Buffer
+
+	for p.isVariableRune(p.next) {
+		buffer.WriteRune(p.next)
+
+		err := p.readRune()
+		if err == io.EOF {
+			return variable{
+				key: strings.ToLower(buffer.String()),
+			}, err
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return variable{
+		key: strings.ToLower(buffer.String()),
+	}, nil
 }
 
 // parseVar parses the contents of a template variable up to the closing delimiter.
@@ -319,6 +341,16 @@ func (p *v2Parser) parseSecret() (node, error) {
 
 				continue
 			}
+			if p.isVariableStartRune(p.next) {
+				variable, err := p.parseVarWithoutBrackets()
+				if err != nil {
+					return nil, checkError(err)
+				}
+				path = append(path, variable)
+
+				continue
+			}
+
 			return nil, ErrIllegalSecretCharacter(p.lineNo, p.columnNo, p.current)
 		}
 
@@ -366,18 +398,23 @@ func (p *v2Parser) parseSecret() (node, error) {
 
 // isSecretPathRune returns whether the given rune is allowed to be used in
 // a secret path.
-func (p *v2Parser) isSecretPathRune(r rune) bool {
+func (p v2Parser) isSecretPathRune(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '-' || r == '.' || r == '/' || r == ':'
 }
 
 // isVariableRune returns whether the given rune is allowed to be used in a template variable key.
-func (p *v2Parser) isVariableRune(r rune) bool {
+func (p v2Parser) isVariableRune(r rune) bool {
 	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_'
+}
+
+// isVariableStartRune returns whether the given rune is allowed to be used at the start of a template variable key.
+func (p v2Parser) isVariableStartRune(r rune) bool {
+	return unicode.IsLetter(r) || r == '_'
 }
 
 // isAllowedWhiteSpace returns whether the given rune is allowed as extra whitespace
 // just after the opening tag and just before the closing tag.
-func (p *v2Parser) isAllowedWhiteSpace(r rune) bool {
+func (p v2Parser) isAllowedWhiteSpace(r rune) bool {
 	return r == ' ' || r == '\t'
 }
 

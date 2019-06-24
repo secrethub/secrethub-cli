@@ -91,6 +91,112 @@ func TestParserV2_parse(t *testing.T) {
 				},
 			},
 		},
+		"uppercase var without brackets": {
+			input: "$VAR",
+			expected: []node{
+				variable{
+					key: "var",
+				},
+			},
+		},
+		"end with variable without brackets": {
+			input: "$var",
+			expected: []node{
+				variable{
+					key: "var",
+				},
+			},
+		},
+		"variable starting with underscore": {
+			input: "$_var",
+			expected: []node{
+				variable{
+					key: "_var",
+				},
+			},
+		},
+		"dollar followed by a number": {
+			input: "$9var",
+			expected: []node{
+				character('$'),
+				character('9'),
+				character('v'),
+				character('a'),
+				character('r'),
+			},
+		},
+		"variable without brackets": {
+			input: "$var-foo",
+			expected: []node{
+				variable{
+					key: "var",
+				},
+				character('-'),
+				character('f'),
+				character('o'),
+				character('o'),
+			},
+		},
+		"variable without brackets in secret path": {
+			input: "{{ path/with/$var/to/secret }}",
+			expected: []node{
+				secret{
+					path: []node{
+						character('p'),
+						character('a'),
+						character('t'),
+						character('h'),
+						character('/'),
+						character('w'),
+						character('i'),
+						character('t'),
+						character('h'),
+						character('/'),
+						variable{
+							key: "var",
+						},
+						character('/'),
+						character('t'),
+						character('o'),
+						character('/'),
+						character('s'),
+						character('e'),
+						character('c'),
+						character('r'),
+						character('e'),
+						character('t'),
+					},
+				},
+			},
+		},
+		"variable without brackets at end of secret path": {
+			input: "{{a/$b}}",
+			expected: []node{
+				secret{
+					path: []node{
+						character('a'),
+						character('/'),
+						variable{
+							key: "b",
+						},
+					},
+				},
+			},
+		},
+		"variable without brackets at end of secret path with spaces": {
+			input: "{{ a/$b }}",
+			expected: []node{
+				secret{
+					path: []node{
+						character('a'),
+						character('/'),
+						variable{
+							key: "b",
+						},
+					},
+				},
+			},
+		},
 		"secret path": {
 			input: "{{path/to/secret}}",
 			expected: []node{
@@ -389,18 +495,6 @@ func TestParserV2_parse(t *testing.T) {
 				character('a'),
 			},
 		},
-		"$ followed by lowercase letter": {
-			input: "$var",
-			err:   ErrUnexpectedDollar(1, 1),
-		},
-		"$ followed by uppercase letter": {
-			input: "$VAR",
-			err:   ErrUnexpectedDollar(1, 1),
-		},
-		"$ followed by underscore": {
-			input: "$_var",
-			err:   ErrUnexpectedDollar(1, 1),
-		},
 		"illegal variable space": {
 			input: "${ va r }",
 			err:   ErrUnexpectedCharacter(1, 7, 'r', '}'),
@@ -452,10 +546,6 @@ func TestParserV2_parse(t *testing.T) {
 		"illegal { at start of secret tag": {
 			input: "{{{ path/to/secret }}}",
 			err:   ErrIllegalSecretCharacter(1, 3, '{'),
-		},
-		"illegal secret character $": {
-			input: "{{ a$b }}",
-			err:   ErrIllegalSecretCharacter(1, 5, '$'),
 		},
 		"illegal variable char in secret tag": {
 			input: "{{ path/with/${var@b} }}",

@@ -189,14 +189,7 @@ func (p *v2Parser) parseRoot() (node, error) {
 	}
 
 	if p.current == token.Dollar && p.isVariableStartRune(p.next) {
-		variable, err := p.parseVarWithoutBrackets()
-		if err == io.EOF {
-			return variable, err
-		}
-		if err != nil {
-			return nil, err
-		}
-		return variable, nil
+		return p.parseVarWithoutBrackets()
 	}
 
 	if p.current == token.LBracket && p.next == token.LBracket {

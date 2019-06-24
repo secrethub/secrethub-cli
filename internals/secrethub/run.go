@@ -435,7 +435,7 @@ func NewEnv(r io.Reader, vars map[string]string) (EnvSource, error) {
 			return nil, err
 		}
 
-		valTpl, err := parser.Parse(envvar.value, envvar.lineNumber, envvar.ColumnNumberValue)
+		valTpl, err := parser.Parse(envvar.value, envvar.lineNumber, envvar.columnNumberValue)
 		if err != nil {
 			return nil, err
 		}
@@ -458,7 +458,7 @@ type envvar struct {
 	value             string
 	lineNumber        int
 	columnNumberKey   int
-	ColumnNumberValue int
+	columnNumberValue int
 }
 
 // parseEnvironment parses envvars from a string.
@@ -527,7 +527,7 @@ func parseDotEnv(r io.Reader) ([]envvar, error) {
 			key:               key,
 			value:             value,
 			lineNumber:        i,
-			ColumnNumberValue: columnNumberValue,
+			columnNumberValue: columnNumberValue,
 			columnNumberKey:   columnNumberKey,
 		}
 	}

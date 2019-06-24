@@ -107,6 +107,24 @@ func TestParserV2_parse(t *testing.T) {
 				},
 			},
 		},
+		"variable starting with underscore": {
+			input: "$_var",
+			expected: []node{
+				variable{
+					key: "_var",
+				},
+			},
+		},
+		"dollar followed by a number": {
+			input: "$9var",
+			expected: []node{
+				character('$'),
+				character('9'),
+				character('v'),
+				character('a'),
+				character('r'),
+			},
+		},
 		"variable without brackets": {
 			input: "$var-foo",
 			expected: []node{

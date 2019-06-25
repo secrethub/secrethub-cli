@@ -137,17 +137,17 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	raw, err := ioutil.ReadFile(cmd.envFile)
-	if err != nil {
-		return ErrCannotReadFile(err)
-	}
-
-	parser, err := getTemplateParser(raw, cmd.templateVersion)
-	if err != nil {
-		return err
-	}
-
 	if cmd.envFile != "" {
+		raw, err := ioutil.ReadFile(cmd.envFile)
+		if err != nil {
+			return ErrCannotReadFile(err)
+		}
+
+		parser, err := getTemplateParser(raw, cmd.templateVersion)
+		if err != nil {
+			return err
+		}
+
 		envFile, err := ReadEnvFile(cmd.envFile, templateVars, parser)
 		if err != nil {
 			return err

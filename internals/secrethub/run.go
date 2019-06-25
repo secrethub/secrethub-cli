@@ -193,10 +193,12 @@ func (cmd *RunCommand) Run() error {
 		secrets[path] = string(secret.Data)
 	}
 
+	secretReader := newBufferedSecretReader(newSecretReader(cmd.newClient))
+
 	// Construct the environment, sourcing variables from the configured sources.
 	environment := make(map[string]string)
 	for _, source := range envSources {
-		pairs, err := source.Env(secrets, newSecretReader(cmd.newClient))
+		pairs, err := source.Env(secrets, secretReader)
 		if err != nil {
 			return errio.Error(err)
 		}
@@ -224,9 +226,15 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
-	maskStrings := make([][]byte, len(secrets))
+	secretsRead := secretReader.SecretsRead()
+
+	maskStrings := make([][]byte, len(secrets)+len(secretsRead))
 	i := 0
 	for _, val := range secrets {
+		maskStrings[i] = []byte(val)
+		i++
+	}
+	for _, val := range secretsRead {
 		maskStrings[i] = []byte(val)
 		i++
 	}

@@ -6,7 +6,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
-func TestDetectVersion(t *testing.T) {
+func TestIsV1Template(t *testing.T) {
 	cases := map[string]struct {
 		raw      string
 		expected bool

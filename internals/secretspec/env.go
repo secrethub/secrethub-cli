@@ -79,14 +79,14 @@ func (p EnvParser) Parse(rootPath string, allowMountAnywhere bool, config map[st
 
 // envar is a variable within an environment
 type envar struct {
-	source api.SecretPath
+	source string
 	target string
 }
 
 // newEnvar creates a new envar, validating the source and target.
 func newEnvar(source string, target string) (*envar, error) {
-	source = strings.TrimSpace(source)
-	secretPath, err := api.NewSecretPath(strings.ToLower(source))
+	source = strings.ToLower(strings.TrimSpace(source))
+	err := api.ValidateSecretPath(source)
 	if err != nil {
 		return nil, ErrInvalidSourcePath(err)
 	}
@@ -98,7 +98,7 @@ func newEnvar(source string, target string) (*envar, error) {
 	}
 
 	return &envar{
-		source: secretPath,
+		source: source,
 		target: target,
 	}, nil
 }
@@ -140,7 +140,7 @@ func newEnv(name string, rootPath string, vars ...*envar) *env {
 // contained in the given argument. Though the map may contain
 // other secrets, it must contain all source secrets of this
 // consumable.
-func (e env) Set(secrets map[api.SecretPath]api.SecretVersion) error {
+func (e env) Set(secrets map[string]api.SecretVersion) error {
 	err := os.MkdirAll(e.dirPath, DefaultEnvDirFileMode)
 	if err != nil {
 		return ErrCannotCreateEnvDir(err)
@@ -172,8 +172,8 @@ func (e *env) Clear() error {
 }
 
 // Sources returns the full path of the secret from which the consumable is sourced.
-func (e *env) Sources() map[api.SecretPath]struct{} {
-	sources := make(map[api.SecretPath]struct{})
+func (e *env) Sources() map[string]struct{} {
+	sources := make(map[string]struct{})
 	for _, v := range e.vars {
 		sources[v.source] = struct{}{}
 	}

@@ -5,24 +5,31 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/tpl"
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
-	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
-	units "github.com/docker/go-units"
+	"github.com/docker/go-units"
+)
+
+// Errors
+var (
+	ErrUnknownTemplateVersion = errMain.Code("unknown_template_version").ErrorPref("unknown template version: '%s' supported versions are 1, 2 and latest")
+	ErrReadFile               = errMain.Code("in_file_read_error").ErrorPref("could not read the input file %s: %s")
 )
 
 // InjectCommand is a command to read a secret.
 type InjectCommand struct {
-	file                string
+	outFile             string
+	inFile              string
 	fileMode            filemode.FileMode
 	force               bool
 	io                  ui.IO
@@ -30,6 +37,8 @@ type InjectCommand struct {
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
 	newClient           newClientFunc
+	templateVars        map[string]string
+	templateVersion     string
 }
 
 // NewInjectCommand creates a new InjectCommand.
@@ -39,6 +48,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 		clearClipboardAfter: defaultClearClipboardAfter,
 		io:                  io,
 		newClient:           newClient,
+		templateVars:        make(map[string]string),
 	}
 }
 
@@ -53,8 +63,12 @@ func (cmd *InjectCommand) Register(r Registerer) {
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
 	).Short('c').BoolVar(&cmd.useClipboard)
-	clause.Flag("file", "Write the injected template to a file instead of stdout.").StringVar(&cmd.file)
-	clause.Flag("file-mode", "Set filemode for the file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --file flag.").Default("0600").SetValue(&cmd.fileMode)
+	clause.Flag("in-file", "The filename of a template file to inject.").Short('i').StringVar(&cmd.inFile)
+	clause.Flag("out-file", "Write the injected template to a file instead of stdout.").Short('o').StringVar(&cmd.outFile)
+	clause.Flag("file", "").Hidden().StringVar(&cmd.outFile) // Alias of --out-file (for backwards compatibility)
+	clause.Flag("file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
+	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
+	clause.Flag("template-version", "The template syntax version to be used.").Default("latest").StringVar(&cmd.templateVersion)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	BindAction(clause, cmd.Run)
@@ -62,45 +76,71 @@ func (cmd *InjectCommand) Register(r Registerer) {
 
 // Run handles the command with the options as specified in the command.
 func (cmd *InjectCommand) Run() error {
-	if cmd.useClipboard && cmd.file != "" {
+	if cmd.useClipboard && cmd.outFile != "" {
 		return ErrFlagsConflict("--clip and --file")
 	}
 
 	var err error
+	var raw []byte
 
-	if !cmd.io.Stdin().IsPiped() {
-		return ErrNoDataOnStdin
-	}
+	if cmd.inFile != "" {
+		raw, err = ioutil.ReadFile(cmd.inFile)
+		if err != nil {
+			return ErrReadFile(cmd.inFile, err)
+		}
+	} else {
+		if !cmd.io.Stdin().IsPiped() {
+			return ErrNoDataOnStdin
+		}
 
-	raw, err := ioutil.ReadAll(cmd.io.Stdin())
-	if err != nil {
-		return errio.Error(err)
-	}
-
-	tpl, err := tpl.New(string(raw))
-	if err != nil {
-		return errio.Error(err)
-	}
-
-	secrets := make(map[api.SecretPath][]byte)
-
-	var client secrethub.Client
-	if len(tpl.Secrets) > 0 {
-		client, err = cmd.newClient()
+		raw, err = ioutil.ReadAll(cmd.io.Stdin())
 		if err != nil {
 			return errio.Error(err)
 		}
 	}
 
-	for _, path := range tpl.Secrets {
-		secret, err := client.Secrets().Versions().GetWithData(path.Value())
-		if err != nil {
-			return errio.Error(err)
-		}
-		secrets[path] = secret.Data
+	templateVars := make(map[string]string)
+
+	osEnv, err := parseKeyValueStringsToMap(os.Environ())
+	if err != nil {
+		return errio.Error(err)
 	}
 
-	injected, err := tpl.Inject(secrets)
+	for k, v := range osEnv {
+		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
+			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
+			templateVars[strings.ToLower(k)] = v
+		}
+	}
+
+	for k, v := range cmd.templateVars {
+		templateVars[strings.ToLower(k)] = v
+	}
+
+	for k := range templateVars {
+		if !validation.IsEnvarNamePosix(k) {
+			return ErrInvalidTemplateVar(k)
+		}
+	}
+
+	var parser tpl.Parser
+	switch cmd.templateVersion {
+	case "1", "v1":
+		parser = tpl.NewV1Parser()
+	case "2", "v2":
+		parser = tpl.NewV2Parser()
+	case "latest":
+		parser = tpl.NewParser()
+	default:
+		return ErrUnknownTemplateVersion(cmd.templateVersion)
+	}
+
+	template, err := parser.Parse(string(raw), 1, 1)
+	if err != nil {
+		return errio.Error(err)
+	}
+
+	injected, err := template.Evaluate(templateVars, newSecretReader(cmd.newClient))
 	if err != nil {
 		return errio.Error(err)
 	}
@@ -113,8 +153,8 @@ func (cmd *InjectCommand) Run() error {
 		}
 
 		fmt.Fprintln(cmd.io.Stdout(), fmt.Sprintf("Copied injected template to clipboard. It will be cleared after %s.", units.HumanDuration(cmd.clearClipboardAfter)))
-	} else if cmd.file != "" {
-		_, err := os.Stat(cmd.file)
+	} else if cmd.outFile != "" {
+		_, err := os.Stat(cmd.outFile)
 		if err == nil && !cmd.force {
 			if cmd.io.Stdout().IsPiped() {
 				return ErrFileAlreadyExists
@@ -124,7 +164,7 @@ func (cmd *InjectCommand) Run() error {
 				cmd.io,
 				fmt.Sprintf(
 					"File %s already exists, overwrite it?",
-					cmd.file,
+					cmd.outFile,
 				),
 				ui.DefaultNo,
 			)
@@ -138,12 +178,12 @@ func (cmd *InjectCommand) Run() error {
 			}
 		}
 
-		err = ioutil.WriteFile(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
+		err = ioutil.WriteFile(cmd.outFile, posix.AddNewLine(out), cmd.fileMode.FileMode())
 		if err != nil {
-			return ErrCannotWrite(cmd.file, err)
+			return ErrCannotWrite(cmd.outFile, err)
 		}
 
-		absPath, err := filepath.Abs(cmd.file)
+		absPath, err := filepath.Abs(cmd.outFile)
 		if err != nil {
 			return ErrCannotWrite(err)
 		}

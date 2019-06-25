@@ -22,6 +22,7 @@ func NewClientFactory(store CredentialStore) ClientFactory {
 }
 
 type clientFactory struct {
+	client    secrethub.Client
 	ServerURL *url.URL
 	store     CredentialStore
 }
@@ -34,12 +35,15 @@ func (f *clientFactory) Register(r FlagRegisterer) {
 // NewClient returns a new client that is configured to use the remote that
 // is set with the flag.
 func (f *clientFactory) NewClient() (secrethub.Client, error) {
-	credential, err := f.store.Get()
-	if err != nil {
-		return nil, errio.Error(err)
-	}
+	if f.client == nil {
+		credential, err := f.store.Get()
+		if err != nil {
+			return nil, errio.Error(err)
+		}
 
-	return secrethub.NewClient(credential, f.NewClientOptions()), nil
+		f.client = secrethub.NewClient(credential, f.NewClientOptions())
+	}
+	return f.client, nil
 }
 
 // NewClientOptions returns the client options configured by the flags.

@@ -26,7 +26,7 @@ func TestNewEnvVar(t *testing.T) {
 			source: "namespace/repo/dir/secret:latest",
 			target: "SECRET",
 			expected: &envar{
-				source: api.SecretPath("namespace/repo/dir/secret:latest"),
+				source: "namespace/repo/dir/secret:latest",
 				target: "SECRET",
 			},
 			err: nil,
@@ -64,7 +64,7 @@ func TestNewEnvVar(t *testing.T) {
 			source: " namespace/repo/dir/secret:latest ",
 			target: "SECRET",
 			expected: &envar{
-				source: api.SecretPath("namespace/repo/dir/secret:latest"),
+				source: "namespace/repo/dir/secret:latest",
 				target: "SECRET",
 			},
 			err: nil,
@@ -74,7 +74,7 @@ func TestNewEnvVar(t *testing.T) {
 			source: "namespace/repo/dir/secret:latest",
 			target: " SECRET ",
 			expected: &envar{
-				source: api.SecretPath("namespace/repo/dir/secret:latest"),
+				source: "namespace/repo/dir/secret:latest",
 				target: "SECRET",
 			},
 			err: nil,
@@ -353,9 +353,9 @@ func TestEnvSetAndClear(t *testing.T) {
 	vNonExisting, err := newEnvar("user/repo/non_existing_secret", "NONEXISTING")
 	assert.OK(t, err)
 
-	secrets := map[api.SecretPath]api.SecretVersion{
-		api.SecretPath(source1): secret1,
-		api.SecretPath(source2): secret2,
+	secrets := map[string]api.SecretVersion{
+		source1: secret1,
+		source2: secret2,
 	}
 
 	cases := []struct {

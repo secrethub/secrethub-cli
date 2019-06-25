@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 var (
-	testSecretPath   = api.SecretPath("danny/example-repo/hello")
+	testSecretPath   = "danny/example-repo/hello"
 	testSecretValue  = "hello world"
-	testSecretPath2  = api.SecretPath("danny/example-repo/hello2")
+	testSecretPath2  = "danny/example-repo/hello2"
 	testSecretValue2 = "hello world2"
 
 	dataJSON = fmt.Sprintf(
@@ -47,103 +46,100 @@ func TestParse(t *testing.T) {
 	// Arrange
 	cases := map[string]struct {
 		raw      string
-		success  bool
-		expected []api.SecretPath
+		expected []node
+		err      error
 	}{
 		"empty_string": {
 			raw:      "",
-			success:  true,
-			expected: []api.SecretPath{},
+			expected: []node{},
 		},
 		"none": {
 			raw:      "foo=bar",
-			success:  true,
-			expected: []api.SecretPath{},
+			expected: []node{val("foo=bar")},
 		},
 		"one": {
 			raw:      fmt.Sprintf(`${%s}`, testSecretPath),
-			success:  true,
-			expected: []api.SecretPath{testSecretPath},
+			expected: []node{key(testSecretPath)},
 		},
 		"with_space": {
 			raw:      fmt.Sprintf(`${ %s }`, testSecretPath),
-			success:  true,
-			expected: []api.SecretPath{testSecretPath},
+			expected: []node{key(testSecretPath)},
 		},
 		"two": {
 			raw:      fmt.Sprintf(`${ %s }${ %s}`, testSecretPath, testSecretPath2),
-			success:  true,
-			expected: []api.SecretPath{testSecretPath, testSecretPath2},
+			expected: []node{key(testSecretPath), key(testSecretPath2)},
 		},
 		"duplicates": {
 			raw:      fmt.Sprintf(`${ %s }${ %s}${%s }`, testSecretPath, testSecretPath2, testSecretPath2),
-			success:  true,
-			expected: []api.SecretPath{testSecretPath, testSecretPath2},
+			expected: []node{key(testSecretPath), key(testSecretPath2), key(testSecretPath2)},
 		},
 		"invalid_path": {
 			raw:      `${ invalidpath }`,
-			success:  true,
-			expected: []api.SecretPath{},
+			expected: []node{key("invalidpath")},
 		},
 		"empty": {
 			raw:      `${}`,
-			success:  true,
-			expected: []api.SecretPath{},
+			expected: []node{key("")},
 		},
 		"empty_nested": {
 			raw:      `${${}}`,
-			success:  true,
-			expected: []api.SecretPath{},
+			expected: []node{key("${"), val("}")},
 		},
 		"path_folowed_by_delim": {
 			raw:      fmt.Sprintf(`${ %s ${}}`, testSecretPath),
-			success:  true,
-			expected: []api.SecretPath{},
+			expected: []node{key(fmt.Sprintf("%s ${", testSecretPath)), val("}")},
 		},
 		"path_followed_by_nested_path": {
 			raw:      fmt.Sprintf(`${ %s ${ %s }}`, testSecretPath, testSecretPath2),
-			success:  true,
-			expected: []api.SecretPath{testSecretPath2},
+			expected: []node{key(fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2)), val("}")},
 		},
 		"nested": {
 			raw:      fmt.Sprintf(`${ ${ %s }}`, testSecretPath),
-			success:  true,
-			expected: []api.SecretPath{testSecretPath},
+			expected: []node{key(fmt.Sprintf("${ %s", testSecretPath)), val("}")},
 		},
 		"unclosed": {
-			raw:      `${ foobar`,
-			success:  true,
-			expected: []api.SecretPath{},
+			raw: `${ foobar`,
+			err: ErrTagNotClosed("}"),
+		},
+		"unopened": {
+			raw:      `{ foobar }`,
+			expected: []node{val("{ foobar }")},
 		},
 		"unclosed_with_nested": {
 			raw:      fmt.Sprintf(`${ ${ %s }`, testSecretPath),
-			success:  true,
-			expected: []api.SecretPath{testSecretPath},
+			expected: []node{key(fmt.Sprintf("${ %s", testSecretPath))},
 		},
 		"unclosed_with_empty_nested": {
 			raw:      `${ ${}`,
-			success:  true,
-			expected: []api.SecretPath{},
+			expected: []node{key("${")},
 		},
 		"unclosed_with_path_and_empty_nested": {
 			raw:      fmt.Sprintf(`${ %s ${}`, testSecretPath),
-			success:  true,
-			expected: []api.SecretPath{},
+			expected: []node{key(fmt.Sprintf("%s ${", testSecretPath))},
 		},
 		"unclosed_with_path_and_nested": {
 			raw:      fmt.Sprintf(`${ %s ${ %s }`, testSecretPath, testSecretPath2),
-			success:  true,
-			expected: []api.SecretPath{testSecretPath2},
+			expected: []node{key(fmt.Sprintf("%s ${ %s", testSecretPath, testSecretPath2))},
 		},
 		"YAML": {
-			raw:      dataYAML,
-			success:  true,
-			expected: []api.SecretPath{testSecretPath},
+			raw: dataYAML,
+			expected: []node{
+				val(`config:
+			some_field: "some value"
+			secret_field: "`),
+				key(testSecretPath),
+				val("\"")},
 		},
 		"JSON": {
-			raw:      dataJSON,
-			success:  true,
-			expected: []api.SecretPath{testSecretPath},
+			raw: dataJSON,
+			expected: []node{
+				val(`{
+			"some_field" : "some value",
+			"secret_field" : "`),
+				key(testSecretPath),
+				val(`"
+		}`),
+			},
 		},
 		// TODO: add unhappy test cases
 	}
@@ -151,15 +147,13 @@ func TestParse(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Act
-			actual, err := parse(tc.raw, defaultDelimiters)
+			actual, err := parser{
+				startDelim: "${",
+				endDelim:   "}",
+			}.parse(tc.raw)
 
 			// Assert
-			if tc.success {
-				assert.OK(t, err)
-			} else if err == nil {
-				t.Errorf("Expected an error but parse succeeded.")
-			}
-
+			assert.Equal(t, err, tc.err)
 			assert.Equal(t, actual, tc.expected)
 		})
 	}
@@ -169,7 +163,7 @@ func TestInject(t *testing.T) {
 	// Arrange
 	cases := map[string]struct {
 		raw      string
-		secrets  map[api.SecretPath][]byte
+		secrets  map[string]string
 		expected string
 		err      error
 	}{
@@ -183,109 +177,53 @@ func TestInject(t *testing.T) {
 		},
 		"one": {
 			raw: fmt.Sprintf(`${%s}`, testSecretPath),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			expected: testSecretValue,
 		},
 		"with_space": {
 			raw: fmt.Sprintf(`${ %s }`, testSecretPath),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			expected: testSecretValue,
 		},
 		"two": {
 			raw: fmt.Sprintf(`${ %s }${ %s}`, testSecretPath, testSecretPath2),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath:  []byte(testSecretValue),
-				testSecretPath2: []byte(testSecretValue2),
+			secrets: map[string]string{
+				testSecretPath:  testSecretValue,
+				testSecretPath2: testSecretValue2,
 			},
 			expected: fmt.Sprintf("%s%s", testSecretValue, testSecretValue2),
 		},
 		"duplicates": {
 			raw: fmt.Sprintf(`${ %s }${ %s}${%s }`, testSecretPath, testSecretPath2, testSecretPath2),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath:  []byte(testSecretValue),
-				testSecretPath2: []byte(testSecretValue2),
+			secrets: map[string]string{
+				testSecretPath:  testSecretValue,
+				testSecretPath2: testSecretValue2,
 			},
 			expected: fmt.Sprintf("%s%s%s", testSecretValue, testSecretValue2, testSecretValue2),
 		},
 		"not_found": {
 			raw: fmt.Sprintf(`${ %s }${ %s}`, testSecretPath, testSecretPath2),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
-			err:      ErrSecretNotFound(testSecretPath2),
+			err:      ErrKeyNotFound(testSecretPath2),
 			expected: "",
-		},
-		"invalid_path": {
-			raw:      `${ invalidpath }`,
-			expected: `${ invalidpath }`,
-		},
-		"empty": {
-			raw:      `${}`,
-			expected: `${}`,
-		},
-		"empty_nested": {
-			raw:      `${${}}`,
-			expected: `${${}}`,
-		},
-		"path_folowed_by_delim": {
-			raw:      fmt.Sprintf(`${ %s ${}}`, testSecretPath),
-			expected: fmt.Sprintf(`${ %s ${}}`, testSecretPath),
-		},
-		"path_followed_by_nested_path": {
-			raw: fmt.Sprintf(`${ %s ${ %s }}`, testSecretPath, testSecretPath2),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath2: []byte(testSecretValue2),
-			},
-			expected: fmt.Sprintf(`${ %s %s}`, testSecretPath, testSecretValue2),
-		},
-		"nested": {
-			raw: fmt.Sprintf(`${ ${ %s }}`, testSecretPath),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath: []byte(testSecretValue),
-			},
-			expected: fmt.Sprintf(`${ %s}`, testSecretValue),
-		},
-		"unclosed": {
-			raw:      `${ foobar`,
-			expected: `${ foobar`,
-		},
-		"unclosed_with_nested": {
-			raw: fmt.Sprintf(`${ ${ %s }`, testSecretPath),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath: []byte(testSecretValue),
-			},
-			expected: fmt.Sprintf(`${ %s`, testSecretValue),
-		},
-		"unclosed_with_empty_nested": {
-			raw:      `${ ${}`,
-			expected: `${ ${}`,
-		},
-		"unclosed_with_path_and_empty_nested": {
-			raw:      fmt.Sprintf(`${ %s ${}`, testSecretPath),
-			expected: fmt.Sprintf(`${ %s ${}`, testSecretPath),
-		},
-		"unclosed_with_path_and_nested": {
-			raw: fmt.Sprintf(`${ %s ${ %s }`, testSecretPath, testSecretPath2),
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath2: []byte(testSecretValue2),
-			},
-			expected: fmt.Sprintf(`${ %s %s`, testSecretPath, testSecretValue2),
 		},
 		"YAML": {
 			raw: dataYAML,
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			expected: expectedYAML,
 		},
 		"JSON": {
 			raw: dataJSON,
-			secrets: map[api.SecretPath][]byte{
-				testSecretPath: []byte(testSecretValue),
+			secrets: map[string]string{
+				testSecretPath: testSecretValue,
 			},
 			expected: expectedJSON,
 		},
@@ -294,7 +232,9 @@ func TestInject(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Act
-			actual, err := injectRecursive(tc.raw, defaultDelimiters, tc.secrets)
+			tpl, err := NewParser("${", "}").Parse(tc.raw)
+			assert.OK(t, err)
+			actual, err := tpl.Inject(tc.secrets)
 
 			// Assert
 			assert.Equal(t, err, tc.err)

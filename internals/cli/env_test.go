@@ -2,6 +2,8 @@ package cli
 
 import (
 	"testing"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestSplitVar(t *testing.T) {
@@ -107,4 +109,31 @@ func TestFormatName(t *testing.T) {
 			t.Errorf("unexpected var name for %s: %s (actual) != %s (expected)", test.name, actual, test.expected)
 		}
 	}
+}
+
+func TestApp_ExtraEnvVarFunc(t *testing.T) {
+	test := func(t *testing.T, name string, a *App, foo bool, bar bool) {
+		t.Run(name, func(t *testing.T) {
+			actual := a.isExtraEnvVar("foo")
+			assert.Equal(t, foo, actual)
+
+			actual = a.isExtraEnvVar("bar")
+			assert.Equal(t, bar, actual)
+		})
+	}
+
+	a := NewApp("test", "")
+	test(t, "no extra envvar func", a, false, false)
+
+	a.ExtraEnvVarFunc(func(key string) bool {
+		return key == "foo"
+	})
+
+	test(t, "1 extra envvar func", a, true, false)
+
+	a.ExtraEnvVarFunc(func(key string) bool {
+		return key == "bar"
+	})
+
+	test(t, "2 extra envvar funcs", a, true, true)
 }

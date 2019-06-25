@@ -83,7 +83,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
 	clause.Flag("masking-timeout", "The time to wait for a partial secret that is written to stdout or stderr to be completed for masking.").Default("1s").DurationVar(&cmd.maskingTimeout)
-	clause.Flag("template-version", "The template syntax version to be used. By default, the latest version is used for .env formatted templates, v1 is used for yaml formatted files.").Default("auto").StringVar(&cmd.templateVersion)
+	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
 
 	BindAction(clause, cmd.Run)
 }
@@ -137,21 +137,14 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	var parser tpl.Parser
-	switch cmd.templateVersion {
-	case "auto":
-		// Leave it up to the env file parser to detect the template version to use;
-		// The latest version is used for .env formatted environment files, v1 is used
-		// for yml formatted environment files.
-		parser = nil
-	case "1", "v1":
-		parser = tpl.NewV1Parser()
-	case "2", "v2":
-		parser = tpl.NewV2Parser()
-	case "latest":
-		parser = tpl.NewParser()
-	default:
-		return ErrUnknownTemplateVersion(cmd.templateVersion)
+	raw, err := ioutil.ReadFile(cmd.envFile)
+	if err != nil {
+		return ErrCannotReadFile(err)
+	}
+
+	parser, err := getTemplateParser(raw, cmd.templateVersion)
+	if err != nil {
+		return err
 	}
 
 	if cmd.envFile != "" {
@@ -450,13 +443,9 @@ func (e EnvFile) Secrets() []string {
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
 func NewEnv(r io.Reader, vars map[string]string, parser tpl.Parser) (EnvSource, error) {
-	env, defaultParser, err := parseEnvironment(r)
+	env, err := parseEnvironment(r)
 	if err != nil {
 		return nil, err
-	}
-
-	if parser == nil {
-		parser = defaultParser
 	}
 
 	secretTemplates := make([]envvarTpls, len(env))
@@ -501,19 +490,17 @@ type envvar struct {
 // It first tries the key=value format. When that returns an error,
 // the yml format is tried.
 // The default parser to be used with the format is also returned.
-func parseEnvironment(r io.Reader) ([]envvar, tpl.Parser, error) {
-	parser := tpl.NewParser()
+func parseEnvironment(r io.Reader) ([]envvar, error) {
 	var ymlReader bytes.Buffer
 	env, err := parseDotEnv(io.TeeReader(r, &ymlReader))
 	if err != nil {
 		var ymlErr error
-		parser = tpl.NewV1Parser()
 		env, ymlErr = parseYML(&ymlReader)
 		if ymlErr != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
-	return env, parser, nil
+	return env, nil
 }
 
 // parseDotEnv parses key-value pairs in the .env syntax (key=value).

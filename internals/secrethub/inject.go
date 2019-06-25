@@ -13,7 +13,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 
@@ -68,7 +67,7 @@ func (cmd *InjectCommand) Register(r Registerer) {
 	clause.Flag("file", "").Hidden().StringVar(&cmd.outFile) // Alias of --out-file (for backwards compatibility)
 	clause.Flag("file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
-	clause.Flag("template-version", "The template syntax version to be used.").Default("latest").StringVar(&cmd.templateVersion)
+	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	BindAction(clause, cmd.Run)
@@ -123,16 +122,9 @@ func (cmd *InjectCommand) Run() error {
 		}
 	}
 
-	var parser tpl.Parser
-	switch cmd.templateVersion {
-	case "1", "v1":
-		parser = tpl.NewV1Parser()
-	case "2", "v2":
-		parser = tpl.NewV2Parser()
-	case "latest":
-		parser = tpl.NewParser()
-	default:
-		return ErrUnknownTemplateVersion(cmd.templateVersion)
+	parser, err := getTemplateParser(raw, cmd.templateVersion)
+	if err != nil {
+		return err
 	}
 
 	template, err := parser.Parse(string(raw), 1, 1)

@@ -415,7 +415,7 @@ func TestNewEnv(t *testing.T) {
 			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
 		},
 		"yml secret template error": {
-			raw: "foo: ${path/to/secret",
+			raw: "foo: ${path/to/secret\nbar: ${ path/to/secret }",
 			err: generictpl.ErrTagNotClosed("}"),
 		},
 		"secret template error": {
@@ -430,7 +430,10 @@ func TestNewEnv(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVars, nil)
+			parser, err := getTemplateParser([]byte(tc.raw), "auto")
+			assert.OK(t, err)
+
+			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVars, parser)
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {

@@ -12,12 +12,13 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
+// Errors
 var (
 	ErrInvalidAWSRegion = errMain.Code("invalid_region").Error("invalid AWS region")
 	ErrRoleAlreadyTaken = errMain.Code("role_taken").Error("a service using that IAM role already exists")
 )
 
-// ServiceInitCommand initializes a service for AWS.
+// ServiceAWSInitCommand initializes a service for AWS.
 type ServiceAWSInitCommand struct {
 	description string
 	path        api.DirPath
@@ -29,7 +30,7 @@ type ServiceAWSInitCommand struct {
 	newClient   newClientFunc
 }
 
-// NewServiceInitCommand creates a new ServiceAWSInitCommand.
+// NewServiceAWSInitCommand creates a new ServiceAWSInitCommand.
 func NewServiceAWSInitCommand(io ui.IO, newClient newClientFunc) *ServiceAWSInitCommand {
 	return &ServiceAWSInitCommand{
 		io:        io,

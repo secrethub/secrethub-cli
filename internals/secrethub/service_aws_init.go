@@ -3,6 +3,7 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -15,6 +16,7 @@ type ServiceAWSInitCommand struct {
 	path        api.DirPath
 	kmsKeyID    string
 	role        string
+	region      string
 	permission  api.Permission
 	io          ui.IO
 	newClient   newClientFunc
@@ -37,7 +39,12 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		return err
 	}
 
-	service, err := client.Services().AWS().Create(repo.Value(), cmd.description, cmd.kmsKeyID, cmd.role)
+	cfg := aws.NewConfig()
+	if cmd.region != "" {
+		cfg = cfg.WithRegion(cmd.region)
+	}
+
+	service, err := client.Services().AWS().Create(repo.Value(), cmd.description, cmd.kmsKeyID, cmd.role, cfg)
 	if err != nil {
 		return err
 	}
@@ -66,6 +73,7 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause.Flag("path", "The service account is attached to the repository in this path and when used together with --permission, an access rule is created on the directory in this path.").Required().SetValue(&cmd.path)
 	clause.Flag("kms-key-id", "ID of the KMS-key to be used for encrypting the service's account key.").Required().StringVar(&cmd.kmsKeyID)
 	clause.Flag("role", "ARN of the IAM role that should have access to this service account.").Required().StringVar(&cmd.role)
+	clause.Flag("region", "The AWS region that should be used").StringVar(&cmd.region)
 	clause.Flag("desc", "A description for the service").StringVar(&cmd.description)
 	clause.Flag("permission", "Automatically create an access rule giving the service account permission on the given path argument. Accepts `read`, `write` or `admin`.").SetValue(&cmd.permission)
 

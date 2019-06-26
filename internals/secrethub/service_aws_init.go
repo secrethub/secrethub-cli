@@ -4,10 +4,17 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
+)
+
+var (
+	ErrInvalidAWSRegion = errMain.Code("invalid_region").Error("invalid AWS region")
+	ErrRoleAlreadyTaken = errMain.Code("role_taken").Error("a service using that IAM role already exists")
 )
 
 // ServiceInitCommand initializes a service for AWS.
@@ -41,11 +48,17 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 	cfg := aws.NewConfig()
 	if cmd.region != "" {
+		_, ok := endpoints.AwsPartition().Regions()[cmd.region]
+		if !ok {
+			return ErrInvalidAWSRegion
+		}
 		cfg = cfg.WithRegion(cmd.region)
 	}
 
 	service, err := client.Services().AWS().Create(repo.Value(), cmd.description, cmd.kmsKeyID, cmd.role, cfg)
-	if err != nil {
+	if err == api.ErrCredentialAlreadyExists {
+		return ErrRoleAlreadyTaken
+	} else if err != nil {
 		return err
 	}
 

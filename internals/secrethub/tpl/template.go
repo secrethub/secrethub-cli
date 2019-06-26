@@ -1,6 +1,10 @@
 package tpl
 
-import "github.com/secrethub/secrethub-go/internals/errio"
+import (
+	"regexp"
+
+	"github.com/secrethub/secrethub-go/internals/errio"
+)
 
 // Errors
 var (
@@ -22,4 +26,11 @@ type Template interface {
 // NewParser returns a parser for the latest template syntax.
 func NewParser() Parser {
 	return NewV2Parser()
+}
+
+var v1SecretTag = regexp.MustCompile(`\${[\t ]*[_\-\.a-zA-Z0-9]+/[_\-\.a-zA-Z0-9]+(?:/[_\-\.a-zA-Z0-9]+)+(?::(?:[0-9]{1,9}|latest))?[\t ]*}`)
+
+// IsV1Template returns whether v1 secret tags are used in the given raw bytes.
+func IsV1Template(raw []byte) bool {
+	return v1SecretTag.Match(raw)
 }

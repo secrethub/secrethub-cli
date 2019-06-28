@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // ACLSetCommand is a command to set access rules.
@@ -53,7 +52,7 @@ func (cmd *ACLSetCommand) Run() error {
 			ui.DefaultNo,
 		)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		if !confirmed {
@@ -66,12 +65,12 @@ func (cmd *ACLSetCommand) Run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	_, err = client.AccessRules().Set(cmd.path.Value(), cmd.permission, cmd.accountName.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Access rule set!")

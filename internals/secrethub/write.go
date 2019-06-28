@@ -9,7 +9,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 var (
@@ -61,7 +60,7 @@ func (cmd *WriteCommand) Run() error {
 	if cmd.useClipboard {
 		data, err = cmd.clipper.ReadAll()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	} else if cmd.io.Stdin().IsPiped() {
 		data, err = ioutil.ReadAll(cmd.io.Stdin())
@@ -71,7 +70,7 @@ func (cmd *WriteCommand) Run() error {
 	} else {
 		str, err := ui.AskSecret(cmd.io, "Please type in the value of the secret, followed by an [ENTER]:")
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		data = []byte(str)
 	}
@@ -87,22 +86,22 @@ func (cmd *WriteCommand) Run() error {
 
 	_, err = fmt.Fprint(cmd.io.Stdout(), "Writing secret value...\n")
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	version, err := client.Secrets().Write(cmd.path.Value(), data)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	_, err = fmt.Fprintf(cmd.io.Stdout(), "Write complete! The given value has been written to %s:%d\n", cmd.path, version.Version)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return nil

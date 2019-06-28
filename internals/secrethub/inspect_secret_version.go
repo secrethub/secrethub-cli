@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // InspectSecretVersionCommand prints out the details of a secret version in JSON format.
@@ -32,17 +31,17 @@ func NewInspectSecretVersionCommand(path api.SecretPath, io ui.IO, newClient new
 func (cmd *InspectSecretVersionCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	version, err := client.Secrets().Versions().GetWithoutData(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	output, err := cli.PrettyJSON(newSecretVersionOutput(version, cmd.timeFormatter))
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), output)

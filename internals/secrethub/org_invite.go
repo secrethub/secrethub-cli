@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // OrgInviteCommand handles inviting a user to an organization.
@@ -46,7 +45,7 @@ func (cmd *OrgInviteCommand) Run() error {
 
 		confirmed, err := ui.AskYesNo(cmd.io, msg, ui.DefaultNo)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		if !confirmed {
@@ -57,14 +56,14 @@ func (cmd *OrgInviteCommand) Run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Inviting user...")
 
 	resp, err := client.Orgs().Members().Invite(cmd.orgName.Value(), cmd.username, cmd.role)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Invite complete! The user %s is now %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)

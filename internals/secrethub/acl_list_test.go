@@ -11,13 +11,12 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 	"github.com/secrethub/secrethub-go/internals/assert"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )
 
 func TestACLListCommand_run(t *testing.T) {
-	testError := errio.Error(errors.New("test error"))
+	testError := errors.New("test error")
 
 	dir1ID := uuid.New()
 	dir2ID := uuid.New()

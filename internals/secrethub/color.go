@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/fatih/color"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // noColorFlag configures the global behaviour to disable colored output.
@@ -30,7 +29,7 @@ func (f noColorFlag) String() string {
 func (f *noColorFlag) Set(value string) error {
 	b, err := strconv.ParseBool(value)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	*f = noColorFlag(b)
 	f.init()

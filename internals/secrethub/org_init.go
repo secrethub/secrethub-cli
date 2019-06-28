@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // OrgInitCommand handles creating an organization.
@@ -42,7 +41,7 @@ func (cmd *OrgInitCommand) Run() error {
 	if !cmd.force {
 		confirmed, err := ui.AskYesNo(cmd.io, "Creating an organization will start a free 14-day trial (no strings attached) of the Team plan. Visit https://secrethub.io/pricing for more information. Would you like to proceed?", ui.DefaultYes)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		if !confirmed {
 			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
@@ -66,7 +65,7 @@ func (cmd *OrgInitCommand) Run() error {
 		if cmd.name == "" {
 			name, err := ui.AskAndValidate(cmd.io, "The name you would like to use for your organization: ", 2, api.ValidateOrgName)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 			cmd.name = api.OrgName(name)
 		}
@@ -74,7 +73,7 @@ func (cmd *OrgInitCommand) Run() error {
 		if cmd.description == "" {
 			cmd.description, err = ui.AskAndValidate(cmd.io, "A short description so your teammates will recognize the organization (max. 144 chars): ", 2, api.ValidateOrgDescription)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 		}
 
@@ -84,14 +83,14 @@ func (cmd *OrgInitCommand) Run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Creating organization...\n")
 
 	resp, err := client.Orgs().Create(cmd.name.Value(), cmd.description)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Creation complete! The organization %s is now ready to use.\n", resp.Name)

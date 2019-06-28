@@ -8,7 +8,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
@@ -81,7 +80,7 @@ func (store *credentialStore) Set(credential secrethub.Credential) {
 func (store *credentialStore) CredentialExists() (bool, error) {
 	profileDir, err := store.NewProfileDir()
 	if err != nil {
-		return false, errio.Error(err)
+		return false, err
 	}
 	credentialPath := profileDir.CredentialPath()
 	_, err = os.Stat(credentialPath)
@@ -91,7 +90,7 @@ func (store *credentialStore) CredentialExists() (bool, error) {
 	if os.IsNotExist(err) {
 		return false, nil
 	}
-	return false, errio.Error(err)
+	return false, err
 }
 
 // Get retrieves a credential from the store.
@@ -104,7 +103,7 @@ func (store *credentialStore) Get() (secrethub.Credential, error) {
 
 	profileDir, err := store.NewProfileDir()
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 	return NewCredentialReader(store.io, profileDir, store.AccountCredential, store.newPassphraseReader()).Read()
 }
@@ -114,17 +113,17 @@ func (store *credentialStore) Get() (secrethub.Credential, error) {
 func (store *credentialStore) Save() error {
 	profileDir, err := store.NewProfileDir()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	err = os.MkdirAll(profileDir.String(), profileDir.FileMode())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	encoded, err := store.encodeCredential(store.credential, store.credentialPassphrase)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	err = ioutil.WriteFile(profileDir.CredentialPath(), posix.AddNewLine([]byte(encoded)), profileDir.CredentialFileMode())
@@ -139,7 +138,7 @@ func (store *credentialStore) encodeCredential(credential secrethub.Credential, 
 	if passphrase != "" {
 		armorer, err := secrethub.NewPassBasedKey([]byte(passphrase))
 		if err != nil {
-			return "", errio.Error(err)
+			return "", err
 		}
 		return secrethub.EncodeEncryptedCredential(credential, armorer)
 

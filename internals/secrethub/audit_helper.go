@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 func getAuditActor(event *api.Audit) (string, error) {
@@ -39,13 +38,13 @@ func getAuditSubject(event *api.Audit, tree *api.Tree) (string, error) {
 	case api.AuditSubjectSecret:
 		secretPath, err := tree.AbsSecretPath(event.Subject.Secret.SecretID)
 		if err != nil {
-			return "", errio.Error(err)
+			return "", err
 		}
 		return secretPath.String(), nil
 	case api.AuditSubjectSecretVersion:
 		secretPath, err := tree.AbsSecretPath(event.Subject.SecretVersion.Secret.SecretID)
 		if err != nil {
-			return "", errio.Error(err)
+			return "", err
 		}
 		return fmt.Sprintf("%s:%d", secretPath.String(), event.Subject.SecretVersion.Version), nil
 	case api.AuditSubjectSecretKey:

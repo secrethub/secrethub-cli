@@ -8,7 +8,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // OrgRevokeCommand handles revoking a member from an organization.
@@ -40,7 +39,7 @@ func (cmd *OrgRevokeCommand) Register(r Registerer) {
 func (cmd *OrgRevokeCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	opts := &api.RevokeOpts{
@@ -48,7 +47,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 	}
 	planned, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username, opts)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if len(planned.Repos) > 0 {
@@ -67,7 +66,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 
 		err = writeOrgRevokeRepoList(cmd.io.Stdout(), planned.Repos...)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		flagged := planned.StatusCounts[api.StatusFlagged]
@@ -102,14 +101,14 @@ func (cmd *OrgRevokeCommand) Run() error {
 
 	revoked, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username, nil)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if len(revoked.Repos) > 0 {
 		fmt.Fprintln(cmd.io.Stdout(), "")
 		err = writeOrgRevokeRepoList(cmd.io.Stdout(), revoked.Repos...)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		flagged := revoked.StatusCounts[api.StatusFlagged]
@@ -138,7 +137,7 @@ func writeOrgRevokeRepoList(w io.Writer, repos ...*api.RevokeRepoResponse) error
 	}
 	err := tw.Flush()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	fmt.Fprintln(w, "")
 	return nil

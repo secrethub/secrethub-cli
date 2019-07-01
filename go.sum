@@ -69,6 +69,8 @@ github.com/secrethub/secrethub-go v0.0.0-20190606095650-5f41dae81f36 h1:5dPFQeMZ
 github.com/secrethub/secrethub-go v0.0.0-20190606095650-5f41dae81f36/go.mod h1:hfyfrv6v3kPkjOR/E8tEHgO3hxomrN37A59K/nXW0lw=
 github.com/secrethub/secrethub-go v0.0.0-20190606100127-6c9f5277452f h1:Z15QV/aumQlJjohBF4xR68JeBqTAbS/XTrkFXUn6aM4=
 github.com/secrethub/secrethub-go v0.0.0-20190606100127-6c9f5277452f/go.mod h1:hfyfrv6v3kPkjOR/E8tEHgO3hxomrN37A59K/nXW0lw=
+github.com/secrethub/secrethub-go v0.0.0-20190627155550-b0094ebd62ae h1:tyAn2t9qz8Z5CkMCbcY6lvYR8UAK6woOZG6CuLpXF9Q=
+github.com/secrethub/secrethub-go v0.0.0-20190627155550-b0094ebd62ae/go.mod h1:E9MecxicOt8/yFp7WzVO5urgUEhbLrqQcGelgEKu+U4=
 github.com/secrethub/secrethub-go v0.20.0 h1:NK6G/c1QmmMI7Rwc5nntC66+x0WediVnxeazpJptCNI=
 github.com/secrethub/secrethub-go v0.20.0/go.mod h1:hfyfrv6v3kPkjOR/E8tEHgO3hxomrN37A59K/nXW0lw=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=

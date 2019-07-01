@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.19.38
 	github.com/docker/go-units v0.3.3
 	github.com/fatih/color v1.7.0
+	github.com/godbus/dbus v4.1.0+incompatible // indirect
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348
 	github.com/masterzen/winrm v0.0.0-20190308153735-1d17eaf15943
 	github.com/mattn/go-colorable v0.1.1
@@ -17,7 +18,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/secrethub/secrethub-go v0.20.0
+	github.com/secrethub/secrethub-go v0.0.0-20190627155550-b0094ebd62ae
 	github.com/stretchr/testify v1.3.0
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a

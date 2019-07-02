@@ -173,12 +173,11 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	client, err := cmd.newClient()
-	if err != nil {
-		return err
-	}
-
 	for path := range secrets {
+		client, err := cmd.newClient()
+		if err != nil {
+			return err
+		}
 		secret, err := client.Secrets().Versions().GetWithData(path)
 		if err != nil {
 			return err

@@ -27,10 +27,11 @@ Commands:
 {{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
 {{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
-{{.Help|Wrap 0}}\
+{{.Help}}\
 {{end}}\
 
 {{if .Flags}}
+
 Flags:
 {{.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\

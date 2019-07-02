@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // ACLCheckCommand prints the access level(s) on a given directory.
@@ -39,13 +38,13 @@ func (cmd *ACLCheckCommand) Register(r Registerer) {
 func (cmd *ACLCheckCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if cmd.accountName != "" {
 		level, err := client.AccessRules().Get(cmd.path.Value(), cmd.accountName.Value())
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		fmt.Fprintf(cmd.io.Stdout(), "%s\n", level.Permission.String())
@@ -54,7 +53,7 @@ func (cmd *ACLCheckCommand) Run() error {
 
 	levels, err := client.AccessRules().ListLevels(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	sort.Sort(api.SortAccessLevels(levels))
@@ -71,7 +70,7 @@ func (cmd *ACLCheckCommand) Run() error {
 
 	err = tabWriter.Flush()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return nil

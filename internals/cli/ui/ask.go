@@ -20,12 +20,12 @@ var (
 func Ask(io IO, question string) (string, error) {
 	r, w, err := io.Prompts()
 	if err != nil {
-		return "", errio.Error(err)
+		return "", err
 	}
 
 	_, err = fmt.Fprintf(w, "%s", question)
 	if err != nil {
-		return "", errio.Error(err)
+		return "", err
 	}
 	return Readln(r)
 }
@@ -35,7 +35,7 @@ func Ask(io IO, question string) (string, error) {
 func AskSecret(io IO, question string) (string, error) {
 	promptIn, promptOut, err := io.Prompts()
 	if err != nil {
-		return "", errio.Error(err)
+		return "", err
 	}
 
 	_, err = fmt.Fprintf(promptOut, "%s", question)
@@ -58,12 +58,12 @@ func AskSecret(io IO, question string) (string, error) {
 func AskAndValidate(io IO, question string, n int, validationFunc func(string) error) (string, error) {
 	_, promptOut, err := io.Prompts()
 	if err != nil {
-		return "", errio.Error(err)
+		return "", err
 	}
 	for i := 0; i < n; i++ {
 		response, err := Ask(io, question)
 		if err != nil {
-			return "", errio.Error(err)
+			return "", err
 		}
 
 		err = validationFunc(response)
@@ -73,7 +73,7 @@ func AskAndValidate(io IO, question string, n int, validationFunc func(string) e
 
 		fmt.Fprintf(promptOut, "\nInvalid input: %s\nPlease try again.\n", err)
 	}
-	return "", errio.Error(err)
+	return "", err
 }
 
 // ConfirmCaseInsensitive asks the user to confirm by typing one of the expected strings.
@@ -104,13 +104,13 @@ func ConfirmCaseInsensitive(io IO, question string, expected ...string) (bool, e
 func AskPassphrase(io IO, question string, repeatPhrase string, n int) (string, error) {
 	_, promptOut, err := io.Prompts()
 	if err != nil {
-		return "", errio.Error(err)
+		return "", err
 	}
 
 	for i := 0; i < n; i++ {
 		answer, err := AskSecret(io, question)
 		if err != nil {
-			return "", errio.Error(err)
+			return "", err
 		}
 
 		if answer == "" {
@@ -119,7 +119,7 @@ func AskPassphrase(io IO, question string, repeatPhrase string, n int) (string, 
 
 		confirmed, err := AskSecret(io, repeatPhrase)
 		if err != nil {
-			return "", errio.Error(err)
+			return "", err
 		}
 
 		if answer == confirmed {

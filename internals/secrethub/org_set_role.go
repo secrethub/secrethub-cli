@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // OrgSetRoleCommand handles updating the role of an organization member.
@@ -39,14 +38,14 @@ func (cmd *OrgSetRoleCommand) Register(r Registerer) {
 func (cmd *OrgSetRoleCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Setting role...\n")
 
 	resp, err := client.Orgs().Members().Update(cmd.orgName.Value(), cmd.username, cmd.role)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Set complete! The user %s is %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)

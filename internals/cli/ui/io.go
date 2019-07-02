@@ -3,10 +3,10 @@ package ui
 import (
 	"bufio"
 	"io"
-
 	"os"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
+
 	"golang.org/x/crypto/ssh/terminal"
 )
 

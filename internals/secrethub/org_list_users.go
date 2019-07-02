@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // OrgListUsersCommand handles listing the users of an organization.
@@ -51,12 +50,12 @@ func (cmd *OrgListUsersCommand) beforeRun() {
 func (cmd *OrgListUsersCommand) run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	resp, err := client.Orgs().Members().List(cmd.orgName.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	sort.Sort(api.SortOrgMemberByUsername(resp))
@@ -70,7 +69,7 @@ func (cmd *OrgListUsersCommand) run() error {
 
 	err = w.Flush()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return nil

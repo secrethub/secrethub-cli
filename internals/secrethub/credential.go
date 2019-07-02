@@ -9,7 +9,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/crypto"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
@@ -53,7 +52,7 @@ func NewCredentialReader(io ui.IO, profileDir ProfileDir, flagValue string, pass
 
 		bytes, err := ioutil.ReadFile(profileDir.CredentialPath())
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 
 		return parseCredential(string(bytes), passReader)
@@ -68,7 +67,7 @@ func parseCredential(raw string, reader PassphraseReader) (secrethub.Credential,
 
 	encoded, err := parser.Parse(raw)
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	if encoded.IsEncrypted() {
@@ -76,7 +75,7 @@ func parseCredential(raw string, reader PassphraseReader) (secrethub.Credential,
 
 		passphrase, err := reader.Get(id)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 
 		passBasedKey, err := secrethub.NewPassBasedKey(passphrase)
@@ -93,7 +92,7 @@ func parseCredential(raw string, reader PassphraseReader) (secrethub.Credential,
 
 			return nil, ErrCannotDecryptCredential
 		} else if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 
 		return credential, nil
@@ -113,7 +112,7 @@ func getEncryptedCredentialID(encrypted []byte) string {
 func readOldCredential(io ui.IO, profileDir ProfileDir, passReader PassphraseReader) (secrethub.Credential, error) {
 	config, err := LoadConfig(io, profileDir.oldConfigFile())
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	return config.toCredential(passReader)
@@ -139,7 +138,7 @@ func (c *Config) toCredential(passReader PassphraseReader) (secrethub.Credential
 func loadPEMKey(key []byte, passReader PassphraseReader) (secrethub.Credential, error) {
 	pemKey, err := crypto.ReadPEM(key)
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	var clientKey crypto.RSAPrivateKey
@@ -148,7 +147,7 @@ func loadPEMKey(key []byte, passReader PassphraseReader) (secrethub.Credential, 
 
 		passphrase, err := passReader.Get(id)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 
 		clientKey, err = pemKey.Decrypt(passphrase)
@@ -157,19 +156,19 @@ func loadPEMKey(key []byte, passReader PassphraseReader) (secrethub.Credential, 
 			if incorrectErr != nil {
 				return nil, ErrIncorrectPassphraseNotCleared(err, incorrectErr)
 			}
-			return nil, errio.Error(err)
+			return nil, err
 		}
 		if err == crypto.ErrNotPKCS1Format {
 			return nil, ErrWrongKeyFormat(err)
 		} else if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 	} else {
 		clientKey, err = pemKey.Decode()
 		if err == crypto.ErrNotPKCS1Format {
 			return nil, ErrWrongKeyFormat(err)
 		} else if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 	}
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secretspec"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // ClearCommand clears the secrets from the system.
@@ -35,7 +34,7 @@ func (cmd *ClearCommand) Register(r Registerer) {
 func (cmd *ClearCommand) Run() error {
 	presenter, err := secretspec.NewPresenter("", true, secretspec.DefaultParsers...)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	_, err = os.Stat(cmd.in)
@@ -50,14 +49,14 @@ func (cmd *ClearCommand) Run() error {
 
 	err = presenter.Parse(spec)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Clearing secrets...")
 
 	err = presenter.Clear()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Clear complete! The secrets are no longer available on the system.\n")

@@ -39,7 +39,7 @@ func Parse(mode string) (FileMode, error) {
 func (m *FileMode) Set(value string) error {
 	fileMode, err := Parse(value)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	*m = fileMode
 	return nil

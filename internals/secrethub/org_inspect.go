@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // OrgInspectCommand handles printing out the details of an organization in a JSON format.
@@ -39,27 +38,27 @@ func (cmd *OrgInspectCommand) Register(r Registerer) {
 func (cmd *OrgInspectCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	org, err := client.Orgs().Get(cmd.name.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	members, err := client.Orgs().Members().List(cmd.name.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	repos, err := client.Repos().List(cmd.name.Namespace().Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	output, err := cli.PrettyJSON(newOrgInspectOutput(org, members, repos, cmd.timeFormatter))
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), output)

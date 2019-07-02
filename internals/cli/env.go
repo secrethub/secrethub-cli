@@ -9,7 +9,6 @@ import (
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/alecthomas/kingpin"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 var (
@@ -143,7 +142,7 @@ func (a *App) PrintEnv(w io.Writer, verbose bool) error {
 
 	err := tabWriter.Flush()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return nil

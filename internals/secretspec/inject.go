@@ -1,17 +1,15 @@
 package secretspec
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/secrethub/secrethub-cli/internals/tpl"
 
-	"fmt"
-
-	"io/ioutil"
-
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
+
 	"golang.org/x/text/encoding"
 )
 
@@ -55,7 +53,7 @@ func (p InjectParser) Parse(rootPath string, allowMountAnywhere bool, config map
 
 	target, err := createTarget(rootPath, targetName, allowMountAnywhere)
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	filemode := DefaultFileMode
@@ -83,7 +81,7 @@ func (p InjectParser) Parse(rootPath string, allowMountAnywhere bool, config map
 	if ok {
 		inj.encoding, err = EncodingFromString(encodingString)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 	} else {
 		inj.encoding = DetectEncoding(bytes)
@@ -97,12 +95,12 @@ func (p InjectParser) Parse(rootPath string, allowMountAnywhere bool, config map
 
 	decodedBytes, err := inj.encoding.NewDecoder().Bytes(bytes)
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	inj.template, err = tpl.NewParser("${", "}").Parse(string(decodedBytes))
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	return &inj, nil
@@ -131,14 +129,14 @@ func (inj *Inject) Set(secrets map[string]api.SecretVersion) error {
 
 	output, err := inj.template.Inject(input)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	log.Debugf("writing injected file to %s", inj.target)
 
 	encodedBytes, err := inj.encoding.NewEncoder().Bytes([]byte(output))
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return overwriteFile(inj.target, encodedBytes, inj.filemode)

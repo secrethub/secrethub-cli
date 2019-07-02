@@ -11,7 +11,6 @@ import (
 
 	"github.com/masterzen/winrm"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 var (
@@ -201,7 +200,7 @@ func restoreContent(client *winrm.Client, fromPath, toPath string) (err error) {
 	go copyFunc(&stdErr, cmd.Stderr, errChannel)
 	err = <-errChannel
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	cmd.Wait()

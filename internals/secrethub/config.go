@@ -127,12 +127,12 @@ func newUserConfig(username, keyPath string, remoteURL *url.URL) (*Config, error
 	// Replace ~/ with the home directory
 	keyPathExpanded, err := homedir.Expand(keyPath)
 	if err != nil {
-		return &config, errio.Error(err)
+		return &config, err
 	}
 
 	absKeyPath, err := filepath.Abs(keyPathExpanded)
 	if err != nil {
-		return &config, errio.Error(err)
+		return &config, err
 	}
 
 	config.Type = ConfigUserType
@@ -151,7 +151,7 @@ func parseUserConfig(io ui.IO, mapConfig configuration.ConfigMap, path string) (
 
 	currentVersion, err := mapConfig.GetVersion()
 	if err != nil {
-		return config, errio.Error(err)
+		return config, err
 	}
 
 	updated := false
@@ -261,7 +261,7 @@ func LoadConfig(io ui.IO, path string) (*Config, error) {
 
 	t, err := mapConfig.GetType()
 	if err != nil {
-		return &config, errio.Error(err)
+		return &config, err
 	}
 
 	if t == ConfigUserType {

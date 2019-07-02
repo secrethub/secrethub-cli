@@ -97,7 +97,7 @@ func (cmd *RunCommand) Run() error {
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
 	flagSource, err := NewEnvFlags(cmd.envar)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	envSources = append(envSources, flagSource)
 
@@ -115,7 +115,7 @@ func (cmd *RunCommand) Run() error {
 
 	osEnv, err := parseKeyValueStringsToMap(os.Environ())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	templateVars := make(map[string]string)
@@ -160,7 +160,7 @@ func (cmd *RunCommand) Run() error {
 	if err == nil {
 		dirSource, err := NewEnvDir(envDir)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		envSources = append(envSources, dirSource)
 	}
@@ -175,13 +175,13 @@ func (cmd *RunCommand) Run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	for path := range secrets {
 		secret, err := client.Secrets().Versions().GetWithData(path)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		secrets[path] = string(secret.Data)
 	}
@@ -193,7 +193,7 @@ func (cmd *RunCommand) Run() error {
 	for _, source := range envSources {
 		pairs, err := source.Env(secrets, secretReader)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		for key, value := range pairs {
@@ -299,7 +299,7 @@ func (cmd *RunCommand) Run() error {
 			}
 
 		}
-		return errio.Error(commandErr)
+		return commandErr
 	}
 
 	return nil
@@ -332,7 +332,7 @@ func parseKeyValueStringsToMap(values []string) (map[string]string, error) {
 
 		err := validation.ValidateEnvarName(key)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 
 		result[key] = value
@@ -668,7 +668,7 @@ func NewEnvFlags(flags map[string]string) (EnvFlags, error) {
 	for name, path := range flags {
 		err := validation.ValidateEnvarName(name)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 
 		err = api.ValidateSecretPath(path)

@@ -11,7 +11,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
@@ -71,12 +70,12 @@ func (cmd *AccountInitCommand) Run() error {
 	if !cmd.isContinue {
 		profileDir, err := cmd.credentialStore.NewProfileDir()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		exists, err := cmd.credentialStore.CredentialExists()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		credentialPath := profileDir.CredentialPath()
@@ -108,7 +107,7 @@ func (cmd *AccountInitCommand) Run() error {
 						if err == ui.ErrCannotAsk {
 							return ErrCredentialAlreadyAuthorized(me.PrettyName())
 						} else if err != nil {
-							return errio.Error(err)
+							return err
 						}
 
 						if !confirmed {
@@ -141,7 +140,7 @@ func (cmd *AccountInitCommand) Run() error {
 				if err == ui.ErrCannotAsk {
 					return ErrLocalAccountFound
 				} else if err != nil {
-					return errio.Error(err)
+					return err
 				}
 
 				if !confirmed {
@@ -165,7 +164,7 @@ func (cmd *AccountInitCommand) Run() error {
 		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 			passphrase, err := ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 			cmd.credentialStore.SetPassphrase(passphrase)
 		}
@@ -173,14 +172,14 @@ func (cmd *AccountInitCommand) Run() error {
 		fmt.Fprint(cmd.io.Stdout(), "Generating credential...")
 		credential, err := secrethub.GenerateCredential()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		cmd.credentialStore.Set(credential)
 		fmt.Fprintln(cmd.io.Stdout(), " Done")
 
 		err = cmd.credentialStore.Save()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		verifier, err := credential.Verifier()
@@ -214,7 +213,7 @@ func (cmd *AccountInitCommand) Run() error {
 		if cmd.useClipboard {
 			err = cmd.clipper.WriteAll(out)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 			fmt.Fprintln(cmd.io.Stdout(), "The credential's public component has been copied to the clipboard. To add the credential to your account, paste the clipboard contents in https://dashboard.secrethub.io/account-init")
 		} else {

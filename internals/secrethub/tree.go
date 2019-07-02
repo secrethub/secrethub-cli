@@ -8,7 +8,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // TreeCommand lists the contents of a directory at a given path in a tree-like format.
@@ -30,12 +29,12 @@ func NewTreeCommand(io ui.IO, clientFactory newClientFunc) *TreeCommand {
 func (cmd *TreeCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	t, err := client.Dirs().GetTree(cmd.path.Value(), -1, false)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	printTree(t, cmd.io.Stdout())

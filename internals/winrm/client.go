@@ -96,7 +96,7 @@ func NewBasicClient(config *Config, username, password string) (*Client, error) 
 		Client: client,
 		auth:   authMethod,
 		config: config,
-	}, errio.Error(err)
+	}, err
 
 }
 
@@ -139,7 +139,7 @@ func NewCertClient(config *Config, clientCert, clientKey []byte) (*Client, error
 		Client: client,
 		auth:   authMethode,
 		config: config,
-	}, errio.Error(err)
+	}, err
 
 }
 
@@ -149,7 +149,7 @@ func newWinRMClient(config *Config, auth authMethod) (*winrm.Client, error) {
 	username, password := auth.getBasic()
 	endpoint := winrm.NewEndpoint(config.Host, config.Port, config.HTTPS, config.SkipVerifyCert, config.CaCert, clientKey, clientCert, 0)
 	client, err := winrm.NewClient(endpoint, username, password)
-	return client, errio.Error(err)
+	return client, err
 }
 
 // Client contains all necessary data for a Client connection.
@@ -194,7 +194,7 @@ func (c *Client) GetServerCert(io ui.IO) error {
 			h := sha1.New()
 			_, err := h.Write(cert.Raw)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 			fingerprint := formatHex(h.Sum(nil))
 
@@ -202,7 +202,7 @@ func (c *Client) GetServerCert(io ui.IO) error {
 
 			answer, err := ui.AskYesNo(io, question, ui.DefaultNo)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 
 			if !answer {
@@ -213,11 +213,11 @@ func (c *Client) GetServerCert(io ui.IO) error {
 			// Reinitialise the client with the CaCert.
 			c.Client, err = newWinRMClient(c.config, c.auth)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 			return nil
 		}
-		return errio.Error(err)
+		return err
 	}
 	return nil
 }

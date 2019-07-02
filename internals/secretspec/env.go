@@ -11,7 +11,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 const (
@@ -68,7 +67,7 @@ func (p EnvParser) Parse(rootPath string, allowMountAnywhere bool, config map[st
 
 		v, err := newEnvar(source, target)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 		envars[i] = v
 		i++
@@ -94,7 +93,7 @@ func newEnvar(source string, target string) (*envar, error) {
 	target = strings.TrimSpace(target)
 	err = validation.ValidateEnvarName(target)
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	return &envar{

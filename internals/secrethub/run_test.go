@@ -451,6 +451,11 @@ func TestRunCommand_Run(t *testing.T) {
 		command RunCommand
 		err     error
 	}{
+		"success, no secrets": {
+			command: RunCommand{
+				command: []string{"echo", "test"},
+			},
+		},
 		"invalid template var: start with a number": {
 			command: RunCommand{
 				templateVars: map[string]string{

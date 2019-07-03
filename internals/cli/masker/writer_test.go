@@ -240,7 +240,7 @@ func TestNewMaskedWriter(t *testing.T) {
 			err := w.Flush()
 
 			assert.OK(t, err)
-			assert.Equal(t, tc.expected, buf.String())
+			assert.Equal(t, buf.String(), tc.expected)
 		})
 	}
 }

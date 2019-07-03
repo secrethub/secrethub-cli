@@ -86,7 +86,7 @@ type MaskedWriter struct {
 	timeout    time.Duration
 
 	buf              []maskByte
-	incomingByte     chan byte
+	incomingBytes    chan []byte
 	forceFlushBuffer chan struct{}
 	output           chan []maskByte
 	err              chan error
@@ -108,7 +108,7 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 		timeout:          timeout,
 		err:              make(chan error, 1),
 		forceFlushBuffer: make(chan struct{}, 1),
-		incomingByte:     make(chan byte, 256),
+		incomingBytes:    make(chan []byte, 256),
 		output:           make(chan []maskByte),
 	}
 }
@@ -118,11 +118,7 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 // This function never returns an error. These can instead be caught with Flush().
 func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
 	mw.wg.Add(len(p))
-
-	for _, b := range p {
-		mw.incomingByte <- b
-	}
-
+	mw.incomingBytes <- p
 	return len(p), nil
 }
 
@@ -136,20 +132,22 @@ func (mw *MaskedWriter) write() {
 				}
 				mw.flushBuffer()
 			}
-		case b := <-mw.incomingByte:
+		case p := <-mw.incomingBytes:
 			matchInProgress := false
-			mw.buf = append(mw.buf, maskByte{byte: b})
+			for _, b := range p {
+				mw.buf = append(mw.buf, maskByte{byte: b})
 
-			for _, matcher := range mw.matchers {
-				maskLen := matcher.Read(b)
-				for i := 0; i < maskLen; i++ {
-					mw.buf[len(mw.buf)-1-i].masked = true
+				for _, matcher := range mw.matchers {
+					maskLen := matcher.Read(b)
+					for i := 0; i < maskLen; i++ {
+						mw.buf[len(mw.buf)-1-i].masked = true
+					}
+					matchInProgress = matchInProgress || matcher.InProgress()
 				}
-				matchInProgress = matchInProgress || matcher.InProgress()
-			}
 
-			if !matchInProgress {
-				mw.flushBuffer()
+				if !matchInProgress {
+					mw.flushBuffer()
+				}
 			}
 		}
 	}

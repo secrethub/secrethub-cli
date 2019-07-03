@@ -170,8 +170,6 @@ func (mw *MaskedWriter) Run() {
 	masking := false
 	for {
 		select {
-		case <-time.After(mw.timeout):
-			mw.forceFlushBuffer <- struct{}{}
 		case output := <-mw.output:
 			for _, b := range output {
 				var err error
@@ -194,6 +192,12 @@ func (mw *MaskedWriter) Run() {
 				}
 			}
 			mw.wg.Add(-len(output))
+		case <-time.After(mw.timeout):
+			// force the buffer to flush if not already done so.
+			select {
+			case mw.forceFlushBuffer <- struct{}{}:
+			default:
+			}
 		}
 	}
 }

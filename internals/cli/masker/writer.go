@@ -85,17 +85,16 @@ type MaskedWriter struct {
 	matchers   []matcher
 	timeout    time.Duration
 
-	buf    []maskByte
-	lock   *sync.Mutex
-	output chan []maskByte
-	err    error
-	nIn    int64
-	nOut   int64
+	buf              []maskByte
+	incomingByte     chan byte
+	forceFlushBuffer chan struct{}
+	output           chan []maskByte
+	err              chan error
+	wg               sync.WaitGroup
 }
 
 // NewMaskedWriter returns a new MaskedWriter that masks all occurrences of sequences in masks with maskString.
 func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout time.Duration) *MaskedWriter {
-	var lock sync.Mutex
 	matchers := make([]matcher, len(masks))
 	for i, mask := range masks {
 		matchers[i] = &sequenceMatcher{
@@ -103,12 +102,14 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 		}
 	}
 	return &MaskedWriter{
-		w:          w,
-		maskString: maskString,
-		matchers:   matchers,
-		timeout:    timeout,
-		lock:       &lock,
-		output:     make(chan []maskByte, 1),
+		w:                w,
+		maskString:       maskString,
+		matchers:         matchers,
+		timeout:          timeout,
+		err:              make(chan error, 1),
+		forceFlushBuffer: make(chan struct{}, 1),
+		incomingByte:     make(chan byte, 256),
+		output:           make(chan []maskByte),
 	}
 }
 
@@ -116,30 +117,42 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 // It is responsible for finding any matches to mask and mark the appropriate bytes as masked.
 // This function never returns an error. These can instead be caught with Flush().
 func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
+	mw.wg.Add(len(p))
+
 	for _, b := range p {
-		matchInProgress := false
-
-		mw.lock.Lock()
-		mw.buf = append(mw.buf, maskByte{byte: b})
-
-		for _, matcher := range mw.matchers {
-			maskLen := matcher.Read(b)
-			for i := 0; i < maskLen; i++ {
-				mw.buf[len(mw.buf)-1-i].masked = true
-			}
-			matchInProgress = matchInProgress || matcher.InProgress()
-		}
-
-		if !matchInProgress {
-			mw.flushBuffer()
-		}
-
-		mw.lock.Unlock()
+		mw.incomingByte <- b
 	}
 
-	mw.nIn += int64(len(p))
-
 	return len(p), nil
+}
+
+func (mw *MaskedWriter) write() {
+	for {
+		select {
+		case <-mw.forceFlushBuffer:
+			if len(mw.output) == 0 {
+				for _, matcher := range mw.matchers {
+					matcher.Reset()
+				}
+				mw.flushBuffer()
+			}
+		case b := <-mw.incomingByte:
+			matchInProgress := false
+			mw.buf = append(mw.buf, maskByte{byte: b})
+
+			for _, matcher := range mw.matchers {
+				maskLen := matcher.Read(b)
+				for i := 0; i < maskLen; i++ {
+					mw.buf[len(mw.buf)-1-i].masked = true
+				}
+				matchInProgress = matchInProgress || matcher.InProgress()
+			}
+
+			if !matchInProgress {
+				mw.flushBuffer()
+			}
+		}
+	}
 }
 
 func (mw *MaskedWriter) flushBuffer() {
@@ -155,18 +168,12 @@ func (mw *MaskedWriter) flushBuffer() {
 //
 // This should be run in a separate goroutine.
 func (mw *MaskedWriter) Run() {
+	go mw.write()
 	masking := false
 	for {
 		select {
 		case <-time.After(mw.timeout):
-			mw.lock.Lock()
-			if len(mw.output) == 0 {
-				for _, matcher := range mw.matchers {
-					matcher.Reset()
-				}
-				mw.flushBuffer()
-			}
-			mw.lock.Unlock()
+			mw.forceFlushBuffer <- struct{}{}
 		case output := <-mw.output:
 			for _, b := range output {
 				var err error
@@ -174,7 +181,7 @@ func (mw *MaskedWriter) Run() {
 					if !masking {
 						_, err = mw.w.Write([]byte(mw.maskString))
 						if err != nil {
-							mw.err = err
+							mw.err <- err
 							return
 						}
 					}
@@ -182,13 +189,13 @@ func (mw *MaskedWriter) Run() {
 				} else {
 					_, err = mw.w.Write([]byte{b.byte})
 					if err != nil {
-						mw.err = err
+						mw.err <- err
 						return
 					}
 					masking = false
 				}
 			}
-			mw.nOut += int64(len(output))
+			mw.wg.Add(-len(output))
 		}
 	}
 }
@@ -196,8 +203,9 @@ func (mw *MaskedWriter) Run() {
 // Flush is called to make sure that all output is written to the underlying io.Writer.
 // Returns any errors caused by the writing.
 func (mw *MaskedWriter) Flush() error {
-	for mw.nIn != mw.nOut && mw.err == nil {
-		time.Sleep(time.Microsecond)
-	}
-	return mw.err
+	go func() {
+		mw.wg.Wait()
+		mw.err <- nil
+	}()
+	return <-mw.err
 }

@@ -85,12 +85,12 @@ type MaskedWriter struct {
 	matchers   []matcher
 	timeout    time.Duration
 
-	buf              []maskByte
-	incomingBytes    chan []byte
-	forceFlushBuffer chan struct{}
-	output           chan []maskByte
-	err              chan error
-	wg               sync.WaitGroup
+	buf           []maskByte
+	incomingBytes chan []byte
+	outputTimeout chan struct{}
+	output        chan []maskByte
+	err           chan error
+	wg            sync.WaitGroup
 }
 
 // NewMaskedWriter returns a new MaskedWriter that masks all occurrences of sequences in masks with maskString.
@@ -102,14 +102,14 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 		}
 	}
 	return &MaskedWriter{
-		w:                w,
-		maskString:       maskString,
-		matchers:         matchers,
-		timeout:          timeout,
-		err:              make(chan error, 1),
-		forceFlushBuffer: make(chan struct{}, 1),
-		incomingBytes:    make(chan []byte, 256),
-		output:           make(chan []maskByte),
+		w:             w,
+		maskString:    maskString,
+		matchers:      matchers,
+		timeout:       timeout,
+		err:           make(chan error, 1),
+		outputTimeout: make(chan struct{}, 1),
+		incomingBytes: make(chan []byte, 256),
+		output:        make(chan []maskByte),
 	}
 }
 
@@ -125,7 +125,8 @@ func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
 func (mw *MaskedWriter) write() {
 	for {
 		select {
-		case <-mw.forceFlushBuffer:
+		case <-mw.outputTimeout:
+			// Only flush if there is still nothing send to the output channel.
 			if len(mw.output) == 0 {
 				for _, matcher := range mw.matchers {
 					matcher.Reset()
@@ -195,7 +196,7 @@ func (mw *MaskedWriter) Run() {
 		case <-time.After(mw.timeout):
 			// force the buffer to flush if not already done so.
 			select {
-			case mw.forceFlushBuffer <- struct{}{}:
+			case mw.outputTimeout <- struct{}{}:
 			default:
 			}
 		}

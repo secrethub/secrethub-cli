@@ -49,7 +49,6 @@ func (f *clientFactory) NewClient() (secrethub.Client, error) {
 			if err != nil {
 				return nil, err
 			}
-	
 			f.client = secrethub.NewClient(credential, auth.NewHTTPSigner(credential), f.NewClientOptions())
 		}
 	}

@@ -43,7 +43,6 @@ func (f *clientFactory) NewClient() (secrethub.Client, error) {
 			if err != nil {
 				return nil, err
 			}
-			
 			f.client = client
 		} else {
 			credential, err := f.store.Get()

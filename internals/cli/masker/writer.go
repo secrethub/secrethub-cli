@@ -203,7 +203,7 @@ func (mw *MaskedWriter) Run() {
 			}
 			mw.wg.Add(-len(output))
 		case <-time.After(mw.timeout):
-			// force the buffer to flush if not already done so.
+			// send to the timeout channel if not already done so.
 			select {
 			case mw.outputTimeoutCh <- struct{}{}:
 			default:

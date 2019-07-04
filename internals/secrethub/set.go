@@ -8,7 +8,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secretspec"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // Errors
@@ -46,7 +45,7 @@ func (cmd *SetCommand) Register(r Registerer) {
 func (cmd *SetCommand) Run() error {
 	presenter, err := secretspec.NewPresenter("", true, secretspec.DefaultParsers...)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	_, err = os.Stat(cmd.in)
@@ -61,12 +60,12 @@ func (cmd *SetCommand) Run() error {
 
 	err = presenter.Parse(spec)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	paths := presenter.Sources()
@@ -82,7 +81,7 @@ func (cmd *SetCommand) Run() error {
 	for path := range paths {
 		secret, err := client.Secrets().Versions().GetWithData(path)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		secrets[path] = *secret
 	}
@@ -91,7 +90,7 @@ func (cmd *SetCommand) Run() error {
 
 	err = presenter.Set(secrets)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Set complete! The secrets are now available on your system.")

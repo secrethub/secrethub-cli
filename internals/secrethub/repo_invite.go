@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // RepoInviteCommand handles inviting a user to collaborate on a repository.
@@ -39,12 +38,12 @@ func (cmd *RepoInviteCommand) Register(r Registerer) {
 func (cmd *RepoInviteCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	user, err := client.Users().Get(cmd.username)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if !cmd.force {
@@ -54,7 +53,7 @@ func (cmd *RepoInviteCommand) Run() error {
 
 		confirmed, err := ui.AskYesNo(cmd.io, msg, ui.DefaultNo)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		if !confirmed {
@@ -66,7 +65,7 @@ func (cmd *RepoInviteCommand) Run() error {
 
 	_, err = client.Repos().Users().Invite(cmd.path.Value(), cmd.username)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Invite complete! The user %s is now a member of the %s repository.\n", user.Username, cmd.path)

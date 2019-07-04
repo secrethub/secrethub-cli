@@ -3,8 +3,6 @@ package secrethub
 import (
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // PrintEnvCommand prints out debug statements about all environment variables.
@@ -26,7 +24,7 @@ func NewPrintEnvCommand(app *cli.App, io ui.IO) *PrintEnvCommand {
 func (cmd *PrintEnvCommand) Run() error {
 	err := cmd.app.PrintEnv(cmd.io.Stdout(), cmd.verbose)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	return nil
 }

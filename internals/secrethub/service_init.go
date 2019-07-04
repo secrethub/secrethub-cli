@@ -11,7 +11,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
@@ -56,22 +55,22 @@ func (cmd *ServiceInitCommand) Run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	serviceCredential, err := secrethub.GenerateCredential()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	encoded, err := secrethub.EncodeCredential(serviceCredential)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	service, err := client.Services().Create(repo.Value(), cmd.description, serviceCredential, serviceCredential)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if cmd.permission != 0 {
@@ -80,10 +79,10 @@ func (cmd *ServiceInitCommand) Run() error {
 			_, delErr := client.Services().Delete(service.ServiceID)
 			if delErr != nil {
 				fmt.Fprintf(cmd.io.Stdout(), "Failed to cleanup after creating an access rule for %s failed. Be sure to manually remove the created service account %s: %s\n", service.ServiceID, service.ServiceID, err)
-				return errio.Error(delErr)
+				return delErr
 			}
 
-			return errio.Error(err)
+			return err
 		}
 	}
 
@@ -91,7 +90,7 @@ func (cmd *ServiceInitCommand) Run() error {
 	if cmd.clip {
 		err = WriteClipboardAutoClear(out, defaultClearClipboardAfter, cmd.clipper)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		fmt.Fprintf(cmd.io.Stdout(), "Copied account configuration for %s to clipboard. It will be cleared after 45 seconds.\n", service.ServiceID)

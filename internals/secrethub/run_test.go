@@ -2,7 +2,12 @@ package secrethub
 
 import (
 	"errors"
+	"strings"
 	"testing"
+
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
 
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
@@ -31,7 +36,7 @@ isEncountered:
 	}
 }
 
-func TestParseEnv(t *testing.T) {
+func TestParseDotEnv(t *testing.T) {
 	cases := map[string]struct {
 		raw      string
 		expected []envvar
@@ -41,14 +46,18 @@ func TestParseEnv(t *testing.T) {
 			raw: "foo=bar\nbaz={{path/to/secret}}",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:               "foo",
+					value:             "bar",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 5,
 				},
 				{
-					key:        "baz",
-					value:      "{{path/to/secret}}",
-					lineNumber: 2,
+					key:               "baz",
+					value:             "{{path/to/secret}}",
+					lineNumber:        2,
+					columnNumberKey:   1,
+					columnNumberValue: 5,
 				},
 			},
 		},
@@ -56,19 +65,119 @@ func TestParseEnv(t *testing.T) {
 			raw: "key = value",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 7,
 				},
 			},
 		},
-		"success with multiple spaces": {
+		"success with multiple spaces after key": {
 			raw: "key    = value",
 			expected: []envvar{
 				{
-					key:        "key",
-					value:      "value",
-					lineNumber: 1,
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 10,
+				},
+			},
+		},
+		"success with multiple spaces before value": {
+			raw: "key =  value",
+			expected: []envvar{
+				{
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 8,
+				},
+			},
+		},
+		"success with leading space": {
+			raw: " key = value",
+			expected: []envvar{
+				{
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   2,
+					columnNumberValue: 8,
+				},
+			},
+		},
+		"success with leading tab": {
+			raw: "\tkey = value",
+			expected: []envvar{
+				{
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   2,
+					columnNumberValue: 8,
+				},
+			},
+		},
+		"success with trailing space": {
+			raw: "key = value ",
+			expected: []envvar{
+				{
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 7,
+				},
+			},
+		},
+		"success with tabs": {
+			raw: "key\t=\tvalue",
+			expected: []envvar{
+				{
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 7,
+				},
+			},
+		},
+		"success with single quotes": {
+			raw: "key='value'",
+			expected: []envvar{
+				{
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 6,
+				},
+			},
+		},
+		"success with double quotes": {
+			raw: `key="value"`,
+			expected: []envvar{
+				{
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 6,
+				},
+			},
+		},
+		"success with quotes and whitespace": {
+			raw: "key = 'value'",
+			expected: []envvar{
+				{
+					key:               "key",
+					value:             "value",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 8,
 				},
 			},
 		},
@@ -76,14 +185,18 @@ func TestParseEnv(t *testing.T) {
 			raw: "# database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:               "DB_USER",
+					value:             "user",
+					lineNumber:        2,
+					columnNumberKey:   1,
+					columnNumberValue: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:               "DB_PASS",
+					value:             "pass",
+					lineNumber:        3,
+					columnNumberKey:   1,
+					columnNumberValue: 11,
 				},
 			},
 		},
@@ -91,14 +204,18 @@ func TestParseEnv(t *testing.T) {
 			raw: "    # database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:               "DB_USER",
+					value:             "user",
+					lineNumber:        2,
+					columnNumberKey:   1,
+					columnNumberValue: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:               "DB_PASS",
+					value:             "pass",
+					lineNumber:        3,
+					columnNumberKey:   1,
+					columnNumberValue: 11,
 				},
 			},
 		},
@@ -106,14 +223,18 @@ func TestParseEnv(t *testing.T) {
 			raw: "\t# database\nDB_USER = user\nDB_PASS = pass",
 			expected: []envvar{
 				{
-					key:        "DB_USER",
-					value:      "user",
-					lineNumber: 2,
+					key:               "DB_USER",
+					value:             "user",
+					lineNumber:        2,
+					columnNumberKey:   1,
+					columnNumberValue: 11,
 				},
 				{
-					key:        "DB_PASS",
-					value:      "pass",
-					lineNumber: 3,
+					key:               "DB_PASS",
+					value:             "pass",
+					lineNumber:        3,
+					columnNumberKey:   1,
+					columnNumberValue: 11,
 				},
 			},
 		},
@@ -121,14 +242,18 @@ func TestParseEnv(t *testing.T) {
 			raw: "foo=bar\n\nbar=baz",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:               "foo",
+					value:             "bar",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 5,
 				},
 				{
-					key:        "bar",
-					value:      "baz",
-					lineNumber: 3,
+					key:               "bar",
+					value:             "baz",
+					lineNumber:        3,
+					columnNumberKey:   1,
+					columnNumberValue: 5,
 				},
 			},
 		},
@@ -136,14 +261,18 @@ func TestParseEnv(t *testing.T) {
 			raw: "foo=bar\n    \nbar = baz",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "bar",
-					lineNumber: 1,
+					key:               "foo",
+					value:             "bar",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 5,
 				},
 				{
-					key:        "bar",
-					value:      "baz",
-					lineNumber: 3,
+					key:               "bar",
+					value:             "baz",
+					lineNumber:        3,
+					columnNumberKey:   1,
+					columnNumberValue: 7,
 				},
 			},
 		},
@@ -151,9 +280,11 @@ func TestParseEnv(t *testing.T) {
 			raw: "foo=foo=bar",
 			expected: []envvar{
 				{
-					key:        "foo",
-					value:      "foo=bar",
-					lineNumber: 1,
+					key:               "foo",
+					value:             "foo=bar",
+					lineNumber:        1,
+					columnNumberKey:   1,
+					columnNumberValue: 5,
 				},
 			},
 		},
@@ -165,7 +296,7 @@ func TestParseEnv(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			actual, err := parseEnv(tc.raw)
+			actual, err := parseDotEnv(strings.NewReader(tc.raw))
 
 			elemEqual(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)
@@ -217,7 +348,7 @@ func TestParseYML(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			actual, err := parseYML(tc.raw)
+			actual, err := parseYML(strings.NewReader(tc.raw))
 
 			elemEqual(t, actual, tc.expected)
 			assert.Equal(t, err, tc.err)
@@ -256,6 +387,15 @@ func TestNewEnv(t *testing.T) {
 				"baz": "secret",
 			},
 		},
+		"success with var in key": {
+			raw: "${var}=value",
+			templateVars: map[string]string{
+				"var": "key",
+			},
+			expected: map[string]string{
+				"key": "value",
+			},
+		},
 		"success yml": {
 			raw: "foo: bar\nbaz: ${path/to/secret}",
 			replacements: map[string]string{
@@ -266,27 +406,38 @@ func TestNewEnv(t *testing.T) {
 				"baz": "val",
 			},
 		},
+		"secret not allowed in key": {
+			raw: "{{ path/to/secret }}key=value",
+			err: ErrSecretsNotAllowedInKey,
+		},
 		"yml template error": {
 			raw: "foo: bar: baz",
 			err: ErrTemplate(1, errors.New("template is not formatted as key=value pairs")),
 		},
 		"yml secret template error": {
-			raw: "foo: ${path/to/secret",
+			raw: "foo: ${path/to/secret\nbar: ${ path/to/secret }",
 			err: generictpl.ErrTagNotClosed("}"),
 		},
-		"env error": {
+		"secret template error": {
 			raw: "foo={{path/to/secret",
-			err: ErrTemplate(1, generictpl.ErrTagNotClosed("}}")),
+			err: tpl.ErrSecretTagNotClosed(1, 21),
+		},
+		"secret template error second line": {
+			raw: "foo=bar\nbar={{ error@secretpath }}",
+			err: tpl.ErrIllegalSecretCharacter(2, 13, '@'),
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			env, err := NewEnv(tc.raw, tc.templateVars)
+			parser, err := getTemplateParser([]byte(tc.raw), "auto")
+			assert.OK(t, err)
+
+			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVars, parser)
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {
-				actual, err := env.Env(tc.replacements)
+				actual, err := env.Env(map[string]string{}, fakes.FakeSecretReader{Secrets: tc.replacements})
 				assert.Equal(t, err, tc.err)
 
 				assert.Equal(t, actual, tc.expected)
@@ -300,6 +451,11 @@ func TestRunCommand_Run(t *testing.T) {
 		command RunCommand
 		err     error
 	}{
+		"success, no secrets": {
+			command: RunCommand{
+				command: []string{"echo", "test"},
+			},
+		},
 		"invalid template var: start with a number": {
 			command: RunCommand{
 				templateVars: map[string]string{
@@ -324,6 +480,116 @@ func TestRunCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := tc.command.Run()
 			assert.Equal(t, err, tc.err)
+		})
+	}
+}
+
+func TestTrimQuotes(t *testing.T) {
+	cases := map[string]struct {
+		in       string
+		expected string
+	}{
+		"unquoted": {
+			in:       `foo`,
+			expected: `foo`,
+		},
+		"single quoted": {
+			in:       `'foo'`,
+			expected: `foo`,
+		},
+		"double quoted": {
+			in:       `"foo"`,
+			expected: `foo`,
+		},
+		"maintain quotes inside unquoted value": {
+			in:       `{"foo":"bar"}`,
+			expected: `{"foo":"bar"}`,
+		},
+		"empty string": {
+			in:       "",
+			expected: "",
+		},
+		"single quoted empty string": {
+			in:       `''`,
+			expected: ``,
+		},
+		"double qouted empty string": {
+			in:       `""`,
+			expected: ``,
+		},
+		"single quote wrapped in single quote": {
+			in:       `''foo''`,
+			expected: `'foo'`,
+		},
+		"single quote wrapped in double quote": {
+			in:       `"'foo'"`,
+			expected: `'foo'`,
+		},
+		"double quote wrapped in double quote": {
+			in:       `""foo""`,
+			expected: `"foo"`,
+		},
+		"double quote wrapped in single quote": {
+			in:       `'"foo"'`,
+			expected: `"foo"`,
+		},
+		"single quote opened but not closed": {
+			in:       `'foo`,
+			expected: `'foo`,
+		},
+		"double quote opened but not closed": {
+			in:       `"foo`,
+			expected: `"foo`,
+		},
+		"single quote closed but not opened": {
+			in:       `foo'`,
+			expected: `foo'`,
+		},
+		"double quote closed but not opened": {
+			in:       `foo"`,
+			expected: `foo"`,
+		},
+		"single quoted with inner leading whitespace": {
+			in:       `' foo'`,
+			expected: ` foo`,
+		},
+		"double quoted with inner leading whitespace": {
+			in:       `" foo"`,
+			expected: ` foo`,
+		},
+		"single quoted with inner trailing whitespace": {
+			in:       `'foo '`,
+			expected: `foo `,
+		},
+		"double quoted with inner trailing whitespace": {
+			in:       `"foo "`,
+			expected: `foo `,
+		},
+
+		// Trimming OUTER whitespace is explicitly not the responsibility of this function.
+		"single quoted with outer leading whitespace": {
+			in:       ` 'foo'`,
+			expected: ` 'foo'`,
+		},
+		"double quoted with outer leading whitespace": {
+			in:       ` "foo"`,
+			expected: ` "foo"`,
+		},
+		"single quoted with outer trailing whitespace": {
+			in:       `'foo' `,
+			expected: `'foo' `,
+		},
+		"double quoted with outer trailing whitespace": {
+			in:       `"foo" `,
+			expected: `"foo" `,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			actual, _ := trimQuotes(tc.in)
+
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // InspectSecretCommand prints out a secret's details.
@@ -32,22 +31,22 @@ func NewInspectSecretCommand(path api.SecretPath, io ui.IO, newClient newClientF
 func (cmd *InspectSecretCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	secret, err := client.Secrets().Versions().GetWithoutData(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	versions, err := client.Secrets().Versions().ListWithoutData(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	output, err := cli.PrettyJSON(newSecretOutput(secret.Secret, versions, cmd.timeFormatter))
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), output)

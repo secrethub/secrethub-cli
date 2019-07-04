@@ -36,7 +36,7 @@ var (
 func ReadFromFile(path string, destination interface{}) error {
 	data, err := readFile(path)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return Read(data, destination)
@@ -45,7 +45,7 @@ func ReadFromFile(path string, destination interface{}) error {
 // Read attempts to read a config in a destination interface.
 func Read(data []byte, destination interface{}) error {
 	err := yaml.Unmarshal(data, destination)
-	return errio.Error(err)
+	return err
 }
 
 // ReadConfigurationDataFromFile retrieves the data and attempts to read the config as a ConfigMap
@@ -54,7 +54,7 @@ func Read(data []byte, destination interface{}) error {
 func ReadConfigurationDataFromFile(path string) (ConfigMap, []byte, error) {
 	data, err := readFile(path)
 	if err != nil {
-		return nil, nil, errio.Error(err)
+		return nil, nil, err
 	}
 
 	configMap, err := ReadMap(data)
@@ -97,7 +97,7 @@ func ParseMap(src *ConfigMap, dst interface{}) error {
 	decoder, err := mapstructure.NewDecoder(&c)
 
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return decoder.Decode(src)

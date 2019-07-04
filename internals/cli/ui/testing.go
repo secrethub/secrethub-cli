@@ -4,10 +4,7 @@ package ui
 
 import (
 	"bytes"
-
 	"errors"
-
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // FakeIO is a helper type for testing that implements the ui.IO interface
@@ -65,7 +62,7 @@ type FakeReader struct {
 func (f *FakeReader) ReadPassword() ([]byte, error) {
 	pass, err := Readln(f)
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 	return []byte(pass), nil
 }

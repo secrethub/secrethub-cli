@@ -89,7 +89,9 @@ func NewApp() *App {
 	store := NewCredentialStore(io)
 	help := "The SecretHub command-line interface is a unified tool to manage your infrastructure secrets with SecretHub.\n\n" +
 		"For a step-by-step introduction, check out:\n\n" +
-		"https://secrethub.io/docs/getting-started/\n\n" +
+		"  https://secrethub.io/docs/getting-started/\n\n" +
+		"To get help, see:\n\n" +
+		"  https://secrethub.io/support/\n\n" +
 		"The CLI is configurable through command-line flags and environment variables. " +
 		"Options set on the command-line take precedence over those set in the environment. " +
 		"The format for environment variables is `SECRETHUB_[COMMAND_]FLAG_NAME`."

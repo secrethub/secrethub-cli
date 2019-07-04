@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // AccountInspectCommand is a command to inspect account details.
@@ -37,17 +36,17 @@ func (cmd *AccountInspectCommand) Register(r Registerer) {
 func (cmd *AccountInspectCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	user, err := client.Users().Me()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	output, err := cli.PrettyJSON(newOutputUser(user, cmd.timeFormatter))
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), output)

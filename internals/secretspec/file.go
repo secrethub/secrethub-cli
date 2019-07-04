@@ -9,7 +9,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 const (
@@ -50,18 +49,18 @@ func (p FileParser) Parse(rootPath string, allowMountAnywhere bool, config map[s
 	if ok && mode != "" {
 		filemode, err = strToFileMode(mode)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 	}
 
 	file, err := newFile(source, target, filemode)
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	err = file.createTarget(rootPath, allowMountAnywhere)
 	if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	return file, nil
@@ -102,7 +101,7 @@ func newFile(source string, target string, filemode os.FileMode) (*file, error) 
 func (f *file) createTarget(rootPath string, allowMountAnywhere bool) error {
 	target, err := createTarget(rootPath, f.target, allowMountAnywhere)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	f.target = target
 	return nil

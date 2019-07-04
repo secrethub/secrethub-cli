@@ -4,7 +4,6 @@ import (
 	"net/url"
 
 	"github.com/secrethub/secrethub-go/internals/auth"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
@@ -23,6 +22,7 @@ func NewClientFactory(store CredentialStore) ClientFactory {
 }
 
 type clientFactory struct {
+	client    secrethub.Client
 	ServerURL *url.URL
 	UseAWS    bool
 	store     CredentialStore
@@ -37,16 +37,24 @@ func (f *clientFactory) Register(r FlagRegisterer) {
 // NewClient returns a new client that is configured to use the remote that
 // is set with the flag.
 func (f *clientFactory) NewClient() (secrethub.Client, error) {
-	if f.UseAWS {
-		return secrethub.NewClientAWS(f.NewClientOptions())
+	if f.client == nil {
+		if f.UseAWS {
+			client, err := secrethub.NewClientAWS(f.NewClientOptions())
+			if err != nil {
+				return nil, err
+			}
+			
+			f.client = client
+		} else {
+			credential, err := f.store.Get()
+			if err != nil {
+				return nil, err
+			}
+	
+			f.client = secrethub.NewClient(credential, auth.NewHTTPSigner(credential), f.NewClientOptions())
+		}
 	}
-
-	credential, err := f.store.Get()
-	if err != nil {
-		return nil, errio.Error(err)
-	}
-
-	return secrethub.NewClient(credential, auth.NewHTTPSigner(credential), f.NewClientOptions()), nil
+	return f.client, nil
 }
 
 // NewClientOptions returns the client options configured by the flags.

@@ -8,7 +8,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
@@ -55,7 +54,7 @@ func (cmd *SignUpCommand) Register(r Registerer) {
 func (cmd *SignUpCommand) Run() error {
 	profileDir, err := cmd.credentialStore.NewProfileDir()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	credentialPath := profileDir.CredentialPath()
 
@@ -66,7 +65,7 @@ func (cmd *SignUpCommand) Run() error {
 	} else {
 		exists, err := cmd.credentialStore.CredentialExists()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		if exists {
 			confirmed, err := ui.AskYesNo(
@@ -77,7 +76,7 @@ func (cmd *SignUpCommand) Run() error {
 			if err == ui.ErrCannotAsk {
 				return ErrLocalAccountFound
 			} else if err != nil {
-				return errio.Error(err)
+				return err
 			}
 
 			if !confirmed {
@@ -89,7 +88,7 @@ func (cmd *SignUpCommand) Run() error {
 		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" {
 			_, promptOut, err := cmd.io.Prompts()
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 			fmt.Fprint(
 				promptOut,
@@ -100,19 +99,19 @@ func (cmd *SignUpCommand) Run() error {
 			if cmd.username == "" {
 				cmd.username, err = ui.AskAndValidate(cmd.io, "The username you'd like to use: ", 2, api.ValidateUsername)
 				if err != nil {
-					return errio.Error(err)
+					return err
 				}
 			}
 			if cmd.fullName == "" {
 				cmd.fullName, err = ui.AskAndValidate(cmd.io, "Your full name: ", 2, api.ValidateFullName)
 				if err != nil {
-					return errio.Error(err)
+					return err
 				}
 			}
 			if cmd.email == "" {
 				cmd.email, err = ui.AskAndValidate(cmd.io, "Your email address: ", 2, api.ValidateEmail)
 				if err != nil {
-					return errio.Error(err)
+					return err
 				}
 			}
 		}
@@ -132,7 +131,7 @@ func (cmd *SignUpCommand) Run() error {
 	if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 		passphrase, err := ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		cmd.credentialStore.SetPassphrase(passphrase)
 	}
@@ -141,14 +140,14 @@ func (cmd *SignUpCommand) Run() error {
 	cmd.progressPrinter.Start()
 	credential, err := secrethub.GenerateCredential()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	cmd.credentialStore.Set(credential)
 	cmd.progressPrinter.Stop()
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprint(cmd.io.Stdout(), "Signing you up...")
@@ -156,11 +155,11 @@ func (cmd *SignUpCommand) Run() error {
 	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential, credential)
 	cmd.progressPrinter.Stop()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	err = cmd.credentialStore.Save()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")

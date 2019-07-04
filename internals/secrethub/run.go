@@ -74,7 +74,15 @@ func NewRunCommand(newClient newClientFunc) *RunCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RunCommand) Register(r Registerer) {
-	clause := r.Command("run", "Pass secrets as environment variables to a process.")
+	const helpShort = "Pass secrets as environment variables to a process."
+	const helpLong = "pass secrets as environment variables to a process." +
+		"\n\n" +
+		"To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are automatically masked by replacing them with \"" + maskString + "\". " +
+		"The output is buffered to detect secrets, but to avoid blocking the buffering is limited to a maximum duration as defined by the --masking-timeout flag. " +
+		"Therefore, you should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
+
+	clause := r.Command("run", helpShort)
+	clause.HelpLong(helpLong)
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&cmd.envFile)
@@ -82,7 +90,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
-	clause.Flag("masking-timeout", "The time to wait for a partial secret that is written to stdout or stderr to be completed for masking.").Default("1s").DurationVar(&cmd.maskingTimeout)
+	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
 
 	BindAction(clause, cmd.Run)

@@ -122,7 +122,16 @@ func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func (mw *MaskedWriter) write() {
+// process receives incoming bytes from calls to Write (over the incoming bytes channel) masks them if necessary and passes
+// them through to Run (over the output channel).
+//
+// - When the incoming bytes do not end in a partial secret, they are directly passed to the output channel.
+// - When the incoming bytes do end in a partial secret, all bytes up to the partial secret are passed to the
+//   output channel. Passing on the partial secrets bytes is delayed until:
+//     - New bytes come in that finish the secret, in which case the bytes are passed to the output channel and marked as masked.
+//     - New bytes come in that do not finish the secret, in which case the bytes are passed to the output channel and not marked as masked.
+//     - The output timeout channel receives a signal, in which case the bytes are passed to the output channel and not marked as masked.
+func (mw *MaskedWriter) process() {
 	for {
 		select {
 		case <-mw.outputTimeoutCh:
@@ -167,7 +176,7 @@ func (mw *MaskedWriter) flushBuffer() {
 //
 // This should be run in a separate goroutine.
 func (mw *MaskedWriter) Run() {
-	go mw.write()
+	go mw.process()
 	masking := false
 	for {
 		select {

@@ -85,17 +85,16 @@ type MaskedWriter struct {
 	matchers   []matcher
 	timeout    time.Duration
 
-	buf    []maskByte
-	lock   *sync.Mutex
-	output chan []maskByte
-	err    error
-	nIn    int64
-	nOut   int64
+	buf             []maskByte
+	incomingBytesCh chan []byte
+	outputTimeoutCh chan struct{}
+	outputCh        chan []maskByte
+	errCh           chan error
+	wg              sync.WaitGroup
 }
 
 // NewMaskedWriter returns a new MaskedWriter that masks all occurrences of sequences in masks with maskString.
 func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout time.Duration) *MaskedWriter {
-	var lock sync.Mutex
 	matchers := make([]matcher, len(masks))
 	for i, mask := range masks {
 		matchers[i] = &sequenceMatcher{
@@ -103,12 +102,14 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 		}
 	}
 	return &MaskedWriter{
-		w:          w,
-		maskString: maskString,
-		matchers:   matchers,
-		timeout:    timeout,
-		lock:       &lock,
-		output:     make(chan []maskByte, 1),
+		w:               w,
+		maskString:      maskString,
+		matchers:        matchers,
+		timeout:         timeout,
+		errCh:           make(chan error, 1),
+		outputTimeoutCh: make(chan struct{}, 1),
+		incomingBytesCh: make(chan []byte, 256),
+		outputCh:        make(chan []maskByte),
 	}
 }
 
@@ -116,36 +117,56 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 // It is responsible for finding any matches to mask and mark the appropriate bytes as masked.
 // This function never returns an error. These can instead be caught with Flush().
 func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
-	for _, b := range p {
-		matchInProgress := false
-
-		mw.lock.Lock()
-		mw.buf = append(mw.buf, maskByte{byte: b})
-
-		for _, matcher := range mw.matchers {
-			maskLen := matcher.Read(b)
-			for i := 0; i < maskLen; i++ {
-				mw.buf[len(mw.buf)-1-i].masked = true
-			}
-			matchInProgress = matchInProgress || matcher.InProgress()
-		}
-
-		if !matchInProgress {
-			mw.flushBuffer()
-		}
-
-		mw.lock.Unlock()
-	}
-
-	mw.nIn += int64(len(p))
-
+	mw.wg.Add(len(p))
+	mw.incomingBytesCh <- p
 	return len(p), nil
+}
+
+// process receives incoming bytes from calls to Write (over the incoming bytes channel) masks them if necessary and passes
+// them through to Run (over the output channel).
+//
+// - When the incoming bytes do not end in a partial secret, they are directly passed to the output channel.
+// - When the incoming bytes do end in a partial secret, all bytes up to the partial secret are passed to the
+//   output channel. Passing on the partial secrets bytes is delayed until:
+//     - New bytes come in that finish the secret, in which case the bytes are passed to the output channel and marked as masked.
+//     - New bytes come in that do not finish the secret, in which case the bytes are passed to the output channel and not marked as masked.
+//     - The output timeout channel receives a signal, in which case the bytes are passed to the output channel and not marked as masked.
+func (mw *MaskedWriter) process() {
+	for {
+		select {
+		case <-mw.outputTimeoutCh:
+			// Only flush if there is still nothing send to the output channel.
+			if len(mw.outputCh) == 0 {
+				for _, matcher := range mw.matchers {
+					matcher.Reset()
+				}
+				mw.flushBuffer()
+			}
+		case p := <-mw.incomingBytesCh:
+			matchInProgress := false
+			for _, b := range p {
+				mw.buf = append(mw.buf, maskByte{byte: b})
+
+				for _, matcher := range mw.matchers {
+					maskLen := matcher.Read(b)
+					for i := 0; i < maskLen; i++ {
+						mw.buf[len(mw.buf)-1-i].masked = true
+					}
+					matchInProgress = matchInProgress || matcher.InProgress()
+				}
+
+				if !matchInProgress {
+					mw.flushBuffer()
+				}
+			}
+		}
+	}
 }
 
 func (mw *MaskedWriter) flushBuffer() {
 	tmp := make([]maskByte, len(mw.buf))
 	copy(tmp, mw.buf)
-	mw.output <- tmp
+	mw.outputCh <- tmp
 	mw.buf = mw.buf[:0]
 }
 
@@ -155,26 +176,18 @@ func (mw *MaskedWriter) flushBuffer() {
 //
 // This should be run in a separate goroutine.
 func (mw *MaskedWriter) Run() {
+	go mw.process()
 	masking := false
 	for {
 		select {
-		case <-time.After(mw.timeout):
-			mw.lock.Lock()
-			if len(mw.output) == 0 {
-				for _, matcher := range mw.matchers {
-					matcher.Reset()
-				}
-				mw.flushBuffer()
-			}
-			mw.lock.Unlock()
-		case output := <-mw.output:
+		case output := <-mw.outputCh:
 			for _, b := range output {
 				var err error
 				if b.masked {
 					if !masking {
 						_, err = mw.w.Write([]byte(mw.maskString))
 						if err != nil {
-							mw.err = err
+							mw.errCh <- err
 							return
 						}
 					}
@@ -182,13 +195,19 @@ func (mw *MaskedWriter) Run() {
 				} else {
 					_, err = mw.w.Write([]byte{b.byte})
 					if err != nil {
-						mw.err = err
+						mw.errCh <- err
 						return
 					}
 					masking = false
 				}
 			}
-			mw.nOut += int64(len(output))
+			mw.wg.Add(-len(output))
+		case <-time.After(mw.timeout):
+			// send to the timeout channel if not already done so.
+			select {
+			case mw.outputTimeoutCh <- struct{}{}:
+			default:
+			}
 		}
 	}
 }
@@ -196,8 +215,9 @@ func (mw *MaskedWriter) Run() {
 // Flush is called to make sure that all output is written to the underlying io.Writer.
 // Returns any errors caused by the writing.
 func (mw *MaskedWriter) Flush() error {
-	for mw.nIn != mw.nOut && mw.err == nil {
-		time.Sleep(time.Microsecond)
-	}
-	return mw.err
+	go func() {
+		mw.wg.Wait()
+		mw.errCh <- nil
+	}()
+	return <-mw.errCh
 }

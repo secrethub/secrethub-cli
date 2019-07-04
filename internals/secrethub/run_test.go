@@ -6,9 +6,7 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
-
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/assert"

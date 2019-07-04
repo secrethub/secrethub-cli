@@ -200,7 +200,7 @@ func TestNewMaskedWriter(t *testing.T) {
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("fo"))
 				assert.OK(t, err)
-				time.Sleep(time.Millisecond * 2)
+				time.Sleep(time.Millisecond * 5)
 				_, err = w.Write([]byte("o bar test"))
 				assert.OK(t, err)
 			},

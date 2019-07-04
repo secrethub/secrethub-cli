@@ -77,7 +77,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	const helpShort = "Pass secrets as environment variables to a process."
 	const helpLong = `pass secrets as environment variables to a process.
 
-To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are masked by replacing them with `+ maskString + `.
+To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are masked by replacing them with ` + maskString + `.
 To improve detection of secrets, the output is buffered for a maximum duration as defined by the --masking-timeout flag. Nevertheless, there is no guarantee that secrets are masked in all cases.`
 
 	clause := r.Command("run", helpShort)

@@ -26,3 +26,5 @@ require (
 	golang.org/x/text v0.3.0
 	gopkg.in/yaml.v2 v2.2.2
 )
+
+replace github.com/alecthomas/kingpin => github.com/simonbarendse/kingpin v0.0.0-20190704132514-1e3080fa9f42

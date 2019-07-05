@@ -6,9 +6,7 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
-
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -451,6 +449,11 @@ func TestRunCommand_Run(t *testing.T) {
 		command RunCommand
 		err     error
 	}{
+		"success, no secrets": {
+			command: RunCommand{
+				command: []string{"echo", "test"},
+			},
+		},
 		"invalid template var: start with a number": {
 			command: RunCommand{
 				templateVars: map[string]string{

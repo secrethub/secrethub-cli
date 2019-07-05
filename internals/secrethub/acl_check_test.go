@@ -8,13 +8,12 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )
 
 func TestACLCheckCommand_Run(t *testing.T) {
-	testError := errio.Error(errors.New("test error"))
+	testError := errors.New("test error")
 
 	cases := map[string]struct {
 		cmd                  ACLCheckCommand

@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // OrgLsCommand handles listing all organisations a user is a member of.
@@ -51,12 +50,12 @@ func (cmd *OrgLsCommand) beforeRun() {
 func (cmd *OrgLsCommand) run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	resp, err := client.Orgs().ListMine()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	sort.Sort(api.SortOrgByName(resp))
@@ -74,12 +73,12 @@ func (cmd *OrgLsCommand) run() error {
 			// TODO SHDEV-724: refactor these two calls to include the counts in the api.Org response by default.
 			members, err := client.Orgs().Members().List(org.Name)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 
 			repos, err := client.Repos().List(org.Name)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 
 			fmt.Fprintf(w, "%s\t%d\t%d\t%s\n", org.Name, len(repos), len(members), cmd.timeFormatter.Format(org.CreatedAt.Local()))
@@ -87,7 +86,7 @@ func (cmd *OrgLsCommand) run() error {
 
 		err = w.Flush()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 

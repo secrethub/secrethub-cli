@@ -80,7 +80,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	if cmd.resourceURI.Port() != "" {
 		port, err = strconv.Atoi(cmd.resourceURI.Port())
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 
@@ -104,7 +104,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	// check the schema
 	https, err := cmd.checkWinRMTLS()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	skipVerifyCert := cmd.checkWinRMVerifyCert()
@@ -127,20 +127,20 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 		if cmd.username == "" {
 			cmd.username, err = ui.Ask(cmd.io, "What username do you want to use to connect?\n")
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 		}
 
 		if cmd.password == "" {
 			cmd.password, err = ui.AskSecret(cmd.io, fmt.Sprintf("What is the password for user %s?\n", cmd.username))
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 		}
 
 		client, err = winrm.NewBasicClient(config, cmd.username, cmd.password)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	case "cert":
 		var clientCert, clientKey []byte
@@ -160,7 +160,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 		client, err = winrm.NewCertClient(config, clientCert, clientKey)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	default:
 		return ErrUnknownAuthType
@@ -171,7 +171,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	if https {
 		err := client.GetServerCert(cmd.io)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 
@@ -186,14 +186,14 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 	credential, err := ioutil.ReadAll(cmd.io.Stdin())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	// Copy the config to the host.
 	fmt.Fprintln(cmd.io.Stdout(), "Deploying configuration...")
 	err = deployer.configure(credential)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Deploy complete! The service account can now be used to connect to SecretHub from the host.")
@@ -258,7 +258,7 @@ func (wd windowsDeployer) configure(token []byte) error {
 
 	err := wd.conn.CopyFile(r, wd.path, copyProgress)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return nil

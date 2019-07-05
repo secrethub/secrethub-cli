@@ -113,12 +113,12 @@ func (p *Presenter) Parse(data []byte) error {
 
 		consumable, err := p.parse(entry)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		for _, c := range p.consumables {
 			if c.Equals(consumable) {
-				return errio.Error(ErrDuplicateSpecEntry(c))
+				return ErrDuplicateSpecEntry(c)
 			}
 		}
 
@@ -133,7 +133,7 @@ func (p *Presenter) Clear() error {
 	for _, consumable := range p.consumables {
 		err := consumable.Clear()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 	return nil
@@ -148,7 +148,7 @@ func (p *Presenter) parse(config Spec) (Consumable, error) {
 		if ok {
 			consumable, err := parser.Parse(p.rootPath, p.allowMountAnywhere, spec)
 			if err != nil {
-				return nil, errio.Error(err)
+				return nil, err
 			}
 
 			return consumable, nil
@@ -163,7 +163,7 @@ func (p *Presenter) Set(secrets map[string]api.SecretVersion) error {
 	for _, consumable := range p.consumables {
 		err := consumable.Set(secrets)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 
@@ -232,7 +232,7 @@ func parseTargetOnRootPath(rootPath, target string, allowMountAnywhere bool) (st
 func createTarget(rootPath, target string, allowMountAnywhere bool) (string, error) {
 	target, err := parseTargetOnRootPath(rootPath, target, allowMountAnywhere)
 	if err != nil {
-		return "", errio.Error(err)
+		return "", err
 	}
 
 	err = os.MkdirAll(filepath.Dir(target), 0771)

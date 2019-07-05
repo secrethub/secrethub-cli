@@ -70,19 +70,19 @@ func (cmd *GenerateSecretCommand) run() error {
 
 	data, err := cmd.generator.Generate(cmd.length)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprint(cmd.io.Stdout(), "Writing secret value...\n")
 
 	version, err := client.Secrets().Write(cmd.path.Value(), data)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Write complete! A randomly generated secret has been written to %s:%d.\n", cmd.path, version.Version)

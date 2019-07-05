@@ -3,7 +3,6 @@ package secrethub
 import (
 	"net/url"
 
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
@@ -38,7 +37,7 @@ func (f *clientFactory) NewClient() (secrethub.Client, error) {
 	if f.client == nil {
 		credential, err := f.store.Get()
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 
 		f.client = secrethub.NewClient(credential, f.NewClientOptions())

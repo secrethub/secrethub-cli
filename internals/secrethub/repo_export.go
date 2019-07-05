@@ -11,7 +11,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // Error
@@ -67,7 +66,7 @@ func (cmd *RepoExportCommand) Run() error {
 		cmd.path.String(),
 	)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if !confirmed {
@@ -77,17 +76,17 @@ func (cmd *RepoExportCommand) Run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	rootDir, err := client.Dirs().GetTree(cmd.path.GetDirPath().Value(), -1, false)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	zipFile, err := os.Create(cmd.zipName)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	writer := zip.NewWriter(zipFile)
@@ -106,18 +105,18 @@ func (cmd *RepoExportCommand) Run() error {
 	for _, secret := range rootDir.Secrets {
 		secretPath, err := rootDir.AbsSecretPath(secret.SecretID)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		versions, err := client.Secrets().Versions().ListWithData(secretPath.Value())
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		for _, version := range versions {
 			versionPath, err := secretPath.AddVersion(version.Version)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 
 			// Replace the : for / to create a directory for every secret containing versions.
@@ -127,12 +126,12 @@ func (cmd *RepoExportCommand) Run() error {
 
 			zipNode, err := writer.Create(zipSecretPath)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 
 			_, err = zipNode.Write(posix.AddNewLine(version.Data))
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 		}
 	}

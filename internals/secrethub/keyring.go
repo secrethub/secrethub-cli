@@ -9,7 +9,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	libkeyring "github.com/zalando/go-keyring"
 )
 
@@ -75,7 +74,7 @@ func (pr passphraseReader) Get(username string) ([]byte, error) {
 	if pr.Cache.IsEnabled() {
 		passphrase, err := pr.Cache.Get(username)
 		if err != nil && err != ErrKeyringItemNotFound {
-			return nil, errio.Error(err)
+			return nil, err
 		} else if err == nil {
 			return []byte(passphrase), nil
 		}
@@ -85,13 +84,13 @@ func (pr passphraseReader) Get(username string) ([]byte, error) {
 	if err == ui.ErrCannotAsk {
 		return nil, ErrPassphraseFlagNotSet // if we cannot ask, users should use the --passphrase flag
 	} else if err != nil {
-		return nil, errio.Error(err)
+		return nil, err
 	}
 
 	if pr.Cache.IsEnabled() {
 		err := pr.Cache.Set(username, passphrase)
 		if err != nil {
-			return nil, errio.Error(err)
+			return nil, err
 		}
 	}
 
@@ -143,7 +142,7 @@ func (c PassphraseCache) Set(username, passphrase string) error {
 	if !item.RunningCleanupProcess {
 		err = c.cleaner.Cleanup(username)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 
@@ -171,7 +170,7 @@ func (c PassphraseCache) Get(username string) (string, error) {
 	if !item.RunningCleanupProcess {
 		err = c.cleaner.Cleanup(username)
 		if err != nil {
-			return "", errio.Error(err)
+			return "", err
 		}
 	}
 
@@ -179,7 +178,7 @@ func (c PassphraseCache) Get(username string) (string, error) {
 
 	err = c.keyring.Set(username, item)
 	if err != nil {
-		return "", errio.Error(err)
+		return "", err
 	}
 
 	return item.Passphrase, nil

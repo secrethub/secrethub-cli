@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // AccountEmailVerifyCommand is a command to inspect account details.
@@ -32,12 +31,12 @@ func (cmd *AccountEmailVerifyCommand) Register(r Registerer) {
 func (cmd *AccountEmailVerifyCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	user, err := client.Me().GetUser()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if user.EmailVerified {

@@ -14,8 +14,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 
-	"github.com/secrethub/secrethub-go/internals/errio"
-
 	"github.com/docker/go-units"
 )
 
@@ -94,7 +92,7 @@ func (cmd *InjectCommand) Run() error {
 
 		raw, err = ioutil.ReadAll(cmd.io.Stdin())
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 
@@ -102,7 +100,7 @@ func (cmd *InjectCommand) Run() error {
 
 	osEnv, err := parseKeyValueStringsToMap(os.Environ())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	for k, v := range osEnv {
@@ -129,19 +127,19 @@ func (cmd *InjectCommand) Run() error {
 
 	template, err := parser.Parse(string(raw), 1, 1)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	injected, err := template.Evaluate(templateVars, newSecretReader(cmd.newClient))
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	out := []byte(injected)
 	if cmd.useClipboard {
 		err = WriteClipboardAutoClear(out, cmd.clearClipboardAfter, cmd.clipper)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		fmt.Fprintln(cmd.io.Stdout(), fmt.Sprintf("Copied injected template to clipboard. It will be cleared after %s.", units.HumanDuration(cmd.clearClipboardAfter)))
@@ -161,7 +159,7 @@ func (cmd *InjectCommand) Run() error {
 				ui.DefaultNo,
 			)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 
 			if !confirmed {

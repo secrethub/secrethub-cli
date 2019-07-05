@@ -123,6 +123,7 @@ func TestNewMaskedWriter(t *testing.T) {
 
 	timeout20ms := time.Millisecond * 20
 	timeout1ms := time.Millisecond * 1
+	timeout0 := time.Second * 0
 
 	tests := map[string]struct {
 		maskStrings []string
@@ -187,7 +188,7 @@ func TestNewMaskedWriter(t *testing.T) {
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("fo"))
 				assert.OK(t, err)
-				time.Sleep(time.Millisecond * 5)
+				time.Sleep(time.Millisecond * 2)
 				_, err = w.Write([]byte("o test"))
 				assert.OK(t, err)
 			},
@@ -199,12 +200,21 @@ func TestNewMaskedWriter(t *testing.T) {
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("fo"))
 				assert.OK(t, err)
-				time.Sleep(time.Millisecond * 2)
+				time.Sleep(time.Millisecond * 5)
 				_, err = w.Write([]byte("o bar test"))
 				assert.OK(t, err)
 			},
 			timeout:  &timeout1ms,
 			expected: "foo " + maskString + " test",
+		},
+		"no timeout": {
+			maskStrings: []string{"foo", "bar"},
+			inputFunc: func(w io.Writer) {
+				_, err := w.Write([]byte("test foo test"))
+				assert.OK(t, err)
+			},
+			timeout:  &timeout0,
+			expected: "test " + maskString + " test",
 		},
 	}
 
@@ -230,7 +240,7 @@ func TestNewMaskedWriter(t *testing.T) {
 			err := w.Flush()
 
 			assert.OK(t, err)
-			assert.Equal(t, tc.expected, buf.String())
+			assert.Equal(t, buf.String(), tc.expected)
 		})
 	}
 }

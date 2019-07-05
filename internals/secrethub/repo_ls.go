@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // RepoLSCommand lists repositories.
@@ -51,12 +50,12 @@ func (cmd *RepoLSCommand) beforeRun() {
 func (cmd *RepoLSCommand) run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	list, err := client.Repos().ListMine()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	sort.Sort(api.SortRepoByName(list))
@@ -73,7 +72,7 @@ func (cmd *RepoLSCommand) run() error {
 		}
 		err = w.Flush()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 

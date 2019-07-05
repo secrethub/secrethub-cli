@@ -7,7 +7,7 @@ lint:
 	@golangci-lint run
 
 test:
-	@go test ./...
+	@go test -race ./...
 
 tools: format-tools lint-tools
 

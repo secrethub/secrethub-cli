@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // RepoRmCommand handles removing a repo.
@@ -35,12 +34,12 @@ func (cmd *RepoRmCommand) Register(r Registerer) {
 func (cmd *RepoRmCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	_, err = client.Repos().Get(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	confirmed, err := ui.ConfirmCaseInsensitive(
@@ -54,7 +53,7 @@ func (cmd *RepoRmCommand) Run() error {
 		cmd.path.String(),
 	)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if !confirmed {
@@ -66,7 +65,7 @@ func (cmd *RepoRmCommand) Run() error {
 
 	err = client.Repos().Delete(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Removal complete! The repository %s has been permanently removed.\n", cmd.path)

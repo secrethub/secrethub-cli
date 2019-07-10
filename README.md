@@ -24,7 +24,7 @@ Type in your secret: ************************
 
 $ cat config.yml.tpl
 db_user: myapp
-db_password: ${path/to/secret:latest}
+db_password: {{ path/to/secret:latest }}
 
 $ cat config.yml.tpl | secrethub inject
 db_user: myapp

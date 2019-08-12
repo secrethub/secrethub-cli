@@ -228,19 +228,19 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
-	secretsRead := secretReader.Values()
+	values := secretReader.Values()
 
-	maskStrings := make([][]byte, 0, len(secretsRead))
+	valuesToMask := make([][]byte, 0, len(values))
 	i := 0
-	for _, val := range secretsRead {
+	for _, val := range values {
 		if val != "" {
-			maskStrings[i] = []byte(val)
+			valuesToMask[i] = []byte(val)
 			i++
 		}
 	}
 
-	maskedStdout := masker.NewMaskedWriter(os.Stdout, maskStrings, maskString, cmd.maskingTimeout)
-	maskedStderr := masker.NewMaskedWriter(os.Stderr, maskStrings, maskString, cmd.maskingTimeout)
+	maskedStdout := masker.NewMaskedWriter(os.Stdout, valuesToMask, maskString, cmd.maskingTimeout)
+	maskedStderr := masker.NewMaskedWriter(os.Stderr, valuesToMask, maskString, cmd.maskingTimeout)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = mapToKeyValueStrings(environment)

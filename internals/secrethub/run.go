@@ -181,19 +181,15 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	for path := range secrets {
-		client, err := cmd.newClient()
-		if err != nil {
-			return err
-		}
-		secret, err := client.Secrets().Versions().GetWithData(path)
-		if err != nil {
-			return err
-		}
-		secrets[path] = string(secret.Data)
-	}
-
 	secretReader := newBufferedSecretReader(newSecretReader(cmd.newClient))
+
+	for path := range secrets {
+		secret, err := secretReader.ReadSecret(path)
+		if err != nil {
+			return err
+		}
+		secrets[path] = secret
+	}
 
 	// Construct the environment, sourcing variables from the configured sources.
 	environment := make(map[string]string)
@@ -228,14 +224,8 @@ func (cmd *RunCommand) Run() error {
 
 	secretsRead := secretReader.SecretsRead()
 
-	maskStrings := make([][]byte, 0, len(secrets)+len(secretsRead))
+	maskStrings := make([][]byte, 0, len(secretsRead))
 	i := 0
-	for _, val := range secrets {
-		if val != "" {
-			maskStrings[i] = []byte(val)
-			i++
-		}
-	}
 	for _, val := range secretsRead {
 		if val != "" {
 			maskStrings[i] = []byte(val)

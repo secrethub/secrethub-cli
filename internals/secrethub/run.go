@@ -228,7 +228,7 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
-	secretsRead := secretReader.SecretsRead()
+	secretsRead := secretReader.Values()
 
 	maskStrings := make([][]byte, 0, len(secretsRead))
 	i := 0

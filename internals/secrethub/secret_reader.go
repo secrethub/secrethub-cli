@@ -37,7 +37,7 @@ type bufferedSecretReader struct {
 }
 
 // newBufferedSecretReader wraps a secret reader and stores the retrieved
-// secret values for retrieval with the SecretsRead function.
+// secret values for retrieval with the Values function.
 func newBufferedSecretReader(sr tpl.SecretReader) *bufferedSecretReader {
 	return &bufferedSecretReader{
 		secretReader: sr,
@@ -46,7 +46,7 @@ func newBufferedSecretReader(sr tpl.SecretReader) *bufferedSecretReader {
 }
 
 // ReadSecret uses the underlying secret reader to read the secret
-// and stores the result for retrieval with the SecretsRead function.
+// and stores the result for retrieval with the Values function.
 func (sr *bufferedSecretReader) ReadSecret(path string) (string, error) {
 	secret, err := sr.secretReader.ReadSecret(path)
 
@@ -57,8 +57,8 @@ func (sr *bufferedSecretReader) ReadSecret(path string) (string, error) {
 	return secret, err
 }
 
-// SecretsRead returns a list of values read with this secret reader.
-func (sr bufferedSecretReader) SecretsRead() []string {
+// Values returns a list of values read with this secret reader.
+func (sr bufferedSecretReader) Values() []string {
 	return sr.secretsRead
 }
 

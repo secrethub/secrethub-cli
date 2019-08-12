@@ -93,7 +93,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
 	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
-	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist. An empty value is used instead.")
+	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.")
 
 	BindAction(clause, cmd.Run)
 }

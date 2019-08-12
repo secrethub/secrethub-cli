@@ -228,15 +228,19 @@ func (cmd *RunCommand) Run() error {
 
 	secretsRead := secretReader.SecretsRead()
 
-	maskStrings := make([][]byte, len(secrets)+len(secretsRead))
+	maskStrings := make([][]byte, 0, len(secrets)+len(secretsRead))
 	i := 0
 	for _, val := range secrets {
-		maskStrings[i] = []byte(val)
-		i++
+		if val != "" {
+			maskStrings[i] = []byte(val)
+			i++
+		}
 	}
 	for _, val := range secretsRead {
-		maskStrings[i] = []byte(val)
-		i++
+		if val != "" {
+			maskStrings[i] = []byte(val)
+			i++
+		}
 	}
 
 	maskedStdout := masker.NewMaskedWriter(os.Stdout, maskStrings, maskString, cmd.maskingTimeout)

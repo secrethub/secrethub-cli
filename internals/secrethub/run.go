@@ -52,15 +52,16 @@ const (
 // defined with --envar or --env-file flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
-	command         []string
-	envar           map[string]string
-	envFile         string
-	templateVars    map[string]string
-	templateVersion string
-	env             string
-	noMasking       bool
-	maskingTimeout  time.Duration
-	newClient       newClientFunc
+	command              []string
+	envar                map[string]string
+	envFile              string
+	templateVars         map[string]string
+	templateVersion      string
+	env                  string
+	noMasking            bool
+	maskingTimeout       time.Duration
+	newClient            newClientFunc
+	ignoreMissingSecrets bool
 }
 
 // NewRunCommand creates a new RunCommand.
@@ -92,6 +93,7 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
 	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
+	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist. An empty value is used instead.")
 
 	BindAction(clause, cmd.Run)
 }
@@ -181,7 +183,11 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	secretReader := newBufferedSecretReader(newSecretReader(cmd.newClient))
+	var sr tpl.SecretReader = newSecretReader(cmd.newClient)
+	if cmd.ignoreMissingSecrets {
+		sr = newIgnoreMissingSecretReader(sr)
+	}
+	secretReader := newBufferedSecretReader(sr)
 
 	for path := range secrets {
 		secret, err := secretReader.ReadSecret(path)

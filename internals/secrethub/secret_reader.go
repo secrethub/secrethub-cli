@@ -1,6 +1,9 @@
 package secrethub
 
-import "github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+import (
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+	"github.com/secrethub/secrethub-go/internals/api"
+)
 
 type secretReader struct {
 	newClient newClientFunc
@@ -57,4 +60,24 @@ func (sr *bufferedSecretReader) ReadSecret(path string) (string, error) {
 // SecretsRead returns a list of values read with this secret reader.
 func (sr bufferedSecretReader) SecretsRead() []string {
 	return sr.secretsRead
+}
+
+type ignoreMissingSecretReader struct {
+	secretReader tpl.SecretReader
+}
+
+func newIgnoreMissingSecretReader(sr tpl.SecretReader) *ignoreMissingSecretReader {
+	return &ignoreMissingSecretReader{
+		secretReader: sr,
+	}
+}
+
+// ReadSecret uses the underlying secret reader to read the secret, but ignores
+// errors for non-existing secrets. Instead, it returns the empty string.
+func (sr *ignoreMissingSecretReader) ReadSecret(path string) (string, error) {
+	secret, err := sr.secretReader.ReadSecret(path)
+	if err == api.ErrSecretNotFound {
+		return "", nil
+	}
+	return secret, err
 }

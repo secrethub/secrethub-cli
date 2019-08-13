@@ -18,7 +18,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/secrethub/secrethub-go v0.0.0-20190705133040-504966a4f4a9
+	github.com/secrethub/secrethub-go v0.0.0-20190813140029-c6b4223cf7a7
 	github.com/stretchr/testify v1.3.0
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a

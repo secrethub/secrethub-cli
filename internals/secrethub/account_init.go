@@ -295,12 +295,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 		return err
 	}
 
-	fingerprint, err := credential.Fingerprint()
-	if err != nil {
-		return err
-	}
-
-	_, err = client.Accounts().Keys().Create(fingerprint, credential)
+	_, err = client.Accounts().Keys().Create(credential)
 	if err != nil {
 		fmt.Fprintln(cmd.io.Stdout(), " Failed")
 		return err

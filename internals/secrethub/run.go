@@ -231,11 +231,9 @@ func (cmd *RunCommand) Run() error {
 	values := secretReader.Values()
 
 	valuesToMask := make([][]byte, 0, len(values))
-	i := 0
 	for _, val := range values {
 		if val != "" {
-			valuesToMask[i] = []byte(val)
-			i++
+			valuesToMask = append(valuesToMask, []byte(val))
 		}
 	}
 

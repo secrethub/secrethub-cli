@@ -499,6 +499,27 @@ func TestRunCommand_Run(t *testing.T) {
 			},
 			err: nil,
 		},
+		"repo does not exist ignored": {
+			command: RunCommand{
+				command: []string{"echo", "test"},
+				envar: map[string]string{
+					"missing": "unexisting/repo/secret",
+				},
+				newClient: func() (secrethub.Client, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrRepoNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+				ignoreMissingSecrets: true,
+			},
+			err: nil,
+		},
 		"invalid template var: start with a number": {
 			command: RunCommand{
 				templateVars: map[string]string{

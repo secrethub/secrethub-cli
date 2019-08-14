@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // ConfigCommand handles operations on the SecretHub configuration.
@@ -53,7 +52,7 @@ func (cmd *ConfigUpgradeCommand) Register(r Registerer) {
 func (cmd *ConfigUpgradeCommand) Run() error {
 	profileDir, err := cmd.credentialStore.NewProfileDir()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	// Run command
@@ -67,7 +66,7 @@ func (cmd *ConfigUpgradeCommand) Run() error {
 		ui.DefaultNo,
 	)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if !confirmed {
@@ -82,7 +81,7 @@ func (cmd *ConfigUpgradeCommand) Run() error {
 
 		config, err := LoadConfig(cmd.io, profileDir.oldConfigFile())
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		if config.Type == ConfigUserType {
@@ -92,26 +91,26 @@ func (cmd *ConfigUpgradeCommand) Run() error {
 
 	credential, err := cmd.credentialStore.Get()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	passphrase, err := ui.AskPassphrase(cmd.io, "Please enter a passphrase to (re)encrypt your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	cmd.credentialStore.SetPassphrase(passphrase)
 	cmd.credentialStore.Set(credential)
 	err = cmd.credentialStore.Save()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	// Remove old files
 	for _, file := range cleanupFiles {
 		err = os.Remove(file)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 

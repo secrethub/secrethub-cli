@@ -4,8 +4,6 @@ import (
 	"strconv"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
-
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
@@ -37,7 +35,7 @@ func (f debugFlag) String() string {
 func (f *debugFlag) Set(value string) error {
 	b, err := strconv.ParseBool(value)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	f.debug = b
 	f.init()

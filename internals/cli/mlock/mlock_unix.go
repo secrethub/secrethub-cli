@@ -3,12 +3,9 @@
 package mlock
 
 import (
-	"syscall"
-
-	"github.com/secrethub/secrethub-go/internals/errio"
-
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -49,7 +46,7 @@ func lockMemory() error {
 				"Please try again with root privileges and see if the problem persists.",
 			err)
 	} else if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	log.Debugf("mlock is active")
 	return nil

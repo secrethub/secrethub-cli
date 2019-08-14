@@ -22,15 +22,16 @@ Commands:
 {{end}}\
 {{end}}\
 
-{{define "FormatUsage"}}\
+{{define "FormatAppUsage"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
 {{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
 {{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
-{{.Help|Wrap 0}}\
+{{.Help}}\
 {{end}}\
 
 {{if .Flags}}
+
 Flags:
 {{.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\
@@ -41,10 +42,34 @@ Args:
 
 {{end}}\
 
+
+{{define "FormatCommandUsage"}}\
+{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
+{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
+{{if .Commands}} <command> [<args> ...]{{end}}
+{{if .HelpLong}}
+{{.HelpLong}}\
+{{ else if .Help}}
+{{.Help}}\
+{{end}}\
+
+{{if .Flags}}
+
+Flags:
+{{.Flags|FlagsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{if .Args}}\
+Args:
+{{.Args|ArgsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+
+{{end}}\
+
+
 {{if .Context.SelectedCommand}}\
-usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
+usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatCommandUsage" .Context.SelectedCommand}}
 {{else}}\
-usage: {{.App.Name}}{{template "FormatUsage" .App}}
+usage: {{.App.Name}}{{template "FormatAppUsage" .App}}
 {{end}}\
 {{if .Context.SelectedCommand}}\
 {{if len .Context.SelectedCommand.Commands}}\

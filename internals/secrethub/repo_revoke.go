@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // RepoRevokeCommand handles revoking an account access to a repository.
@@ -41,14 +40,14 @@ func (cmd *RepoRevokeCommand) Register(r Registerer) {
 func (cmd *RepoRevokeCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	var prettyName string
 	if cmd.accountName.IsUser() {
 		user, err := client.Users().Get(string(cmd.accountName))
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 		prettyName = user.PrettyName()
 	} else {
@@ -65,7 +64,7 @@ func (cmd *RepoRevokeCommand) Run() error {
 		if err == ui.ErrCannotAsk {
 			return ErrCannotDoWithoutForce
 		} else if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		if !confirmed {
@@ -83,7 +82,7 @@ func (cmd *RepoRevokeCommand) Run() error {
 		revoked, err = client.Repos().Users().Revoke(cmd.path.Value(), string(cmd.accountName))
 	}
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if revoked.Status == api.StatusFailed {
@@ -97,7 +96,7 @@ func (cmd *RepoRevokeCommand) Run() error {
 
 	rootDir, err := client.Dirs().GetTree(cmd.path.GetDirPath().Value(), -1, false)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
@@ -106,7 +105,7 @@ func (cmd *RepoRevokeCommand) Run() error {
 
 	err = w.Flush()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if countFlagged > 0 {

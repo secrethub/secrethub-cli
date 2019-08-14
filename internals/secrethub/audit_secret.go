@@ -6,7 +6,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // AuditSecretCommand prints all audit events for a given secret.
@@ -56,7 +55,7 @@ func (cmd *AuditSecretCommand) run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	events, err := client.Secrets().ListEvents(cmd.path.Value(), nil)
@@ -70,7 +69,7 @@ func (cmd *AuditSecretCommand) run() error {
 	}
 
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
@@ -83,7 +82,7 @@ func (cmd *AuditSecretCommand) run() error {
 
 		actor, err := getAuditActor(event)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%s\n",
@@ -96,7 +95,7 @@ func (cmd *AuditSecretCommand) run() error {
 
 	err = tabWriter.Flush()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return nil

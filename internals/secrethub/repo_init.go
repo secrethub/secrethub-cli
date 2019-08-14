@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // RepoInitCommand handles creating new repositories.
@@ -35,14 +34,14 @@ func (cmd *RepoInitCommand) Register(r Registerer) {
 func (cmd *RepoInitCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Creating repository...")
 
 	_, err = client.Repos().Create(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Create complete! The repository %s is now ready to use.\n", cmd.path.String())

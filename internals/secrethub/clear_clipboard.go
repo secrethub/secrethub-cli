@@ -7,8 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
 
-	"github.com/secrethub/secrethub-go/internals/errio"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -56,7 +54,7 @@ func (cmd *ClearClipboardCommand) Run() error {
 
 	err = cmd.clipper.WriteAll(nil)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	return nil
 }
@@ -65,12 +63,12 @@ func (cmd *ClearClipboardCommand) Run() error {
 func WriteClipboardAutoClear(data []byte, timeout time.Duration, clipper clip.Clipper) error {
 	hash, err := bcrypt.GenerateFromPassword(data, bcrypt.DefaultCost)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	err = clipper.WriteAll(data)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	err = cloneproc.Spawn(

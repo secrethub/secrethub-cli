@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	bitbucket.org/zombiezen/cardcpx v0.0.0-20150417151802-902f68ff43ef
-	github.com/alecthomas/kingpin v0.0.0-20190511121203-91c304675159
+	github.com/alecthomas/kingpin v0.0.0-20190705085659-95eb9edaa399
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/atotto/clipboard v0.1.2
 	github.com/danieljoos/wincred v1.0.1 // indirect
@@ -19,7 +19,7 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/secrethub/secrethub-go v0.0.0-20190813140029-c6b4223cf7a7
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
 	golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223

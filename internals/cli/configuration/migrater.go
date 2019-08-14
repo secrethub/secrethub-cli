@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 var (
@@ -39,7 +38,7 @@ func MigrateConfigTo(io ui.IO, config ConfigMap, versionFrom int, versionTo int,
 		}
 
 		if err != nil {
-			return config, errio.Error(err)
+			return config, err
 		}
 		if !migrated {
 			return config, ErrVersionNotReachable

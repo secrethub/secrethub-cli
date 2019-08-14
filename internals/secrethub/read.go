@@ -9,7 +9,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 
 	units "github.com/docker/go-units"
 )
@@ -53,18 +52,18 @@ func (cmd *ReadCommand) Register(r Registerer) {
 func (cmd *ReadCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	secret, err := client.Secrets().Versions().GetWithData(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if cmd.useClipboard {
 		err = WriteClipboardAutoClear(secret.Data, cmd.clearClipboardAfter, cmd.clipper)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		fmt.Fprintf(

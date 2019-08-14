@@ -9,7 +9,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // ACLListCommand prints access rules for the given directory.
@@ -56,17 +55,17 @@ func (cmd *ACLListCommand) beforeRun() {
 func (cmd *ACLListCommand) run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	rules, err := client.AccessRules().List(cmd.path.Value(), cmd.depth, cmd.ancestors)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	tree, err := client.Dirs().GetTree(cmd.path.Value(), cmd.depth, cmd.ancestors)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	// Separate all rules into lists of rules per directory.
@@ -81,7 +80,7 @@ func (cmd *ACLListCommand) run() error {
 	for dirID, list := range ruleIDMap {
 		dirPath, err := tree.AbsDirPath(&dirID)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		dirRules := make([]*api.AccessRule, len(list))
@@ -120,7 +119,7 @@ func (cmd *ACLListCommand) run() error {
 
 	err = tabWriter.Flush()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return nil

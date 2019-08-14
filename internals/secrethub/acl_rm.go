@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // ACLRmCommand handles removing an access rule.
@@ -48,7 +47,7 @@ func (cmd *ACLRmCommand) Run() error {
 			ui.DefaultNo,
 		)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		if !confirmed {
@@ -59,14 +58,14 @@ func (cmd *ACLRmCommand) Run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Removing access rule...")
 
 	err = client.AccessRules().Delete(cmd.path.Value(), cmd.accountName.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Removal complete! The access rule for %s on %s has been removed.\n", cmd.accountName, cmd.path)

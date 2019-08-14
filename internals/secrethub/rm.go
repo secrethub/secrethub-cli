@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
@@ -50,13 +49,13 @@ func (cmd *RmCommand) Register(r Registerer) {
 func (cmd *RmCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if !cmd.path.HasVersion() {
 		dirPath, err := cmd.path.ToDirPath()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		if dirPath.IsRepoPath() {
@@ -70,13 +69,13 @@ func (cmd *RmCommand) Run() error {
 			}
 			return rmDir(client, dirPath, cmd.force, cmd.io)
 		} else if err != api.ErrDirNotFound {
-			return errio.Error(err)
+			return err
 		}
 	}
 
 	secretPath, err := cmd.path.ToSecretPath()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	if cmd.path.HasVersion() {
@@ -95,7 +94,7 @@ func (cmd *RmCommand) Run() error {
 func rmSecretVersion(client secrethub.Client, secretPath api.SecretPath, force bool, io ui.IO) error {
 	version, err := secretPath.GetVersion()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	ok, err := askRmConfirmation(
@@ -107,7 +106,7 @@ func rmSecretVersion(client secrethub.Client, secretPath api.SecretPath, force b
 		secretPath.String(),
 	)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	if !ok {
 		return nil
@@ -115,7 +114,7 @@ func rmSecretVersion(client secrethub.Client, secretPath api.SecretPath, force b
 
 	err = client.Secrets().Versions().Delete(secretPath.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(
@@ -137,7 +136,7 @@ func rmSecret(client secrethub.Client, secretPath api.SecretPath, force bool, io
 		secretPath.String(),
 	)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	if !ok {
 		return nil
@@ -145,7 +144,7 @@ func rmSecret(client secrethub.Client, secretPath api.SecretPath, force bool, io
 
 	err = client.Secrets().Delete(secretPath.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(
@@ -167,7 +166,7 @@ func rmDir(client secrethub.Client, dirPath api.DirPath, force bool, io ui.IO) e
 		dirPath.String(),
 	)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	if !ok {
 		return nil
@@ -175,7 +174,7 @@ func rmDir(client secrethub.Client, dirPath api.DirPath, force bool, io ui.IO) e
 
 	err = client.Dirs().Delete(dirPath.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintf(

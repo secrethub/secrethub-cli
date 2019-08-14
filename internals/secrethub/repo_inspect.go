@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // RepoInspectCommand handles printing out the details of a repo in a JSON format.
@@ -39,27 +38,27 @@ func (cmd *RepoInspectCommand) Register(r Registerer) {
 func (cmd *RepoInspectCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	repo, err := client.Repos().Get(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	users, err := client.Repos().Users().List(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	services, err := client.Repos().Services().List(cmd.path.Value())
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	output, err := cli.PrettyJSON(newInspectRepoOutput(repo, users, services, cmd.timeFormatter))
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), output)

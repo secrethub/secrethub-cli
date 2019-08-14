@@ -59,7 +59,7 @@ func (cmd *LsCommand) Run() error {
 
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	// It must be a SecretPath as only SecretPaths has versions.
@@ -67,17 +67,17 @@ func (cmd *LsCommand) Run() error {
 		secretPath, err := cmd.path.ToSecretPath()
 		if err != nil {
 			fmt.Println("no secret path!")
-			return errio.Error(err)
+			return err
 		}
 
 		version, err := client.Secrets().Versions().GetWithoutData(secretPath.Value())
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		err = printVersions(cmd.io.Stdout(), cmd.quiet, timeFormatter, version)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		return nil
@@ -88,13 +88,13 @@ func (cmd *LsCommand) Run() error {
 	if err == nil {
 		dirFS, err := client.Dirs().GetTree(dirPath.Value(), 1, false)
 		if err == api.ErrDirNotFound && dirPath.IsRepoPath() {
-			return errio.Error(err)
+			return err
 		} else if err != nil && err != api.ErrDirNotFound {
-			return errio.Error(err)
+			return err
 		} else if err == nil {
 			err = printDir(cmd.io.Stdout(), cmd.quiet, dirFS.RootDir, timeFormatter)
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 			return nil
 		}
@@ -107,12 +107,12 @@ func (cmd *LsCommand) Run() error {
 		if err == api.ErrSecretNotFound {
 			return ErrResourceNotFound(cmd.path)
 		} else if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		err = printVersions(cmd.io.Stdout(), cmd.quiet, timeFormatter, versions...)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		return nil
@@ -142,7 +142,7 @@ func printVersions(w io.Writer, quiet bool, timeFormatter TimeFormatter, version
 		}
 		err := w.Flush()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 	return nil
@@ -171,7 +171,7 @@ func printDir(w io.Writer, quiet bool, dir *api.Dir, timeFormatter TimeFormatter
 		}
 		err := tw.Flush()
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 	}
 	return nil

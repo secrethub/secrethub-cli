@@ -6,7 +6,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // AuditRepoCommand prints all audit events for a given repository.
@@ -51,17 +50,17 @@ func (cmd *AuditRepoCommand) beforeRun() {
 func (cmd *AuditRepoCommand) run() error {
 	client, err := cmd.newClient()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	events, err := client.Repos().ListEvents(cmd.path.Value(), nil)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	dirFS, err := client.Dirs().GetTree(cmd.path.GetDirPath().Value(), -1, false)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
@@ -74,12 +73,12 @@ func (cmd *AuditRepoCommand) run() error {
 
 		actor, err := getAuditActor(event)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		subject, err := getAuditSubject(event, dirFS)
 		if err != nil {
-			return errio.Error(err)
+			return err
 		}
 
 		fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%s\t%s\n",
@@ -93,7 +92,7 @@ func (cmd *AuditRepoCommand) run() error {
 
 	err = tabWriter.Flush()
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 
 	return nil

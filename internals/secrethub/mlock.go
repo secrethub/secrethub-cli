@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/mlock"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // mlockFlag configures locking memory.
@@ -16,7 +15,7 @@ func (f mlockFlag) init() error {
 		if mlock.Supported() {
 			err := mlock.LockMemory()
 			if err != nil {
-				return errio.Error(err)
+				return err
 			}
 		}
 	}
@@ -38,7 +37,7 @@ func (f mlockFlag) String() string {
 func (f *mlockFlag) Set(value string) error {
 	b, err := strconv.ParseBool(value)
 	if err != nil {
-		return errio.Error(err)
+		return err
 	}
 	*f = mlockFlag(b)
 	return f.init()

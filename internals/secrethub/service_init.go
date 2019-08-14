@@ -58,17 +58,7 @@ func (cmd *ServiceInitCommand) Run() error {
 		return err
 	}
 
-	serviceCredential, err := secrethub.GenerateCredential()
-	if err != nil {
-		return err
-	}
-
-	encoded, err := secrethub.EncodeCredential(serviceCredential)
-	if err != nil {
-		return err
-	}
-
-	service, err := client.Services().Create(repo.Value(), cmd.description, serviceCredential, serviceCredential)
+	service, credential, err := client.Services().Create(repo.Value(), cmd.description)
 	if err != nil {
 		return err
 	}
@@ -84,6 +74,11 @@ func (cmd *ServiceInitCommand) Run() error {
 
 			return err
 		}
+	}
+
+	encoded, err := secrethub.EncodeCredential(credential)
+	if err != nil {
+		return err
 	}
 
 	out := []byte(encoded)

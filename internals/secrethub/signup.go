@@ -23,16 +23,16 @@ type SignUpCommand struct {
 	email           string
 	force           bool
 	io              ui.IO
-	newClient       newClientFunc
+	client          secrethub.Client
 	credentialStore CredentialStore
 	progressPrinter progress.Printer
 }
 
 // NewSignUpCommand creates a new SignUpCommand.
-func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialStore) *SignUpCommand {
+func NewSignUpCommand(io ui.IO, credentialStore CredentialStore) *SignUpCommand {
 	return &SignUpCommand{
 		io:              io,
-		newClient:       newClient,
+		client:          secrethub.NewClient(nil, nil, nil),
 		credentialStore: credentialStore,
 		progressPrinter: progress.NewPrinter(io.Stdout(), 500*time.Millisecond),
 	}
@@ -136,27 +136,15 @@ func (cmd *SignUpCommand) Run() error {
 		cmd.credentialStore.SetPassphrase(passphrase)
 	}
 
-	fmt.Fprint(cmd.io.Stdout(), "Generating credential...")
-	cmd.progressPrinter.Start()
-	credential, err := secrethub.GenerateCredential()
-	if err != nil {
-		return err
-	}
-	cmd.credentialStore.Set(credential)
-	cmd.progressPrinter.Stop()
-
-	client, err := cmd.newClient()
-	if err != nil {
-		return err
-	}
-
 	fmt.Fprint(cmd.io.Stdout(), "Signing you up...")
 	cmd.progressPrinter.Start()
-	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential, credential)
+	_, credential, err := cmd.client.Users().Create(cmd.username, cmd.email, cmd.fullName)
 	cmd.progressPrinter.Stop()
 	if err != nil {
 		return err
 	}
+
+	cmd.credentialStore.Set(credential)
 	err = cmd.credentialStore.Save()
 	if err != nil {
 		return err

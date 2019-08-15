@@ -69,7 +69,7 @@ var (
 // App is the secrethub command-line application.
 type App struct {
 	credentialStore CredentialStore
-	clientFactory   ClientFactory
+	clientFactory   *clientFactory
 	cli             *cli.App
 	io              ui.IO
 	logger          cli.Logger
@@ -173,7 +173,7 @@ func (app *App) registerCommands() {
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
 
 	// Commands
-	NewSignUpCommand(app.io, app.credentialStore).Register(app.cli)
+	NewSignUpCommand(app.io, app.clientFactory.newUnauthenticatedClient, app.credentialStore).Register(app.cli)
 	NewWriteCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewReadCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewGenerateSecretCommand(app.io, app.clientFactory.NewClient).Register(app.cli)

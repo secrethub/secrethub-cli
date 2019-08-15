@@ -15,7 +15,7 @@ type ClientFactory interface {
 }
 
 // NewClientFactory creates a new ClientFactory.
-func NewClientFactory(store CredentialStore) ClientFactory {
+func NewClientFactory(store CredentialStore) *clientFactory {
 	return &clientFactory{
 		store: store,
 	}
@@ -44,6 +44,10 @@ func (f *clientFactory) NewClient() (secrethub.Client, error) {
 		f.client = secrethub.NewClient(credential, auth.NewHTTPSigner(credential), f.NewClientOptions())
 	}
 	return f.client, nil
+}
+
+func (f *clientFactory) newUnauthenticatedClient() (secrethub.Client, error) {
+	return secrethub.NewClient(nil, nil, f.NewClientOptions()), nil
 }
 
 // NewClientOptions returns the client options configured by the flags.

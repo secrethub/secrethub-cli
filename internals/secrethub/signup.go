@@ -8,7 +8,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
 // Errors
@@ -23,16 +22,16 @@ type SignUpCommand struct {
 	email           string
 	force           bool
 	io              ui.IO
-	client          secrethub.Client
+	newClient       newClientFunc
 	credentialStore CredentialStore
 	progressPrinter progress.Printer
 }
 
 // NewSignUpCommand creates a new SignUpCommand.
-func NewSignUpCommand(io ui.IO, credentialStore CredentialStore) *SignUpCommand {
+func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialStore) *SignUpCommand {
 	return &SignUpCommand{
 		io:              io,
-		client:          secrethub.NewClient(nil, nil, nil),
+		newClient:       newClient,
 		credentialStore: credentialStore,
 		progressPrinter: progress.NewPrinter(io.Stdout(), 500*time.Millisecond),
 	}
@@ -136,9 +135,14 @@ func (cmd *SignUpCommand) Run() error {
 		cmd.credentialStore.SetPassphrase(passphrase)
 	}
 
+	client, err := cmd.newClient()
+	if err != nil {
+		return err
+	}
+
 	fmt.Fprint(cmd.io.Stdout(), "Signing you up...")
 	cmd.progressPrinter.Start()
-	_, credential, err := cmd.client.Users().Create(cmd.username, cmd.email, cmd.fullName)
+	_, credential, err := client.Users().Create(cmd.username, cmd.email, cmd.fullName)
 	cmd.progressPrinter.Stop()
 	if err != nil {
 		return err

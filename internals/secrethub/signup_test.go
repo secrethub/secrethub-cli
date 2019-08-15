@@ -8,6 +8,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )
 
@@ -31,8 +32,10 @@ func TestSignUpCommand_Run(t *testing.T) {
 
 			progressPrinter := fakeprogress.Printer{}
 			tc.cmd.progressPrinter = &progressPrinter
-			tc.cmd.client = fakeclient.Client{
-				UserService: &fakeclient.UserService{},
+			tc.cmd.newClient = func() (secrethub.Client, error) {
+				return fakeclient.Client{
+					UserService: &fakeclient.UserService{},
+				}, nil
 			}
 
 			// Act

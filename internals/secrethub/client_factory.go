@@ -7,15 +7,7 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
 
-// ClientFactory handles creating a new client with the configured options.
-type ClientFactory interface {
-	// NewClient returns a new SecretHub client.
-	NewClient() (secrethub.Client, error)
-	Register(FlagRegisterer)
-}
-
-// NewClientFactory creates a new ClientFactory.
-func NewClientFactory(store CredentialStore) *clientFactory {
+func newClientFactory(store CredentialStore) *clientFactory {
 	return &clientFactory{
 		store: store,
 	}

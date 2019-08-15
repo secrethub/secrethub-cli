@@ -102,7 +102,7 @@ func NewApp() *App {
 			},
 		),
 		credentialStore: store,
-		clientFactory:   NewClientFactory(store),
+		clientFactory:   newClientFactory(store),
 		io:              io,
 		logger:          cli.NewLogger(),
 	}

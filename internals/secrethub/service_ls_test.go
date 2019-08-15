@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -21,6 +22,11 @@ func TestServiceLsCommand_Run(t *testing.T) {
 		err            error
 	}{
 		"success": {
+			cmd: ServiceLsCommand{
+				timeFormatter: &fakes.TimeFormatter{
+					Response: "2018-01-01T01:01:01+00:00",
+				},
+			},
 			serviceService: fakeclient.ServiceService{
 				Lister: fakeclient.RepoServiceLister{
 					ReturnsServices: []*api.Service{
@@ -35,7 +41,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					},
 				},
 			},
-			out: "ID      DESCRIPTION\ntest    foobar\nsecond  foobarbaz\n",
+			out: "ID      DESCRIPTION    CREATED\ntest    foobar         2018-01-01T01:01:01+00:00\nsecond  foobarbaz      2018-01-01T01:01:01+00:00\n",
 		},
 		"success quiet": {
 			cmd: ServiceLsCommand{
@@ -90,7 +96,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 			}
 
 			// Act
-			err := tc.cmd.Run()
+			err := tc.cmd.run()
 
 			// Assert
 			assert.Equal(t, err, tc.err)

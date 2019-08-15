@@ -13,8 +13,10 @@ type ServiceLsCommand struct {
 	repoPath api.RepoPath
 	quiet    bool
 
-	io        ui.IO
-	newClient newClientFunc
+	io            ui.IO
+	timeFormatter TimeFormatter
+	useTimestamps bool
+	newClient     newClientFunc
 }
 
 // NewServiceLsCommand creates a new ServiceLsCommand.
@@ -30,12 +32,24 @@ func (cmd *ServiceLsCommand) Register(r Registerer) {
 	clause := r.Command("ls", "List all service accounts in a given repository.")
 	clause.Arg("repo-path", "The path to the repository to list services for (<namespace>/<repo>).").Required().SetValue(&cmd.repoPath)
 	clause.Flag("quiet", "Only print service IDs.").Short('q').BoolVar(&cmd.quiet)
+	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	BindAction(clause, cmd.Run)
 }
 
 // Run lists all service accounts in a given repository.
 func (cmd *ServiceLsCommand) Run() error {
+	cmd.beforeRun()
+	return cmd.run()
+}
+
+// beforeRun configures the command using the flag values.
+func (cmd *ServiceLsCommand) beforeRun() {
+	cmd.timeFormatter = NewTimeFormatter(cmd.useTimestamps)
+}
+
+// Run lists all service accounts in a given repository.
+func (cmd *ServiceLsCommand) run() error {
 	client, err := cmd.newClient()
 	if err != nil {
 		return err
@@ -53,10 +67,10 @@ func (cmd *ServiceLsCommand) Run() error {
 	} else {
 		w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
 
-		fmt.Fprintf(w, "%s\t%s\n", "ID", "DESCRIPTION")
+		fmt.Fprintf(w, "%s\t%s\t%s\n", "ID", "DESCRIPTION", "CREATED")
 
 		for _, service := range services {
-			fmt.Fprintf(w, "%s\t%s\n", service.ServiceID, service.Description)
+			fmt.Fprintf(w, "%s\t%s\t%s\n", service.ServiceID, service.Description, cmd.timeFormatter.Format(service.CreatedAt.Local()))
 		}
 
 		err = w.Flush()

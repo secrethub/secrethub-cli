@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
@@ -21,7 +22,7 @@ type ServiceInitCommand struct {
 	file        string
 	fileMode    filemode.FileMode
 	path        api.DirPath
-	permission  api.Permission
+	permission  string
 	clipper     clip.Clipper
 	io          ui.IO
 	newClient   newClientFunc
@@ -73,8 +74,32 @@ func (cmd *ServiceInitCommand) Run() error {
 		return err
 	}
 
-	if cmd.permission != 0 {
-		_, err = client.AccessRules().Set(cmd.path.Value(), cmd.permission.String(), service.ServiceID)
+	permissionPath := cmd.path
+	var permission api.Permission
+	values := strings.SplitN(cmd.permission, ":", 2)
+	if len(values) == 1 {
+		err := permission.Set(values[0])
+		if err != nil {
+			return err
+		}
+	} else if len(values) == 2 {
+		if !cmd.path.IsRepoPath() {
+			return api.ErrInvalidRepoPath(cmd.path)
+		}
+
+		err := permission.Set(values[1])
+		if err != nil {
+			return err
+		}
+
+		permissionPath, err = api.NewDirPath(api.JoinPaths(permissionPath.String(), values[0]))
+		if err != nil {
+			return ErrInvalidPermissionPath(err)
+		}
+	}
+
+	if permission != 0 {
+		_, err = client.AccessRules().Set(permissionPath.Value(), permission.String(), service.ServiceID)
 		if err != nil {
 			_, delErr := client.Services().Delete(service.ServiceID)
 			if delErr != nil {
@@ -118,7 +143,7 @@ func (cmd *ServiceInitCommand) Register(r Registerer) {
 	clause := r.Command("init", "Create a new service account attached to a repository.")
 	clause.Arg("path", "The service account is attached to the repository in this path and when used together with --permission, an access rule is created on the directory in this path.").Required().SetValue(&cmd.path)
 	clause.Flag("desc", "A description for the service").StringVar(&cmd.description)
-	clause.Flag("permission", "Automatically create an access rule giving the service account permission on the given path argument. Accepts `read`, `write` or `admin`.").SetValue(&cmd.permission)
+	clause.Flag("permission", "Automatically create an access rule giving the service account permission on the given path argument. Accepts `read`, `write` or `admin`.").StringVar(&cmd.permission)
 	// TODO make 45 sec configurable
 	clause.Flag("clip", "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(&cmd.clip)
 	clause.Flag("file", "Write the service account configuration to a file instead of stdout.").StringVar(&cmd.file)

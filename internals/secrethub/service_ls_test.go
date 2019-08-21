@@ -44,7 +44,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					},
 				},
 			},
-			out: "ID      DESCRIPTION  TYPE\ntest    foobar     key\nsecond  foobarbaz  key\n",
+			out: "ID      DESCRIPTION  TYPE\ntest    foobar       key\nsecond  foobarbaz    key\n",
 		},
 		"success quiet": {
 			cmd: ServiceLsCommand{

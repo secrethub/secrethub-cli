@@ -52,15 +52,16 @@ const (
 // defined with --envar or --env-file flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
-	command         []string
-	envar           map[string]string
-	envFile         string
-	templateVars    map[string]string
-	templateVersion string
-	env             string
-	noMasking       bool
-	maskingTimeout  time.Duration
-	newClient       newClientFunc
+	command              []string
+	envar                map[string]string
+	envFile              string
+	templateVars         map[string]string
+	templateVersion      string
+	env                  string
+	noMasking            bool
+	maskingTimeout       time.Duration
+	newClient            newClientFunc
+	ignoreMissingSecrets bool
 }
 
 // NewRunCommand creates a new RunCommand.
@@ -74,7 +75,15 @@ func NewRunCommand(newClient newClientFunc) *RunCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RunCommand) Register(r Registerer) {
-	clause := r.Command("run", "Pass secrets as environment variables to a process.")
+	const helpShort = "Pass secrets as environment variables to a process."
+	const helpLong = "pass secrets as environment variables to a process." +
+		"\n\n" +
+		"To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are automatically masked by replacing them with \"" + maskString + "\". " +
+		"The output is buffered to detect secrets, but to avoid blocking the buffering is limited to a maximum duration as defined by the --masking-timeout flag. " +
+		"Therefore, you should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
+
+	clause := r.Command("run", helpShort)
+	clause.HelpLong(helpLong)
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&cmd.envFile)
@@ -82,8 +91,9 @@ func (cmd *RunCommand) Register(r Registerer) {
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
-	clause.Flag("masking-timeout", "The time to wait for a partial secret that is written to stdout or stderr to be completed for masking.").Default("1s").DurationVar(&cmd.maskingTimeout)
+	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
+	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
 
 	BindAction(clause, cmd.Run)
 }
@@ -173,19 +183,19 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	for path := range secrets {
-		client, err := cmd.newClient()
-		if err != nil {
-			return err
-		}
-		secret, err := client.Secrets().Versions().GetWithData(path)
-		if err != nil {
-			return err
-		}
-		secrets[path] = string(secret.Data)
+	var sr tpl.SecretReader = newSecretReader(cmd.newClient)
+	if cmd.ignoreMissingSecrets {
+		sr = newIgnoreMissingSecretReader(sr)
 	}
+	secretReader := newBufferedSecretReader(sr)
 
-	secretReader := newBufferedSecretReader(newSecretReader(cmd.newClient))
+	for path := range secrets {
+		secret, err := secretReader.ReadSecret(path)
+		if err != nil {
+			return err
+		}
+		secrets[path] = secret
+	}
 
 	// Construct the environment, sourcing variables from the configured sources.
 	environment := make(map[string]string)
@@ -218,21 +228,17 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
-	secretsRead := secretReader.SecretsRead()
+	values := secretReader.Values()
 
-	maskStrings := make([][]byte, len(secrets)+len(secretsRead))
-	i := 0
-	for _, val := range secrets {
-		maskStrings[i] = []byte(val)
-		i++
-	}
-	for _, val := range secretsRead {
-		maskStrings[i] = []byte(val)
-		i++
+	valuesToMask := make([][]byte, 0, len(values))
+	for _, val := range values {
+		if val != "" {
+			valuesToMask = append(valuesToMask, []byte(val))
+		}
 	}
 
-	maskedStdout := masker.NewMaskedWriter(os.Stdout, maskStrings, maskString, cmd.maskingTimeout)
-	maskedStderr := masker.NewMaskedWriter(os.Stderr, maskStrings, maskString, cmd.maskingTimeout)
+	maskedStdout := masker.NewMaskedWriter(os.Stdout, valuesToMask, maskString, cmd.maskingTimeout)
+	maskedStderr := masker.NewMaskedWriter(os.Stderr, valuesToMask, maskString, cmd.maskingTimeout)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = mapToKeyValueStrings(environment)

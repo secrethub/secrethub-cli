@@ -56,6 +56,22 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		cfg = cfg.WithRegion(cmd.region)
 	}
 
+	if cmd.role == "" {
+		role, err := ui.Ask(cmd.io, "What role would you like to use?")
+		if err != nil {
+			return err
+		}
+		cmd.role = role
+	}
+
+	if cmd.kmsKeyID == "" {
+		kmsKey, err := ui.Ask(cmd.io, "What KMS Key would you like to use?")
+		if err != nil {
+			return err
+		}
+		cmd.kmsKeyID = kmsKey
+	}
+
 	service, err := client.Services().AWS().Create(cmd.repo.Value(), cmd.description, cmd.kmsKeyID, cmd.role, cfg)
 	if err == api.ErrCredentialAlreadyExists {
 		return ErrRoleAlreadyTaken
@@ -105,8 +121,8 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause := r.Command("init", "Create a new AWS service account attached to a repository.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().SetValue(&cmd.repo)
-	clause.Flag("kms-key-id", "ID of the KMS-key to be used for encrypting the service's account key.").Required().StringVar(&cmd.kmsKeyID)
-	clause.Flag("role", "ARN of the IAM role that should have access to this service account.").Required().StringVar(&cmd.role)
+	clause.Flag("kms-key-id", "ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
+	clause.Flag("role", "ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)
 	clause.Flag("region", "The AWS region that should be used").StringVar(&cmd.region)
 	clause.Flag("desc", "A description for the service").StringVar(&cmd.description)
 	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <subdirectory>:<permission> format to give permission on a subdirectory of the repo.").StringVar(&cmd.permission)

@@ -6,6 +6,8 @@ github.com/ChrisTrenkamp/goxpath v0.0.0-20170922090931-c385f95c6022 h1:y8Gs8CzNf
 github.com/ChrisTrenkamp/goxpath v0.0.0-20170922090931-c385f95c6022/go.mod h1:nuWgzSkT5PnyOd+272uUmV0dnAnAn42Mk7PiQC5VzN4=
 github.com/alecthomas/kingpin v0.0.0-20190511121203-91c304675159 h1:p/tyVUpLaJ4sI1p47kNX4FEmMcQXS8vh0aNDhc75MeE=
 github.com/alecthomas/kingpin v0.0.0-20190511121203-91c304675159/go.mod h1:idxgS9pV6OOpAhZvx+gcoGRMX9/tt0iqkw/pNxI0C14=
+github.com/alecthomas/kingpin v0.0.0-20190705085659-95eb9edaa399 h1:NoJOfPUP5uDdYYuWS/+I6UQDH4+Fo1wDlaw4CUEeHmk=
+github.com/alecthomas/kingpin v0.0.0-20190705085659-95eb9edaa399/go.mod h1:idxgS9pV6OOpAhZvx+gcoGRMX9/tt0iqkw/pNxI0C14=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc h1:cAKDfWh5VpdgMhJosfJnn5/FoN2SRZ4p7fJNX58YPaU=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf h1:qet1QNfXsQxTZqLG4oE62mJzwPIB8+Tee4RNCL9ulrY=
@@ -62,9 +64,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
-github.com/secrethub/secrethub-go v0.0.0-20190627155550-b0094ebd62ae h1:tyAn2t9qz8Z5CkMCbcY6lvYR8UAK6woOZG6CuLpXF9Q=
-github.com/secrethub/secrethub-go v0.0.0-20190627155550-b0094ebd62ae/go.mod h1:E9MecxicOt8/yFp7WzVO5urgUEhbLrqQcGelgEKu+U4=
-github.com/secrethub/secrethub-go v0.0.0-20190801115327-20fc784b35e0 h1:rLemtleYukjLM3Uv13kaAsvKG4MkysXb7aYmP7pOhhw=
 github.com/secrethub/secrethub-go v0.0.0-20190801115327-20fc784b35e0/go.mod h1:E9MecxicOt8/yFp7WzVO5urgUEhbLrqQcGelgEKu+U4=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

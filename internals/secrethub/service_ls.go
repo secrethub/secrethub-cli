@@ -17,6 +17,7 @@ type ServiceLsCommand struct {
 	io           ui.IO
 	newClient    newClientFunc
 	serviceTable serviceTable
+	filters      []func(service *api.Service) bool
 }
 
 // NewServiceLsCommand creates a new ServiceLsCommand.
@@ -25,6 +26,17 @@ func NewServiceLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand {
 		io:           io,
 		newClient:    newClient,
 		serviceTable: keyServiceTable{},
+	}
+}
+
+func NewServiceAWSLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand {
+	return &ServiceLsCommand{
+		io:           io,
+		newClient:    newClient,
+		serviceTable: awsServiceTable{},
+		filters: []func(service *api.Service) bool{
+			isAWSService,
+		},
 	}
 }
 
@@ -49,8 +61,19 @@ func (cmd *ServiceLsCommand) Run() error {
 		return err
 	}
 
+	included := []*api.Service{}
+outer:
+	for _, service := range services {
+		for _, filter := range cmd.filters {
+			if !filter(service) {
+				continue outer
+			}
+		}
+		included = append(included, service)
+	}
+
 	if cmd.quiet {
-		for _, service := range services {
+		for _, service := range included {
 			fmt.Fprintf(cmd.io.Stdout(), "%s\n", service.ServiceID)
 		}
 	} else {
@@ -58,7 +81,7 @@ func (cmd *ServiceLsCommand) Run() error {
 
 		fmt.Fprintln(w, strings.Join(cmd.serviceTable.header(), "\t"))
 
-		for _, service := range services {
+		for _, service := range included {
 			fmt.Fprintln(w, strings.Join(cmd.serviceTable.row(service), "\t"))
 		}
 
@@ -96,4 +119,20 @@ func (sw keyServiceTable) header() []string {
 
 func (sw keyServiceTable) row(service *api.Service) []string {
 	return append(sw.baseServiceTable.row(service), string(service.Credential.Type))
+}
+
+type awsServiceTable struct {
+	baseServiceTable
+}
+
+func (sw awsServiceTable) header() []string {
+	return append(sw.baseServiceTable.header(), "ROLE", "KMS KEY")
+}
+
+func (sw awsServiceTable) row(service *api.Service) []string {
+	return append(sw.baseServiceTable.row(service), service.Credential.Metadata[api.CredentialMetadataAWSRole], service.Credential.Metadata[api.CredentialMetadataAWSKMSKey])
+}
+
+func isAWSService(service *api.Service) bool {
+	return service.Credential.Type == api.CredentialTypeAWSSTS
 }

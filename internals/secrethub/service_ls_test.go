@@ -66,6 +66,62 @@ func TestServiceLsCommand_Run(t *testing.T) {
 			},
 			out: "test\nsecond\n",
 		},
+		"success aws": {
+			cmd: ServiceLsCommand{
+				serviceTable: awsServiceTable{},
+			},
+			serviceService: fakeclient.ServiceService{
+				Lister: fakeclient.RepoServiceLister{
+					ReturnsServices: []*api.Service{
+						{
+							ServiceID:   "test",
+							Description: "foobar",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeAWSSTS,
+								Metadata: map[api.CredentialMetadataKey]string{
+									api.CredentialMetadataAWSRole:   "arn:aws:iam::123456:role/path/to/role",
+									api.CredentialMetadataAWSKMSKey: "arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012",
+								},
+							},
+						},
+					},
+				},
+			},
+			out: "ID    DESCRIPTION  ROLE                                   KMS KEY\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012\n",
+		},
+		"success aws filter": {
+			cmd: ServiceLsCommand{
+				serviceTable: awsServiceTable{},
+				filters: []func(*api.Service) bool{
+					isAWSService,
+				},
+			},
+			serviceService: fakeclient.ServiceService{
+				Lister: fakeclient.RepoServiceLister{
+					ReturnsServices: []*api.Service{
+						{
+							ServiceID:   "test",
+							Description: "foobar",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeAWSSTS,
+								Metadata: map[api.CredentialMetadataKey]string{
+									api.CredentialMetadataAWSRole:   "arn:aws:iam::123456:role/path/to/role",
+									api.CredentialMetadataAWSKMSKey: "arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012",
+								},
+							},
+						},
+						{
+							ServiceID:   "test2",
+							Description: "foobarbaz",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeRSA,
+							},
+						},
+					},
+				},
+			},
+			out: "ID    DESCRIPTION  ROLE                                   KMS KEY\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012\n",
+		},
 		"new client error": {
 			newClientErr: errors.New("error"),
 			err:          errors.New("error"),

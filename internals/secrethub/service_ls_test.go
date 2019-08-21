@@ -21,21 +21,30 @@ func TestServiceLsCommand_Run(t *testing.T) {
 		err            error
 	}{
 		"success": {
+			cmd: ServiceLsCommand{
+				serviceTable: keyServiceTable{},
+			},
 			serviceService: fakeclient.ServiceService{
 				Lister: fakeclient.RepoServiceLister{
 					ReturnsServices: []*api.Service{
 						{
 							ServiceID:   "test",
 							Description: "foobar",
+							Credential: &api.Credential{
+								Type: api.CredentialType("key"),
+							},
 						},
 						{
 							ServiceID:   "second",
 							Description: "foobarbaz",
+							Credential: &api.Credential{
+								Type: api.CredentialType("key"),
+							},
 						},
 					},
 				},
 			},
-			out: "ID      DESCRIPTION\ntest    foobar\nsecond  foobarbaz\n",
+			out: "ID      DESCRIPTION  TYPE\ntest    foobar       key\nsecond  foobarbaz    key\n",
 		},
 		"success quiet": {
 			cmd: ServiceLsCommand{

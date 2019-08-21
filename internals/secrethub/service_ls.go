@@ -56,10 +56,10 @@ func (cmd *ServiceLsCommand) Run() error {
 	} else {
 		w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
 
-		fmt.Println(w, strings.Join(cmd.serviceTable.header(), "\t"))
+		fmt.Fprintln(w, strings.Join(cmd.serviceTable.header(), "\t"))
 
 		for _, service := range services {
-			fmt.Println(w, strings.Join(cmd.serviceTable.row(service), "\t"))
+			fmt.Fprintln(w, strings.Join(cmd.serviceTable.row(service), "\t"))
 		}
 
 		err = w.Flush()

@@ -115,7 +115,7 @@ func (cmd *ServiceInitCommand) Register(r Registerer) {
 	clause := r.Command("init", "Create a new service account attached to a repository.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().SetValue(&cmd.path)
 	clause.Flag("desc", "A description for the service").StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <subdirectory>:<permission> format to give permission on a subdirectory of the repo.").StringVar(&cmd.permission)
+	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <permission> format to give permission on the root of the repo and <subdirectory>:<permission> to give permission on a subdirectory.").StringVar(&cmd.permission)
 	// TODO make 45 sec configurable
 	clause.Flag("clip", "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(&cmd.clip)
 	clause.Flag("file", "Write the service account configuration to a file instead of stdout.").StringVar(&cmd.file)

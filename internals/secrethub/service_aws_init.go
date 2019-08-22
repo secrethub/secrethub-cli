@@ -79,7 +79,7 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause.Flag("role", "ARN of the IAM role that should have access to this service account.").Required().StringVar(&cmd.role)
 	clause.Flag("region", "The AWS region that should be used").StringVar(&cmd.region)
 	clause.Flag("desc", "A description for the service").StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <subdirectory>:<permission> format to give permission on a subdirectory of the repo.").StringVar(&cmd.permission)
+	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <permission> format to give permission on the root of the repo and <subdirectory>:<permission> to give permission on a subdirectory.").StringVar(&cmd.permission)
 
 	BindAction(clause, cmd.Run)
 }

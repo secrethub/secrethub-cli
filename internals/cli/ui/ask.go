@@ -2,6 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -179,4 +182,86 @@ func AskYesNo(io IO, question string, t ConfirmationType) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func Choose(io IO, question string, getOptions func() ([]string, error), addOwn bool) (string, error) {
+	r, w, err := io.Prompts()
+	if err != nil {
+		return "", err
+	}
+
+	if question != "" {
+		fmt.Fprintln(w, question)
+	}
+
+	s := selecter{
+		r:          r,
+		w:          w,
+		getOptions: getOptions,
+		addOwn:     addOwn,
+	}
+
+	return s.run()
+}
+
+type selecter struct {
+	r          io.Reader
+	w          io.Writer
+	getOptions func() ([]string, error)
+	addOwn     bool
+
+	n       int
+	options []string
+}
+
+func (s *selecter) moreOptions() error {
+	options, err := s.getOptions()
+	if err != nil {
+		return err
+	}
+
+	if len(options) == 0 {
+		fmt.Fprintln(s.w, "No more options available.")
+		return nil
+	}
+
+	if len(s.options) == 0 {
+		fmt.Fprintln(s.w, "Press [ENTER] for more options.")
+	}
+
+	s.options = append(s.options, options...)
+
+	for _, option := range options {
+		s.n++
+		fmt.Fprintf(s.w, "%d) %s\n", s.n, option)
+	}
+
+	return nil
+}
+
+func (s *selecter) run() (string, error) {
+	in, err := Readln(s.r)
+	if err != nil {
+		return "", err
+	}
+
+	if in == "" {
+		err = s.moreOptions()
+		if err != nil {
+			return "", err
+		}
+		return s.run()
+	}
+
+	choice, err := strconv.Atoi(in)
+	if err != nil || choice < 1 || choice > len(s.options) {
+		if s.addOwn {
+			return in, nil
+		}
+
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("%d is not a valid choice", choice))
+		return s.run()
+	}
+
+	return s.options[choice-1], nil
 }

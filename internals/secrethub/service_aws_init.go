@@ -6,6 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/kms"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
@@ -65,7 +67,8 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	if cmd.kmsKeyID == "" {
-		kmsKey, err := ui.Ask(cmd.io, "What KMS Key would you like to use?")
+		kmsKeyOptionsGetter := newKMSKeyOptionsGetter(cfg)
+		kmsKey, err := ui.Choose(cmd.io, "What KMS Key would you like to use? Press [ENTER] for options.", kmsKeyOptionsGetter.get, true)
 		if err != nil {
 			return err
 		}
@@ -132,4 +135,45 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <subdirectory>:<permission> format to give permission on a subdirectory of the repo.").StringVar(&cmd.permission)
 
 	BindAction(clause, cmd.Run)
+}
+
+func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {
+	return kmsKeyOptionsGetter{cfg: cfg}
+}
+
+type kmsKeyOptionsGetter struct {
+	cfg *aws.Config
+
+	done       bool
+	nextMarker string
+}
+
+func (g *kmsKeyOptionsGetter) get() ([]string, error) {
+	if g.done {
+		return []string{}, nil
+	}
+
+	listKeysInput := kms.ListKeysInput{}
+	listKeysInput.SetLimit(10)
+	if g.nextMarker != "" {
+		listKeysInput.SetMarker(g.nextMarker)
+	}
+
+	keys, err := kms.New(session.New(g.cfg)).ListKeys(&listKeysInput)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching available KMS keys: %s", err)
+	}
+
+	if keys.NextMarker != nil {
+		g.nextMarker = *keys.NextMarker
+	} else {
+		g.done = true
+	}
+
+	options := make([]string, len(keys.Keys))
+	for i, key := range keys.Keys {
+		options[i] = *key.KeyId
+	}
+
+	return options, nil
 }

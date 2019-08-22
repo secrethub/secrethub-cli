@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -210,4 +211,78 @@ func TestAskYesNo(t *testing.T) {
 			assert.Equal(t, io.PromptOut.String(), tc.out)
 		})
 	}
+}
+
+func TestChoose(t *testing.T) {
+	cases := map[string]struct {
+		question   string
+		getOptions func() ([]string, error)
+		addOwn     bool
+
+		in []string
+
+		expected string
+		out      string
+	}{
+		"directly add own": {
+			question: "foo?",
+			addOwn:   true,
+			in:       []string{"bar\n"},
+			expected: "bar",
+			out:      "foo?\n",
+		},
+		"choose option of first batch": {
+			question: "foo?",
+			getOptions: func() ([]string, error) {
+				return []string{"foo", "bar", "baz"}, nil
+			},
+
+			in: []string{"\n", "2\n"},
+
+			expected: "bar",
+			out:      "foo?\nPress [ENTER] for more options.\n1) foo\n2) bar\n3) baz\n",
+		},
+		"choose option of second batch": {
+			question: "foo?",
+
+			in: []string{"\n", "\n", "7\n"},
+
+			expected: "Option 7",
+			out:      "foo?\nPress [ENTER] for more options.\n1) Option 1\n2) Option 2\n3) Option 3\n4) Option 4\n5) Option 5\n6) Option 6\n7) Option 7\n8) Option 8\n9) Option 9\n10) Option 10\n",
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			io := NewFakeIO()
+			io.PromptIn.Reads = tc.in
+
+			if tc.getOptions == nil {
+				og := optionGetter{}
+				tc.getOptions = og.Get
+			}
+
+			// Run
+			actual, err := Choose(io, tc.question, tc.getOptions, tc.addOwn)
+
+			// Assert
+			assert.Equal(t, err, nil)
+			assert.Equal(t, actual, tc.expected)
+			assert.Equal(t, io.PromptOut.String(), tc.out)
+		})
+	}
+}
+
+type optionGetter struct {
+	n int
+}
+
+func (og *optionGetter) Get() ([]string, error) {
+	res := make([]string, 5)
+	for i := 0; i < 5; i++ {
+		res[i] = fmt.Sprintf("Option %d", og.n+i+1)
+	}
+	og.n += 5
+	return res, nil
 }

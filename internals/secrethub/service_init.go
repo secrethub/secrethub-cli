@@ -125,24 +125,17 @@ func (cmd *ServiceInitCommand) Register(r Registerer) {
 }
 
 func givePermission(service *api.Service, repo api.RepoPath, permissionFlagValue string, client secrethub.Client) error {
-	permissionPath := repo.GetDirPath()
-	var permission api.Permission
-	values := strings.SplitN(permissionFlagValue, ":", 2)
-	if len(values) == 1 {
-		err := permission.Set(values[0])
-		if err != nil {
-			return err
-		}
-	} else if len(values) == 2 {
-		err := permission.Set(values[1])
-		if err != nil {
-			return err
-		}
+	subdir, permissionValue := parsePermissionFlag(permissionFlagValue)
 
-		permissionPath, err = api.NewDirPath(api.JoinPaths(permissionPath.String(), values[0]))
-		if err != nil {
-			return ErrInvalidPermissionPath(err)
-		}
+	permissionPath, err := api.NewDirPath(api.JoinPaths(repo.GetDirPath().String(), subdir))
+	if err != nil {
+		return ErrInvalidPermissionPath(err)
+	}
+
+	var permission api.Permission
+	err = permission.Set(permissionValue)
+	if err != nil {
+		return err
 	}
 
 	if permission != 0 {
@@ -159,4 +152,15 @@ func givePermission(service *api.Service, repo api.RepoPath, permissionFlagValue
 	}
 
 	return nil
+}
+
+// parsePermissionFlag parses a permission flag into a permission and a subdirectory to give
+// the permission on.
+func parsePermissionFlag(value string) (subdir string, permission string) {
+	values := strings.SplitN(value, ":", 2)
+	if len(values) == 1 {
+		return "", values[0]
+	} else {
+		return values[0], values[1]
+	}
 }

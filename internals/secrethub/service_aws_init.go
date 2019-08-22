@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -12,6 +13,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	shaws "github.com/secrethub/secrethub-go/internals/aws"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
@@ -20,6 +22,7 @@ var (
 	ErrInvalidAWSRegion      = errMain.Code("invalid_region").Error("invalid AWS region")
 	ErrRoleAlreadyTaken      = errMain.Code("role_taken").Error("a service using that IAM role already exists")
 	ErrInvalidPermissionPath = errMain.Code("invalid_permission_path").ErrorPref("invalid permission path: %s")
+	ErrMissingRegion         = errMain.Code("missing_region").Error("could not find AWS region. Supply using the --region flag or in the AWS configuration. See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html for the AWS configuration files")
 )
 
 // ServiceAWSInitCommand initializes a service for AWS.
@@ -161,6 +164,16 @@ func (g *kmsKeyOptionsGetter) get() ([]string, error) {
 
 	keys, err := kms.New(session.New(g.cfg)).ListKeys(&listKeysInput)
 	if err != nil {
+		errAWS, ok := err.(awserr.Error)
+		if ok {
+			if errAWS.Code() == "NoCredentialProviders" {
+				return nil, shaws.ErrNoAWSCredentials
+			}
+			if errAWS.Code() == "MissingRegion" {
+				return nil, ErrMissingRegion
+			}
+			err = errio.Namespace("aws").Code(errAWS.Code()).Error(errAWS.Message())
+		}
 		return nil, fmt.Errorf("error fetching available KMS keys: %s", err)
 	}
 

@@ -74,41 +74,13 @@ func (cmd *ServiceInitCommand) Run() error {
 		return err
 	}
 
-	permissionPath := cmd.path
-	var permission api.Permission
-	values := strings.SplitN(cmd.permission, ":", 2)
-	if len(values) == 1 {
-		err := permission.Set(values[0])
-		if err != nil {
-			return err
-		}
-	} else if len(values) == 2 {
-		if !cmd.path.IsRepoPath() {
-			return api.ErrInvalidRepoPath(cmd.path)
-		}
-
-		err := permission.Set(values[1])
-		if err != nil {
-			return err
-		}
-
-		permissionPath, err = api.NewDirPath(api.JoinPaths(permissionPath.String(), values[0]))
-		if err != nil {
-			return ErrInvalidPermissionPath(err)
-		}
+	if strings.Contains(cmd.permission, ":") && !cmd.path.IsRepoPath() {
+		return api.ErrInvalidRepoPath(cmd.path)
 	}
 
-	if permission != 0 {
-		_, err = client.AccessRules().Set(permissionPath.Value(), permission.String(), service.ServiceID)
-		if err != nil {
-			_, delErr := client.Services().Delete(service.ServiceID)
-			if delErr != nil {
-				fmt.Fprintf(cmd.io.Stdout(), "Failed to cleanup after creating an access rule for %s failed. Be sure to manually remove the created service account %s: %s\n", service.ServiceID, service.ServiceID, err)
-				return delErr
-			}
-
-			return err
-		}
+	err = givePermission(service, cmd.path.GetRepoPath(), cmd.permission, client)
+	if err != nil {
+		return err
 	}
 
 	out := []byte(encoded)
@@ -150,4 +122,41 @@ func (cmd *ServiceInitCommand) Register(r Registerer) {
 	clause.Flag("file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.").Default("0440").SetValue(&cmd.fileMode)
 
 	BindAction(clause, cmd.Run)
+}
+
+func givePermission(service *api.Service, repo api.RepoPath, permissionFlagValue string, client secrethub.Client) error {
+	permissionPath := repo.GetDirPath()
+	var permission api.Permission
+	values := strings.SplitN(permissionFlagValue, ":", 2)
+	if len(values) == 1 {
+		err := permission.Set(values[0])
+		if err != nil {
+			return err
+		}
+	} else if len(values) == 2 {
+		err := permission.Set(values[1])
+		if err != nil {
+			return err
+		}
+
+		permissionPath, err = api.NewDirPath(api.JoinPaths(permissionPath.String(), values[0]))
+		if err != nil {
+			return ErrInvalidPermissionPath(err)
+		}
+	}
+
+	if permission != 0 {
+		_, err := client.AccessRules().Set(permissionPath.Value(), permission.String(), service.ServiceID)
+		if err != nil {
+			_, delErr := client.Services().Delete(service.ServiceID)
+			if delErr != nil {
+				fmt.Fprintf(os.Stderr, "Failed to cleanup after creating an access rule for %s failed. Be sure to manually remove the created service account %s: %s\n", service.ServiceID, service.ServiceID, err)
+				return delErr
+			}
+
+			return err
+		}
+	}
+
+	return nil
 }

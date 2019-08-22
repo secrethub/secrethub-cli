@@ -2,15 +2,13 @@ package secrethub
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/internals/errio"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 )
 
 // Errors
@@ -63,37 +61,9 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		return err
 	}
 
-	permissionPath := cmd.repo.GetDirPath()
-	var permission api.Permission
-	values := strings.SplitN(cmd.permission, ":", 2)
-	if len(values) == 1 {
-		err := permission.Set(values[0])
-		if err != nil {
-			return err
-		}
-	} else if len(values) == 2 {
-		err := permission.Set(values[1])
-		if err != nil {
-			return err
-		}
-
-		permissionPath, err = api.NewDirPath(api.JoinPaths(permissionPath.String(), values[0]))
-		if err != nil {
-			return ErrInvalidPermissionPath(err)
-		}
-	}
-
-	if permission != 0 {
-		_, err = client.AccessRules().Set(permissionPath.Value(), permission.String(), service.ServiceID)
-		if err != nil {
-			_, delErr := client.Services().Delete(service.ServiceID)
-			if delErr != nil {
-				fmt.Fprintf(cmd.io.Stdout(), "Failed to cleanup after creating an access rule for %s failed. Be sure to manually remove the created service account %s: %s\n", service.ServiceID, service.ServiceID, err)
-				return errio.Error(delErr)
-			}
-
-			return errio.Error(err)
-		}
+	err = givePermission(service, cmd.repo, cmd.permission, client)
+	if err != nil {
+		return err
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "The service %s is now reachable through AWS when the role %s is assumed.\n", service.ServiceID, cmd.role)

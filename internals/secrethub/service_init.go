@@ -124,6 +124,10 @@ func (cmd *ServiceInitCommand) Register(r Registerer) {
 	BindAction(clause, cmd.Run)
 }
 
+// givePermission gives the service permission on the repository as defined in the permission flag.
+// When the permission flag is given in the format <permission>, the permission is given on the root directory of the repository.
+// When the permission flag is given in the format <subdirectory>:<permission>, the permission is given on the given subdirectory of the
+// repo.
 func givePermission(service *api.Service, repo api.RepoPath, permissionFlagValue string, client secrethub.Client) error {
 	subdir, permissionValue := parsePermissionFlag(permissionFlagValue)
 

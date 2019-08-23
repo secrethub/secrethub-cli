@@ -134,5 +134,9 @@ func (sw awsServiceTable) row(service *api.Service) []string {
 }
 
 func isAWSService(service *api.Service) bool {
+	if service == nil {
+		return false
+	}
+
 	return service.Credential.Type == api.CredentialTypeAWSSTS
 }

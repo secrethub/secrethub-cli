@@ -117,7 +117,7 @@ func (cmd *ServiceInitCommand) Run() error {
 func (cmd *ServiceInitCommand) Register(r Registerer) {
 	clause := r.Command("init", "Create a new service account attached to a repository.")
 	clause.Arg("path", "The service account is attached to the repository in this path and when used together with --permission, an access rule is created on the directory in this path.").Required().SetValue(&cmd.path)
-	clause.Flag("description", "A description for the service").StringVar(&cmd.description)
+	clause.Flag("description", "A description for the service so others will recognize it.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("permission", "Automatically create an access rule giving the service account permission on the given path argument. Accepts `read`, `write` or `admin`.").SetValue(&cmd.permission)

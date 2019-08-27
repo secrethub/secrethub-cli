@@ -44,13 +44,29 @@ type PassphraseReader interface {
 
 // passphraseReader provides passphrase reading capability to the CLI.
 type passphraseReader struct {
+	tries     int
+	hasAsked  bool
 	io        ui.IO
 	FlagValue string
 	Cache     *PassphraseCache
 }
 
+func (pr *passphraseReader) Read() ([]byte, error) {
+	defer func() { pr.tries++ }()
+
+	if pr.tries > 0 {
+		_ = pr.Cache.Delete()
+	}
+
+	passphrase, err := pr.get()
+	if err != nil {
+		return nil, err
+	}
+	return []byte(passphrase), nil
+}
+
 // NewPassphraseReader constructs a new PassphraseReader using values in the CLI.
-func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassphraseTTL time.Duration) PassphraseReader {
+func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassphraseTTL time.Duration) credentials.Reader {
 	ttl := credentialPassphraseTTL
 	cleaner := NewKeyringCleaner()
 	keyring := NewKeyring()
@@ -68,45 +84,46 @@ func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassph
 //  1. The value provided by a flag.
 //  2. PassphraseCache
 //  3. Input typed in by the user.
-func (pr passphraseReader) Get(username string) ([]byte, error) {
+func (pr *passphraseReader) get() (string, error) {
 	if pr.FlagValue != "" {
-		return []byte(pr.FlagValue), nil
+		if pr.tries == 0 {
+			return pr.FlagValue, nil
+		} else {
+			return "", nil
+		}
 	}
 
 	if pr.Cache.IsEnabled() {
-		passphrase, err := pr.Cache.Get(username)
+		passphrase, err := pr.Cache.Get()
 		if err != nil && err != ErrKeyringItemNotFound {
-			return nil, err
+			return "", err
 		} else if err == nil {
-			return []byte(passphrase), nil
+			return passphrase, nil
 		}
 	}
-
-	passphrase, err := ui.AskSecret(pr.io, "Please put in the passphrase to unlock your credential:")
+	var err error
+	var passphrase string
+	if pr.hasAsked {
+		passphrase, err = ui.AskSecret(pr.io, "Incorrect passphrase, try again:")
+	} else {
+		passphrase, err = ui.AskSecret(pr.io, "Please put in the passphrase to unlock your credential:")
+	}
 	if err == ui.ErrCannotAsk {
-		return nil, ErrPassphraseFlagNotSet // if we cannot ask, users should use the --passphrase flag
+		return "", ErrPassphraseFlagNotSet // if we cannot ask, users should use the --passphrase flag
 	} else if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	if pr.Cache.IsEnabled() {
-		err := pr.Cache.Set(username, passphrase)
+	pr.hasAsked = true
+
+	if pr.Cache.IsEnabled() && passphrase != "" {
+		err := pr.Cache.Set(passphrase)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
-	return []byte(passphrase), nil
-}
-
-// IncorrectPassphrase signals the reader to clean up a cached passphrase for
-// the given username. This is useful when an incorrect passphrase has been cached.
-func (pr passphraseReader) IncorrectPassphrase(username string) error {
-	if pr.Cache.IsEnabled() {
-		return pr.Cache.Delete(username)
-	}
-
-	return nil
+	return passphrase, nil
 }
 
 // PassphraseCache caches passphrases in a keyring for a given time to live.
@@ -150,7 +167,7 @@ func (c PassphraseCache) Set(passphrase string) error {
 
 	item.ExpiresAt = c.ExpiresAt()
 
-	return c.keyring.Set(username, item)
+	return c.keyring.Set(item)
 }
 
 // Get returns a passphrase for the given username if it was cached.

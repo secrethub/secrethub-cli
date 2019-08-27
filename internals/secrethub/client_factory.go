@@ -3,14 +3,14 @@ package secrethub
 import (
 	"net/url"
 
-	"github.com/secrethub/secrethub-go/internals/auth"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
 // ClientFactory handles creating a new client with the configured options.
 type ClientFactory interface {
 	// NewClient returns a new SecretHub client.
-	NewClient() (secrethub.Client, error)
+	NewClient() (*secrethub.Client, error)
 	Register(FlagRegisterer)
 }
 
@@ -22,7 +22,7 @@ func NewClientFactory(store CredentialStore) ClientFactory {
 }
 
 type clientFactory struct {
-	client    secrethub.Client
+	client    *secrethub.Client
 	ServerURL *url.URL
 	UseAWS    bool
 	store     CredentialStore
@@ -36,31 +36,32 @@ func (f *clientFactory) Register(r FlagRegisterer) {
 
 // NewClient returns a new client that is configured to use the remote that
 // is set with the flag.
-func (f *clientFactory) NewClient() (secrethub.Client, error) {
+func (f *clientFactory) NewClient() (*secrethub.Client, error) {
 	if f.client == nil {
+		var credentialProvider credentials.Provider
 		if f.UseAWS {
-			client, err := secrethub.NewClientAWS(f.NewClientOptions())
-			if err != nil {
-				return nil, err
-			}
-			f.client = client
+			credentialProvider = credentials.UseAWS()
 		} else {
-			credential, err := f.store.Get()
-			if err != nil {
-				return nil, err
-			}
-			f.client = secrethub.NewClient(credential, auth.NewHTTPSigner(credential), f.NewClientOptions())
+			credentialProvider = f.store.Provider()
 		}
+
+		options := f.baseClientOptions()
+		options = append(options, secrethub.WithCredentials(credentialProvider))
+
+		client, err := secrethub.NewClient(options...)
+		if err != nil {
+			return nil, err
+		}
+		f.client = client
 	}
 	return f.client, nil
 }
 
-// NewClientOptions returns the client options configured by the flags.
-func (f *clientFactory) NewClientOptions() *secrethub.ClientOptions {
-	var opts secrethub.ClientOptions
+func (f *clientFactory) baseClientOptions() []secrethub.ClientOption {
+	options := []secrethub.ClientOption{secrethub.WithConfigDir(f.store.ConfigDir())}
 
 	if f.ServerURL != nil {
-		opts.ServerURL = f.ServerURL.String()
+		options = append(options, secrethub.WithServerURL(f.ServerURL.String()))
 	}
-	return &opts
+	return options
 }

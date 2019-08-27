@@ -40,7 +40,7 @@ func NewCredentialStore(io ui.IO) CredentialStore {
 }
 
 type credentialStore struct {
-	ConfigDir                    string
+	configDir                    ConfigDir
 	AccountCredential            string
 	credentialPassphrase         string
 	CredentialPassphraseCacheTTL time.Duration
@@ -48,9 +48,13 @@ type credentialStore struct {
 	io                           ui.IO
 }
 
+func (store *credentialStore) ConfigDir() configdir.Dir {
+	return store.configDir.Dir
+}
+
 // Register registers the flags for configuring the store on the provided Registerer.
 func (store *credentialStore) Register(r FlagRegisterer) {
-	r.Flag("config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub").StringVar(&store.ConfigDir)
+	r.Flag("config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub").Default("").SetValue(&store.configDir)
 	r.Flag("credential", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.").StringVar(&store.AccountCredential)
 	r.Flag("credential-passphrase", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.").Short('p').StringVar(&store.credentialPassphrase)
 	r.Flag("credential-passphrase-cache-ttl", "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.").Default("5m").DurationVar(&store.CredentialPassphraseCacheTTL)

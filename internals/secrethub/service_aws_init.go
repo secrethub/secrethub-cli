@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -57,7 +58,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	if cmd.description == "" {
-		cmd.description = cmd.role
+		cmd.description = "AWS role " + roleNameFromRole(cmd.role)
 	}
 
 	service, err := client.Services().AWS().Create(repo.Value(), cmd.description, cmd.kmsKeyID, cmd.role, cfg)
@@ -96,4 +97,23 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause.Flag("permission", "Automatically create an access rule giving the service account permission on the given path argument. Accepts `read`, `write` or `admin`.").SetValue(&cmd.permission)
 
 	BindAction(clause, cmd.Run)
+}
+
+// roleNameFromRole returns the name of the role indicated by the input. Accepted input is:
+// - A role name (e.g. my-role)
+// - A role name, prefixed by "role/" (e.g. role/my-role)
+// - A role ARN (e.g. arn:aws:iam::123456789012:role/my-role)
+//
+// When the input is not one of these accepted inputs, no guarantees about the expected return
+// are made.
+func roleNameFromRole(role string) string {
+	if strings.Contains(role, ":") {
+		parts := strings.SplitN(role, "role/", 2)
+		if len(parts) == 2 {
+			return parts[1]
+		}
+	} else {
+		return strings.TrimPrefix(role, "role/")
+	}
+	return ""
 }

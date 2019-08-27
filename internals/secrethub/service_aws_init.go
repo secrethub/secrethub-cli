@@ -10,6 +10,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
 // Errors
@@ -60,7 +61,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		cmd.description = cmd.role
 	}
 
-	service, err := client.Services().AWS().Create(repo.Value(), cmd.description, cmd.kmsKeyID, cmd.role, cfg)
+	service, err := client.Services().Create(repo.Value(), cmd.description, credentials.CreateAWS(cmd.kmsKeyID, cmd.role, cfg))
 	if err == api.ErrCredentialAlreadyExists {
 		return ErrRoleAlreadyTaken
 	} else if err != nil {

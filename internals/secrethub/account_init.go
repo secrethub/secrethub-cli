@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -158,36 +160,45 @@ func (cmd *AccountInitCommand) Run() error {
 			credentialPath,
 		)
 
+		credential := credentials.CreateKey()
+
 		// Only prompt for a passphrase when the user hasn't used --force.
 		// Otherwise, we assume the passphrase was intentionally not
 		// configured to output a plaintext credential.
+		var passphrase string
 		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
-			passphrase, err := ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+			var err error
+			passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 			if err != nil {
 				return err
 			}
-			cmd.credentialStore.SetPassphrase(passphrase)
 		}
 
 		fmt.Fprint(cmd.io.Stdout(), "Generating credential...")
-		credential, err := secrethub.GenerateCredential()
-		if err != nil {
-			return err
-		}
-		cmd.credentialStore.Set(credential)
+		err := credential.Create()
+
 		fmt.Fprintln(cmd.io.Stdout(), " Done")
 
-		err = cmd.credentialStore.Save()
+		exportKey := credential.Key
+		if passphrase != "" {
+			exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
+		}
+
+		exportedCredential, err := exportKey.Export()
+		if err != nil {
+			return err
+		}
+		err = cmd.credentialStore.ConfigDir().Credential().Write(exportedCredential)
 		if err != nil {
 			return err
 		}
 
-		verifier, err := credential.Verifier()
+		verifierBytes, err := exportKey.Verifier().Verifier()
 		if err != nil {
 			return err
 		}
 
-		fingerprint, err := credential.Fingerprint()
+		fingerprint, err := api.GetFingerprint(exportKey.Verifier().Type(), verifierBytes)
 		if err != nil {
 			return err
 		}
@@ -198,9 +209,9 @@ func (cmd *AccountInitCommand) Run() error {
 				Fingerprint string             `json:"fingerprint"`
 				Verifier    []byte             `json:"verifier"`
 			}{
-				Type:        credential.Type(),
+				Type:        exportKey.Verifier().Type(),
 				Fingerprint: fingerprint,
-				Verifier:    verifier,
+				Verifier:    verifierBytes,
 			},
 		)
 		if err != nil {
@@ -222,11 +233,7 @@ func (cmd *AccountInitCommand) Run() error {
 			fmt.Fprintf(cmd.io.Stdout(), "\n%s\n", out)
 		}
 	} else {
-		exists, err := cmd.credentialStore.CredentialExists()
-		if err != nil {
-			return err
-		}
-		if !exists {
+		if !cmd.credentialStore.ConfigDir().Credential().Exists() {
 			return ErrCredentialNotGenerated
 		}
 	}
@@ -289,17 +296,22 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 
 	fmt.Fprint(cmd.io.Stdout(), "Finishing setup of your account...")
 
-	credential, err := cmd.credentialStore.Get()
+	key, err := cmd.credentialStore.Import()
 	if err != nil {
 		return err
 	}
 
-	fingerprint, err := credential.Fingerprint()
+	verifierBytes, err := key.Verifier().Verifier()
 	if err != nil {
 		return err
 	}
 
-	_, err = client.Accounts().Keys().Create(fingerprint, credential)
+	fingerprint, err := api.GetFingerprint(key.Verifier().Type(), verifierBytes)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Accounts().Keys().Create(fingerprint, key.Encrypter())
 	if err != nil {
 		fmt.Fprintln(cmd.io.Stdout(), " Failed")
 		return err
@@ -312,7 +324,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 
 // waitForCredentialToBeAdded returns a channel on which is returned when the credential is added and a channel
 // on which an error is returned if one occurs.
-func (cmd *AccountInitCommand) waitForCredentialToBeAdded(client secrethub.Client) (chan bool, chan error) {
+func (cmd *AccountInitCommand) waitForCredentialToBeAdded(client *secrethub.Client) (chan bool, chan error) {
 	errc := make(chan error, 1)
 	c := make(chan bool, 1)
 	go func() {
@@ -332,7 +344,7 @@ func (cmd *AccountInitCommand) waitForCredentialToBeAdded(client secrethub.Clien
 	return c, errc
 }
 
-func (cmd *AccountInitCommand) isAuthenticated(client secrethub.Client) (bool, error) {
+func (cmd *AccountInitCommand) isAuthenticated(client *secrethub.Client) (bool, error) {
 	_, err := client.Users().Me()
 	if err == api.ErrSignatureNotVerified {
 		return false, nil

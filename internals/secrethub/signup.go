@@ -128,22 +128,14 @@ func (cmd *SignUpCommand) Run() error {
 	// Only prompt for a passphrase when the user hasn't used --force.
 	// Otherwise, we assume the passphrase was intentionally not
 	// configured to output a plaintext credential.
+	var passphrase string
 	if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
-		passphrase, err := ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+		var err error
+		passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 		if err != nil {
 			return err
 		}
-		cmd.credentialStore.SetPassphrase(passphrase)
 	}
-
-	fmt.Fprint(cmd.io.Stdout(), "Generating credential...")
-	cmd.progressPrinter.Start()
-	credential, err := secrethub.GenerateCredential()
-	if err != nil {
-		return err
-	}
-	cmd.credentialStore.Set(credential)
-	cmd.progressPrinter.Stop()
 
 	client, err := cmd.newClient()
 	if err != nil {
@@ -152,12 +144,23 @@ func (cmd *SignUpCommand) Run() error {
 
 	fmt.Fprint(cmd.io.Stdout(), "Signing you up...")
 	cmd.progressPrinter.Start()
-	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential, credential)
+	credential := credentials.CreateKey()
+	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential)
 	cmd.progressPrinter.Stop()
 	if err != nil {
 		return err
 	}
-	err = cmd.credentialStore.Save()
+
+	exportKey := credential.Key
+	if passphrase != "" {
+		exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
+	}
+
+	encodedCredential, err := credential.Export()
+	if err != nil {
+		return err
+	}
+	err = cmd.credentialStore.ConfigDir().Credential().Write(encodedCredential)
 	if err != nil {
 		return err
 	}

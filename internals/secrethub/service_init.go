@@ -11,7 +11,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.
@@ -58,17 +58,8 @@ func (cmd *ServiceInitCommand) Run() error {
 		return err
 	}
 
-	serviceCredential, err := secrethub.GenerateCredential()
-	if err != nil {
-		return err
-	}
-
-	encoded, err := secrethub.EncodeCredential(serviceCredential)
-	if err != nil {
-		return err
-	}
-
-	service, err := client.Services().Create(repo.Value(), cmd.description, serviceCredential, serviceCredential)
+	credential := credentials.CreateKey()
+	service, err := client.Services().Create(repo.Value(), cmd.description, credential)
 	if err != nil {
 		return err
 	}
@@ -85,8 +76,11 @@ func (cmd *ServiceInitCommand) Run() error {
 			return err
 		}
 	}
+	out, err := credential.Export()
+	if err != nil {
+		return err
+	}
 
-	out := []byte(encoded)
 	if cmd.clip {
 		err = WriteClipboardAutoClear(out, defaultClearClipboardAfter, cmd.clipper)
 		if err != nil {

@@ -166,6 +166,9 @@ func (cmd *AccountInitCommand) Run() error {
 
 		fmt.Fprint(cmd.io.Stdout(), "Generating credential...")
 		err := credential.Create()
+		if err != nil {
+			return err
+		}
 
 		fmt.Fprintln(cmd.io.Stdout(), " Done")
 

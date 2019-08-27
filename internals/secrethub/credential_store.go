@@ -9,6 +9,11 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
 
+// Errors
+var (
+	ErrCredentialNotExist = errMain.Code("credential_not_exist").Error("could not find credential file. Run `secrethub signup` to create an account.")
+)
+
 // CredentialConfig handles the configuration necessary for local credentials.
 type CredentialConfig interface {
 	IsPassphraseSet() bool

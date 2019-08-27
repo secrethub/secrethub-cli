@@ -88,9 +88,8 @@ func (pr *passphraseReader) get() (string, error) {
 	if pr.FlagValue != "" {
 		if pr.tries == 0 {
 			return pr.FlagValue, nil
-		} else {
-			return "", nil
 		}
+		return "", nil
 	}
 
 	if pr.Cache.IsEnabled() {

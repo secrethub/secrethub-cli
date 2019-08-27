@@ -60,6 +60,7 @@ func (pr *passphraseReader) Read() ([]byte, error) {
 
 	passphrase, err := pr.get()
 	if err != nil {
+		_ = pr.Cache.Delete()
 		return nil, err
 	}
 	return []byte(passphrase), nil
@@ -151,7 +152,7 @@ func (c PassphraseCache) Set(passphrase string) error {
 	item, err := c.keyring.Get()
 	if err == ErrKeyringItemNotFound {
 		item = &KeyringItem{
-			Passphrase: passphrase,
+			Passphrase: []byte(passphrase),
 		}
 	} else if err != nil {
 		return err
@@ -199,7 +200,7 @@ func (c PassphraseCache) Get() (string, error) {
 		return "", err
 	}
 
-	return item.Passphrase, nil
+	return string(item.Passphrase), nil
 }
 
 // Delete tries delete the stored passphrase for a given username.
@@ -216,7 +217,7 @@ func (c PassphraseCache) ExpiresAt() time.Time {
 type KeyringItem struct {
 	RunningCleanupProcess bool      `json:"running_cleanup_process,omitempty"`
 	ExpiresAt             time.Time `json:"expires_at"`
-	Passphrase            string    `json:"passphrase"`
+	Passphrase            []byte    `json:"passphrase"`
 }
 
 // IsExpired returns true when the item has expired.

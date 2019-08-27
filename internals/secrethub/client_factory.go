@@ -4,6 +4,7 @@ import (
 	"net/url"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
@@ -50,7 +51,9 @@ func (f *clientFactory) NewClient() (secrethub.ClientAdapter, error) {
 		options = append(options, secrethub.WithCredentials(credentialProvider))
 
 		client, err := secrethub.NewClient(options...)
-		if err != nil {
+		if err == configdir.ErrCredentialNotFound {
+			return nil, ErrCredentialNotExist
+		} else if err != nil {
 			return nil, err
 		}
 		f.client = client

@@ -9,8 +9,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
 
-// CredentialStore handles storing a shclient.Credential.
-type CredentialStore interface {
+// CredentialConfig handles the configuration necessary for local credentials.
+type CredentialConfig interface {
 	IsPassphraseSet() bool
 	Provider() credentials.Provider
 	Import() (credentials.Key, error)
@@ -20,14 +20,14 @@ type CredentialStore interface {
 	Register(FlagRegisterer)
 }
 
-// NewCredentialStore creates a new CredentialStore.
-func NewCredentialStore(io ui.IO) CredentialStore {
-	return &credentialStore{
+// NewCredentialConfig creates a new CredentialConfig.
+func NewCredentialConfig(io ui.IO) CredentialConfig {
+	return &credentialConfig{
 		io: io,
 	}
 }
 
-type credentialStore struct {
+type credentialConfig struct {
 	configDir                    ConfigDir
 	AccountCredential            string
 	credentialPassphrase         string
@@ -35,16 +35,16 @@ type credentialStore struct {
 	io                           ui.IO
 }
 
-func (store *credentialStore) ConfigDir() configdir.Dir {
+func (store *credentialConfig) ConfigDir() configdir.Dir {
 	return store.configDir.Dir
 }
 
-func (store *credentialStore) IsPassphraseSet() bool {
+func (store *credentialConfig) IsPassphraseSet() bool {
 	return store.credentialPassphrase != ""
 }
 
 // Register registers the flags for configuring the store on the provided Registerer.
-func (store *credentialStore) Register(r FlagRegisterer) {
+func (store *credentialConfig) Register(r FlagRegisterer) {
 	r.Flag("config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub").Default("").SetValue(&store.configDir)
 	r.Flag("credential", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.").StringVar(&store.AccountCredential)
 	r.Flag("credential-passphrase", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.").Short('p').StringVar(&store.credentialPassphrase)
@@ -54,15 +54,15 @@ func (store *credentialStore) Register(r FlagRegisterer) {
 // Provider retrieves a credential from the store.
 // When a credential is set, that credential is returned,
 // otherwise the credential is read from the configured file.
-func (store *credentialStore) Provider() credentials.Provider {
+func (store *credentialConfig) Provider() credentials.Provider {
 	return credentials.UseKey(store.getCredentialReader()).Passphrase(store.PassphraseReader())
 }
 
-func (store *credentialStore) Import() (credentials.Key, error) {
+func (store *credentialConfig) Import() (credentials.Key, error) {
 	return credentials.ImportKey(store.getCredentialReader(), store.PassphraseReader())
 }
 
-func (store *credentialStore) getCredentialReader() credentials.Reader {
+func (store *credentialConfig) getCredentialReader() credentials.Reader {
 	if store.AccountCredential != "" {
 		return credentials.FromString(store.AccountCredential)
 	}
@@ -70,6 +70,6 @@ func (store *credentialStore) getCredentialReader() credentials.Reader {
 }
 
 // PassphraseReader returns a PassphraseReader configured by the flags.
-func (store *credentialStore) PassphraseReader() credentials.Reader {
+func (store *credentialConfig) PassphraseReader() credentials.Reader {
 	return NewPassphraseReader(store.io, store.credentialPassphrase, store.CredentialPassphraseCacheTTL)
 }

@@ -24,12 +24,12 @@ type SignUpCommand struct {
 	force           bool
 	io              ui.IO
 	newClient       newClientFunc
-	credentialStore CredentialStore
+	credentialStore CredentialConfig
 	progressPrinter progress.Printer
 }
 
 // NewSignUpCommand creates a new SignUpCommand.
-func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialStore) *SignUpCommand {
+func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *SignUpCommand {
 	return &SignUpCommand{
 		io:              io,
 		newClient:       newClient,

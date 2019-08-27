@@ -68,7 +68,7 @@ var (
 
 // App is the secrethub command-line application.
 type App struct {
-	credentialStore CredentialStore
+	credentialStore CredentialConfig
 	clientFactory   ClientFactory
 	cli             *cli.App
 	io              ui.IO
@@ -86,7 +86,7 @@ type newClientFunc func() (*secrethub.Client, error)
 // NewApp creates a new command-line application.
 func NewApp() *App {
 	io := ui.NewUserIO()
-	store := NewCredentialStore(io)
+	store := NewCredentialConfig(io)
 	help := "The SecretHub command-line interface is a unified tool to manage your infrastructure secrets with SecretHub.\n\n" +
 		"For a step-by-step introduction, check out:\n\n" +
 		"  https://secrethub.io/docs/getting-started/\n\n" +

@@ -38,14 +38,14 @@ type AccountInitCommand struct {
 	noWait          bool
 	isContinue      bool
 	force           bool
-	credentialStore CredentialStore
+	credentialStore CredentialConfig
 	clipper         clip.Clipper
 	progressPrinter progress.Printer
 	newClient       newClientFunc
 }
 
 // NewAccountInitCommand creates a new AccountInitCommand.
-func NewAccountInitCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialStore) *AccountInitCommand {
+func NewAccountInitCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *AccountInitCommand {
 	return &AccountInitCommand{
 		io:              io,
 		credentialStore: credentialStore,

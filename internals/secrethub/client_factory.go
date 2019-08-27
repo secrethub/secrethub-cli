@@ -16,7 +16,7 @@ type ClientFactory interface {
 }
 
 // NewClientFactory creates a new ClientFactory.
-func NewClientFactory(store CredentialStore) ClientFactory {
+func NewClientFactory(store CredentialConfig) ClientFactory {
 	return &clientFactory{
 		store: store,
 	}
@@ -26,7 +26,7 @@ type clientFactory struct {
 	client    *secrethub.Client
 	ServerURL *url.URL
 	UseAWS    bool
-	store     CredentialStore
+	store     CredentialConfig
 }
 
 // Register the flags for configuration on a cli application.

@@ -10,11 +10,11 @@ import (
 // ConfigCommand handles operations on the SecretHub configuration.
 type ConfigCommand struct {
 	io              ui.IO
-	credentialStore CredentialStore
+	credentialStore CredentialConfig
 }
 
 // NewConfigCommand creates a new ConfigCommand.
-func NewConfigCommand(io ui.IO, store CredentialStore) *ConfigCommand {
+func NewConfigCommand(io ui.IO, store CredentialConfig) *ConfigCommand {
 	return &ConfigCommand{
 		io:              io,
 		credentialStore: store,
@@ -30,11 +30,11 @@ func (cmd *ConfigCommand) Register(r Registerer) {
 // ConfigUpgradeCommand handles upgrading the configuration in the profile directory.
 type ConfigUpgradeCommand struct {
 	io              ui.IO
-	credentialStore CredentialStore
+	credentialStore CredentialConfig
 }
 
 // NewConfigUpgradeCommand creates a new ConfigUpgradeCommand.
-func NewConfigUpgradeCommand(io ui.IO, credentialStore CredentialStore) *ConfigUpgradeCommand {
+func NewConfigUpgradeCommand(io ui.IO, credentialStore CredentialConfig) *ConfigUpgradeCommand {
 	return &ConfigUpgradeCommand{
 		io:              io,
 		credentialStore: credentialStore,

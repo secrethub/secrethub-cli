@@ -10,8 +10,8 @@ import (
 // ClientFactory handles creating a new client with the configured options.
 type ClientFactory interface {
 	// NewClient returns a new SecretHub client.
-	NewClient() (*secrethub.Client, error)
-	NewUnauthenticatedClient() (*secrethub.Client, error)
+	NewClient() (secrethub.ClientAdapter, error)
+	NewUnauthenticatedClient() (secrethub.ClientAdapter, error)
 	Register(FlagRegisterer)
 }
 
@@ -37,7 +37,7 @@ func (f *clientFactory) Register(r FlagRegisterer) {
 
 // NewClient returns a new client that is configured to use the remote that
 // is set with the flag.
-func (f *clientFactory) NewClient() (*secrethub.Client, error) {
+func (f *clientFactory) NewClient() (secrethub.ClientAdapter, error) {
 	if f.client == nil {
 		var credentialProvider credentials.Provider
 		if f.UseAWS {
@@ -58,7 +58,7 @@ func (f *clientFactory) NewClient() (*secrethub.Client, error) {
 	return f.client, nil
 }
 
-func (f *clientFactory) NewUnauthenticatedClient() (*secrethub.Client, error) {
+func (f *clientFactory) NewUnauthenticatedClient() (secrethub.ClientAdapter, error) {
 	options := f.baseClientOptions()
 
 	client, err := secrethub.NewClient(options...)

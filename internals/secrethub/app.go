@@ -81,7 +81,7 @@ type Registerer interface {
 }
 
 // newClientFunc creates a ClientAdapater.
-type newClientFunc func() (*secrethub.Client, error)
+type newClientFunc func() (secrethub.ClientAdapter, error)
 
 // NewApp creates a new command-line application.
 func NewApp() *App {

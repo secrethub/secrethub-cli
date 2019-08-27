@@ -33,16 +33,6 @@ func (c *TestKeyringCleaner) Cleanup() error {
 	return nil
 }
 
-// FakePassphraseReader is a helper type that implements the PassphraseReader interface.
-type FakePassphraseReader struct {
-	pass []byte
-	err  error
-}
-
-func (fp FakePassphraseReader) Get() ([]byte, error) {
-	return fp.pass, fp.err
-}
-
 func TestPassphraseReaderGet_Flag(t *testing.T) {
 	// Arrange
 	reader := passphraseReader{

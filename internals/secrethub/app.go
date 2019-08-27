@@ -19,11 +19,6 @@ const (
 	ApplicationName = "secrethub"
 )
 
-var (
-	// logger handles logging statements at different levels
-	logger = cli.NewLogger()
-)
-
 // Errors
 var (
 	errMain       = errio.Namespace(ApplicationName)

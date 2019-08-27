@@ -70,19 +70,9 @@ func (cmd *AccountInitCommand) Register(r Registerer) {
 func (cmd *AccountInitCommand) Run() error {
 
 	if !cmd.isContinue {
-		profileDir, err := cmd.credentialStore.NewProfileDir()
-		if err != nil {
-			return err
-		}
+		credentialPath := cmd.credentialStore.ConfigDir().Credential().Path
 
-		exists, err := cmd.credentialStore.CredentialExists()
-		if err != nil {
-			return err
-		}
-
-		credentialPath := profileDir.CredentialPath()
-
-		if exists {
+		if cmd.credentialStore.ConfigDir().Credential().Exists() {
 			client, err := cmd.newClient()
 			if err != nil {
 				return err

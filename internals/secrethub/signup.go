@@ -8,7 +8,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
 // Errors
@@ -52,22 +52,14 @@ func (cmd *SignUpCommand) Register(r Registerer) {
 // Run signs up a new user and configures his account for use on this machine.
 // If an account was already configured, the user is prompted for confirmation to overwrite it.
 func (cmd *SignUpCommand) Run() error {
-	profileDir, err := cmd.credentialStore.NewProfileDir()
-	if err != nil {
-		return err
-	}
-	credentialPath := profileDir.CredentialPath()
+	credentialPath := cmd.credentialStore.ConfigDir().Credential().Path
 
 	if cmd.force {
 		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" {
 			return ErrMissingFlags
 		}
 	} else {
-		exists, err := cmd.credentialStore.CredentialExists()
-		if err != nil {
-			return err
-		}
-		if exists {
+		if cmd.credentialStore.ConfigDir().Credential().Exists() {
 			confirmed, err := ui.AskYesNo(
 				cmd.io,
 				fmt.Sprintf("Found account credentials at %s, do you wish to overwrite them?", credentialPath),

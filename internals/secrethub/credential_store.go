@@ -1,34 +1,22 @@
 package secrethub
 
 import (
-	"io/ioutil"
-	"os"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/posix"
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
 
 // CredentialStore handles storing a shclient.Credential.
 type CredentialStore interface {
-	// CredentialExists returns whether there is already a credential stored
-	// in the configured location. When this is the case, a write will
-	// override this credential.
-	CredentialExists() (bool, error)
-	// TODO SHDEV-1026: Remove from interface once config upgrade uses CredentialStore
-	NewProfileDir() (ProfileDir, error)
 	IsPassphraseSet() bool
-	SetPassphrase(string)
-	// Set stores a credential that is returned on Get.
-	// The credential is only stored in memory. Save
-	// should be called to persist the credential.
-	Set(credential *secrethub.RSACredential)
-	// Save persists the credential.
-	Save() error
-	// Get retrieves a credential from the store.
-	Get() (*secrethub.RSACredential, error)
+	Provider() credentials.Provider
+	Import() (credentials.Key, error)
+	ConfigDir() configdir.Dir
+	PassphraseReader() credentials.Reader
+
 	Register(FlagRegisterer)
 }
 
@@ -44,12 +32,15 @@ type credentialStore struct {
 	AccountCredential            string
 	credentialPassphrase         string
 	CredentialPassphraseCacheTTL time.Duration
-	credential                   *secrethub.RSACredential
 	io                           ui.IO
 }
 
 func (store *credentialStore) ConfigDir() configdir.Dir {
 	return store.configDir.Dir
+}
+
+func (store *credentialStore) IsPassphraseSet() bool {
+	return store.credentialPassphrase != ""
 }
 
 // Register registers the flags for configuring the store on the provided Registerer.
@@ -60,103 +51,25 @@ func (store *credentialStore) Register(r FlagRegisterer) {
 	r.Flag("credential-passphrase-cache-ttl", "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.").Default("5m").DurationVar(&store.CredentialPassphraseCacheTTL)
 }
 
-// IsPassphraseSet returns whether a passphrase is configured.
-// This can be because it is already set using SetPassphrase,
-// or by using the credential-passphrase flag in the CLI.
-func (store *credentialStore) IsPassphraseSet() bool {
-	return store.credentialPassphrase != ""
-}
-
-// SetPassphrase sets the passphrase used to encrypt the credential.
-func (store *credentialStore) SetPassphrase(passphrase string) {
-	store.credentialPassphrase = passphrase
-}
-
-// Set stores a credential that is returned on Get.
-// The credential is not persisted yet in a file.
-func (store *credentialStore) Set(credential *secrethub.RSACredential) {
-	store.credential = credential
-}
-
-// CredentialExists returns whether there is already a credential stored
-// in the configured location. When this is the case, a write will
-// override this credential.
-func (store *credentialStore) CredentialExists() (bool, error) {
-	profileDir, err := store.NewProfileDir()
-	if err != nil {
-		return false, err
-	}
-	credentialPath := profileDir.CredentialPath()
-	_, err = os.Stat(credentialPath)
-	if err == nil {
-		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
-}
-
-// Get retrieves a credential from the store.
+// Provider retrieves a credential from the store.
 // When a credential is set, that credential is returned,
 // otherwise the credential is read from the configured file.
-func (store *credentialStore) Get() (*secrethub.RSACredential, error) {
-	if store.credential != nil {
-		return store.credential, nil
-	}
-
-	profileDir, err := store.NewProfileDir()
-	if err != nil {
-		return nil, err
-	}
-	return NewCredentialReader(store.io, profileDir, store.AccountCredential, store.newPassphraseReader()).Read()
+func (store *credentialStore) Provider() credentials.Provider {
+	return credentials.UseKey(store.getCredentialReader()).Passphrase(store.PassphraseReader())
 }
 
-// Save encrypts the credential using the configured passphrase and
-// persists it in the configured file.
-func (store *credentialStore) Save() error {
-	profileDir, err := store.NewProfileDir()
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(profileDir.String(), profileDir.FileMode())
-	if err != nil {
-		return err
-	}
-
-	encoded, err := store.encodeCredential(store.credential, store.credentialPassphrase)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(profileDir.CredentialPath(), posix.AddNewLine([]byte(encoded)), profileDir.CredentialFileMode())
-	if err != nil {
-		return ErrCannotWrite(profileDir.CredentialPath(), err)
-	}
-
-	return nil
+func (store *credentialStore) Import() (credentials.Key, error) {
+	return credentials.ImportKey(store.getCredentialReader(), store.PassphraseReader())
 }
 
-func (store *credentialStore) encodeCredential(credential secrethub.Credential, passphrase string) (string, error) {
-	if passphrase != "" {
-		armorer, err := secrethub.NewPassBasedKey([]byte(passphrase))
-		if err != nil {
-			return "", err
-		}
-		return secrethub.EncodeEncryptedCredential(credential, armorer)
-
+func (store *credentialStore) getCredentialReader() credentials.Reader {
+	if store.AccountCredential != "" {
+		return credentials.FromString(store.AccountCredential)
 	}
-	return secrethub.EncodeCredential(credential)
+	return store.configDir.Credential()
 }
 
-// newPassphraseReader returns a PassphraseReader configured by the flags.
-func (store *credentialStore) newPassphraseReader() PassphraseReader {
+// PassphraseReader returns a PassphraseReader configured by the flags.
+func (store *credentialStore) PassphraseReader() credentials.Reader {
 	return NewPassphraseReader(store.io, store.credentialPassphrase, store.CredentialPassphraseCacheTTL)
-}
-
-// NewProfileDir returns a new ProfileDir from the flag configuration.
-// TODO SHDEV-1026: Make private once config upgrade uses CredentialStore
-func (store *credentialStore) NewProfileDir() (ProfileDir, error) {
-	return NewProfileDir(store.ConfigDir)
 }

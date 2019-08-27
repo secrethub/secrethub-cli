@@ -112,8 +112,7 @@ func roleNameFromRole(role string) string {
 		if len(parts) == 2 {
 			return parts[1]
 		}
-	} else {
-		return strings.TrimPrefix(role, "role/")
+		return ""
 	}
-	return ""
+	return strings.TrimPrefix(role, "role/")
 }

@@ -11,6 +11,7 @@ import (
 type ClientFactory interface {
 	// NewClient returns a new SecretHub client.
 	NewClient() (*secrethub.Client, error)
+	NewUnauthenticatedClient() (*secrethub.Client, error)
 	Register(FlagRegisterer)
 }
 
@@ -55,6 +56,17 @@ func (f *clientFactory) NewClient() (*secrethub.Client, error) {
 		f.client = client
 	}
 	return f.client, nil
+}
+
+func (f *clientFactory) NewUnauthenticatedClient() (*secrethub.Client, error) {
+	options := f.baseClientOptions()
+
+	client, err := secrethub.NewClient(options...)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
 
 func (f *clientFactory) baseClientOptions() []secrethub.ClientOption {

@@ -3,6 +3,7 @@ package secrethub
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -141,19 +142,23 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {
-	return kmsKeyOptionsGetter{cfg: cfg}
+	return kmsKeyOptionsGetter{
+		cfg:           cfg,
+		timeFormatter: NewTimeFormatter(false),
+	}
 }
 
 type kmsKeyOptionsGetter struct {
-	cfg *aws.Config
+	cfg           *aws.Config
+	timeFormatter TimeFormatter
 
 	done       bool
 	nextMarker string
 }
 
-func (g *kmsKeyOptionsGetter) get() ([]string, error) {
+func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
 	if g.done {
-		return []string{}, nil
+		return []ui.Option{}, nil
 	}
 
 	listKeysInput := kms.ListKeysInput{}
@@ -162,7 +167,9 @@ func (g *kmsKeyOptionsGetter) get() ([]string, error) {
 		listKeysInput.SetMarker(g.nextMarker)
 	}
 
-	keys, err := kms.New(session.New(g.cfg)).ListKeys(&listKeysInput)
+	kmsSvc := kms.New(session.New(g.cfg))
+
+	keys, err := kmsSvc.ListKeys(&listKeysInput)
 	if err != nil {
 		errAWS, ok := err.(awserr.Error)
 		if ok {
@@ -183,10 +190,26 @@ func (g *kmsKeyOptionsGetter) get() ([]string, error) {
 		g.done = true
 	}
 
-	options := make([]string, len(keys.Keys))
+	var waitgroup sync.WaitGroup
+	options := make([]ui.Option, len(keys.Keys))
+
 	for i, key := range keys.Keys {
-		options[i] = *key.KeyId
+		waitgroup.Add(1)
+		go func() {
+			option := ui.Option{
+				Value:   aws.StringValue(key.KeyArn),
+				Display: aws.StringValue(key.KeyId),
+			}
+
+			resp, err := kmsSvc.DescribeKey(&kms.DescribeKeyInput{KeyId: key.KeyId})
+			if err == nil {
+				option.Display += "\t" + aws.StringValue(resp.KeyMetadata.Description) + "\t" + g.timeFormatter.Format(*resp.KeyMetadata.CreationDate)
+			}
+
+			options[i] = option
+		}()
 	}
+	waitgroup.Wait()
 
 	return options, nil
 }

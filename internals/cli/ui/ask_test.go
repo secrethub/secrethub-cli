@@ -216,7 +216,7 @@ func TestAskYesNo(t *testing.T) {
 func TestChoose(t *testing.T) {
 	cases := map[string]struct {
 		question   string
-		getOptions func() ([]string, error)
+		getOptions func() ([]Option, error)
 		addOwn     bool
 
 		in []string
@@ -233,8 +233,12 @@ func TestChoose(t *testing.T) {
 		},
 		"choose option of first batch": {
 			question: "foo?",
-			getOptions: func() ([]string, error) {
-				return []string{"foo", "bar", "baz"}, nil
+			getOptions: func() ([]Option, error) {
+				return []Option{
+					{Value: "foo", Display: "foo"},
+					{Value: "bar", Display: "bar"},
+					{Value: "baz", Display: "baz"},
+				}, nil
 			},
 
 			in: []string{"\n", "2\n"},
@@ -278,10 +282,14 @@ type optionGetter struct {
 	n int
 }
 
-func (og *optionGetter) Get() ([]string, error) {
-	res := make([]string, 5)
+func (og *optionGetter) Get() ([]Option, error) {
+	res := make([]Option, 5)
 	for i := 0; i < 5; i++ {
-		res[i] = fmt.Sprintf("Option %d", og.n+i+1)
+		option := fmt.Sprintf("Option %d", og.n+i+1)
+		res[i] = Option{
+			Value:   option,
+			Display: option,
+		}
 	}
 	og.n += 5
 	return res, nil

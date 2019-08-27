@@ -184,7 +184,16 @@ func AskYesNo(io IO, question string, t ConfirmationType) (bool, error) {
 	return false, nil
 }
 
-func Choose(io IO, question string, getOptions func() ([]string, error), addOwn bool) (string, error) {
+type Option struct {
+	Value   string
+	Display string
+}
+
+func (o Option) String() string {
+	return o.Display
+}
+
+func Choose(io IO, question string, getOptions func() ([]Option, error), addOwn bool) (string, error) {
 	r, w, err := io.Prompts()
 	if err != nil {
 		return "", err
@@ -207,11 +216,11 @@ func Choose(io IO, question string, getOptions func() ([]string, error), addOwn 
 type selecter struct {
 	r          io.Reader
 	w          io.Writer
-	getOptions func() ([]string, error)
+	getOptions func() ([]Option, error)
 	addOwn     bool
 
 	n       int
-	options []string
+	options []Option
 }
 
 func (s *selecter) moreOptions() error {
@@ -263,5 +272,5 @@ func (s *selecter) run() (string, error) {
 		return s.run()
 	}
 
-	return s.options[choice-1], nil
+	return s.options[choice-1].Value, nil
 }

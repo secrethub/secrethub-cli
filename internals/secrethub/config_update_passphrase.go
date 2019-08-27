@@ -3,55 +3,33 @@ package secrethub
 import (
 	"fmt"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
 
-// ConfigCommand handles operations on the SecretHub configuration.
-type ConfigCommand struct {
+type ConfigUpdatePassphraseCommand struct {
 	io              ui.IO
 	credentialStore CredentialConfig
 }
 
-// NewConfigCommand creates a new ConfigCommand.
-func NewConfigCommand(io ui.IO, store CredentialConfig) *ConfigCommand {
-	return &ConfigCommand{
-		io:              io,
-		credentialStore: store,
-	}
-}
-
-// Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *ConfigCommand) Register(r Registerer) {
-	clause := r.Command("config", "Manage your local configuration.")
-	NewConfigUpgradeCommand(cmd.io, cmd.credentialStore).Register(clause)
-}
-
-// ConfigUpgradeCommand handles upgrading the configuration in the profile directory.
-type ConfigUpgradeCommand struct {
-	io              ui.IO
-	credentialStore CredentialConfig
-}
-
-// NewConfigUpgradeCommand creates a new ConfigUpgradeCommand.
-func NewConfigUpgradeCommand(io ui.IO, credentialStore CredentialConfig) *ConfigUpgradeCommand {
-	return &ConfigUpgradeCommand{
+// NewConfigUpdatePassphraseCommand creates a new ConfigUpdatePassphraseCommand.
+func NewConfigUpdatePassphraseCommand(io ui.IO, credentialStore CredentialConfig) *ConfigUpdatePassphraseCommand {
+	return &ConfigUpdatePassphraseCommand{
 		io:              io,
 		credentialStore: credentialStore,
 	}
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ConfigUpgradeCommand) Register(r Registerer) {
+func (cmd *ConfigUpdatePassphraseCommand) Register(r Registerer) {
 	clause := r.Command("update-passphrase", "Update the passphrase of your local key credential file.")
-	alias := r.Command("upgrade", "Update the passphrase of your local key credential file.").Hidden()
 
 	BindAction(clause, cmd.Run)
-	BindAction(alias, cmd.Run)
 }
 
 // Run upgrades the configuration in the profile directory to the new version.
-func (cmd *ConfigUpgradeCommand) Run() error {
+func (cmd *ConfigUpdatePassphraseCommand) Run() error {
 	if !cmd.credentialStore.ConfigDir().Credential().Exists() {
 		fmt.Println("No credentials. Nothing to do.")
 		return nil

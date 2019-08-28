@@ -107,7 +107,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 	if cmd.kmsKeyID == "" {
 		kmsKeyOptionsGetter := newKMSKeyOptionsGetter(cfg)
-		kmsKey, err := ui.Choose(cmd.io, "What KMS Key would you like to use?", kmsKeyOptionsGetter.get, true)
+		kmsKey, err := ui.Choose(cmd.io, "What is the ID of the KMS-key you want to use for encrypting this service's credential? The service's IAM role should have decryption permissions on this key.", kmsKeyOptionsGetter.get, true)
 		if err != nil {
 			return err
 		}

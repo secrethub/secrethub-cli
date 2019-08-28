@@ -93,7 +93,7 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause.Flag("kms-key-id", "ID of the KMS-key to be used for encrypting the service's account key.").Required().StringVar(&cmd.kmsKeyID)
 	clause.Flag("role", "ARN of the IAM role that should have access to this service account.").Required().StringVar(&cmd.role)
 	clause.Flag("region", "The AWS region that should be used").StringVar(&cmd.region)
-	clause.Flag("description", "A description for the service. Defaults to the ARN of the IAM role that is given access to the service.").StringVar(&cmd.description)
+	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the ARN of the IAM role that is given access to the service.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("permission", "Automatically create an access rule giving the service account permission on the given path argument. Accepts `read`, `write` or `admin`.").SetValue(&cmd.permission)

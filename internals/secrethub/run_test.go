@@ -9,7 +9,10 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
+	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )
 
 func elemEqual(t *testing.T, actual []envvar, expected []envvar) {
@@ -453,6 +456,69 @@ func TestRunCommand_Run(t *testing.T) {
 			command: RunCommand{
 				command: []string{"echo", "test"},
 			},
+		},
+		"missing secret": {
+			command: RunCommand{
+				command: []string{"echo", "test"},
+				envar: map[string]string{
+					"missing": "path/to/unexisting/secret",
+				},
+				newClient: func() (secrethub.ClientAdapter, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+				ignoreMissingSecrets: false,
+			},
+			err: api.ErrSecretNotFound,
+		},
+		"missing secret ignored": {
+			command: RunCommand{
+				command: []string{"echo", "test"},
+				envar: map[string]string{
+					"missing": "path/to/unexisting/secret",
+				},
+				newClient: func() (secrethub.ClientAdapter, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+				ignoreMissingSecrets: true,
+			},
+			err: nil,
+		},
+		"repo does not exist ignored": {
+			command: RunCommand{
+				command: []string{"echo", "test"},
+				envar: map[string]string{
+					"missing": "unexisting/repo/secret",
+				},
+				newClient: func() (secrethub.ClientAdapter, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrRepoNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+				ignoreMissingSecrets: true,
+			},
+			err: nil,
 		},
 		"invalid template var: start with a number": {
 			command: RunCommand{

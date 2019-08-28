@@ -2,10 +2,12 @@ package secrethub
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -54,7 +56,11 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		cfg = cfg.WithRegion(cmd.region)
 	}
 
-	service, err := client.Services().AWS().Create(cmd.repo.Value(), cmd.description, cmd.kmsKeyID, cmd.role, cfg)
+	if cmd.description == "" {
+		cmd.description = "AWS role " + roleNameFromRole(cmd.role)
+	}
+
+	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credentials.CreateAWS(cmd.kmsKeyID, cmd.role, cfg))
 	if err == api.ErrCredentialAlreadyExists {
 		return ErrRoleAlreadyTaken
 	} else if err != nil {
@@ -78,8 +84,28 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause.Flag("kms-key-id", "ID of the KMS-key to be used for encrypting the service's account key.").Required().StringVar(&cmd.kmsKeyID)
 	clause.Flag("role", "ARN of the IAM role that should have access to this service account.").Required().StringVar(&cmd.role)
 	clause.Flag("region", "The AWS region that should be used").StringVar(&cmd.region)
-	clause.Flag("desc", "A description for the service").StringVar(&cmd.description)
+	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
+	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
+	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <permission> format to give permission on the root of the repo and <subdirectory>:<permission> to give permission on a subdirectory.").StringVar(&cmd.permission)
 
 	BindAction(clause, cmd.Run)
+}
+
+// roleNameFromRole returns the name of the role indicated by the input. Accepted input is:
+// - A role name (e.g. my-role)
+// - A role name, prefixed by "role/" (e.g. role/my-role)
+// - A role ARN (e.g. arn:aws:iam::123456789012:role/my-role)
+//
+// When the input is not one of these accepted inputs, no guarantees about the expected return
+// are made.
+func roleNameFromRole(role string) string {
+	if strings.Contains(role, ":") {
+		parts := strings.SplitN(role, "role/", 2)
+		if len(parts) == 2 {
+			return parts[1]
+		}
+		return ""
+	}
+	return strings.TrimPrefix(role, "role/")
 }

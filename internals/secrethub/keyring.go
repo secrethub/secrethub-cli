@@ -2,14 +2,15 @@ package secrethub
 
 import (
 	"encoding/json"
-	"time"
-
 	"fmt"
 	"strings"
+	"time"
+
+	libkeyring "github.com/zalando/go-keyring"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	libkeyring "github.com/zalando/go-keyring"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
 // Errors
@@ -31,6 +32,7 @@ var (
 
 const (
 	keyringServiceLabel = "secrethub"
+	keyringKey          = "secrethub-passphrase"
 )
 
 // PassphraseReader can retrieve a password and be instructed if the password is incorrect.
@@ -42,13 +44,30 @@ type PassphraseReader interface {
 
 // passphraseReader provides passphrase reading capability to the CLI.
 type passphraseReader struct {
+	tries     int
+	hasAsked  bool
 	io        ui.IO
 	FlagValue string
 	Cache     *PassphraseCache
 }
 
+func (pr *passphraseReader) Read() ([]byte, error) {
+	defer func() { pr.tries++ }()
+
+	if pr.tries > 0 {
+		_ = pr.Cache.Delete()
+	}
+
+	passphrase, err := pr.get()
+	if err != nil {
+		_ = pr.Cache.Delete()
+		return nil, err
+	}
+	return []byte(passphrase), nil
+}
+
 // NewPassphraseReader constructs a new PassphraseReader using values in the CLI.
-func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassphraseTTL time.Duration) PassphraseReader {
+func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassphraseTTL time.Duration) credentials.Reader {
 	ttl := credentialPassphraseTTL
 	cleaner := NewKeyringCleaner()
 	keyring := NewKeyring()
@@ -66,45 +85,45 @@ func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassph
 //  1. The value provided by a flag.
 //  2. PassphraseCache
 //  3. Input typed in by the user.
-func (pr passphraseReader) Get(username string) ([]byte, error) {
+func (pr *passphraseReader) get() (string, error) {
 	if pr.FlagValue != "" {
-		return []byte(pr.FlagValue), nil
+		if pr.tries == 0 {
+			return pr.FlagValue, nil
+		}
+		return "", nil
 	}
 
 	if pr.Cache.IsEnabled() {
-		passphrase, err := pr.Cache.Get(username)
+		passphrase, err := pr.Cache.Get()
 		if err != nil && err != ErrKeyringItemNotFound {
-			return nil, err
+			return "", err
 		} else if err == nil {
-			return []byte(passphrase), nil
+			return passphrase, nil
 		}
 	}
-
-	passphrase, err := ui.AskSecret(pr.io, "Please put in the passphrase to unlock your credential:")
+	var err error
+	var passphrase string
+	if pr.hasAsked {
+		passphrase, err = ui.AskSecret(pr.io, "Incorrect passphrase, try again:")
+	} else {
+		passphrase, err = ui.AskSecret(pr.io, "Please put in the passphrase to unlock your credential:")
+	}
 	if err == ui.ErrCannotAsk {
-		return nil, ErrPassphraseFlagNotSet // if we cannot ask, users should use the --passphrase flag
+		return "", ErrPassphraseFlagNotSet // if we cannot ask, users should use the --passphrase flag
 	} else if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	if pr.Cache.IsEnabled() {
-		err := pr.Cache.Set(username, passphrase)
+	pr.hasAsked = true
+
+	if pr.Cache.IsEnabled() && passphrase != "" {
+		err := pr.Cache.Set(passphrase)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
-	return []byte(passphrase), nil
-}
-
-// IncorrectPassphrase signals the reader to clean up a cached passphrase for
-// the given username. This is useful when an incorrect passphrase has been cached.
-func (pr passphraseReader) IncorrectPassphrase(username string) error {
-	if pr.Cache.IsEnabled() {
-		return pr.Cache.Delete(username)
-	}
-
-	return nil
+	return passphrase, nil
 }
 
 // PassphraseCache caches passphrases in a keyring for a given time to live.
@@ -129,18 +148,18 @@ func (c PassphraseCache) IsEnabled() bool {
 }
 
 // Set caches the passphrase for the configured time to live.
-func (c PassphraseCache) Set(username, passphrase string) error {
-	item, err := c.keyring.Get(username)
+func (c PassphraseCache) Set(passphrase string) error {
+	item, err := c.keyring.Get()
 	if err == ErrKeyringItemNotFound {
 		item = &KeyringItem{
-			Passphrase: passphrase,
+			Passphrase: []byte(passphrase),
 		}
 	} else if err != nil {
 		return err
 	}
 
 	if !item.RunningCleanupProcess {
-		err = c.cleaner.Cleanup(username)
+		err = c.cleaner.Cleanup()
 		if err != nil {
 			return err
 		}
@@ -148,19 +167,19 @@ func (c PassphraseCache) Set(username, passphrase string) error {
 
 	item.ExpiresAt = c.ExpiresAt()
 
-	return c.keyring.Set(username, item)
+	return c.keyring.Set(item)
 }
 
 // Get returns a passphrase for the given username if it was cached.
 // Every call to Get resets the time to live of the passphrase.
-func (c PassphraseCache) Get(username string) (string, error) {
-	item, err := c.keyring.Get(username)
+func (c PassphraseCache) Get() (string, error) {
+	item, err := c.keyring.Get()
 	if err != nil {
 		return "", err
 	}
 
 	if item.IsExpired() {
-		err := c.keyring.Delete(username)
+		err := c.keyring.Delete()
 		if err != nil && err != ErrKeyringItemNotFound {
 			return "", ErrCannotClearExpiredKeyringItem(err)
 		}
@@ -168,7 +187,7 @@ func (c PassphraseCache) Get(username string) (string, error) {
 	}
 
 	if !item.RunningCleanupProcess {
-		err = c.cleaner.Cleanup(username)
+		err = c.cleaner.Cleanup()
 		if err != nil {
 			return "", err
 		}
@@ -176,17 +195,17 @@ func (c PassphraseCache) Get(username string) (string, error) {
 
 	item.ExpiresAt = c.ExpiresAt()
 
-	err = c.keyring.Set(username, item)
+	err = c.keyring.Set(item)
 	if err != nil {
 		return "", err
 	}
 
-	return item.Passphrase, nil
+	return string(item.Passphrase), nil
 }
 
 // Delete tries delete the stored passphrase for a given username.
-func (c PassphraseCache) Delete(username string) error {
-	return c.keyring.Delete(username)
+func (c PassphraseCache) Delete() error {
+	return c.keyring.Delete()
 }
 
 // ExpiresAt returns a timestamp to expire a keyring item at.
@@ -198,7 +217,7 @@ func (c PassphraseCache) ExpiresAt() time.Time {
 type KeyringItem struct {
 	RunningCleanupProcess bool      `json:"running_cleanup_process,omitempty"`
 	ExpiresAt             time.Time `json:"expires_at"`
-	Passphrase            string    `json:"passphrase"`
+	Passphrase            []byte    `json:"passphrase"`
 }
 
 // IsExpired returns true when the item has expired.
@@ -210,9 +229,9 @@ func (ki KeyringItem) IsExpired() bool {
 // deleting secrets from the system keyring.
 type Keyring interface {
 	IsAvailable() bool
-	Get(username string) (*KeyringItem, error)
-	Set(username string, item *KeyringItem) error
-	Delete(username string) error
+	Get() (*KeyringItem, error)
+	Set(item *KeyringItem) error
+	Delete() error
 }
 
 // keyring implements Keyring interface by using libkeyring.
@@ -232,14 +251,6 @@ func NewKeyring() Keyring {
 	}
 }
 
-// sanitizeUsername ensures the username is usable in the keyring.
-func (kr keyring) sanitizeUsername(username string) string {
-	if len(username) > kr.usernameMaxLen {
-		username = username[:kr.usernameMaxLen]
-	}
-	return username
-}
-
 // IsAvailable returns true when the OS keyring is available.
 // On some operating systems it may not be installed.
 func (kr keyring) IsAvailable() bool {
@@ -249,10 +260,8 @@ func (kr keyring) IsAvailable() bool {
 
 // Get gets an item from the keyring for the given username.
 // This should not be used outside this file!
-func (kr keyring) Get(username string) (*KeyringItem, error) {
-	username = kr.sanitizeUsername(username)
-
-	stored, err := libkeyring.Get(kr.label, username)
+func (kr keyring) Get() (*KeyringItem, error) {
+	stored, err := libkeyring.Get(kr.label, keyringKey)
 	if err == libkeyring.ErrNotFound {
 		return nil, ErrKeyringItemNotFound
 	} else if err != nil {
@@ -270,15 +279,13 @@ func (kr keyring) Get(username string) (*KeyringItem, error) {
 
 // Set sets an item for the given username in the keyring.
 // This should not be used outside this file!
-func (kr keyring) Set(username string, item *KeyringItem) error {
-	username = kr.sanitizeUsername(username)
-
+func (kr keyring) Set(item *KeyringItem) error {
 	bytes, err := json.Marshal(item)
 	if err != nil {
 		return ErrCannotSetKeyringItem(err)
 	}
 
-	err = libkeyring.Set(kr.label, username, string(bytes))
+	err = libkeyring.Set(kr.label, keyringKey, string(bytes))
 	if err != nil {
 		return ErrCannotSetKeyringItem(err)
 	}
@@ -287,10 +294,8 @@ func (kr keyring) Set(username string, item *KeyringItem) error {
 }
 
 // Delete deletes an item in the keyring for a given username.
-func (kr keyring) Delete(username string) error {
-	username = kr.sanitizeUsername(username)
-
-	err := libkeyring.Delete(kr.label, username)
+func (kr keyring) Delete() error {
+	err := libkeyring.Delete(kr.label, keyringKey)
 	if err == libkeyring.ErrNotFound {
 		return ErrKeyringItemNotFound
 	} else if err != nil {
@@ -303,7 +308,7 @@ func (kr keyring) Delete(username string) error {
 // KeyringCleaner is used to remove items from a keyring.
 type KeyringCleaner interface {
 	// Cleanup removes an item from the keyring when it expires.
-	Cleanup(username string) error
+	Cleanup() error
 }
 
 // keyringCleaner cleans up the credential by spawning a new CLI process that will take care of cleaning up the credential.
@@ -315,8 +320,8 @@ func NewKeyringCleaner() KeyringCleaner {
 }
 
 // Cleanup starts a Cleanup process to clean up the cached passphrase when it expires.
-func (kc keyringCleaner) Cleanup(username string) error {
-	err := cloneproc.Spawn("keyring-clear", username)
+func (kc keyringCleaner) Cleanup() error {
+	err := cloneproc.Spawn("keyring-clear")
 	if err != nil {
 		return err
 	}

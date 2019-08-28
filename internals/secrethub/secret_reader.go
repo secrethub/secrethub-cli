@@ -1,6 +1,9 @@
 package secrethub
 
-import "github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+import (
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+	"github.com/secrethub/secrethub-go/internals/errio"
+)
 
 type secretReader struct {
 	newClient newClientFunc
@@ -34,7 +37,7 @@ type bufferedSecretReader struct {
 }
 
 // newBufferedSecretReader wraps a secret reader and stores the retrieved
-// secret values for retrieval with the SecretsRead function.
+// secret values for retrieval with the Values function.
 func newBufferedSecretReader(sr tpl.SecretReader) *bufferedSecretReader {
 	return &bufferedSecretReader{
 		secretReader: sr,
@@ -43,7 +46,7 @@ func newBufferedSecretReader(sr tpl.SecretReader) *bufferedSecretReader {
 }
 
 // ReadSecret uses the underlying secret reader to read the secret
-// and stores the result for retrieval with the SecretsRead function.
+// and stores the result for retrieval with the Values function.
 func (sr *bufferedSecretReader) ReadSecret(path string) (string, error) {
 	secret, err := sr.secretReader.ReadSecret(path)
 
@@ -54,7 +57,37 @@ func (sr *bufferedSecretReader) ReadSecret(path string) (string, error) {
 	return secret, err
 }
 
-// SecretsRead returns a list of values read with this secret reader.
-func (sr bufferedSecretReader) SecretsRead() []string {
+// Values returns a list of values read with this secret reader.
+func (sr bufferedSecretReader) Values() []string {
 	return sr.secretsRead
+}
+
+type ignoreMissingSecretReader struct {
+	secretReader tpl.SecretReader
+}
+
+func newIgnoreMissingSecretReader(sr tpl.SecretReader) *ignoreMissingSecretReader {
+	return &ignoreMissingSecretReader{
+		secretReader: sr,
+	}
+}
+
+// ReadSecret uses the underlying secret reader to read the secret, but ignores
+// errors for non-existing secrets. Instead, it returns the empty string.
+func (sr *ignoreMissingSecretReader) ReadSecret(path string) (string, error) {
+	secret, err := sr.secretReader.ReadSecret(path)
+	if isErrNotFound(err) {
+		return "", nil
+	}
+	return secret, err
+}
+
+// isErrNotFound returns whether the given error is caused by a un-existing resource.
+// TODO: Replace this function with github.com/secrethub/secrethub-go/blob/develop/internals/api.IsErrNotFound once that is released.
+func isErrNotFound(err error) bool {
+	statusError, ok := err.(errio.PublicStatusError)
+	if !ok {
+		return false
+	}
+	return statusError.StatusCode == 404
 }

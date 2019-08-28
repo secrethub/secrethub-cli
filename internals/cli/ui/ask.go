@@ -2,7 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"strconv"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
@@ -179,4 +183,105 @@ func AskYesNo(io IO, question string, t ConfirmationType) (bool, error) {
 	}
 
 	return false, nil
+}
+
+type Option struct {
+	Value   string
+	Display string
+}
+
+func (o Option) String() string {
+	return o.Display
+}
+
+func Choose(io IO, question string, getOptions func() ([]Option, bool, error), addOwn bool) (string, error) {
+	r, w, err := io.Prompts()
+	if err != nil {
+		return "", err
+	}
+
+	s := selecter{
+		r:          r,
+		w:          w,
+		getOptions: getOptions,
+		question:   question,
+		addOwn:     addOwn,
+	}
+
+	return s.run()
+}
+
+type selecter struct {
+	r          io.Reader
+	w          io.Writer
+	getOptions func() ([]Option, bool, error)
+	question   string
+	addOwn     bool
+
+	done    bool
+	options []Option
+}
+
+func (s *selecter) moreOptions() error {
+	if s.done {
+		fmt.Fprintln(s.w, "No more options available.")
+		return nil
+	}
+
+	options, done, err := s.getOptions()
+	if err != nil {
+		return err
+	}
+
+	s.done = done
+	w := tabwriter.NewWriter(s.w, 0, 4, 4, ' ', 0)
+	for i, option := range options {
+		fmt.Fprintf(w, "%d) %s\n", len(s.options)+i+1, option)
+	}
+	s.options = append(s.options, options...)
+
+	err = w.Flush()
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprint(s.w, "Give number of choice or enter other option")
+	if !s.done {
+		fmt.Fprint(s.w, " ([ENTER] for more options)")
+	}
+	fmt.Fprintln(s.w, ": ")
+
+	return nil
+}
+
+func (s *selecter) run() (string, error) {
+	fmt.Fprintf(s.w, s.question+" Press [ENTER] for options.\n")
+	return s.process()
+}
+
+func (s *selecter) process() (string, error) {
+	in, err := Readln(s.r)
+	if err != nil {
+		return "", err
+	}
+
+	if in == "" {
+		err = s.moreOptions()
+		if err != nil {
+			return "", err
+		}
+		return s.process()
+	}
+
+	choice, err := strconv.Atoi(in)
+	if err != nil || choice < 1 || choice > len(s.options) {
+		if s.addOwn {
+			return in, nil
+		}
+
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("%d is not a valid choice", choice))
+		return s.process()
+	}
+
+	return s.options[choice-1].Value, nil
 }

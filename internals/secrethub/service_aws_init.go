@@ -64,7 +64,9 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		cfg = cfg.WithRegion(cmd.region)
 	}
 
-	sess, err := session.NewSession(cfg)
+	// Disable retries to make sure we quickly fail if no credentials are present.
+	noRetries := aws.NewConfig().WithMaxRetries(0)
+	sess, err := session.NewSession(cfg, noRetries)
 	if err != nil {
 		return handleAWSErr(err)
 	}

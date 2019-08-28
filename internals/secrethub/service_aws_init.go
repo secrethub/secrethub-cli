@@ -64,7 +64,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	if cmd.role == "" {
-		role, err := ui.Ask(cmd.io, "What IAM role should have access to the service? (full ARN or role name)")
+		role, err := ui.Ask(cmd.io, "What IAM role should have access to the service? (full ARN or role name)\n")
 		if err != nil {
 			return err
 		}

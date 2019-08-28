@@ -5,7 +5,7 @@ var (
 	ErrConfigUpgradeDropped = errMain.Code("config_upgrade_dropped").Error("This command no longer exists. config update-passphrase can be used to change the passphrase of your credential. To upgrade old configuration files, use a CLI with a version <= v0.25")
 )
 
-type ConfigUpgradeCommand struct {}
+type ConfigUpgradeCommand struct{}
 
 func NewConfigUpgradeCommand() *ConfigUpgradeCommand {
 	return &ConfigUpgradeCommand{}

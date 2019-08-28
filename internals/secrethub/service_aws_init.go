@@ -174,7 +174,7 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
 
 	for i, key := range keys.Keys {
 		waitgroup.Add(1)
-		go func() {
+		go func(i int, key *kms.KeyListEntry) {
 			option := ui.Option{
 				Value:   aws.StringValue(key.KeyArn),
 				Display: aws.StringValue(key.KeyId),
@@ -187,7 +187,7 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
 
 			options[i] = option
 			waitgroup.Done()
-		}()
+		}(i, key)
 	}
 	waitgroup.Wait()
 

@@ -186,12 +186,7 @@ func (cmd *AccountInitCommand) Run() error {
 			return err
 		}
 
-		verifierBytes, err := exportKey.Verifier().Verifier()
-		if err != nil {
-			return err
-		}
-
-		fingerprint, err := api.GetFingerprint(exportKey.Verifier().Type(), verifierBytes)
+		verifierBytes, fingerprint, err := exportKey.Verifier().Export()
 		if err != nil {
 			return err
 		}
@@ -294,12 +289,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 		return err
 	}
 
-	verifierBytes, err := key.Verifier().Verifier()
-	if err != nil {
-		return err
-	}
-
-	fingerprint, err := api.GetFingerprint(key.Verifier().Type(), verifierBytes)
+	_, fingerprint, err := key.Verifier().Export()
 	if err != nil {
 		return err
 	}

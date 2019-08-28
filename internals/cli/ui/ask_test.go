@@ -263,11 +263,6 @@ func TestChoose(t *testing.T) {
 				"4) Option 4\n" +
 				"5) Option 5\n" +
 				"Give number of choice or enter other option ([ENTER] for more options): \n" +
-				"1) Option 1\n" +
-				"2) Option 2\n" +
-				"3) Option 3\n" +
-				"4) Option 4\n" +
-				"5) Option 5\n" +
 				"6) Option 6\n" +
 				"7) Option 7\n" +
 				"8) Option 8\n" +

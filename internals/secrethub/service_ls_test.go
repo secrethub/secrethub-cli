@@ -78,7 +78,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							Description: "foobar",
 							Credential: &api.Credential{
 								Type: api.CredentialTypeAWSSTS,
-								Metadata: map[api.CredentialMetadataKey]string{
+								Metadata: map[string]string{
 									api.CredentialMetadataAWSRole:   "arn:aws:iam::123456:role/path/to/role",
 									api.CredentialMetadataAWSKMSKey: "12345678-1234-1234-1234-123456789012",
 								},
@@ -104,7 +104,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							Description: "foobar",
 							Credential: &api.Credential{
 								Type: api.CredentialTypeAWSSTS,
-								Metadata: map[api.CredentialMetadataKey]string{
+								Metadata: map[string]string{
 									api.CredentialMetadataAWSRole:   "arn:aws:iam::123456:role/path/to/role",
 									api.CredentialMetadataAWSKMSKey: "arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012",
 								},

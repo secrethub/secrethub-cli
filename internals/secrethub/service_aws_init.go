@@ -169,7 +169,7 @@ func getAWSRegionOptions() ([]ui.Option, bool, error) {
 		regionNames[i] = name
 		i++
 	}
-	sort.Sort(sort.StringSlice(regionNames))
+	sort.Strings(regionNames)
 
 	for i, name := range regionNames {
 		region := regions[name]

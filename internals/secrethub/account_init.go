@@ -70,7 +70,7 @@ func (cmd *AccountInitCommand) Register(r Registerer) {
 func (cmd *AccountInitCommand) Run() error {
 
 	if !cmd.isContinue {
-		credentialPath := cmd.credentialStore.ConfigDir().Credential().Path
+		credentialPath := cmd.credentialStore.ConfigDir().Credential().Path()
 
 		if cmd.credentialStore.ConfigDir().Credential().Exists() {
 			client, err := cmd.newClient()

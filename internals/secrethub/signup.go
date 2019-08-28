@@ -52,7 +52,7 @@ func (cmd *SignUpCommand) Register(r Registerer) {
 // Run signs up a new user and configures his account for use on this machine.
 // If an account was already configured, the user is prompted for confirmation to overwrite it.
 func (cmd *SignUpCommand) Run() error {
-	credentialPath := cmd.credentialStore.ConfigDir().Credential().Path
+	credentialPath := cmd.credentialStore.ConfigDir().Credential().Path()
 
 	if cmd.force {
 		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" {

@@ -7,14 +7,12 @@ type ConfigDir struct {
 }
 
 func (c *ConfigDir) String() string {
-	return c.Dir.Path
+	return c.Dir.Path()
 }
 
 func (c *ConfigDir) Set(value string) error {
 	if value != "" {
-		*c = ConfigDir{Dir: configdir.Dir{
-			Path: value,
-		}}
+		*c = ConfigDir{Dir: configdir.New(value)}
 		return nil
 	}
 	dir, err := configdir.Default()

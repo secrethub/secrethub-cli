@@ -102,11 +102,11 @@ func TestRepoLSCommand_run(t *testing.T) {
 			tc.cmd.io = io
 
 			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
 					return nil, tc.newClientErr
 				}
 			} else {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
 					return fakeclient.Client{
 						RepoService: &tc.repoService,
 					}, nil

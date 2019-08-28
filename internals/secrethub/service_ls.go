@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -13,15 +14,17 @@ type ServiceLsCommand struct {
 	repoPath api.RepoPath
 	quiet    bool
 
-	io        ui.IO
-	newClient newClientFunc
+	io           ui.IO
+	newClient    newClientFunc
+	serviceTable serviceTable
 }
 
 // NewServiceLsCommand creates a new ServiceLsCommand.
 func NewServiceLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand {
 	return &ServiceLsCommand{
-		io:        io,
-		newClient: newClient,
+		io:           io,
+		newClient:    newClient,
+		serviceTable: keyServiceTable{},
 	}
 }
 
@@ -53,10 +56,10 @@ func (cmd *ServiceLsCommand) Run() error {
 	} else {
 		w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
 
-		fmt.Fprintf(w, "%s\t%s\n", "ID", "DESCRIPTION")
+		fmt.Fprintln(w, strings.Join(cmd.serviceTable.header(), "\t"))
 
 		for _, service := range services {
-			fmt.Fprintf(w, "%s\t%s\n", service.ServiceID, service.Description)
+			fmt.Fprintln(w, strings.Join(cmd.serviceTable.row(service), "\t"))
 		}
 
 		err = w.Flush()
@@ -66,4 +69,31 @@ func (cmd *ServiceLsCommand) Run() error {
 	}
 
 	return nil
+}
+
+type serviceTable interface {
+	header() []string
+	row(service *api.Service) []string
+}
+
+type baseServiceTable struct{}
+
+func (sw baseServiceTable) header() []string {
+	return []string{"ID", "DESCRIPTION"}
+}
+
+func (sw baseServiceTable) row(service *api.Service) []string {
+	return []string{service.ServiceID, service.Description}
+}
+
+type keyServiceTable struct {
+	baseServiceTable
+}
+
+func (sw keyServiceTable) header() []string {
+	return append(sw.baseServiceTable.header(), "TYPE")
+}
+
+func (sw keyServiceTable) row(service *api.Service) []string {
+	return append(sw.baseServiceTable.row(service), string(service.Credential.Type))
 }

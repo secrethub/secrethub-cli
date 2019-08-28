@@ -254,6 +254,20 @@ func TestChoose(t *testing.T) {
 			expected: "Option 7",
 			out:      "foo?\nPress [ENTER] for more options.\n1) Option 1\n2) Option 2\n3) Option 3\n4) Option 4\n5) Option 5\n6) Option 6\n7) Option 7\n8) Option 8\n9) Option 9\n10) Option 10\n",
 		},
+		"options formatted": {
+			question: "foo?",
+			getOptions: func() ([]Option, error) {
+				return []Option{
+					{Value: "foo", Display: "foobar\tbaz"},
+					{Value: "bar", Display: "bar\tbaz"},
+					{Value: "baz", Display: "baz\tbar"},
+				}, nil
+			},
+
+			in: []string{"\n", "2\n"},
+			expected: "bar",
+			out: "foo?\nPress [ENTER] for more options.\n1) foobar    baz\n2) bar       baz\n3) baz       bar\n",
+		},
 	}
 
 	for name, tc := range cases {

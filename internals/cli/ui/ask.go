@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
@@ -240,12 +241,12 @@ func (s *selecter) moreOptions() error {
 
 	s.options = append(s.options, options...)
 
+	w := tabwriter.NewWriter(s.w, 0, 4, 4, ' ', 0)
 	for _, option := range options {
 		s.n++
-		fmt.Fprintf(s.w, "%d) %s\n", s.n, option)
+		fmt.Fprintf(w, "%d) %s\n", s.n, option)
 	}
-
-	return nil
+	return w.Flush()
 }
 
 func (s *selecter) run() (string, error) {

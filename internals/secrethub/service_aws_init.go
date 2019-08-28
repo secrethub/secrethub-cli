@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go/service/sts"
 )
 
 // Errors
@@ -61,6 +62,39 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 			return ErrInvalidAWSRegion
 		}
 		cfg = cfg.WithRegion(cmd.region)
+	}
+
+	sess, err := session.NewSession(cfg)
+	if err != nil {
+		return handleAWSErr(err)
+	}
+	stsSvc := sts.New(sess)
+
+	identity, err := stsSvc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err != nil {
+		return handleAWSErr(err)
+	}
+	accountID := aws.StringValue(identity.Account)
+
+	fmt.Fprintf(cmd.io.Stdout(), "Detected access to AWS account %s.", accountID)
+
+	region := sess.Config.Region
+	if isSet(region) {
+		fmt.Fprintf(cmd.io.Stdout(), "Using region %s.", *region)
+	}
+	fmt.Fprintln(cmd.io.Stdout())
+
+	if !isSet(region) {
+		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true)
+		if err != nil {
+			return err
+		}
+
+		_, ok := endpoints.AwsPartition().Regions()[region]
+		if !ok {
+			return ErrInvalidAWSRegion
+		}
+		cfg = cfg.WithRegion(region)
 	}
 
 	if cmd.role == "" {
@@ -123,6 +157,20 @@ func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {
 	}
 }
 
+func getAWSRegionOptions() ([]ui.Option, error) {
+	regions := endpoints.AwsPartition().Regions()
+	options := make([]ui.Option, len(regions))
+	i := 0
+	for _, region := range regions {
+		options[i] = ui.Option{
+			Value:   region.ID(),
+			Display: region.ID() + "\t" + region.Description(),
+		}
+		i++
+	}
+	return options, nil
+}
+
 type kmsKeyOptionsGetter struct {
 	cfg           *aws.Config
 	timeFormatter TimeFormatter
@@ -144,23 +192,13 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
 
 	sess, err := session.NewSession(g.cfg)
 	if err != nil {
-		return nil, err
+		return nil, handleAWSErr(err)
 	}
 	kmsSvc := kms.New(sess)
 
 	keys, err := kmsSvc.ListKeys(&listKeysInput)
 	if err != nil {
-		errAWS, ok := err.(awserr.Error)
-		if ok {
-			if errAWS.Code() == "NoCredentialProviders" {
-				return nil, shaws.ErrNoAWSCredentials
-			}
-			if errAWS.Code() == "MissingRegion" {
-				return nil, ErrMissingRegion
-			}
-			err = errio.Namespace("aws").Code(errAWS.Code()).Error(errAWS.Message())
-		}
-		return nil, fmt.Errorf("error fetching available KMS keys: %s", err)
+		return nil, handleAWSErr(err)
 	}
 
 	if keys.NextMarker != nil {
@@ -210,4 +248,22 @@ func roleNameFromRole(role string) string {
 		return ""
 	}
 	return strings.TrimPrefix(role, "role/")
+}
+
+func handleAWSErr(err error) error {
+	errAWS, ok := err.(awserr.Error)
+	if ok {
+		if errAWS.Code() == "NoCredentialProviders" {
+			return shaws.ErrNoAWSCredentials
+		}
+		if errAWS.Code() == "MissingRegion" {
+			return ErrMissingRegion
+		}
+		err = errio.Namespace("aws").Code(errAWS.Code()).Error(errAWS.Message())
+	}
+	return fmt.Errorf("error fetching available KMS keys: %s", err)
+}
+
+func isSet(v *string) bool {
+	return v != nil && *v != ""
 }

@@ -15,7 +15,7 @@ var (
 	testKeyringItem = &KeyringItem{
 		RunningCleanupProcess: false,
 		ExpiresAt:             time.Now().UTC().Add(testTTL),
-		Passphrase:            password,
+		Passphrase:            []byte(password),
 	}
 )
 
@@ -149,7 +149,7 @@ func TestPassphraseCacheGet_Expired(t *testing.T) {
 	item := &KeyringItem{
 		RunningCleanupProcess: false,
 		ExpiresAt:             time.Now().Add(-10 * time.Millisecond),
-		Passphrase:            password,
+		Passphrase:            []byte(password),
 	}
 
 	err := keyring.Set(item)
@@ -182,7 +182,7 @@ func TestKeyringSet_Twice(t *testing.T) {
 	keyring := newTestKeyring()
 
 	err := keyring.Set(&KeyringItem{
-		Passphrase: "first",
+		Passphrase: []byte("first"),
 	})
 	assert.OK(t, err)
 

@@ -69,6 +69,65 @@ func TestServiceLsCommand_Run(t *testing.T) {
 			},
 			out: "test\nsecond\n",
 		},
+		"success aws": {
+			cmd: ServiceLsCommand{
+				newServiceTable: newAWSServiceTable,
+			},
+			serviceService: fakeclient.ServiceService{
+				Lister: fakeclient.RepoServiceLister{
+					ReturnsServices: []*api.Service{
+						{
+							ServiceID:   "test",
+							Description: "foobar",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeAWSSTS,
+								Metadata: map[string]string{
+									api.CredentialMetadataAWSRole:   "arn:aws:iam::123456:role/path/to/role",
+									api.CredentialMetadataAWSKMSKey: "12345678-1234-1234-1234-123456789012",
+								},
+							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
+						},
+					},
+				},
+			},
+			out: "ID    DESCRIPTION  CREATED            ROLE                                   KMS-KEY\ntest  foobar       About an hour ago  arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012\n",
+		},
+		"success aws filter": {
+			cmd: ServiceLsCommand{
+				newServiceTable: newAWSServiceTable,
+				filters: []func(*api.Service) bool{
+					isAWSService,
+				},
+			},
+			serviceService: fakeclient.ServiceService{
+				Lister: fakeclient.RepoServiceLister{
+					ReturnsServices: []*api.Service{
+						{
+							ServiceID:   "test",
+							Description: "foobar",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeAWSSTS,
+								Metadata: map[string]string{
+									api.CredentialMetadataAWSRole:   "arn:aws:iam::123456:role/path/to/role",
+									api.CredentialMetadataAWSKMSKey: "arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012",
+								},
+							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
+						},
+						{
+							ServiceID:   "test2",
+							Description: "foobarbaz",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeRSA,
+							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
+						},
+					},
+				},
+			},
+			out: "ID    DESCRIPTION  CREATED            ROLE                                   KMS-KEY\ntest  foobar       About an hour ago  arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012\n",
+		},
 		"new client error": {
 			newClientErr: errors.New("error"),
 			err:          errors.New("error"),

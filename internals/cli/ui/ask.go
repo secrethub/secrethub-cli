@@ -194,20 +194,17 @@ func (o Option) String() string {
 	return o.Display
 }
 
-func Choose(io IO, question string, getOptions func() ([]Option, error), addOwn bool) (string, error) {
+func Choose(io IO, question string, getOptions func() ([]Option, bool, error), addOwn bool) (string, error) {
 	r, w, err := io.Prompts()
 	if err != nil {
 		return "", err
-	}
-
-	if question != "" {
-		fmt.Fprintln(w, question)
 	}
 
 	s := selecter{
 		r:          r,
 		w:          w,
 		getOptions: getOptions,
+		question:   question,
 		addOwn:     addOwn,
 	}
 
@@ -217,39 +214,53 @@ func Choose(io IO, question string, getOptions func() ([]Option, error), addOwn 
 type selecter struct {
 	r          io.Reader
 	w          io.Writer
-	getOptions func() ([]Option, error)
+	getOptions func() ([]Option, bool, error)
+	question   string
 	addOwn     bool
 
-	n       int
+	done    bool
 	options []Option
 }
 
 func (s *selecter) moreOptions() error {
-	options, err := s.getOptions()
-	if err != nil {
-		return err
-	}
-
-	if len(options) == 0 {
+	if s.done {
 		fmt.Fprintln(s.w, "No more options available.")
 		return nil
 	}
 
-	if len(s.options) == 0 {
+	options, done, err := s.getOptions()
+	if err != nil {
+		return err
+	}
+
+	s.done = done
+	s.options = append(s.options, options...)
+
+	fmt.Fprintln(s.w, s.question)
+
+	w := tabwriter.NewWriter(s.w, 0, 4, 4, ' ', 0)
+	for i, option := range s.options {
+		fmt.Fprintf(w, "%d) %s\n", i+1, option)
+	}
+
+	err = w.Flush()
+	if err != nil {
+		return err
+	}
+
+	if !s.done {
 		fmt.Fprintln(s.w, "Press [ENTER] for more options.")
 	}
 
-	s.options = append(s.options, options...)
-
-	w := tabwriter.NewWriter(s.w, 0, 4, 4, ' ', 0)
-	for _, option := range options {
-		s.n++
-		fmt.Fprintf(w, "%d) %s\n", s.n, option)
-	}
-	return w.Flush()
+	return nil
 }
 
 func (s *selecter) run() (string, error) {
+	fmt.Fprintf(s.w, s.question+" Press [ENTER] for options.\n")
+	return s.process()
+}
+
+func (s *selecter) process() (string, error) {
 	in, err := Readln(s.r)
 	if err != nil {
 		return "", err
@@ -260,7 +271,7 @@ func (s *selecter) run() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return s.run()
+		return s.process()
 	}
 
 	choice, err := strconv.Atoi(in)
@@ -270,7 +281,7 @@ func (s *selecter) run() (string, error) {
 		}
 
 		fmt.Fprintln(os.Stderr, fmt.Sprintf("%d is not a valid choice", choice))
-		return s.run()
+		return s.process()
 	}
 
 	return s.options[choice-1].Value, nil

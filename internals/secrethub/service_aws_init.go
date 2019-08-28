@@ -85,7 +85,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	fmt.Fprintln(cmd.io.Stdout())
 
 	if !isSet(region) {
-		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS? Press [ENTER] for options.", getAWSRegionOptions, true)
+		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true)
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 	if cmd.kmsKeyID == "" {
 		kmsKeyOptionsGetter := newKMSKeyOptionsGetter(cfg)
-		kmsKey, err := ui.Choose(cmd.io, "What KMS Key would you like to use? Press [ENTER] for options.", kmsKeyOptionsGetter.get, true)
+		kmsKey, err := ui.Choose(cmd.io, "What KMS Key would you like to use?", kmsKeyOptionsGetter.get, true)
 		if err != nil {
 			return err
 		}
@@ -157,7 +157,7 @@ func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {
 	}
 }
 
-func getAWSRegionOptions() ([]ui.Option, error) {
+func getAWSRegionOptions() ([]ui.Option, bool, error) {
 	regions := endpoints.AwsPartition().Regions()
 	options := make([]ui.Option, len(regions))
 	i := 0
@@ -168,7 +168,7 @@ func getAWSRegionOptions() ([]ui.Option, error) {
 		}
 		i++
 	}
-	return options, nil
+	return options, true, nil
 }
 
 type kmsKeyOptionsGetter struct {
@@ -179,9 +179,9 @@ type kmsKeyOptionsGetter struct {
 	nextMarker string
 }
 
-func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
+func (g *kmsKeyOptionsGetter) get() ([]ui.Option, bool, error) {
 	if g.done {
-		return []ui.Option{}, nil
+		return []ui.Option{}, true, nil
 	}
 
 	listKeysInput := kms.ListKeysInput{}
@@ -192,13 +192,13 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
 
 	sess, err := session.NewSession(g.cfg)
 	if err != nil {
-		return nil, handleAWSErr(err)
+		return nil, true, handleAWSErr(err)
 	}
 	kmsSvc := kms.New(sess)
 
 	keys, err := kmsSvc.ListKeys(&listKeysInput)
 	if err != nil {
-		return nil, handleAWSErr(err)
+		return nil, true, handleAWSErr(err)
 	}
 
 	if keys.NextMarker != nil {
@@ -229,7 +229,7 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
 	}
 	waitgroup.Wait()
 
-	return options, nil
+	return options, g.done, nil
 }
 
 // roleNameFromRole returns the name of the role indicated by the input. Accepted input is:

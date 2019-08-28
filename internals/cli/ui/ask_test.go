@@ -216,7 +216,7 @@ func TestAskYesNo(t *testing.T) {
 func TestChoose(t *testing.T) {
 	cases := map[string]struct {
 		question   string
-		getOptions func() ([]Option, error)
+		getOptions func() ([]Option, bool, error)
 		addOwn     bool
 
 		in []string
@@ -229,22 +229,22 @@ func TestChoose(t *testing.T) {
 			addOwn:   true,
 			in:       []string{"bar\n"},
 			expected: "bar",
-			out:      "foo?\n",
+			out:      "foo? Press [ENTER] for options.\n",
 		},
 		"choose option of first batch": {
 			question: "foo?",
-			getOptions: func() ([]Option, error) {
+			getOptions: func() ([]Option, bool, error) {
 				return []Option{
 					{Value: "foo", Display: "foo"},
 					{Value: "bar", Display: "bar"},
 					{Value: "baz", Display: "baz"},
-				}, nil
+				}, true, nil
 			},
 
 			in: []string{"\n", "2\n"},
 
 			expected: "bar",
-			out:      "foo?\nPress [ENTER] for more options.\n1) foo\n2) bar\n3) baz\n",
+			out:      "foo? Press [ENTER] for options.\nfoo?\n1) foo\n2) bar\n3) baz\n",
 		},
 		"choose option of second batch": {
 			question: "foo?",
@@ -252,21 +252,21 @@ func TestChoose(t *testing.T) {
 			in: []string{"\n", "\n", "7\n"},
 
 			expected: "Option 7",
-			out:      "foo?\nPress [ENTER] for more options.\n1) Option 1\n2) Option 2\n3) Option 3\n4) Option 4\n5) Option 5\n6) Option 6\n7) Option 7\n8) Option 8\n9) Option 9\n10) Option 10\n",
+			out:      "foo? Press [ENTER] for options.\nfoo?\n1) Option 1\n2) Option 2\n3) Option 3\n4) Option 4\n5) Option 5\nPress [ENTER] for more options.\nfoo?\n1) Option 1\n2) Option 2\n3) Option 3\n4) Option 4\n5) Option 5\n6) Option 6\n7) Option 7\n8) Option 8\n9) Option 9\n10) Option 10\nPress [ENTER] for more options.\n",
 		},
 		"options formatted": {
 			question: "foo?",
-			getOptions: func() ([]Option, error) {
+			getOptions: func() ([]Option, bool, error) {
 				return []Option{
 					{Value: "foo", Display: "foobar\tbaz"},
 					{Value: "bar", Display: "bar\tbaz"},
 					{Value: "baz", Display: "baz\tbar"},
-				}, nil
+				}, true, nil
 			},
 
 			in:       []string{"\n", "2\n"},
 			expected: "bar",
-			out:      "foo?\nPress [ENTER] for more options.\n1) foobar    baz\n2) bar       baz\n3) baz       bar\n",
+			out:      "foo? Press [ENTER] for options.\nfoo?\n1) foobar    baz\n2) bar       baz\n3) baz       bar\n",
 		},
 	}
 
@@ -296,7 +296,7 @@ type optionGetter struct {
 	n int
 }
 
-func (og *optionGetter) Get() ([]Option, error) {
+func (og *optionGetter) Get() ([]Option, bool, error) {
 	res := make([]Option, 5)
 	for i := 0; i < 5; i++ {
 		option := fmt.Sprintf("Option %d", og.n+i+1)
@@ -306,5 +306,5 @@ func (og *optionGetter) Get() ([]Option, error) {
 		}
 	}
 	og.n += 5
-	return res, nil
+	return res, false, nil
 }

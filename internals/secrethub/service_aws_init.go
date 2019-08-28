@@ -85,7 +85,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	fmt.Fprintln(cmd.io.Stdout())
 
 	if !isSet(region) {
-		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true)
+		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS? Press [ENTER] for options.", getAWSRegionOptions, true)
 		if err != nil {
 			return err
 		}

@@ -56,6 +56,10 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		return err
 	}
 
+	if cmd.role == "" && cmd.kmsKeyID == "" {
+		fmt.Fprintln(cmd.io.Stdout(), "This command creates a new service account for use on AWS. For help on this, see https://secrethub.io/docs/reference/service-command/#command-service-aws-init.")
+	}
+
 	cfg := aws.NewConfig()
 	if cmd.region != "" {
 		_, ok := endpoints.AwsPartition().Regions()[cmd.region]

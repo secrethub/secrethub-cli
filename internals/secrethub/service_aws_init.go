@@ -222,7 +222,10 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, bool, error) {
 
 			resp, err := kmsSvc.DescribeKey(&kms.DescribeKeyInput{KeyId: key.KeyId})
 			if err == nil {
-				option.Display += "\t" + aws.StringValue(resp.KeyMetadata.Description) + "\t" + g.timeFormatter.Format(*resp.KeyMetadata.CreationDate)
+				option.Display += " (created " + g.timeFormatter.Format(*resp.KeyMetadata.CreationDate) + ")\n"
+				if aws.StringValue(resp.KeyMetadata.Description) != "" {
+					option.Display += "Description: " + aws.StringValue(resp.KeyMetadata.Description) + "\n"
+				}
 			}
 
 			options[i] = option

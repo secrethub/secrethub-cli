@@ -236,8 +236,6 @@ func (s *selecter) moreOptions() error {
 	s.done = done
 	s.options = append(s.options, options...)
 
-	fmt.Fprintln(s.w, s.question)
-
 	w := tabwriter.NewWriter(s.w, 0, 4, 4, ' ', 0)
 	for i, option := range s.options {
 		fmt.Fprintf(w, "%d) %s\n", i+1, option)
@@ -248,9 +246,11 @@ func (s *selecter) moreOptions() error {
 		return err
 	}
 
+	fmt.Fprint(s.w, "Give number of choice or enter other option")
 	if !s.done {
-		fmt.Fprintln(s.w, "Press [ENTER] for more options.")
+		fmt.Fprint(s.w, " ([ENTER] for more options)")
 	}
+	fmt.Fprintln(s.w, ": ")
 
 	return nil
 }

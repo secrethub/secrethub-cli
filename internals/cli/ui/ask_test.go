@@ -244,7 +244,11 @@ func TestChoose(t *testing.T) {
 			in: []string{"\n", "2\n"},
 
 			expected: "bar",
-			out:      "foo? Press [ENTER] for options.\nfoo?\n1) foo\n2) bar\n3) baz\n",
+			out: "foo? Press [ENTER] for options.\n" +
+				"1) foo\n" +
+				"2) bar\n" +
+				"3) baz\n" +
+				"Give number of choice or enter other option: \n",
 		},
 		"choose option of second batch": {
 			question: "foo?",
@@ -252,7 +256,24 @@ func TestChoose(t *testing.T) {
 			in: []string{"\n", "\n", "7\n"},
 
 			expected: "Option 7",
-			out:      "foo? Press [ENTER] for options.\nfoo?\n1) Option 1\n2) Option 2\n3) Option 3\n4) Option 4\n5) Option 5\nPress [ENTER] for more options.\nfoo?\n1) Option 1\n2) Option 2\n3) Option 3\n4) Option 4\n5) Option 5\n6) Option 6\n7) Option 7\n8) Option 8\n9) Option 9\n10) Option 10\nPress [ENTER] for more options.\n",
+			out: "foo? Press [ENTER] for options.\n" +
+				"1) Option 1\n" +
+				"2) Option 2\n" +
+				"3) Option 3\n" +
+				"4) Option 4\n" +
+				"5) Option 5\n" +
+				"Give number of choice or enter other option ([ENTER] for more options): \n" +
+				"1) Option 1\n" +
+				"2) Option 2\n" +
+				"3) Option 3\n" +
+				"4) Option 4\n" +
+				"5) Option 5\n" +
+				"6) Option 6\n" +
+				"7) Option 7\n" +
+				"8) Option 8\n" +
+				"9) Option 9\n" +
+				"10) Option 10\n" +
+				"Give number of choice or enter other option ([ENTER] for more options): \n",
 		},
 		"options formatted": {
 			question: "foo?",
@@ -266,7 +287,11 @@ func TestChoose(t *testing.T) {
 
 			in:       []string{"\n", "2\n"},
 			expected: "bar",
-			out:      "foo? Press [ENTER] for options.\nfoo?\n1) foobar    baz\n2) bar       baz\n3) baz       bar\n",
+			out: "foo? Press [ENTER] for options.\n" +
+				"1) foobar    baz\n" +
+				"2) bar       baz\n" +
+				"3) baz       bar\n" +
+				"Give number of choice or enter other option: \n",
 		},
 	}
 

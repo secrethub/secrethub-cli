@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -162,13 +163,20 @@ func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {
 func getAWSRegionOptions() ([]ui.Option, bool, error) {
 	regions := endpoints.AwsPartition().Regions()
 	options := make([]ui.Option, len(regions))
+	regionNames := make([]string, len(regions))
 	i := 0
-	for _, region := range regions {
+	for name := range regions {
+		regionNames[i] = name
+		i++
+	}
+	sort.Sort(sort.StringSlice(regionNames))
+
+	for i, name := range regionNames {
+		region := regions[name]
 		options[i] = ui.Option{
 			Value:   region.ID(),
 			Display: region.ID() + "\t" + region.Description(),
 		}
-		i++
 	}
 	return options, true, nil
 }

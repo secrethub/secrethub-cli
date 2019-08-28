@@ -154,5 +154,5 @@ func isAWSService(service *api.Service) bool {
 		return false
 	}
 
-	return service.Credential.Type == api.CredentialTypeAWSSTS
+	return service.Credential.Type == api.CredentialTypeAWS
 }

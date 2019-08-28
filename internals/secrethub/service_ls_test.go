@@ -80,7 +80,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							ServiceID:   "test",
 							Description: "foobar",
 							Credential: &api.Credential{
-								Type: api.CredentialTypeAWSSTS,
+								Type: api.CredentialTypeAWS,
 								Metadata: map[string]string{
 									api.CredentialMetadataAWSRole:   "arn:aws:iam::123456:role/path/to/role",
 									api.CredentialMetadataAWSKMSKey: "12345678-1234-1234-1234-123456789012",
@@ -107,7 +107,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							ServiceID:   "test",
 							Description: "foobar",
 							Credential: &api.Credential{
-								Type: api.CredentialTypeAWSSTS,
+								Type: api.CredentialTypeAWS,
 								Metadata: map[string]string{
 									api.CredentialMetadataAWSRole:   "arn:aws:iam::123456:role/path/to/role",
 									api.CredentialMetadataAWSKMSKey: "arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012",
@@ -119,7 +119,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							ServiceID:   "test2",
 							Description: "foobarbaz",
 							Credential: &api.Credential{
-								Type: api.CredentialTypeRSA,
+								Type: api.CredentialTypeKey,
 							},
 							CreatedAt: time.Now().Add(-1 * time.Hour),
 						},

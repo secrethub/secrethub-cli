@@ -47,7 +47,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					},
 				},
 			},
-			out: "ID      DESCRIPTION  CREATED            TYPE\ntest    foobar       About an hour ago  key\nsecond  foobarbaz    2 hours ago        key\n",
+			out: "ID      DESCRIPTION  TYPE  CREATED\ntest    foobar       key   About an hour ago\nsecond  foobarbaz    key   2 hours ago\n",
 		},
 		"success quiet": {
 			cmd: ServiceLsCommand{
@@ -91,7 +91,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					},
 				},
 			},
-			out: "ID    DESCRIPTION  CREATED            ROLE                                   KMS-KEY\ntest  foobar       About an hour ago  arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012\n",
+			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY                               CREATED\ntest  foobar       arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012  About an hour ago\n",
 		},
 		"success aws filter": {
 			cmd: ServiceLsCommand{
@@ -126,7 +126,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					},
 				},
 			},
-			out: "ID    DESCRIPTION  CREATED            ROLE                                   KMS-KEY\ntest  foobar       About an hour ago  arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012\n",
+			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY                                                                CREATED\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012  About an hour ago\n",
 		},
 		"new client error": {
 			newClientErr: errors.New("error"),

@@ -107,12 +107,14 @@ type baseServiceTable struct {
 	timeFormatter TimeFormatter
 }
 
-func (sw baseServiceTable) header() []string {
-	return []string{"ID", "DESCRIPTION", "CREATED"}
+func (sw baseServiceTable) header(content ...string) []string {
+	res := append([]string{"ID", "DESCRIPTION"}, content...)
+	return append(res, "CREATED")
 }
 
-func (sw baseServiceTable) row(service *api.Service) []string {
-	return []string{service.ServiceID, service.Description, sw.timeFormatter.Format(service.CreatedAt.Local())}
+func (sw baseServiceTable) row(service *api.Service, content ...string) []string {
+	res := append([]string{service.ServiceID, service.Description}, content...)
+	return append(res, sw.timeFormatter.Format(service.CreatedAt.Local()))
 }
 
 func newKeyServiceTable(timeFormatter TimeFormatter) serviceTable {
@@ -124,11 +126,11 @@ type keyServiceTable struct {
 }
 
 func (sw keyServiceTable) header() []string {
-	return append(sw.baseServiceTable.header(), "TYPE")
+	return sw.baseServiceTable.header( "TYPE")
 }
 
 func (sw keyServiceTable) row(service *api.Service) []string {
-	return append(sw.baseServiceTable.row(service), string(service.Credential.Type))
+	return sw.baseServiceTable.row(service, string(service.Credential.Type))
 }
 
 func newAWSServiceTable(timeFormatter TimeFormatter) serviceTable {
@@ -140,11 +142,11 @@ type awsServiceTable struct {
 }
 
 func (sw awsServiceTable) header() []string {
-	return append(sw.baseServiceTable.header(), "ROLE", "KMS-KEY")
+	return sw.baseServiceTable.header( "ROLE", "KMS-KEY")
 }
 
 func (sw awsServiceTable) row(service *api.Service) []string {
-	return append(sw.baseServiceTable.row(service), service.Credential.Metadata[api.CredentialMetadataAWSRole], service.Credential.Metadata[api.CredentialMetadataAWSKMSKey])
+	return sw.baseServiceTable.row(service, service.Credential.Metadata[api.CredentialMetadataAWSRole], service.Credential.Metadata[api.CredentialMetadataAWSKMSKey])
 }
 
 func isAWSService(service *api.Service) bool {

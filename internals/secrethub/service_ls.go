@@ -126,7 +126,7 @@ type awsServiceTable struct {
 }
 
 func (sw awsServiceTable) header() []string {
-	return append(sw.baseServiceTable.header(), "ROLE", "KMS KEY")
+	return append(sw.baseServiceTable.header(), "ROLE", "KMS-KEY")
 }
 
 func (sw awsServiceTable) row(service *api.Service) []string {

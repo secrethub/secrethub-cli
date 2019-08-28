@@ -87,7 +87,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					},
 				},
 			},
-			out: "ID    DESCRIPTION  ROLE                                   KMS KEY\ntest  foobar       arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012\n",
+			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY\ntest  foobar       arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012\n",
 		},
 		"success aws filter": {
 			cmd: ServiceLsCommand{
@@ -120,7 +120,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					},
 				},
 			},
-			out: "ID    DESCRIPTION  ROLE                                   KMS KEY\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012\n",
+			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012\n",
 		},
 		"new client error": {
 			newClientErr: errors.New("error"),

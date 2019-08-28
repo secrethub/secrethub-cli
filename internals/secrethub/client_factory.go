@@ -4,53 +4,79 @@ import (
 	"net/url"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
 // ClientFactory handles creating a new client with the configured options.
 type ClientFactory interface {
 	// NewClient returns a new SecretHub client.
-	NewClient() (secrethub.Client, error)
+	NewClient() (secrethub.ClientAdapter, error)
+	NewUnauthenticatedClient() (secrethub.ClientAdapter, error)
 	Register(FlagRegisterer)
 }
 
 // NewClientFactory creates a new ClientFactory.
-func NewClientFactory(store CredentialStore) ClientFactory {
+func NewClientFactory(store CredentialConfig) ClientFactory {
 	return &clientFactory{
 		store: store,
 	}
 }
 
 type clientFactory struct {
-	client    secrethub.Client
+	client    *secrethub.Client
 	ServerURL *url.URL
-	store     CredentialStore
+	UseAWS    bool
+	store     CredentialConfig
 }
 
 // Register the flags for configuration on a cli application.
 func (f *clientFactory) Register(r FlagRegisterer) {
 	r.Flag("api-remote", "The SecretHub API address, don't set this unless you know what you're doing.").Hidden().URLVar(&f.ServerURL)
+	r.Flag("use-aws", "Use AWS credentials for authentication and account key decryption").BoolVar(&f.UseAWS)
 }
 
 // NewClient returns a new client that is configured to use the remote that
 // is set with the flag.
-func (f *clientFactory) NewClient() (secrethub.Client, error) {
+func (f *clientFactory) NewClient() (secrethub.ClientAdapter, error) {
 	if f.client == nil {
-		credential, err := f.store.Get()
-		if err != nil {
-			return nil, err
+		var credentialProvider credentials.Provider
+		if f.UseAWS {
+			credentialProvider = credentials.UseAWS()
+		} else {
+			credentialProvider = f.store.Provider()
 		}
 
-		f.client = secrethub.NewClient(credential, f.NewClientOptions())
+		options := f.baseClientOptions()
+		options = append(options, secrethub.WithCredentials(credentialProvider))
+
+		client, err := secrethub.NewClient(options...)
+		if err == configdir.ErrCredentialNotFound {
+			return nil, ErrCredentialNotExist
+		} else if err != nil {
+			return nil, err
+		}
+		f.client = client
 	}
 	return f.client, nil
 }
 
-// NewClientOptions returns the client options configured by the flags.
-func (f *clientFactory) NewClientOptions() *secrethub.ClientOptions {
-	var opts secrethub.ClientOptions
+func (f *clientFactory) NewUnauthenticatedClient() (secrethub.ClientAdapter, error) {
+	options := f.baseClientOptions()
+
+	client, err := secrethub.NewClient(options...)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+func (f *clientFactory) baseClientOptions() []secrethub.ClientOption {
+	options := []secrethub.ClientOption{secrethub.WithConfigDir(f.store.ConfigDir())}
 
 	if f.ServerURL != nil {
-		opts.ServerURL = f.ServerURL.String()
+		options = append(options, secrethub.WithServerURL(f.ServerURL.String()))
 	}
-	return &opts
+	return options
 }

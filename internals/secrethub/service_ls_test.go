@@ -3,9 +3,9 @@ package secrethub
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -23,9 +23,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 	}{
 		"success": {
 			cmd: ServiceLsCommand{
-				timeFormatter: &fakes.TimeFormatter{
-					Response: "2018-01-01T01:01:01+00:00",
-				},
+				newServiceTable: newKeyServiceTable,
 			},
 			serviceService: fakeclient.ServiceService{
 				Lister: fakeclient.RepoServiceLister{
@@ -33,15 +31,23 @@ func TestServiceLsCommand_Run(t *testing.T) {
 						{
 							ServiceID:   "test",
 							Description: "foobar",
+							Credential: &api.Credential{
+								Type: api.CredentialType("key"),
+							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
 						},
 						{
 							ServiceID:   "second",
 							Description: "foobarbaz",
+							Credential: &api.Credential{
+								Type: api.CredentialType("key"),
+							},
+							CreatedAt: time.Now().Add(-2 * time.Hour),
 						},
 					},
 				},
 			},
-			out: "ID      DESCRIPTION    CREATED\ntest    foobar         2018-01-01T01:01:01+00:00\nsecond  foobarbaz      2018-01-01T01:01:01+00:00\n",
+			out: "ID      DESCRIPTION  CREATED            TYPE\ntest    foobar       About an hour ago  key\nsecond  foobarbaz    2 hours ago        key\n",
 		},
 		"success quiet": {
 			cmd: ServiceLsCommand{
@@ -84,11 +90,11 @@ func TestServiceLsCommand_Run(t *testing.T) {
 			tc.cmd.io = io
 
 			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
 					return nil, tc.newClientErr
 				}
 			} else {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
 					return fakeclient.Client{
 						ServiceService: &tc.serviceService,
 					}, nil
@@ -96,7 +102,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 			}
 
 			// Act
-			err := tc.cmd.run()
+			err := tc.cmd.Run()
 
 			// Assert
 			assert.Equal(t, err, tc.err)

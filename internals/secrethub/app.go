@@ -19,11 +19,6 @@ const (
 	ApplicationName = "secrethub"
 )
 
-var (
-	// logger handles logging statements at different levels
-	logger = cli.NewLogger()
-)
-
 // Errors
 var (
 	errMain       = errio.Namespace(ApplicationName)
@@ -68,7 +63,7 @@ var (
 
 // App is the secrethub command-line application.
 type App struct {
-	credentialStore CredentialStore
+	credentialStore CredentialConfig
 	clientFactory   ClientFactory
 	cli             *cli.App
 	io              ui.IO
@@ -81,12 +76,12 @@ type Registerer interface {
 }
 
 // newClientFunc creates a ClientAdapater.
-type newClientFunc func() (secrethub.Client, error)
+type newClientFunc func() (secrethub.ClientAdapter, error)
 
 // NewApp creates a new command-line application.
 func NewApp() *App {
 	io := ui.NewUserIO()
-	store := NewCredentialStore(io)
+	store := NewCredentialConfig(io)
 	help := "The SecretHub command-line interface is a unified tool to manage your infrastructure secrets with SecretHub.\n\n" +
 		"For a step-by-step introduction, check out:\n\n" +
 		"  https://secrethub.io/docs/getting-started/\n\n" +
@@ -173,7 +168,7 @@ func (app *App) registerCommands() {
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
 
 	// Commands
-	NewSignUpCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
+	NewSignUpCommand(app.io, app.clientFactory.NewUnauthenticatedClient, app.credentialStore).Register(app.cli)
 	NewWriteCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewReadCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewGenerateSecretCommand(app.io, app.clientFactory.NewClient).Register(app.cli)

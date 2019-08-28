@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -13,17 +14,18 @@ type ServiceLsCommand struct {
 	repoPath api.RepoPath
 	quiet    bool
 
-	io            ui.IO
-	timeFormatter TimeFormatter
-	useTimestamps bool
-	newClient     newClientFunc
+	io              ui.IO
+	useTimestamps   bool
+	newClient       newClientFunc
+	newServiceTable func(t TimeFormatter) serviceTable
 }
 
 // NewServiceLsCommand creates a new ServiceLsCommand.
 func NewServiceLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand {
 	return &ServiceLsCommand{
-		io:        io,
-		newClient: newClient,
+		io:              io,
+		newClient:       newClient,
+		newServiceTable: newKeyServiceTable,
 	}
 }
 
@@ -38,18 +40,8 @@ func (cmd *ServiceLsCommand) Register(r Registerer) {
 }
 
 // Run lists all service accounts in a given repository.
-func (cmd *ServiceLsCommand) Run() error {
-	cmd.beforeRun()
-	return cmd.run()
-}
-
-// beforeRun configures the command using the flag values.
-func (cmd *ServiceLsCommand) beforeRun() {
-	cmd.timeFormatter = NewTimeFormatter(cmd.useTimestamps)
-}
-
 // Run lists all service accounts in a given repository.
-func (cmd *ServiceLsCommand) run() error {
+func (cmd *ServiceLsCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
 		return err
@@ -66,11 +58,12 @@ func (cmd *ServiceLsCommand) run() error {
 		}
 	} else {
 		w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
+		serviceTable := cmd.newServiceTable(NewTimeFormatter(cmd.useTimestamps))
 
-		fmt.Fprintf(w, "%s\t%s\t%s\n", "ID", "DESCRIPTION", "CREATED")
+		fmt.Fprintln(w, strings.Join(serviceTable.header(), "\t"))
 
 		for _, service := range services {
-			fmt.Fprintf(w, "%s\t%s\t%s\n", service.ServiceID, service.Description, cmd.timeFormatter.Format(service.CreatedAt.Local()))
+			fmt.Fprintln(w, strings.Join(serviceTable.row(service), "\t"))
 		}
 
 		err = w.Flush()
@@ -80,4 +73,37 @@ func (cmd *ServiceLsCommand) run() error {
 	}
 
 	return nil
+}
+
+type serviceTable interface {
+	header() []string
+	row(service *api.Service) []string
+}
+
+type baseServiceTable struct {
+	timeFormatter TimeFormatter
+}
+
+func (sw baseServiceTable) header() []string {
+	return []string{"ID", "DESCRIPTION", "CREATED"}
+}
+
+func (sw baseServiceTable) row(service *api.Service) []string {
+	return []string{service.ServiceID, service.Description, sw.timeFormatter.Format(service.CreatedAt.Local())}
+}
+
+func newKeyServiceTable(timeFormatter TimeFormatter) serviceTable {
+	return keyServiceTable{baseServiceTable{timeFormatter: timeFormatter}}
+}
+
+type keyServiceTable struct {
+	baseServiceTable
+}
+
+func (sw keyServiceTable) header() []string {
+	return append(sw.baseServiceTable.header(), "TYPE")
+}
+
+func (sw keyServiceTable) row(service *api.Service) []string {
+	return append(sw.baseServiceTable.row(service), string(service.Credential.Type))
 }

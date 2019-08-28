@@ -103,7 +103,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			tc.cmd.newClient = func() (secrethub.Client, error) {
+			tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
 				return fakeclient.Client{
 					OrgService: &fakeclient.OrgService{
 						MemberService: &tc.service,

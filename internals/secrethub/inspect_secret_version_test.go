@@ -74,7 +74,7 @@ func TestInspectSecretVersion_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Arrange
-			tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					SecretService: &fakeclient.SecretService{
 						VersionService: &tc.secretVersionService,

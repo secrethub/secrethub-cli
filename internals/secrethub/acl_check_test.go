@@ -98,7 +98,7 @@ func TestACLCheckCommand_Run(t *testing.T) {
 			getter := &tc.getter
 			lister := &tc.lister
 
-			tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					AccessRuleService: &fakeclient.AccessRuleService{
 						Getter:      getter,

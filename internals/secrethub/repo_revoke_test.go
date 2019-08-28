@@ -325,11 +325,11 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return nil, tc.newClientErr
 				}
 			} else {
-				tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						AccountService: &tc.accountService,
 						DirService:     &tc.dirService,

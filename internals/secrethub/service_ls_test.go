@@ -149,11 +149,11 @@ func TestServiceLsCommand_Run(t *testing.T) {
 			tc.cmd.io = io
 
 			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return nil, tc.newClientErr
 				}
 			} else {
-				tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						ServiceService: &tc.serviceService,
 					}, nil

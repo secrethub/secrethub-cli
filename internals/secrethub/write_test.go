@@ -196,7 +196,7 @@ func TestWriteCommand_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					SecretService: &tc.service,
 				}, nil

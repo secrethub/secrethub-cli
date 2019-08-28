@@ -126,7 +126,7 @@ type keyServiceTable struct {
 }
 
 func (sw keyServiceTable) header() []string {
-	return sw.baseServiceTable.header( "TYPE")
+	return sw.baseServiceTable.header("TYPE")
 }
 
 func (sw keyServiceTable) row(service *api.Service) []string {
@@ -142,7 +142,7 @@ type awsServiceTable struct {
 }
 
 func (sw awsServiceTable) header() []string {
-	return sw.baseServiceTable.header( "ROLE", "KMS-KEY")
+	return sw.baseServiceTable.header("ROLE", "KMS-KEY")
 }
 
 func (sw awsServiceTable) row(service *api.Service) []string {

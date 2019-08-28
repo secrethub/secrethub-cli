@@ -8,11 +8,11 @@ import (
 type AccountCommand struct {
 	io              ui.IO
 	newClient       newClientFunc
-	credentialStore CredentialStore
+	credentialStore CredentialConfig
 }
 
 // NewAccountCommand creates a new AccountCommand.
-func NewAccountCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialStore) *AccountCommand {
+func NewAccountCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *AccountCommand {
 	return &AccountCommand{
 		io:              io,
 		newClient:       newClient,

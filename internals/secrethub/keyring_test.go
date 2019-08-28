@@ -15,7 +15,7 @@ var (
 	testKeyringItem = &KeyringItem{
 		RunningCleanupProcess: false,
 		ExpiresAt:             time.Now().UTC().Add(testTTL),
-		Passphrase:            password,
+		Passphrase:            []byte(password),
 	}
 )
 
@@ -28,23 +28,9 @@ type TestKeyringCleaner struct {
 	cleanupCalled bool
 }
 
-func (c *TestKeyringCleaner) Cleanup(username string) error {
+func (c *TestKeyringCleaner) Cleanup() error {
 	c.cleanupCalled = true
 	return nil
-}
-
-// FakePassphraseReader is a helper type that implements the PassphraseReader interface.
-type FakePassphraseReader struct {
-	pass []byte
-	err  error
-}
-
-func (fp FakePassphraseReader) Get(username string) ([]byte, error) {
-	return fp.pass, fp.err
-}
-
-func (fp FakePassphraseReader) IncorrectPassphrase(username string) error {
-	return fp.err
 }
 
 func TestPassphraseReaderGet_Flag(t *testing.T) {
@@ -55,17 +41,17 @@ func TestPassphraseReaderGet_Flag(t *testing.T) {
 	}
 
 	// Act
-	actual, err := reader.Get(username1)
+	actual, err := reader.get()
 
 	// Assert
 	assert.OK(t, err)
-	assert.Equal(t, actual, []byte(password))
+	assert.Equal(t, actual, password)
 }
 
 func TestPassphraseReaderGet_Keystore(t *testing.T) {
 	// Arrange
 	cache := NewPassphraseCache(testTTL, &TestKeyringCleaner{}, newTestKeyring())
-	err := cache.Set(username1, password)
+	err := cache.Set(password)
 	assert.OK(t, err)
 	reader := passphraseReader{
 		FlagValue: "",
@@ -73,11 +59,11 @@ func TestPassphraseReaderGet_Keystore(t *testing.T) {
 	}
 
 	// Act
-	actual, err := reader.Get(username1)
+	actual, err := reader.get()
 
 	// Assert
 	assert.OK(t, err)
-	assert.Equal(t, actual, []byte(password))
+	assert.Equal(t, actual, password)
 }
 
 func TestPassphraseCacheSetSuccess(t *testing.T) {
@@ -85,7 +71,7 @@ func TestPassphraseCacheSetSuccess(t *testing.T) {
 	cache := NewPassphraseCache(testTTL, &TestKeyringCleaner{}, newTestKeyring())
 
 	// Act
-	err := cache.Set(username1, password)
+	err := cache.Set(password)
 
 	// Assert
 	assert.OK(t, err)
@@ -97,7 +83,7 @@ func TestPassphraseCacheSet_CleanupCalled(t *testing.T) {
 	cache := NewPassphraseCache(testTTL, cleaner, newTestKeyring())
 
 	// Act
-	err := cache.Set(username1, password)
+	err := cache.Set(password)
 
 	// Assert
 	assert.OK(t, err)
@@ -109,11 +95,11 @@ func TestPassphraseCacheSet_CleanupCalled(t *testing.T) {
 func TestPassphraseCacheGet_Success(t *testing.T) {
 	// Arrange
 	cache := NewPassphraseCache(testTTL, &TestKeyringCleaner{}, newTestKeyring())
-	err := cache.Set(username1, password)
+	err := cache.Set(password)
 	assert.OK(t, err)
 
 	// Act
-	actual, err := cache.Get(username1)
+	actual, err := cache.Get()
 
 	// Assert
 	assert.OK(t, err)
@@ -124,20 +110,20 @@ func TestPassphraseCacheGet_UpdatedAfterRead(t *testing.T) {
 	// Arrange
 	keyring := newTestKeyring()
 	cache := NewPassphraseCache(testTTL, &TestKeyringCleaner{}, keyring)
-	err := cache.Set(username1, password)
+	err := cache.Set(password)
 	assert.OK(t, err)
 
-	expected, err := keyring.Get(username1)
+	expected, err := keyring.Get()
 	assert.OK(t, err)
 
 	time.Sleep(20 * time.Millisecond)
 
 	// Act
-	_, err = cache.Get(username1)
+	_, err = cache.Get()
 	assert.OK(t, err)
 
 	// Assert
-	actual, err := keyring.Get(username1)
+	actual, err := keyring.Get()
 	assert.OK(t, err)
 	if !actual.ExpiresAt.After(expected.ExpiresAt) {
 		t.Errorf("password last read not updated")
@@ -149,7 +135,7 @@ func TestPassphraseCacheGet_NonExisting(t *testing.T) {
 	cache := NewPassphraseCache(testTTL, &TestKeyringCleaner{}, newTestKeyring())
 
 	// Act
-	_, err := cache.Get(username1)
+	_, err := cache.Get()
 
 	// Assert
 	assert.Equal(t, err, ErrKeyringItemNotFound)
@@ -163,20 +149,20 @@ func TestPassphraseCacheGet_Expired(t *testing.T) {
 	item := &KeyringItem{
 		RunningCleanupProcess: false,
 		ExpiresAt:             time.Now().Add(-10 * time.Millisecond),
-		Passphrase:            password,
+		Passphrase:            []byte(password),
 	}
 
-	err := keyring.Set(username1, item)
+	err := keyring.Set(item)
 	assert.OK(t, err)
 
 	// Act
-	actual, err := cache.Get(username1)
+	actual, err := cache.Get()
 
 	// Assert
 	assert.Equal(t, actual, "")
 	assert.Equal(t, err, ErrKeyringItemNotFound)
 
-	_, err = keyring.Get(username1)
+	_, err = keyring.Get()
 	assert.Equal(t, err, ErrKeyringItemNotFound)
 }
 
@@ -185,7 +171,7 @@ func TestKeyringSet_Success(t *testing.T) {
 	keyring := newTestKeyring()
 
 	// Act
-	err := keyring.Set(username1, testKeyringItem)
+	err := keyring.Set(testKeyringItem)
 
 	// Assert
 	assert.OK(t, err)
@@ -195,13 +181,13 @@ func TestKeyringSet_Twice(t *testing.T) {
 	// Arrange
 	keyring := newTestKeyring()
 
-	err := keyring.Set(username1, &KeyringItem{
-		Passphrase: "first",
+	err := keyring.Set(&KeyringItem{
+		Passphrase: []byte("first"),
 	})
 	assert.OK(t, err)
 
 	// Act
-	err = keyring.Set(username1, testKeyringItem)
+	err = keyring.Set(testKeyringItem)
 
 	// Assert
 	assert.OK(t, err)
@@ -210,11 +196,11 @@ func TestKeyringSet_Twice(t *testing.T) {
 func TestKeyring_Get(t *testing.T) {
 	// Arrange
 	keyring := newTestKeyring()
-	err := keyring.Set(username1, testKeyringItem)
+	err := keyring.Set(testKeyringItem)
 	assert.OK(t, err)
 
 	// Act
-	actual, err := keyring.Get(username1)
+	actual, err := keyring.Get()
 
 	// Assert
 	assert.OK(t, err)
@@ -226,7 +212,7 @@ func TestKeyring_Get_NonExisting(t *testing.T) {
 	keyring := newTestKeyring()
 
 	// Act
-	_, err := keyring.Get(username1)
+	_, err := keyring.Get()
 
 	// Assert
 	assert.Equal(t, err, ErrKeyringItemNotFound)
@@ -235,11 +221,11 @@ func TestKeyring_Get_NonExisting(t *testing.T) {
 func TestKeyring_Delete(t *testing.T) {
 	// Arrange
 	keyring := newTestKeyring()
-	err := keyring.Set(username1, testKeyringItem)
+	err := keyring.Set(testKeyringItem)
 	assert.OK(t, err)
 
 	// Act
-	err = keyring.Delete(username1)
+	err = keyring.Delete()
 
 	// Assert
 	assert.OK(t, err)
@@ -250,7 +236,7 @@ func TestKeyring_Delete_NonExisting(t *testing.T) {
 	keyring := newTestKeyring()
 
 	// Act
-	err := keyring.Delete(username1)
+	err := keyring.Delete()
 
 	// Assert
 	assert.Equal(t, err, ErrKeyringItemNotFound)

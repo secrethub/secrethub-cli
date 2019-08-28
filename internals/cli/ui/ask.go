@@ -218,7 +218,6 @@ type selecter struct {
 	question   string
 	addOwn     bool
 
-	n       int
 	done    bool
 	options []Option
 }
@@ -235,13 +234,11 @@ func (s *selecter) moreOptions() error {
 	}
 
 	s.done = done
-	s.options = append(s.options, options...)
-
 	w := tabwriter.NewWriter(s.w, 0, 4, 4, ' ', 0)
 	for i, option := range options {
-		fmt.Fprintf(w, "%d) %s\n", s.n+i+1, option)
+		fmt.Fprintf(w, "%d) %s\n", len(s.options)+i+1, option)
 	}
-	s.n += len(options)
+	s.options = append(s.options, options...)
 
 	err = w.Flush()
 	if err != nil {

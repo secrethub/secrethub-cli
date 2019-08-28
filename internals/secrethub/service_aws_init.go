@@ -142,7 +142,11 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
 		listKeysInput.SetMarker(g.nextMarker)
 	}
 
-	kmsSvc := kms.New(session.New(g.cfg))
+	sess, err := session.NewSession(g.cfg)
+	if err != nil {
+		return nil, err
+	}
+	kmsSvc := kms.New(sess)
 
 	keys, err := kmsSvc.ListKeys(&listKeysInput)
 	if err != nil {

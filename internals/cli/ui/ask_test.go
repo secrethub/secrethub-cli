@@ -264,9 +264,9 @@ func TestChoose(t *testing.T) {
 				}, nil
 			},
 
-			in: []string{"\n", "2\n"},
+			in:       []string{"\n", "2\n"},
 			expected: "bar",
-			out: "foo?\nPress [ENTER] for more options.\n1) foobar    baz\n2) bar       baz\n3) baz       bar\n",
+			out:      "foo?\nPress [ENTER] for more options.\n1) foobar    baz\n2) bar       baz\n3) baz       bar\n",
 		},
 	}
 

@@ -17,13 +17,13 @@ import (
 func TestMkDirCommand(t *testing.T) {
 	cases := map[string]struct {
 		path      string
-		newClient func() (secrethub.ClientAdapter, error)
+		newClient func() (secrethub.ClientInterface, error)
 		stdout    string
 		err       error
 	}{
 		"success": {
 			path: "namespace/repo/dir",
-			newClient: func() (secrethub.ClientAdapter, error) {
+			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
 						Creater: fakeclient.DirCreater{
@@ -50,7 +50,7 @@ func TestMkDirCommand(t *testing.T) {
 		},
 		"new client fails": {
 			path: "namespace/repo/dir",
-			newClient: func() (secrethub.ClientAdapter, error) {
+			newClient: func() (secrethub.ClientInterface, error) {
 				return nil, errio.Namespace("test").Code("foo").Error("bar")
 			},
 			stdout: "",
@@ -58,7 +58,7 @@ func TestMkDirCommand(t *testing.T) {
 		},
 		"create dir fails": {
 			path: "namespace/repo/dir",
-			newClient: func() (secrethub.ClientAdapter, error) {
+			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
 						Creater: fakeclient.DirCreater{

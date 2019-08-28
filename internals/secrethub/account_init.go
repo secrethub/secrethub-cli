@@ -307,7 +307,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 
 // waitForCredentialToBeAdded returns a channel on which is returned when the credential is added and a channel
 // on which an error is returned if one occurs.
-func (cmd *AccountInitCommand) waitForCredentialToBeAdded(client secrethub.ClientAdapter) (chan bool, chan error) {
+func (cmd *AccountInitCommand) waitForCredentialToBeAdded(client secrethub.ClientInterface) (chan bool, chan error) {
 	errc := make(chan error, 1)
 	c := make(chan bool, 1)
 	go func() {
@@ -327,7 +327,7 @@ func (cmd *AccountInitCommand) waitForCredentialToBeAdded(client secrethub.Clien
 	return c, errc
 }
 
-func (cmd *AccountInitCommand) isAuthenticated(client secrethub.ClientAdapter) (bool, error) {
+func (cmd *AccountInitCommand) isAuthenticated(client secrethub.ClientInterface) (bool, error) {
 	_, err := client.Users().Me()
 	if err == api.ErrSignatureNotVerified {
 		return false, nil

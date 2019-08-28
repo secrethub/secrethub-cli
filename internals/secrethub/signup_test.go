@@ -32,7 +32,7 @@ func TestSignUpCommand_Run(t *testing.T) {
 
 			progressPrinter := fakeprogress.Printer{}
 			tc.cmd.progressPrinter = &progressPrinter
-			tc.cmd.newClient = func() (secrethub.ClientAdapter, error) {
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					UserService: &fakeclient.UserService{},
 				}, nil

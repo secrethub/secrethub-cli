@@ -207,6 +207,7 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, error) {
 			}
 
 			options[i] = option
+			waitgroup.Done()
 		}()
 	}
 	waitgroup.Wait()

@@ -3,6 +3,7 @@ package secrethub
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
@@ -22,7 +23,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 	}{
 		"success": {
 			cmd: ServiceLsCommand{
-				serviceTable: keyServiceTable{},
+				newServiceTable: newKeyServiceTable,
 			},
 			serviceService: fakeclient.ServiceService{
 				Lister: fakeclient.RepoServiceLister{
@@ -33,6 +34,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							Credential: &api.Credential{
 								Type: api.CredentialType("key"),
 							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
 						},
 						{
 							ServiceID:   "second",
@@ -40,11 +42,12 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							Credential: &api.Credential{
 								Type: api.CredentialType("key"),
 							},
+							CreatedAt: time.Now().Add(-2 * time.Hour),
 						},
 					},
 				},
 			},
-			out: "ID      DESCRIPTION  TYPE\ntest    foobar       key\nsecond  foobarbaz    key\n",
+			out: "ID      DESCRIPTION  TYPE  CREATED\ntest    foobar       key   About an hour ago\nsecond  foobarbaz    key   2 hours ago\n",
 		},
 		"success quiet": {
 			cmd: ServiceLsCommand{
@@ -68,7 +71,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 		},
 		"success aws": {
 			cmd: ServiceLsCommand{
-				serviceTable: awsServiceTable{},
+				newServiceTable: newAWSServiceTable,
 			},
 			serviceService: fakeclient.ServiceService{
 				Lister: fakeclient.RepoServiceLister{
@@ -83,15 +86,16 @@ func TestServiceLsCommand_Run(t *testing.T) {
 									api.CredentialMetadataAWSKMSKey: "12345678-1234-1234-1234-123456789012",
 								},
 							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
 						},
 					},
 				},
 			},
-			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY\ntest  foobar       arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012\n",
+			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY                               CREATED\ntest  foobar       arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012  About an hour ago\n",
 		},
 		"success aws filter": {
 			cmd: ServiceLsCommand{
-				serviceTable: awsServiceTable{},
+				newServiceTable: newAWSServiceTable,
 				filters: []func(*api.Service) bool{
 					isAWSService,
 				},
@@ -109,6 +113,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 									api.CredentialMetadataAWSKMSKey: "arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012",
 								},
 							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
 						},
 						{
 							ServiceID:   "test2",
@@ -116,11 +121,12 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							Credential: &api.Credential{
 								Type: api.CredentialTypeRSA,
 							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
 						},
 					},
 				},
 			},
-			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012\n",
+			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY                                                                CREATED\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012  About an hour ago\n",
 		},
 		"new client error": {
 			newClientErr: errors.New("error"),

@@ -14,26 +14,27 @@ type ServiceLsCommand struct {
 	repoPath api.RepoPath
 	quiet    bool
 
-	io           ui.IO
-	newClient    newClientFunc
-	serviceTable serviceTable
-	filters      []func(service *api.Service) bool
+	io              ui.IO
+	useTimestamps   bool
+	newClient       newClientFunc
+	newServiceTable func(t TimeFormatter) serviceTable
+	filters         []func(service *api.Service) bool
 }
 
 // NewServiceLsCommand creates a new ServiceLsCommand.
 func NewServiceLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand {
 	return &ServiceLsCommand{
-		io:           io,
-		newClient:    newClient,
-		serviceTable: keyServiceTable{},
+		io:              io,
+		newClient:       newClient,
+		newServiceTable: newKeyServiceTable,
 	}
 }
 
 func NewServiceAWSLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand {
 	return &ServiceLsCommand{
-		io:           io,
-		newClient:    newClient,
-		serviceTable: awsServiceTable{},
+		io:              io,
+		newClient:       newClient,
+		newServiceTable: newAWSServiceTable,
 		filters: []func(service *api.Service) bool{
 			isAWSService,
 		},
@@ -45,10 +46,12 @@ func (cmd *ServiceLsCommand) Register(r Registerer) {
 	clause := r.Command("ls", "List all service accounts in a given repository.")
 	clause.Arg("repo-path", "The path to the repository to list services for (<namespace>/<repo>).").Required().SetValue(&cmd.repoPath)
 	clause.Flag("quiet", "Only print service IDs.").Short('q').BoolVar(&cmd.quiet)
+	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	BindAction(clause, cmd.Run)
 }
 
+// Run lists all service accounts in a given repository.
 // Run lists all service accounts in a given repository.
 func (cmd *ServiceLsCommand) Run() error {
 	client, err := cmd.newClient()
@@ -78,11 +81,12 @@ outer:
 		}
 	} else {
 		w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
+		serviceTable := cmd.newServiceTable(NewTimeFormatter(cmd.useTimestamps))
 
-		fmt.Fprintln(w, strings.Join(cmd.serviceTable.header(), "\t"))
+		fmt.Fprintln(w, strings.Join(serviceTable.header(), "\t"))
 
 		for _, service := range included {
-			fmt.Fprintln(w, strings.Join(cmd.serviceTable.row(service), "\t"))
+			fmt.Fprintln(w, strings.Join(serviceTable.row(service), "\t"))
 		}
 
 		err = w.Flush()
@@ -99,14 +103,22 @@ type serviceTable interface {
 	row(service *api.Service) []string
 }
 
-type baseServiceTable struct{}
-
-func (sw baseServiceTable) header() []string {
-	return []string{"ID", "DESCRIPTION"}
+type baseServiceTable struct {
+	timeFormatter TimeFormatter
 }
 
-func (sw baseServiceTable) row(service *api.Service) []string {
-	return []string{service.ServiceID, service.Description}
+func (sw baseServiceTable) header(content ...string) []string {
+	res := append([]string{"ID", "DESCRIPTION"}, content...)
+	return append(res, "CREATED")
+}
+
+func (sw baseServiceTable) row(service *api.Service, content ...string) []string {
+	res := append([]string{service.ServiceID, service.Description}, content...)
+	return append(res, sw.timeFormatter.Format(service.CreatedAt.Local()))
+}
+
+func newKeyServiceTable(timeFormatter TimeFormatter) serviceTable {
+	return keyServiceTable{baseServiceTable{timeFormatter: timeFormatter}}
 }
 
 type keyServiceTable struct {
@@ -114,11 +126,15 @@ type keyServiceTable struct {
 }
 
 func (sw keyServiceTable) header() []string {
-	return append(sw.baseServiceTable.header(), "TYPE")
+	return sw.baseServiceTable.header("TYPE")
 }
 
 func (sw keyServiceTable) row(service *api.Service) []string {
-	return append(sw.baseServiceTable.row(service), string(service.Credential.Type))
+	return sw.baseServiceTable.row(service, string(service.Credential.Type))
+}
+
+func newAWSServiceTable(timeFormatter TimeFormatter) serviceTable {
+	return awsServiceTable{baseServiceTable{timeFormatter: timeFormatter}}
 }
 
 type awsServiceTable struct {
@@ -126,11 +142,11 @@ type awsServiceTable struct {
 }
 
 func (sw awsServiceTable) header() []string {
-	return append(sw.baseServiceTable.header(), "ROLE", "KMS-KEY")
+	return sw.baseServiceTable.header("ROLE", "KMS-KEY")
 }
 
 func (sw awsServiceTable) row(service *api.Service) []string {
-	return append(sw.baseServiceTable.row(service), service.Credential.Metadata[api.CredentialMetadataAWSRole], service.Credential.Metadata[api.CredentialMetadataAWSKMSKey])
+	return sw.baseServiceTable.row(service, service.Credential.Metadata[api.CredentialMetadataAWSRole], service.Credential.Metadata[api.CredentialMetadataAWSKMSKey])
 }
 
 func isAWSService(service *api.Service) bool {

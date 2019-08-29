@@ -144,7 +144,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
-	clause := r.Command("init", "Create a new AWS service account attached to a repository.")
+	clause := r.Command("init", "Create a new service account that is tied to an AWS IAM role.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().SetValue(&cmd.repo)
 	clause.Flag("kms-key-id", "The ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
 	clause.Flag("role", "The role name or ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)

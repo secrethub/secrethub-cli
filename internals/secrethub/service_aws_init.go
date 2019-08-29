@@ -146,9 +146,9 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause := r.Command("init", "Create a new AWS service account attached to a repository.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().SetValue(&cmd.repo)
-	clause.Flag("kms-key-id", "ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
-	clause.Flag("role", "ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)
-	clause.Flag("region", "The AWS region that should be used for KMS").StringVar(&cmd.region)
+	clause.Flag("kms-key-id", "The ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
+	clause.Flag("role", "The role name or ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)
+	clause.Flag("region", "The AWS region that should be used for KMS.").StringVar(&cmd.region)
 	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)

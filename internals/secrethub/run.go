@@ -150,7 +150,7 @@ func (cmd *RunCommand) Run() error {
 	if cmd.envFile != "" {
 		raw, err := ioutil.ReadFile(cmd.envFile)
 		if err != nil {
-			return ErrCannotReadFile(err)
+			return ErrCannotReadFile(cmd.envFile, err)
 		}
 
 		parser, err := getTemplateParser(raw, cmd.templateVersion)

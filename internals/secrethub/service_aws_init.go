@@ -92,7 +92,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	fmt.Fprintln(cmd.io.Stdout())
 
 	if !isSet(region) {
-		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true)
+		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true, "region")
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 	if cmd.kmsKeyID == "" {
 		kmsKeyOptionsGetter := newKMSKeyOptionsGetter(cfg)
-		kmsKey, err := ui.Choose(cmd.io, "What is the ID of the KMS-key you want to use for encrypting this service's credential? The service's IAM role should have decryption permissions on this key.", kmsKeyOptionsGetter.get, true)
+		kmsKey, err := ui.Choose(cmd.io, "What is the ID of the KMS-key you want to use for encrypting this service's credential? The service's IAM role should have decryption permissions on this key.", kmsKeyOptionsGetter.get, true, "KMS key (ID or ARN)")
 		if err != nil {
 			return err
 		}

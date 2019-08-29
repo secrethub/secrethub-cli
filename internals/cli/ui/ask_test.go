@@ -248,7 +248,7 @@ func TestChoose(t *testing.T) {
 				"1) foo\n" +
 				"2) bar\n" +
 				"3) baz\n" +
-				"Give number of choice or enter other option: \n",
+				"Type a number of choice or enter a value: \n",
 		},
 		"choose option of second batch": {
 			question: "foo?",
@@ -262,13 +262,13 @@ func TestChoose(t *testing.T) {
 				"3) Option 3\n" +
 				"4) Option 4\n" +
 				"5) Option 5\n" +
-				"Give number of choice or enter other option ([ENTER] for more options): \n" +
+				"Type a number of choice or enter a value ([ENTER] for more options): \n" +
 				"6) Option 6\n" +
 				"7) Option 7\n" +
 				"8) Option 8\n" +
 				"9) Option 9\n" +
 				"10) Option 10\n" +
-				"Give number of choice or enter other option ([ENTER] for more options): \n",
+				"Type a number of choice or enter a value ([ENTER] for more options): \n",
 		},
 		"options formatted": {
 			question: "foo?",
@@ -286,7 +286,7 @@ func TestChoose(t *testing.T) {
 				"1) foobar    baz\n" +
 				"2) bar       baz\n" +
 				"3) baz       bar\n" +
-				"Give number of choice or enter other option: \n",
+				"Type a number of choice or enter a value: \n",
 		},
 	}
 
@@ -302,7 +302,7 @@ func TestChoose(t *testing.T) {
 			}
 
 			// Run
-			actual, err := Choose(io, tc.question, tc.getOptions, tc.addOwn)
+			actual, err := Choose(io, tc.question, tc.getOptions, tc.addOwn, "value")
 
 			// Assert
 			assert.Equal(t, err, nil)

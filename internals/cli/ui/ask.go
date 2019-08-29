@@ -194,10 +194,14 @@ func (o Option) String() string {
 	return o.Display
 }
 
-func Choose(io IO, question string, getOptions func() ([]Option, bool, error), addOwn bool) (string, error) {
+func Choose(io IO, question string, getOptions func() ([]Option, bool, error), addOwn bool, optionName string) (string, error) {
 	r, w, err := io.Prompts()
 	if err != nil {
 		return "", err
+	}
+
+	if optionName == "" {
+		optionName = "option"
 	}
 
 	s := selecter{
@@ -206,8 +210,8 @@ func Choose(io IO, question string, getOptions func() ([]Option, bool, error), a
 		getOptions: getOptions,
 		question:   question,
 		addOwn:     addOwn,
+		optionName: optionName,
 	}
-
 	return s.run()
 }
 
@@ -217,6 +221,7 @@ type selecter struct {
 	getOptions func() ([]Option, bool, error)
 	question   string
 	addOwn     bool
+	optionName string
 
 	done    bool
 	options []Option
@@ -245,7 +250,7 @@ func (s *selecter) moreOptions() error {
 		return err
 	}
 
-	fmt.Fprint(s.w, "Give number of choice or enter other option")
+	fmt.Fprintf(s.w, "Type a number of choice or enter a %s", s.optionName)
 	if !s.done {
 		fmt.Fprint(s.w, " ([ENTER] for more options)")
 	}

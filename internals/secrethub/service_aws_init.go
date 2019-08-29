@@ -57,7 +57,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	if cmd.role == "" && cmd.kmsKeyID == "" {
-		fmt.Fprintln(cmd.io.Stdout(), "This command creates a new service account for use on AWS. For help on this, see https://secrethub.io/docs/reference/service-command/#command-service-aws-init.")
+		fmt.Fprintln(cmd.io.Stdout(), "This command creates a new service account for use on AWS. For help on this, run `secrethub service aws init --help`.")
 	}
 
 	cfg := aws.NewConfig()

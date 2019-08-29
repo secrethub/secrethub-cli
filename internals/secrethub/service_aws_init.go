@@ -137,7 +137,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "The service %s is now reachable through AWS when the role %s is assumed.\n", service.ServiceID, cmd.role)
+	fmt.Fprintf(cmd.io.Stdout(), "Successfully created the service account. Any host that assumes the IAM role %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", roleNameFromRole(cmd.role))
 
 	return nil
 }

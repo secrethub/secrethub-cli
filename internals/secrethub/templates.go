@@ -15,9 +15,7 @@ Management Commands:
 {{ end }}\
 
 {{ if $rootCommands }}\
-{{ if $managementCommands }}\
 Commands:
-{{ end }}\
 {{ $rootCommands | CommandsToTwoColumns | FormatTwoColumns }}
 {{end}}\
 {{end}}\
@@ -73,7 +71,6 @@ usage: {{.App.Name}}{{template "FormatAppUsage" .App}}
 {{end}}\
 {{if .Context.SelectedCommand}}\
 {{if len .Context.SelectedCommand.Commands}}\
-Subcommands:
 {{template "FormatSubCommands" .Context.SelectedCommand}}
 {{end}}\
 {{else if .App.Commands}}\

@@ -73,10 +73,17 @@ func (f *clientFactory) NewUnauthenticatedClient() (secrethub.ClientInterface, e
 }
 
 func (f *clientFactory) baseClientOptions() []secrethub.ClientOption {
-	options := []secrethub.ClientOption{secrethub.WithConfigDir(f.store.ConfigDir())}
+	options := []secrethub.ClientOption{
+		secrethub.WithConfigDir(f.store.ConfigDir()),
+		secrethub.WithAppInfo(&secrethub.AppInfo{
+			Name:    "secrethub-cli",
+			Version: Version,
+		}),
+	}
 
 	if f.ServerURL != nil {
 		options = append(options, secrethub.WithServerURL(f.ServerURL.String()))
 	}
+
 	return options
 }

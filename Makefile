@@ -19,7 +19,7 @@ lint-tools:
 
 COMMIT=`git rev-parse --short HEAD`
 VERSION=`git describe --always`
-BUILD_FLAGS=-ldflags "-s -w -X main.commit=${COMMIT} -X main.version=${VERSION}" -tags=production
+BUILD_FLAGS=-ldflags "-s -w -X "github.com/secrethub/secrethub-cli/internals/secrethub.Commit=${COMMIT}" -X "github.com/secrethub/secrethub-cli/internals/secrethub.Version=${VERSION}"" -tags=production
 
 build:
 	go build ${BUILD_FLAGS} ./cmd/secrethub

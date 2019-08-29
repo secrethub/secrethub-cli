@@ -289,12 +289,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 		return err
 	}
 
-	_, fingerprint, err := key.Verifier().Export()
-	if err != nil {
-		return err
-	}
-
-	_, err = client.Accounts().Keys().Create(fingerprint, key.Encrypter())
+	_, err = client.Accounts().Keys().Create(key.Verifier(), key.Encrypter())
 	if err != nil {
 		fmt.Fprintln(cmd.io.Stdout(), " Failed")
 		return err

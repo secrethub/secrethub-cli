@@ -22,6 +22,8 @@ github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/docker/docker v1.13.1 h1:IkZjBSIc8hBjLpqeAbeE5mca5mNgeatLHBy3GO78BWo=
+github.com/docker/docker v1.13.1/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=
 github.com/docker/go-units v0.3.3 h1:Xk8S3Xj5sLGlG5g67hJmYMmUgXv5N4PhkjJHHqrwnTk=
 github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
@@ -52,6 +54,8 @@ github.com/mattn/go-colorable v0.1.1/go.mod h1:FuOcm+DKB9mbwrcAfNl7/TZVBZ6rcncea
 github.com/mattn/go-isatty v0.0.5/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/mattn/go-isatty v0.0.7 h1:UvyT9uN+3r7yLEYSlJsbQGdsaB/a0DlgWP3pql6iwOc=
 github.com/mattn/go-isatty v0.0.7/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
+github.com/mattn/go-shellwords v1.0.6 h1:9Jok5pILi5S1MnDirGVTufYGtksUs/V2BWUP3ZkeUUI=
+github.com/mattn/go-shellwords v1.0.6/go.mod h1:3xCvwCdWdlDJUrvuMn7Wuy9eWs4pE8vqg+NOMyg4B2o=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQzvN1EDeE=
@@ -65,6 +69,9 @@ github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdh
 github.com/secrethub/secrethub-go v0.0.0-20190801115327-20fc784b35e0/go.mod h1:E9MecxicOt8/yFp7WzVO5urgUEhbLrqQcGelgEKu+U4=
 github.com/secrethub/secrethub-go v0.0.0-20190827151003-8a8456906094 h1:45CYvezMm3BvMfgOsSdQgUxbmjM8GJbeju0pvQesIfI=
 github.com/secrethub/secrethub-go v0.0.0-20190827151003-8a8456906094/go.mod h1:dumDWUpaD/LE4+3N2X7mnaPDApgtSRlUnntew1/x1ew=
+github.com/secrethub/secrethub-go v0.0.0-20190829112958-68fe6f8d82c6 h1:e7B5pHnsEnj10YkVIW8GzhQh+mzsnEfXUOS5osDI1iI=
+github.com/secrethub/secrethub-go v0.0.0-20190829112958-68fe6f8d82c6/go.mod h1:rc2IfKKBJ4L0wGec0u4XnF5/pe0FFPE4Q1MWfrFso7s=
+github.com/secrethub/secrethub-go v0.20.0 h1:NK6G/c1QmmMI7Rwc5nntC66+x0WediVnxeazpJptCNI=
 github.com/secrethub/secrethub-go v0.20.1-0.20190821082359-26bfe8af56af h1:Ai2EmOTb7jnJZvXOLrdkM7RVlzR4fLOd//Uph1984+U=
 github.com/secrethub/secrethub-go v0.20.1-0.20190821082359-26bfe8af56af/go.mod h1:E9MecxicOt8/yFp7WzVO5urgUEhbLrqQcGelgEKu+U4=
 github.com/secrethub/secrethub-go v0.20.1-0.20190821121056-8eaaf9673369 h1:sRuUIraIkQ/Nmajsf8N12D4oQ0d0DURNLi2jjem/X28=

@@ -10,9 +10,7 @@ import (
 // KeyringClearCommand waits for the keyring item store to expire
 // and clears it. If the process receives a kill signal it will
 // delete the keyring item and stop.
-type KeyringClearCommand struct {
-	username string
-}
+type KeyringClearCommand struct{}
 
 // NewKeyringClearCommand creates a new KeyringClearCommand.
 func NewKeyringClearCommand() *KeyringClearCommand {
@@ -22,7 +20,6 @@ func NewKeyringClearCommand() *KeyringClearCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *KeyringClearCommand) Register(r Registerer) {
 	clause := r.Command("keyring-clear", "Clear the key passphrase from the keyring.").Hidden()
-	clause.Arg("username", "The username to clear the passphrase for").Required().StringVar(&cmd.username)
 
 	// Alias for backwards compatibility with old name of command.
 	clause.Alias("key-passphrase-clear")
@@ -36,7 +33,7 @@ func (cmd *KeyringClearCommand) Register(r Registerer) {
 func (cmd *KeyringClearCommand) Run() error {
 	keyring := NewKeyring()
 
-	item, err := keyring.Get(cmd.username)
+	item, err := keyring.Get()
 	if err == ErrKeyringItemNotFound {
 		// Passphrase already cleared.
 		return nil
@@ -45,7 +42,7 @@ func (cmd *KeyringClearCommand) Run() error {
 	}
 
 	item.RunningCleanupProcess = true
-	err = keyring.Set(cmd.username, item)
+	err = keyring.Set(item)
 	if err != nil {
 		return err
 	}
@@ -64,9 +61,9 @@ func (cmd *KeyringClearCommand) Run() error {
 	for {
 		select {
 		case <-kill:
-			return keyring.Delete(cmd.username)
+			return keyring.Delete()
 		case <-time.After(wait):
-			item, err := keyring.Get(cmd.username)
+			item, err := keyring.Get()
 			if err == ErrKeyringItemNotFound {
 				return nil
 			} else if err != nil {
@@ -74,7 +71,7 @@ func (cmd *KeyringClearCommand) Run() error {
 			}
 
 			if item.IsExpired() {
-				err := keyring.Delete(cmd.username)
+				err := keyring.Delete()
 				if err == nil || err == ErrKeyringItemNotFound {
 					return err
 				}

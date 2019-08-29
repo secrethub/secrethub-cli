@@ -92,11 +92,11 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return nil, tc.newClientErr
 				}
 			} else {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						RepoService: &fakeclient.RepoService{
 							UserService: &tc.repoUserService,

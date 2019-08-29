@@ -26,7 +26,7 @@ func TestAccountInspect(t *testing.T) {
 	}{
 		"success": {
 			cmd: AccountInspectCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return &fakeclient.Client{
 						UserService: &fakeclient.UserService{
 							MeGetter: fakeclient.MeGetter{
@@ -60,7 +60,7 @@ func TestAccountInspect(t *testing.T) {
 		},
 		"client error": {
 			cmd: AccountInspectCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						UserService: &fakeclient.UserService{
 							MeGetter: fakeclient.MeGetter{
@@ -76,7 +76,7 @@ func TestAccountInspect(t *testing.T) {
 		},
 		"client creation error": {
 			cmd: AccountInspectCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return nil, testErr
 				},
 			},

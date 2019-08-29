@@ -76,9 +76,7 @@ func NewRunCommand(newClient newClientFunc) *RunCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RunCommand) Register(r Registerer) {
 	const helpShort = "Pass secrets as environment variables to a process."
-	const helpLong = "pass secrets as environment variables to a process." +
-		"\n\n" +
-		"To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are automatically masked by replacing them with \"" + maskString + "\". " +
+	const helpLong = "To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are automatically masked by replacing them with \"" + maskString + "\". " +
 		"The output is buffered to detect secrets, but to avoid blocking the buffering is limited to a maximum duration as defined by the --masking-timeout flag. " +
 		"Therefore, you should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
 
@@ -150,7 +148,7 @@ func (cmd *RunCommand) Run() error {
 	if cmd.envFile != "" {
 		raw, err := ioutil.ReadFile(cmd.envFile)
 		if err != nil {
-			return ErrCannotReadFile(err)
+			return ErrCannotReadFile(cmd.envFile, err)
 		}
 
 		parser, err := getTemplateParser(raw, cmd.templateVersion)

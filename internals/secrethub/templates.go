@@ -45,10 +45,12 @@ Args:
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
 {{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
 {{if .Commands}} <command> [<args> ...]{{end}}
-{{if .HelpLong}}
-{{.HelpLong}}\
-{{ else if .Help}}
+{{ if .Help}}
 {{.Help}}\
+{{end}}\
+{{if .HelpLong}}
+
+{{.HelpLong}}\
 {{end}}\
 
 {{if .Flags}}

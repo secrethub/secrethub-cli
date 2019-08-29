@@ -5,7 +5,7 @@ var (
 	// Changes in comparison to kingpin.DefaultUsageTemplate:
 	// 1. Removed * for default commands
 	DefaultUsageTemplate = `
-{{define "FormatSubCommands"}}\
+{{define "FormatSubCommands"}}
 {{ $managementCommands := .Commands | ManagementCommands }}\
 {{ $rootCommands := .Commands | RootCommands }}\
 

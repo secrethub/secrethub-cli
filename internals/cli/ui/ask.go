@@ -284,7 +284,7 @@ func (s *selecter) process() (string, error) {
 			return in, nil
 		}
 
-		fmt.Fprintln(os.Stderr, fmt.Sprintf("%d is not a valid choice", choice))
+		fmt.Fprintln(os.Stderr, fmt.Sprintf("%s is not a valid choice", in))
 		return s.process()
 	}
 

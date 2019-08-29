@@ -154,6 +154,16 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <permission> format to give permission on the root of the repo and <subdirectory>:<permission> to give permission on a subdirectory.").StringVar(&cmd.permission)
 
+	clause.HelpLong("The native AWS identity provider uses a combination of AWS IAM and AWS KMS to provide access to SecretHub for any service running on AWS (e.g. EC2, Lambda or ECS). For this to work, an IAM role and a KMS key are needed.\n" +
+		"\n" +
+		"  - The role should be the role that is assumed by the service during execution: the \"IAM Role\" for an EC2 instance, \"Task Execution Role\" for an Lambda Function and \"Task Role\" for ECS Tasks.\n" +
+		"  - The KMS key is a key that is used for encrypting the account key of the service. Decryption permission on this key must be granted to the previously described IAM Role.\n" +
+		"\n" +
+		"To create a new service that uses the AWS identity provider, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore AWS credentials should be configured on this system. For details on how this can be done, see https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html.\n" +
+		"\n" +
+		"If no system-wide default for the AWS region is provided (e.g. with $AWS_REGION), the AWS-region where the KMS key resides should be explicitly provided to this command with the --region flag.",
+	)
+
 	BindAction(clause, cmd.Run)
 }
 

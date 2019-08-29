@@ -250,17 +250,17 @@ func (s *selecter) moreOptions() error {
 		return err
 	}
 
-	fmt.Fprintf(s.w, "Type a number of choice or enter a %s", s.optionName)
+	fmt.Fprintf(s.w, "Type the number of an option or type a %s", s.optionName)
 	if !s.done {
-		fmt.Fprint(s.w, " ([ENTER] for more options)")
+		fmt.Fprint(s.w, " (press [ENTER] for more options)")
 	}
-	fmt.Fprintln(s.w, ": ")
+	fmt.Fprintln(s.w, ":")
 
 	return nil
 }
 
 func (s *selecter) run() (string, error) {
-	fmt.Fprintf(s.w, s.question+" Press [ENTER] for options.\n")
+	fmt.Fprintf(s.w, s.question+" (press [ENTER] for options)\n")
 	return s.process()
 }
 

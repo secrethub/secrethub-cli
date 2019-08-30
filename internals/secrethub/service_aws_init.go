@@ -132,9 +132,11 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		return err
 	}
 
-	err = givePermission(service, cmd.repo, cmd.permission, client)
-	if err != nil {
-		return err
+	if cmd.permission != "" {
+		err = givePermission(service, cmd.repo, cmd.permission, client)
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Successfully created the service account. Any host that assumes the IAM role %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", roleNameFromRole(cmd.role))

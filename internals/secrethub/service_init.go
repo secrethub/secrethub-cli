@@ -70,9 +70,11 @@ func (cmd *ServiceInitCommand) Run() error {
 		return api.ErrInvalidRepoPath(cmd.path)
 	}
 
-	err = givePermission(service, cmd.path.GetRepoPath(), cmd.permission, client)
-	if err != nil {
-		return err
+	if cmd.permission != "" {
+		err = givePermission(service, cmd.path.GetRepoPath(), cmd.permission, client)
+		if err != nil {
+			return err
+		}
 	}
 	out, err := credential.Export()
 	if err != nil {

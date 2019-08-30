@@ -234,7 +234,7 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, bool, error) {
 	}
 
 	var waitgroup sync.WaitGroup
-	options := make([]ui.Option, len(keys.Keys))
+	options := make([]*ui.Option, len(keys.Keys))
 
 	for i, key := range keys.Keys {
 		waitgroup.Add(1)
@@ -244,21 +244,38 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, bool, error) {
 				Display: aws.StringValue(key.KeyId),
 			}
 
+			enabled := true
+
 			resp, err := kmsSvc.DescribeKey(&kms.DescribeKeyInput{KeyId: key.KeyId})
 			if err == nil {
 				option.Display += " (created " + g.timeFormatter.Format(*resp.KeyMetadata.CreationDate) + ")\n"
 				if aws.StringValue(resp.KeyMetadata.Description) != "" {
 					option.Display += "Description: " + aws.StringValue(resp.KeyMetadata.Description) + "\n"
 				}
+				enabled = aws.BoolValue(resp.KeyMetadata.Enabled)
+			}
+			if enabled {
+				options[i] = &option
 			}
 
-			options[i] = option
 			waitgroup.Done()
 		}(i, key)
 	}
 	waitgroup.Wait()
 
-	return options, g.done, nil
+	ret := []ui.Option{}
+
+	for _, option := range options {
+		if option != nil {
+			ret = append(ret, *option)
+		}
+	}
+
+	if len(ret) == 0 {
+		return g.get()
+	}
+
+	return ret, g.done, nil
 }
 
 // roleNameFromRole returns the name of the role indicated by the input. Accepted input is:

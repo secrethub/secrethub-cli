@@ -105,7 +105,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	if cmd.role == "" {
-		role, err := ui.Ask(cmd.io, "What IAM role should have access to the service? (full ARN or role name)\n")
+		role, err := ui.AskAndValidate(cmd.io, "What IAM role should have access to the service? (full ARN or role name)\n", 3, checkIsNotEmpty("role"))
 		if err != nil {
 			return err
 		}
@@ -312,4 +312,13 @@ func handleAWSErr(err error) error {
 
 func isSet(v *string) bool {
 	return v != nil && *v != ""
+}
+
+func checkIsNotEmpty(name string) func(string) error {
+	return func(v string) error {
+		if v == "" {
+			return fmt.Errorf("%s cannot be empty", name)
+		}
+		return nil
+	}
 }

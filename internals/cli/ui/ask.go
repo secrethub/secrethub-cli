@@ -75,7 +75,10 @@ func AskAndValidate(io IO, question string, n int, validationFunc func(string) e
 			return response, nil
 		}
 
-		fmt.Fprintf(promptOut, "\nInvalid input: %s\nPlease try again.\n", err)
+		fmt.Fprintf(promptOut, "\nInvalid input: %s\n", err)
+		if i != n-1 {
+			fmt.Fprintln(promptOut, "Please try again.")
+		}
 	}
 	return "", err
 }

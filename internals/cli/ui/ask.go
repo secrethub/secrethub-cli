@@ -65,7 +65,8 @@ func AskAndValidate(io IO, question string, n int, validationFunc func(string) e
 		return "", err
 	}
 	for i := 0; i < n; i++ {
-		response, err := Ask(io, question)
+		var response string
+		response, err = Ask(io, question)
 		if err != nil {
 			return "", err
 		}

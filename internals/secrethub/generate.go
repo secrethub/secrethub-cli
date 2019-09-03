@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/randchar"
@@ -35,7 +37,7 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *GenerateSecretCommand) Register(r Registerer) {
+func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	generateCommand := r.Command("generate", "").Hidden()
 
 	clause := generateCommand.Command("rand", "Generate a random secret. By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
@@ -46,7 +48,7 @@ func (cmd *GenerateSecretCommand) Register(r Registerer) {
 	// TODO SHDEV-528: implement --clip
 	// clause.Flag("clip", "Copy the secret value to the clipboard. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(cmd.clip)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // before configures the command using the flag values.

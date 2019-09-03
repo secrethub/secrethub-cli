@@ -6,6 +6,8 @@ import (
 	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -42,13 +44,13 @@ func NewServiceAWSLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceLsCommand) Register(r Registerer) {
+func (cmd *ServiceLsCommand) Register(r command.Registerer) {
 	clause := r.Command("ls", "List all service accounts in a given repository.")
 	clause.Arg("repo-path", "The path to the repository to list services for (<namespace>/<repo>).").Required().SetValue(&cmd.repoPath)
 	clause.Flag("quiet", "Only print service IDs.").Short('q').BoolVar(&cmd.quiet)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run lists all service accounts in a given repository.

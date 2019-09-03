@@ -7,10 +7,11 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
-	units "github.com/docker/go-units"
+	"github.com/docker/go-units"
 )
 
 // ReadCommand is a command to read a secret.
@@ -34,7 +35,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ReadCommand) Register(r Registerer) {
+func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.Command("read", "Read a secret.")
 	clause.Arg("secret-path", "The path to the secret (<namespace>/<repo>[/<dir>]/<secret>)").Required().SetValue(&cmd.path)
 	clause.Flag(
@@ -45,7 +46,7 @@ func (cmd *ReadCommand) Register(r Registerer) {
 		),
 	).Short('c').BoolVar(&cmd.useClipboard)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.

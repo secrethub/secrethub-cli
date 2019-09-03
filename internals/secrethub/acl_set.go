@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -27,14 +29,14 @@ func NewACLSetCommand(io ui.IO, newClient newClientFunc) *ACLSetCommand {
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
 // Register adds args and flags.
-func (cmd *ACLSetCommand) Register(r Registerer) {
+func (cmd *ACLSetCommand) Register(r command.Registerer) {
 	clause := r.Command("set", "Set access rule for an user or service on a path.")
 	clause.Arg("dir-path", "The path of the directory to set the access rule for (<namespace>/<repo>[/<dir>])").Required().SetValue(&cmd.path)
 	clause.Arg("account-name", "The account name (username or service name) to set the access rule for").Required().SetValue(&cmd.accountName)
 	clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.

@@ -70,11 +70,6 @@ type App struct {
 	logger          cli.Logger
 }
 
-// Registerer allows others to register commands on it.
-type Registerer interface {
-	Command(cmd string, help string) *cli.CommandClause
-}
-
 // newClientFunc creates a ClientAdapater.
 type newClientFunc func() (secrethub.ClientInterface, error)
 

@@ -1,16 +1,15 @@
 package secrethub
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"sort"
 	"text/tabwriter"
 
-	"sort"
-
-	"io"
-
-	"errors"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
@@ -37,13 +36,13 @@ func NewLsCommand(io ui.IO, newClient newClientFunc) *LsCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *LsCommand) Register(r Registerer) {
+func (cmd *LsCommand) Register(r command.Registerer) {
 	clause := r.Command("ls", "List contents of a path.")
 	clause.Arg("path", "The path to list all contents (<namespace>/<repo>[/<path>])").SetValue(&cmd.path)
 	clause.Flag("quiet", "Only print paths.").Short('q').BoolVar(&cmd.quiet)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run lists a repo, secret or namespace.

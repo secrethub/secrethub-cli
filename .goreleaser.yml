@@ -30,7 +30,7 @@ builds:
         goarch: arm
     main: ./cmd/secrethub/main.go
     ldflags:
-      - -s -w -X main.commit={{ .ShortCommit }} -X main.version={{ .Version }}
+      - -s -w -X "github.com/secrethub/secrethub-cli/internals/secrethub.Commit={{ .ShortCommit }}" -X "github.com/secrethub/secrethub-cli/internals/secrethub.Version={{ .Version }}"
     flags:
       - -tags=production
 

@@ -105,7 +105,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	if cmd.role == "" {
-		role, err := ui.Ask(cmd.io, "What IAM role should have access to the service? (full ARN or role name)\n")
+		role, err := ui.AskAndValidate(cmd.io, "What IAM role should have access to the service? (ARN or role name)\n", 3, checkIsNotEmpty("role"))
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 	if cmd.kmsKeyID == "" {
 		kmsKeyOptionsGetter := newKMSKeyOptionsGetter(cfg)
-		kmsKey, err := ui.Choose(cmd.io, "What is the ID of the KMS-key you want to use for encrypting this service's credential? The service's IAM role should have decryption permissions on this key.", kmsKeyOptionsGetter.get, true, "KMS key (ID or ARN)")
+		kmsKey, err := ui.Choose(cmd.io, "What is the KMS-key you want to use for encrypting this service's credential? (ARN or ID) The service's IAM role should have decryption permissions on this key.", kmsKeyOptionsGetter.get, true, "KMS key (ARN or ID)")
 		if err != nil {
 			return err
 		}
@@ -132,9 +132,11 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		return err
 	}
 
-	err = givePermission(service, cmd.repo, cmd.permission, client)
-	if err != nil {
-		return err
+	if cmd.permission != "" {
+		err = givePermission(service, cmd.repo, cmd.permission, client)
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Successfully created the service account. Any host that assumes the IAM role %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", roleNameFromRole(cmd.role))
@@ -146,7 +148,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 	clause := r.Command("init", "Create a new service account that is tied to an AWS IAM role.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().SetValue(&cmd.repo)
-	clause.Flag("kms-key-id", "The ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
+	clause.Flag("kms-key", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
 	clause.Flag("role", "The role name or ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)
 	clause.Flag("region", "The AWS region that should be used for KMS.").StringVar(&cmd.region)
 	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
@@ -232,7 +234,7 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, bool, error) {
 	}
 
 	var waitgroup sync.WaitGroup
-	options := make([]ui.Option, len(keys.Keys))
+	options := make([]*ui.Option, len(keys.Keys))
 
 	for i, key := range keys.Keys {
 		waitgroup.Add(1)
@@ -242,21 +244,38 @@ func (g *kmsKeyOptionsGetter) get() ([]ui.Option, bool, error) {
 				Display: aws.StringValue(key.KeyId),
 			}
 
+			enabled := true
+
 			resp, err := kmsSvc.DescribeKey(&kms.DescribeKeyInput{KeyId: key.KeyId})
 			if err == nil {
 				option.Display += " (created " + g.timeFormatter.Format(*resp.KeyMetadata.CreationDate) + ")\n"
 				if aws.StringValue(resp.KeyMetadata.Description) != "" {
 					option.Display += "Description: " + aws.StringValue(resp.KeyMetadata.Description) + "\n"
 				}
+				enabled = aws.BoolValue(resp.KeyMetadata.Enabled)
+			}
+			if enabled {
+				options[i] = &option
 			}
 
-			options[i] = option
 			waitgroup.Done()
 		}(i, key)
 	}
 	waitgroup.Wait()
 
-	return options, g.done, nil
+	ret := []ui.Option{}
+
+	for _, option := range options {
+		if option != nil {
+			ret = append(ret, *option)
+		}
+	}
+
+	if len(ret) == 0 {
+		return g.get()
+	}
+
+	return ret, g.done, nil
 }
 
 // roleNameFromRole returns the name of the role indicated by the input. Accepted input is:
@@ -293,4 +312,13 @@ func handleAWSErr(err error) error {
 
 func isSet(v *string) bool {
 	return v != nil && *v != ""
+}
+
+func checkIsNotEmpty(name string) func(string) error {
+	return func(v string) error {
+		if v == "" {
+			return fmt.Errorf("%s cannot be empty", name)
+		}
+		return nil
+	}
 }

@@ -65,7 +65,8 @@ func AskAndValidate(io IO, question string, n int, validationFunc func(string) e
 		return "", err
 	}
 	for i := 0; i < n; i++ {
-		response, err := Ask(io, question)
+		var response string
+		response, err = Ask(io, question)
 		if err != nil {
 			return "", err
 		}
@@ -75,7 +76,10 @@ func AskAndValidate(io IO, question string, n int, validationFunc func(string) e
 			return response, nil
 		}
 
-		fmt.Fprintf(promptOut, "\nInvalid input: %s\nPlease try again.\n", err)
+		fmt.Fprintf(promptOut, "\nInvalid input: %s\n", err)
+		if i != n-1 {
+			fmt.Fprintln(promptOut, "Please try again.")
+		}
 	}
 	return "", err
 }

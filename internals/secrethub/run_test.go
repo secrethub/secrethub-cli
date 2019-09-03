@@ -463,7 +463,7 @@ func TestRunCommand_Run(t *testing.T) {
 				envar: map[string]string{
 					"missing": "path/to/unexisting/secret",
 				},
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
@@ -484,7 +484,7 @@ func TestRunCommand_Run(t *testing.T) {
 				envar: map[string]string{
 					"missing": "path/to/unexisting/secret",
 				},
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
@@ -505,7 +505,7 @@ func TestRunCommand_Run(t *testing.T) {
 				envar: map[string]string{
 					"missing": "unexisting/repo/secret",
 				},
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{

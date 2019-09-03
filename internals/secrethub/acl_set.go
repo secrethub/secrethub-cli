@@ -68,7 +68,7 @@ func (cmd *ACLSetCommand) Run() error {
 		return err
 	}
 
-	_, err = client.AccessRules().Set(cmd.path.Value(), cmd.permission, cmd.accountName.Value())
+	_, err = client.AccessRules().Set(cmd.path.Value(), cmd.permission.String(), cmd.accountName.Value())
 	if err != nil {
 		return err
 	}

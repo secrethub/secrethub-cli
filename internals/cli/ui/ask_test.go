@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -210,4 +211,120 @@ func TestAskYesNo(t *testing.T) {
 			assert.Equal(t, io.PromptOut.String(), tc.out)
 		})
 	}
+}
+
+func TestChoose(t *testing.T) {
+	cases := map[string]struct {
+		question   string
+		getOptions func() ([]Option, bool, error)
+		addOwn     bool
+
+		in []string
+
+		expected string
+		out      string
+	}{
+		"directly add own": {
+			question: "foo?",
+			addOwn:   true,
+			in:       []string{"bar\n"},
+			expected: "bar",
+			out:      "foo? (press [ENTER] for options)\n",
+		},
+		"choose option of first batch": {
+			question: "foo?",
+			getOptions: func() ([]Option, bool, error) {
+				return []Option{
+					{Value: "foo", Display: "foo"},
+					{Value: "bar", Display: "bar"},
+					{Value: "baz", Display: "baz"},
+				}, true, nil
+			},
+
+			in: []string{"\n", "2\n"},
+
+			expected: "bar",
+			out: "foo? (press [ENTER] for options)\n" +
+				"1) foo\n" +
+				"2) bar\n" +
+				"3) baz\n" +
+				"Type the number of an option or type a value:\n",
+		},
+		"choose option of second batch": {
+			question: "foo?",
+
+			in: []string{"\n", "\n", "7\n"},
+
+			expected: "Option 7",
+			out: "foo? (press [ENTER] for options)\n" +
+				"1) Option 1\n" +
+				"2) Option 2\n" +
+				"3) Option 3\n" +
+				"4) Option 4\n" +
+				"5) Option 5\n" +
+				"Type the number of an option or type a value (press [ENTER] for more options):\n" +
+				"6) Option 6\n" +
+				"7) Option 7\n" +
+				"8) Option 8\n" +
+				"9) Option 9\n" +
+				"10) Option 10\n" +
+				"Type the number of an option or type a value (press [ENTER] for more options):\n",
+		},
+		"options formatted": {
+			question: "foo?",
+			getOptions: func() ([]Option, bool, error) {
+				return []Option{
+					{Value: "foo", Display: "foobar\tbaz"},
+					{Value: "bar", Display: "bar\tbaz"},
+					{Value: "baz", Display: "baz\tbar"},
+				}, true, nil
+			},
+
+			in:       []string{"\n", "2\n"},
+			expected: "bar",
+			out: "foo? (press [ENTER] for options)\n" +
+				"1) foobar    baz\n" +
+				"2) bar       baz\n" +
+				"3) baz       bar\n" +
+				"Type the number of an option or type a value:\n",
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			io := NewFakeIO()
+			io.PromptIn.Reads = tc.in
+
+			if tc.getOptions == nil {
+				og := optionGetter{}
+				tc.getOptions = og.Get
+			}
+
+			// Run
+			actual, err := Choose(io, tc.question, tc.getOptions, tc.addOwn, "value")
+
+			// Assert
+			assert.Equal(t, err, nil)
+			assert.Equal(t, actual, tc.expected)
+			assert.Equal(t, io.PromptOut.String(), tc.out)
+		})
+	}
+}
+
+type optionGetter struct {
+	n int
+}
+
+func (og *optionGetter) Get() ([]Option, bool, error) {
+	res := make([]Option, 5)
+	for i := 0; i < 5; i++ {
+		option := fmt.Sprintf("Option %d", og.n+i+1)
+		res[i] = Option{
+			Value:   option,
+			Display: option,
+		}
+	}
+	og.n += 5
+	return res, false, nil
 }

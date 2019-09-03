@@ -91,7 +91,7 @@ func (cmd *RmCommand) Run() error {
 	return rmSecret(client, secretPath, cmd.force, cmd.io)
 }
 
-func rmSecretVersion(client secrethub.Client, secretPath api.SecretPath, force bool, io ui.IO) error {
+func rmSecretVersion(client secrethub.ClientInterface, secretPath api.SecretPath, force bool, io ui.IO) error {
 	version, err := secretPath.GetVersion()
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func rmSecretVersion(client secrethub.Client, secretPath api.SecretPath, force b
 	return nil
 }
 
-func rmSecret(client secrethub.Client, secretPath api.SecretPath, force bool, io ui.IO) error {
+func rmSecret(client secrethub.ClientInterface, secretPath api.SecretPath, force bool, io ui.IO) error {
 	ok, err := askRmConfirmation(
 		io,
 		fmt.Sprintf("This will permanently remove the %s secret and all its versions. "+
@@ -156,7 +156,7 @@ func rmSecret(client secrethub.Client, secretPath api.SecretPath, force bool, io
 	return nil
 }
 
-func rmDir(client secrethub.Client, dirPath api.DirPath, force bool, io ui.IO) error {
+func rmDir(client secrethub.ClientInterface, dirPath api.DirPath, force bool, io ui.IO) error {
 	ok, err := askRmConfirmation(
 		io,
 		fmt.Sprintf("This will permanently remove the %s directory and all the directories and secrets it contains. "+

@@ -59,11 +59,11 @@ func TestRepoInitCommand_Run(t *testing.T) {
 			}
 
 			if tc.newClientErr != nil {
-				cmd.newClient = func() (secrethub.Client, error) {
+				cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return nil, tc.newClientErr
 				}
 			} else {
-				cmd.newClient = func() (secrethub.Client, error) {
+				cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						RepoService: &tc.service,
 					}, nil

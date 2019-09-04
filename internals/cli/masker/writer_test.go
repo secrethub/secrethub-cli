@@ -223,8 +223,6 @@ func TestNewMaskedWriter(t *testing.T) {
 		"long input": {
 			maskStrings: []string{},
 			inputFunc: func(w io.Writer) {
-
-				assert.OK(t, err)
 				for _, c := range randomIn {
 					_, err := w.Write([]byte{c})
 					assert.OK(t, err)
@@ -235,8 +233,6 @@ func TestNewMaskedWriter(t *testing.T) {
 		"reuse input buffer": {
 			maskStrings: []string{},
 			inputFunc: func(w io.Writer) {
-
-				assert.OK(t, err)
 				tmp := make([]byte, 1)
 				for _, c := range randomIn {
 					copy(tmp, []byte{c})

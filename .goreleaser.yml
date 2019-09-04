@@ -76,3 +76,16 @@ scoop:
   description: Command-line interface for SecretHub
 
   license: Apache-2.0
+
+nfpms:
+  -
+    vendor: SecretHub
+    homepage: https://secrethub.io/
+    description: CLI for using the SecretHub Secret Management Service
+    license: Apache 2.0
+    formats:
+      - rpm
+      - deb
+    recommends:
+      - xclip
+    bindir: /usr/local

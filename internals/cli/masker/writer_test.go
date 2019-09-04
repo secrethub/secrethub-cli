@@ -121,7 +121,7 @@ func TestMatcher(t *testing.T) {
 func TestNewMaskedWriter(t *testing.T) {
 	maskString := "<redacted by SecretHub>"
 
-	timeout20ms := time.Millisecond * 20
+	timeout10s := time.Second * 10
 	timeout1ms := time.Millisecond * 1
 	timeout0 := time.Second * 0
 
@@ -188,11 +188,11 @@ func TestNewMaskedWriter(t *testing.T) {
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("fo"))
 				assert.OK(t, err)
-				time.Sleep(time.Millisecond * 2)
+				time.Sleep(time.Nanosecond * 1)
 				_, err = w.Write([]byte("o test"))
 				assert.OK(t, err)
 			},
-			timeout:  &timeout20ms,
+			timeout:  &timeout10s,
 			expected: maskString + " test",
 		},
 		"outside timeout": {

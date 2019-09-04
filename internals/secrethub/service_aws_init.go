@@ -14,6 +14,7 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -85,13 +86,19 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Stdout(), "Detected access to AWS account %s.", accountID)
 
-	region := sess.Config.Region
-	if isSet(region) {
-		fmt.Fprintf(cmd.io.Stdout(), "Using region %s.", *region)
+	if !isSet(cfg.Region) && cmd.kmsKeyID != "" {
+		kmsARN, err := arn.Parse(cmd.kmsKeyID)
+		if err == nil {
+			cfg = cfg.WithRegion(kmsARN.Region)
+		}
+	}
+
+	if isSet(cfg.Region) {
+		fmt.Fprintf(cmd.io.Stdout(), "Using region %s.", *cfg.Region)
 	}
 	fmt.Fprintln(cmd.io.Stdout())
 
-	if !isSet(region) {
+	if !isSet(cfg.Region) {
 		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true, "region")
 		if err != nil {
 			return err

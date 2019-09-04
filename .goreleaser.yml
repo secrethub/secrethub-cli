@@ -89,3 +89,7 @@ nfpms:
       - deb
     recommends:
       - xclip
+    scripts:
+      postinstall: "scripts/post-install.sh"
+      postremove: "scripts/post-remove.sh"
+

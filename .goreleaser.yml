@@ -82,6 +82,7 @@ nfpms:
     vendor: SecretHub
     homepage: https://secrethub.io/
     description: CLI for using the SecretHub Secret Management Service
+    maintainer: SecretHub Support <support@secrethub.io>
     license: Apache 2.0
     formats:
       - rpm

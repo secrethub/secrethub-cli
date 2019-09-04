@@ -1,7 +1,7 @@
 project_name: secrethub
 
 builds:
-  - binary: "bin/secrethub"
+  - binary: "secrethub"
     env:
       - CGO_ENABLED=0
     goos:
@@ -89,4 +89,3 @@ nfpms:
       - deb
     recommends:
       - xclip
-    bindir: /usr/local

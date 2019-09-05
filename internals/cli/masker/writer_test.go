@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
+	"github.com/secrethub/secrethub-go/pkg/randchar"
 )
 
 func TestMatcher(t *testing.T) {
@@ -121,9 +122,12 @@ func TestMatcher(t *testing.T) {
 func TestNewMaskedWriter(t *testing.T) {
 	maskString := "<redacted by SecretHub>"
 
-	timeout20ms := time.Millisecond * 20
+	timeout10s := time.Second * 10
 	timeout1ms := time.Millisecond * 1
 	timeout0 := time.Second * 0
+
+	randomIn, err := randchar.NewGenerator(true).Generate(10000)
+	assert.OK(t, err)
 
 	tests := map[string]struct {
 		maskStrings []string
@@ -188,11 +192,11 @@ func TestNewMaskedWriter(t *testing.T) {
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("fo"))
 				assert.OK(t, err)
-				time.Sleep(time.Millisecond * 2)
+				time.Sleep(time.Nanosecond * 1)
 				_, err = w.Write([]byte("o test"))
 				assert.OK(t, err)
 			},
-			timeout:  &timeout20ms,
+			timeout:  &timeout10s,
 			expected: maskString + " test",
 		},
 		"outside timeout": {
@@ -215,6 +219,28 @@ func TestNewMaskedWriter(t *testing.T) {
 			},
 			timeout:  &timeout0,
 			expected: "test " + maskString + " test",
+		},
+		"long input": {
+			maskStrings: []string{},
+			inputFunc: func(w io.Writer) {
+				for _, c := range randomIn {
+					_, err := w.Write([]byte{c})
+					assert.OK(t, err)
+				}
+			},
+			expected: string(randomIn),
+		},
+		"reuse input buffer": {
+			maskStrings: []string{},
+			inputFunc: func(w io.Writer) {
+				tmp := make([]byte, 1)
+				for _, c := range randomIn {
+					copy(tmp, []byte{c})
+					_, err := w.Write(tmp)
+					assert.OK(t, err)
+				}
+			},
+			expected: string(randomIn),
 		},
 	}
 

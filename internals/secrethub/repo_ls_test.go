@@ -81,6 +81,28 @@ func TestRepoLSCommand_run(t *testing.T) {
 			out: "dev1/repository\n" +
 				"dev2/applicationname\n",
 		},
+		"success workspace": {
+			cmd: RepoLSCommand{
+				timeFormatter: &fakes.TimeFormatter{
+					Response: "2018-01-01T01:01:01+01:00",
+				},
+				workspace: "dev1",
+			},
+			repoService: fakeclient.RepoService{
+				Lister: fakeclient.RepoLister{
+					ReturnsRepos: []*api.Repo{
+						{
+							Owner:     "dev1",
+							Name:      "repository",
+							Status:    api.StatusOK,
+							CreatedAt: &testTime,
+						},
+					},
+				},
+			},
+			out: "NAME             STATUS  CREATED\n" +
+				"dev1/repository  ok      2018-01-01T01:01:01+01:00\n",
+		},
 		"new client error": {
 			newClientErr: testErr,
 			err:          testErr,

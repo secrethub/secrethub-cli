@@ -9,6 +9,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
 
 // Errors
@@ -158,6 +159,21 @@ func (cmd *SignUpCommand) Run() error {
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")
-	fmt.Fprintf(cmd.io.Stdout(), "Please verify your email address to continue. We've sent a verification mail to %s\n", cmd.email)
+
+	fmt.Fprintln(cmd.io.Stdout(), "Setting up a start workspace.")
+
+	repoPath := secretpath.Join(cmd.username, "start")
+	_, err = client.Repos().Create(secretpath.Join(repoPath))
+	if err != nil {
+		return err
+	}
+
+	secretPath := secretpath.Join(repoPath, "hello")
+	_, err = client.Secrets().Write(secretPath, []byte("Welcome to SecretHub!"))
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. You can read your first secret with `secrethub read %s`\n", secretPath)
 	return nil
 }

@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
@@ -46,11 +47,12 @@ func (f *clientFactory) Register(r FlagRegisterer) {
 func (f *clientFactory) NewClient() (secrethub.ClientInterface, error) {
 	if f.client == nil {
 		var credentialProvider credentials.Provider
-		if f.identityProvider == "aws" {
+		switch strings.ToLower(f.identityProvider) {
+		case "aws":
 			credentialProvider = credentials.UseAWS()
-		} else if f.identityProvider == "key" {
+		case "key":
 			credentialProvider = f.store.Provider()
-		} else {
+		default:
 			return nil, ErrUnknownIdentityProvider(f.identityProvider)
 		}
 

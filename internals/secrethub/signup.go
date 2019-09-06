@@ -2,12 +2,14 @@ package secrethub
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
@@ -160,22 +162,28 @@ func (cmd *SignUpCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")
 
-	fmt.Fprintln(cmd.io.Stdout(), "Setting up a start workspace...")
+	return createStartRepo(client, cmd.io.Stdout(), cmd.username, cmd.fullName)
+}
 
-	repoPath := secretpath.Join(cmd.username, "start")
-	_, err = client.Repos().Create(secretpath.Join(repoPath))
+// createStartRepo creates a start repository and write a fist secret to it, so that
+// the user can start by reading their first secret. This is intended to smoothen
+// onboarding.
+func createStartRepo(client secrethub.ClientInterface, w io.Writer, workspace string, name string) error {
+	fmt.Fprintln(w, "Setting up a start workspace...")
+	repoPath := secretpath.Join(workspace, "start")
+	_, err := client.Repos().Create(secretpath.Join(repoPath))
 	if err != nil {
 		return err
 	}
 
 	secretPath := secretpath.Join(repoPath, "hello")
-	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", cmd.fullName, secretPath)
+	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", name, secretPath)
 
 	_, err = client.Secrets().Write(secretPath, []byte(message))
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
+	fmt.Fprintf(w, "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 	return nil
 }

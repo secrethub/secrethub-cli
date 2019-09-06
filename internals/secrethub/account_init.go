@@ -232,6 +232,8 @@ func (cmd *AccountInitCommand) Run() error {
 // createAccountKey polls the server on /me/user until the credential is
 // added to the account. When the credential is added to the account, it
 // creates an account key for the credential.
+// When the account key is created, a start repository is created, so that
+// the user can start by reading their first secret.
 func (cmd *AccountInitCommand) createAccountKey() error {
 	client, err := cmd.newClient()
 	if err != nil {
@@ -297,7 +299,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 
 	fmt.Fprintln(cmd.io.Stdout(), " Done")
 
-	return nil
+	return createStartRepo(client, cmd.io.Stdout(), me.Username, me.FullName)
 }
 
 // waitForCredentialToBeAdded returns a channel on which is returned when the credential is added and a channel

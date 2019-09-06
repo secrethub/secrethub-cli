@@ -24,6 +24,8 @@ type SignUpCommand struct {
 	username        string
 	fullName        string
 	email           string
+	org             string
+	orgDescription  string
 	force           bool
 	io              ui.IO
 	newClient       newClientFunc
@@ -47,6 +49,8 @@ func (cmd *SignUpCommand) Register(r Registerer) {
 	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
 	clause.Flag("full-name", "Your email address.").StringVar(&cmd.fullName)
 	clause.Flag("email", "The email address we will use for all correspondence.").StringVar(&cmd.email)
+	clause.Flag("org", "The name of your organization.").StringVar(&cmd.org)
+	clause.Flag("org-description", "A description (max 144 chars) for your organization so others will recognize it.").StringVar(&cmd.orgDescription)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	BindAction(clause, cmd.Run)
@@ -80,7 +84,7 @@ func (cmd *SignUpCommand) Run() error {
 			}
 		}
 
-		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" {
+		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" || cmd.org == "" || cmd.orgDescription == "" {
 			_, promptOut, err := cmd.io.Prompts()
 			if err != nil {
 				return err
@@ -105,6 +109,18 @@ func (cmd *SignUpCommand) Run() error {
 			}
 			if cmd.email == "" {
 				cmd.email, err = ui.AskAndValidate(cmd.io, "Your email address: ", 2, api.ValidateEmail)
+				if err != nil {
+					return err
+				}
+			}
+			if cmd.org == "" {
+				cmd.org, err = ui.AskAndValidate(cmd.io, "Your organization (leave empty to skip for now): ", 2, allowEmpty(api.ValidateOrgName))
+				if err != nil {
+					return err
+				}
+			}
+			if cmd.org != "" && cmd.orgDescription == "" {
+				cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your organization so others will recognize it.", 2, api.ValidateOrgDescription)
 				if err != nil {
 					return err
 				}
@@ -160,6 +176,15 @@ func (cmd *SignUpCommand) Run() error {
 		return err
 	}
 
+	if cmd.org != "" {
+		_, err := client.Orgs().Create(cmd.org, cmd.orgDescription)
+		if err == api.ErrOrgAlreadyExists {
+			fmt.Fprintln(cmd.io.Stdout(), "The organization already exists. Ask a colleague to invite you to the organization.")
+		} else if err != nil {
+			return err
+		}
+	}
+
 	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")
 
 	return createStartRepo(client, cmd.io.Stdout(), cmd.username, cmd.fullName)
@@ -186,4 +211,15 @@ func createStartRepo(client secrethub.ClientInterface, w io.Writer, workspace st
 
 	fmt.Fprintf(w, "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 	return nil
+}
+
+// allowEmpty takes a validation function and returns a function that accepts the empty string input
+// and validates all other input using the given validation function.
+func allowEmpty(f func(string) error) func(string) error {
+	return func(v string) error {
+		if v == "" {
+			return nil
+		}
+		return f(v)
+	}
 }

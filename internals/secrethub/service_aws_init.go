@@ -86,19 +86,21 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Stdout(), "Detected access to AWS account %s.", accountID)
 
-	if !isSet(cfg.Region) && cmd.kmsKeyID != "" {
+	if cfg.Region == nil && cmd.kmsKeyID != "" {
+		// When the region is not configured in the AWS configuration and not supplied using the flag, use
+		// the region from the KMS key if the key is supplied as an ARN.
 		kmsARN, err := arn.Parse(cmd.kmsKeyID)
 		if err == nil {
 			cfg = cfg.WithRegion(kmsARN.Region)
 		}
 	}
 
-	if isSet(cfg.Region) {
+	if cfg.Region != nil {
 		fmt.Fprintf(cmd.io.Stdout(), "Using region %s.", *cfg.Region)
 	}
 	fmt.Fprintln(cmd.io.Stdout())
 
-	if !isSet(cfg.Region) {
+	if cfg.Region == nil {
 		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true, "region")
 		if err != nil {
 			return err
@@ -315,10 +317,6 @@ func handleAWSErr(err error) error {
 		err = errio.Namespace("aws").Code(errAWS.Code()).Error(errAWS.Message())
 	}
 	return fmt.Errorf("error fetching available KMS keys: %s", err)
-}
-
-func isSet(v *string) bool {
-	return v != nil && *v != ""
 }
 
 func checkIsNotEmpty(name string) func(string) error {

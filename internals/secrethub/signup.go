@@ -169,7 +169,7 @@ func (cmd *SignUpCommand) Run() error {
 // the user can start by reading their first secret. This is intended to smoothen
 // onboarding.
 func createStartRepo(client secrethub.ClientInterface, w io.Writer, workspace string, name string) error {
-	fmt.Fprintln(w, "Setting up a start workspace...")
+	fmt.Fprintln(w, "Setting up your workspace...")
 	repoPath := secretpath.Join(workspace, "start")
 	_, err := client.Repos().Create(secretpath.Join(repoPath))
 	if err != nil {

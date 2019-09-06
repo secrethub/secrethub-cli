@@ -160,7 +160,7 @@ func (cmd *SignUpCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")
 
-	fmt.Fprintln(cmd.io.Stdout(), "Setting up a start workspace.")
+	fmt.Fprintln(cmd.io.Stdout(), "Setting up a start workspace...")
 
 	repoPath := secretpath.Join(cmd.username, "start")
 	_, err = client.Repos().Create(secretpath.Join(repoPath))
@@ -169,11 +169,13 @@ func (cmd *SignUpCommand) Run() error {
 	}
 
 	secretPath := secretpath.Join(repoPath, "hello")
-	_, err = client.Secrets().Write(secretPath, []byte("Welcome to SecretHub!"))
+	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", cmd.fullName, secretPath)
+
+	_, err = client.Secrets().Write(secretPath, []byte(message))
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. You can read your first secret with `secrethub read %s`\n", secretPath)
+	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 	return nil
 }

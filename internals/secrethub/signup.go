@@ -120,7 +120,7 @@ func (cmd *SignUpCommand) Run() error {
 				}
 			}
 			if cmd.org != "" && cmd.orgDescription == "" {
-				cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your organization so others will recognize it.", 2, api.ValidateOrgDescription)
+				cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your organization so others will recognize it:\n", 2, api.ValidateOrgDescription)
 				if err != nil {
 					return err
 				}

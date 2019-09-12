@@ -9,6 +9,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
 
 // Errors
@@ -134,12 +135,12 @@ func (cmd *SignUpCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprint(cmd.io.Stdout(), "Signing you up...")
+	fmt.Fprint(cmd.io.Stdout(), "Setting up your account...")
 	cmd.progressPrinter.Start()
 	credential := credentials.CreateKey()
 	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential)
-	cmd.progressPrinter.Stop()
 	if err != nil {
+		cmd.progressPrinter.Stop()
 		return err
 	}
 
@@ -150,14 +151,36 @@ func (cmd *SignUpCommand) Run() error {
 
 	encodedCredential, err := credential.Export()
 	if err != nil {
+		cmd.progressPrinter.Stop()
 		return err
 	}
 	err = cmd.credentialStore.ConfigDir().Credential().Write(encodedCredential)
 	if err != nil {
+		cmd.progressPrinter.Stop()
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")
-	fmt.Fprintf(cmd.io.Stdout(), "Please verify your email address to continue. We've sent a verification mail to %s\n", cmd.email)
+	// create a start repository and write a fist secret to it, so that
+	// the user can start by reading their first secret.
+	// This is intended to smoothen onboarding.
+	repoPath := secretpath.Join(cmd.username, "start")
+	_, err = client.Repos().Create(secretpath.Join(repoPath))
+	if err != nil {
+		cmd.progressPrinter.Stop()
+		return err
+	}
+
+	secretPath := secretpath.Join(repoPath, "hello")
+	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", cmd.fullName, secretPath)
+
+	_, err = client.Secrets().Write(secretPath, []byte(message))
+	if err != nil {
+		cmd.progressPrinter.Stop()
+		return err
+	}
+
+	cmd.progressPrinter.Stop()
+
+	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 	return nil
 }

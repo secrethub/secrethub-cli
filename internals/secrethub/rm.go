@@ -36,6 +36,7 @@ func NewRmCommand(io ui.IO, newClient newClientFunc) *RmCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RmCommand) Register(r Registerer) {
 	clause := r.Command("rm", "Remove a directory, secret or version.")
+	clause.Alias("remove")
 	clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
 	clause.Flag("recursive", "Remove directories and their contents recursively.").Short('r').BoolVar(&cmd.recursive)
 	registerForceFlag(clause).BoolVar(&cmd.force)

@@ -55,6 +55,11 @@ Args:
 
 {{if .Flags}}
 
+{{ else }}{{if .Args}}
+
+{{end}}{{end}}\
+
+{{if .Flags}}\
 Flags:
 {{.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\

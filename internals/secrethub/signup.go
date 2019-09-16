@@ -114,13 +114,13 @@ func (cmd *SignUpCommand) Run() error {
 				}
 			}
 			if cmd.org == "" {
-				cmd.org, err = ui.AskAndValidate(cmd.io, "Your organization (leave empty to skip for now): ", 2, allowEmpty(api.ValidateOrgName))
+				cmd.org, err = ui.AskAndValidate(cmd.io, "Workspace name for your team (e.g. your company, leave empty to skip for now): ", 2, allowEmpty(api.ValidateOrgName))
 				if err != nil {
 					return err
 				}
 			}
 			if cmd.org != "" && cmd.orgDescription == "" {
-				cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your organization so others will recognize it:\n", 2, api.ValidateOrgDescription)
+				cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your team workspace so others will recognize it:\n", 2, api.ValidateOrgDescription)
 				if err != nil {
 					return err
 				}

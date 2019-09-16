@@ -95,7 +95,7 @@ func TestACLRmCommand_Run(t *testing.T) {
 
 			deleter := &tc.deleter
 
-			tc.cmd.newClient = func() (secrethub.Client, error) {
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					AccessRuleService: &fakeclient.AccessRuleService{
 						Deleter: deleter,

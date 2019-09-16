@@ -19,8 +19,6 @@ const (
 
 	// oldConfigFilename defines the filename for the file containing old configuration options.
 	oldConfigFilename = "config"
-	// oldConfigFileMode is the filemode to assign to the old configuration file.
-	oldConfigFileMode os.FileMode = 0600
 )
 
 // ProfileDir points to the account's directory used for storing credentials and configuration.

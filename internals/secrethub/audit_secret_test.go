@@ -25,7 +25,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 		"create secret event": {
 			cmd: AuditSecretCommand{
 				path: "namespace/repo/secret",
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							EventLister: fakeclient.SecretEventLister{
@@ -59,7 +59,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 		"0 events": {
 			cmd: AuditSecretCommand{
 				path: "namespace/repo/secret",
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							EventLister: fakeclient.SecretEventLister{
@@ -79,7 +79,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 		},
 		"client creation error": {
 			cmd: AuditSecretCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return nil, ErrCannotFindHomeDir()
 				},
 			},
@@ -88,7 +88,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 		"error can not audit dir": {
 			cmd: AuditSecretCommand{
 				path: "namespace/repo/dir",
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							EventLister: fakeclient.SecretEventLister{
@@ -103,7 +103,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 		"error secret not found": {
 			cmd: AuditSecretCommand{
 				path: "namespace/repo/secret",
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{
 							TreeGetter: fakeclient.TreeGetter{
@@ -123,7 +123,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 		"other list audit events error": {
 			cmd: AuditSecretCommand{
 				path: "namespace/repo/secret",
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							EventLister: fakeclient.SecretEventLister{
@@ -137,7 +137,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 		},
 		"invalid audit actor": {
 			cmd: AuditSecretCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							EventLister: fakeclient.SecretEventLister{

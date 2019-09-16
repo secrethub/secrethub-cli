@@ -25,7 +25,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		"0 events": {
 			cmd: AuditRepoCommand{
 				path: "namespace/repo",
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return &fakeclient.Client{
 						DirService: &fakeclient.DirService{},
 						RepoService: &fakeclient.RepoService{
@@ -39,7 +39,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		"create repo event": {
 			cmd: AuditRepoCommand{
 				path: "namespace/repo",
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{},
 						RepoService: &fakeclient.RepoService{
@@ -77,7 +77,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"client creation error": {
 			cmd: AuditRepoCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return nil, ErrCannotFindHomeDir()
 				},
 			},
@@ -85,7 +85,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"list audit events error": {
 			cmd: AuditRepoCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						RepoService: &fakeclient.RepoService{
 							EventLister: fakeclient.RepoEventLister{
@@ -99,7 +99,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"get dir error": {
 			cmd: AuditRepoCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{
 							TreeGetter: fakeclient.TreeGetter{
@@ -116,7 +116,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"invalid audit actor": {
 			cmd: AuditRepoCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{},
 						RepoService: &fakeclient.RepoService{
@@ -135,7 +135,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"invalid audit subject": {
 			cmd: AuditRepoCommand{
-				newClient: func() (secrethub.Client, error) {
+				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{},
 						RepoService: &fakeclient.RepoService{

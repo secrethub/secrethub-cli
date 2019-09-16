@@ -5,7 +5,7 @@ var (
 	// Changes in comparison to kingpin.DefaultUsageTemplate:
 	// 1. Removed * for default commands
 	DefaultUsageTemplate = `
-{{define "FormatSubCommands"}}\
+{{define "FormatSubCommands"}}
 {{ $managementCommands := .Commands | ManagementCommands }}\
 {{ $rootCommands := .Commands | RootCommands }}\
 
@@ -15,9 +15,7 @@ Management Commands:
 {{ end }}\
 
 {{ if $rootCommands }}\
-{{ if $managementCommands }}\
 Commands:
-{{ end }}\
 {{ $rootCommands | CommandsToTwoColumns | FormatTwoColumns }}
 {{end}}\
 {{end}}\
@@ -47,14 +45,21 @@ Args:
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
 {{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
 {{if .Commands}} <command> [<args> ...]{{end}}
-{{if .HelpLong}}
-{{.HelpLong}}\
-{{ else if .Help}}
+{{ if .Help}}
 {{.Help}}\
+{{end}}\
+{{if .HelpLong}}
+
+{{.HelpLong}}\
 {{end}}\
 
 {{if .Flags}}
 
+{{ else }}{{if .Args}}
+
+{{end}}{{end}}\
+
+{{if .Flags}}\
 Flags:
 {{.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\
@@ -73,7 +78,6 @@ usage: {{.App.Name}}{{template "FormatAppUsage" .App}}
 {{end}}\
 {{if .Context.SelectedCommand}}\
 {{if len .Context.SelectedCommand.Commands}}\
-Subcommands:
 {{template "FormatSubCommands" .Context.SelectedCommand}}
 {{end}}\
 {{else if .App.Commands}}\

@@ -175,7 +175,8 @@ func (cmd *CommandClause) Hidden() *CommandClause {
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
 func (cmd *CommandClause) Flag(name, help string) *Flag {
-	prefix := formatName(cmd.name, cmd.app.name, cmd.app.separator, cmd.app.delimiters...)
+	fullCmd := strings.Replace(cmd.FullCommand(), " ", cmd.app.separator, -1)
+	prefix := formatName(fullCmd, cmd.app.name, cmd.app.separator, cmd.app.delimiters...)
 	envVar := formatName(name, prefix, cmd.app.separator, cmd.app.delimiters...)
 
 	cmd.app.registerEnvVar(envVar)

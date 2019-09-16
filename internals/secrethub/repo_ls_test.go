@@ -81,6 +81,28 @@ func TestRepoLSCommand_run(t *testing.T) {
 			out: "dev1/repository\n" +
 				"dev2/applicationname\n",
 		},
+		"success workspace": {
+			cmd: RepoLSCommand{
+				timeFormatter: &fakes.TimeFormatter{
+					Response: "2018-01-01T01:01:01+01:00",
+				},
+				workspace: "dev1",
+			},
+			repoService: fakeclient.RepoService{
+				Lister: fakeclient.RepoLister{
+					ReturnsRepos: []*api.Repo{
+						{
+							Owner:     "dev1",
+							Name:      "repository",
+							Status:    api.StatusOK,
+							CreatedAt: &testTime,
+						},
+					},
+				},
+			},
+			out: "NAME             STATUS  CREATED\n" +
+				"dev1/repository  ok      2018-01-01T01:01:01+01:00\n",
+		},
 		"new client error": {
 			newClientErr: testErr,
 			err:          testErr,
@@ -102,11 +124,11 @@ func TestRepoLSCommand_run(t *testing.T) {
 			tc.cmd.io = io
 
 			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return nil, tc.newClientErr
 				}
 			} else {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						RepoService: &tc.repoService,
 					}, nil

@@ -142,7 +142,7 @@ func TestACLListCommand_run(t *testing.T) {
 			io := ui.NewFakeIO()
 			tc.cmd.io = io
 
-			tc.cmd.newClient = func() (secrethub.Client, error) {
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					AccessRuleService: &tc.accessrules,
 					DirService:        &tc.dirs,

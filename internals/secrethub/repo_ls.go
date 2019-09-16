@@ -13,6 +13,7 @@ import (
 type RepoLSCommand struct {
 	useTimestamps bool
 	quiet         bool
+	workspace     api.Namespace
 	io            ui.IO
 	timeFormatter TimeFormatter
 	newClient     newClientFunc
@@ -29,7 +30,9 @@ func NewRepoLSCommand(io ui.IO, newClient newClientFunc) *RepoLSCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoLSCommand) Register(r Registerer) {
 	clause := r.Command("ls", "List all repositories you have access to.")
+	clause.Alias("list")
 	clause.Flag("quiet", "Only print paths.").Short('q').BoolVar(&cmd.quiet)
+	clause.Arg("workspace", "When supplied, results are limited to repositories in this workspace.").SetValue(&cmd.workspace)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	BindAction(clause, cmd.Run)
@@ -53,9 +56,17 @@ func (cmd *RepoLSCommand) run() error {
 		return err
 	}
 
-	list, err := client.Repos().ListMine()
-	if err != nil {
-		return err
+	var list []*api.Repo
+	if cmd.workspace == "" {
+		list, err = client.Repos().ListMine()
+		if err != nil {
+			return err
+		}
+	} else {
+		list, err = client.Repos().List(cmd.workspace.String())
+		if err != nil {
+			return err
+		}
 	}
 
 	sort.Sort(api.SortRepoByName(list))

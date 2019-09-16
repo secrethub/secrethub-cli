@@ -16,15 +16,12 @@ func TestACLCheckCommand_Run(t *testing.T) {
 	testError := errors.New("test error")
 
 	cases := map[string]struct {
-		cmd                  ACLCheckCommand
-		newClientErr         error
-		getter               fakeclient.AccessRuleGetter
-		getterArgPath        api.Path
-		getterArgAccountName api.AccountName
-		lister               fakeclient.AccessLevelLister
-		listerArgPath        api.Path
-		out                  string
-		err                  error
+		cmd           ACLCheckCommand
+		newClientErr  error
+		lister        fakeclient.AccessLevelLister
+		listerArgPath api.Path
+		out           string
+		err           error
 	}{
 		"client creation error": {
 			newClientErr: testError,
@@ -35,14 +32,42 @@ func TestACLCheckCommand_Run(t *testing.T) {
 				accountName: "dev1",
 				path:        "namespace/repo",
 			},
-			getter: fakeclient.AccessRuleGetter{
-				ReturnsAccessRule: &api.AccessRule{
-					Permission: api.PermissionRead,
+			lister: fakeclient.AccessLevelLister{
+				ReturnsAccessLevels: []*api.AccessLevel{
+					{
+						Account: &api.Account{
+							Name: "dev1",
+						},
+						Permission: api.PermissionRead,
+					},
+					{
+						Account: &api.Account{
+							Name: "dev2",
+						},
+						Permission: api.PermissionWrite,
+					},
 				},
 			},
-			getterArgPath:        "namespace/repo",
-			getterArgAccountName: "dev1",
-			out:                  "read\n",
+			listerArgPath: "namespace/repo",
+			out:           "read\n",
+		},
+		"success specific account no permission": {
+			cmd: ACLCheckCommand{
+				accountName: "dev1",
+				path:        "namespace/repo",
+			},
+			lister: fakeclient.AccessLevelLister{
+				ReturnsAccessLevels: []*api.AccessLevel{
+					{
+						Account: &api.Account{
+							Name: "dev2",
+						},
+						Permission: api.PermissionWrite,
+					},
+				},
+			},
+			listerArgPath: "namespace/repo",
+			out:           "none\n",
 		},
 		"success all accounts": {
 			cmd: ACLCheckCommand{
@@ -69,18 +94,6 @@ func TestACLCheckCommand_Run(t *testing.T) {
 				"write          dev2\n" +
 				"read           dev1\n",
 		},
-		"get error": {
-			cmd: ACLCheckCommand{
-				accountName: "dev1",
-				path:        "namespace/repo",
-			},
-			getter: fakeclient.AccessRuleGetter{
-				Err: testError,
-			},
-			getterArgPath:        "namespace/repo",
-			getterArgAccountName: "dev1",
-			err:                  testError,
-		},
 		"list error": {
 			lister: fakeclient.AccessLevelLister{
 				Err: testError,
@@ -95,13 +108,11 @@ func TestACLCheckCommand_Run(t *testing.T) {
 			io := ui.NewFakeIO()
 			tc.cmd.io = io
 
-			getter := &tc.getter
 			lister := &tc.lister
 
-			tc.cmd.newClient = func() (secrethub.Client, error) {
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					AccessRuleService: &fakeclient.AccessRuleService{
-						Getter:      getter,
 						LevelLister: lister,
 					},
 				}, tc.newClientErr
@@ -113,8 +124,6 @@ func TestACLCheckCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
-			assert.Equal(t, getter.ArgPath, tc.getterArgPath)
-			assert.Equal(t, getter.ArgAccountName, tc.getterArgAccountName)
 			assert.Equal(t, lister.ArgPath, tc.listerArgPath)
 		})
 	}

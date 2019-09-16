@@ -1,23 +1,17 @@
 package secrethub
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"sort"
 	"text/tabwriter"
 
-	"sort"
-
-	"io"
-
-	"errors"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
-
-// ErrLsNamespaceNotSupported is an error that is thrown when the ls command is called
-// with a namespace as path argument.
-var ErrLsNamespaceNotSupported = errMain.Code("ls_namespace_not_supported").Error("currently listing a namespace is not supported")
 
 // LsCommand lists a repo, secret or namespace.
 type LsCommand struct {
@@ -39,6 +33,7 @@ func NewLsCommand(io ui.IO, newClient newClientFunc) *LsCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *LsCommand) Register(r Registerer) {
 	clause := r.Command("ls", "List contents of a path.")
+	clause.Alias("list")
 	clause.Arg("path", "The path to list all contents (<namespace>/<repo>[/<path>])").SetValue(&cmd.path)
 	clause.Flag("quiet", "Only print paths.").Short('q').BoolVar(&cmd.quiet)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
@@ -118,9 +113,17 @@ func (cmd *LsCommand) Run() error {
 		return nil
 	}
 
-	_, err = cmd.path.ToNamespace()
+	workspace, err := cmd.path.ToNamespace()
 	if err == nil {
-		return ErrLsNamespaceNotSupported
+		cmd := RepoLSCommand{
+			workspace:     workspace,
+			useTimestamps: cmd.useTimestamps,
+			quiet:         cmd.quiet,
+			io:            cmd.io,
+			newClient:     cmd.newClient,
+		}
+
+		return cmd.Run()
 	}
 
 	// Path should always be a namespace, repository, directory, secret or secret version.

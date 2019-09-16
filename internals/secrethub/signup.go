@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
 
 // Errors
@@ -24,12 +27,12 @@ type SignUpCommand struct {
 	force           bool
 	io              ui.IO
 	newClient       newClientFunc
-	credentialStore CredentialStore
+	credentialStore CredentialConfig
 	progressPrinter progress.Printer
 }
 
 // NewSignUpCommand creates a new SignUpCommand.
-func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialStore) *SignUpCommand {
+func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *SignUpCommand {
 	return &SignUpCommand{
 		io:              io,
 		newClient:       newClient,
@@ -52,22 +55,14 @@ func (cmd *SignUpCommand) Register(r Registerer) {
 // Run signs up a new user and configures his account for use on this machine.
 // If an account was already configured, the user is prompted for confirmation to overwrite it.
 func (cmd *SignUpCommand) Run() error {
-	profileDir, err := cmd.credentialStore.NewProfileDir()
-	if err != nil {
-		return err
-	}
-	credentialPath := profileDir.CredentialPath()
+	credentialPath := cmd.credentialStore.ConfigDir().Credential().Path()
 
 	if cmd.force {
 		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" {
 			return ErrMissingFlags
 		}
 	} else {
-		exists, err := cmd.credentialStore.CredentialExists()
-		if err != nil {
-			return err
-		}
-		if exists {
+		if cmd.credentialStore.ConfigDir().Credential().Exists() {
 			confirmed, err := ui.AskYesNo(
 				cmd.io,
 				fmt.Sprintf("Found account credentials at %s, do you wish to overwrite them?", credentialPath),
@@ -128,22 +123,14 @@ func (cmd *SignUpCommand) Run() error {
 	// Only prompt for a passphrase when the user hasn't used --force.
 	// Otherwise, we assume the passphrase was intentionally not
 	// configured to output a plaintext credential.
+	var passphrase string
 	if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
-		passphrase, err := ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+		var err error
+		passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 		if err != nil {
 			return err
 		}
-		cmd.credentialStore.SetPassphrase(passphrase)
 	}
-
-	fmt.Fprint(cmd.io.Stdout(), "Generating credential...")
-	cmd.progressPrinter.Start()
-	credential, err := secrethub.GenerateCredential()
-	if err != nil {
-		return err
-	}
-	cmd.credentialStore.Set(credential)
-	cmd.progressPrinter.Stop()
 
 	client, err := cmd.newClient()
 	if err != nil {
@@ -152,17 +139,51 @@ func (cmd *SignUpCommand) Run() error {
 
 	fmt.Fprint(cmd.io.Stdout(), "Signing you up...")
 	cmd.progressPrinter.Start()
-	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName)
+	credential := credentials.CreateKey()
+	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential)
 	cmd.progressPrinter.Stop()
 	if err != nil {
 		return err
 	}
-	err = cmd.credentialStore.Save()
+
+	exportKey := credential.Key
+	if passphrase != "" {
+		exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
+	}
+
+	encodedCredential, err := credential.Export()
+	if err != nil {
+		return err
+	}
+	err = cmd.credentialStore.ConfigDir().Credential().Write(encodedCredential)
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")
-	fmt.Fprintf(cmd.io.Stdout(), "Please verify your email address to continue. We've sent a verification mail to %s\n", cmd.email)
+
+	return createStartRepo(client, cmd.io.Stdout(), cmd.username, cmd.fullName)
+}
+
+// createStartRepo creates a start repository and write a fist secret to it, so that
+// the user can start by reading their first secret. This is intended to smoothen
+// onboarding.
+func createStartRepo(client secrethub.ClientInterface, w io.Writer, workspace string, name string) error {
+	fmt.Fprintln(w, "Setting up your workspace...")
+	repoPath := secretpath.Join(workspace, "start")
+	_, err := client.Repos().Create(secretpath.Join(repoPath))
+	if err != nil {
+		return err
+	}
+
+	secretPath := secretpath.Join(repoPath, "hello")
+	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", name, secretPath)
+
+	_, err = client.Secrets().Write(secretPath, []byte(message))
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(w, "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 	return nil
 }

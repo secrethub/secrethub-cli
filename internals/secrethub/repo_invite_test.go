@@ -44,19 +44,11 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 				username: "dev1",
 				force:    true,
 			},
-			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					ReturnsUser: &api.User{
-						Username: "dev1",
-					},
-				},
-			},
 			repoUserService: fakeclient.RepoUserService{
 				RepoInviter: fakeclient.RepoInviter{
 					ReturnsRepoMember: &api.RepoMember{},
 				},
 			},
-			getArgUsername:    "dev1",
 			inviteArgUsername: "dev1",
 			inviteArgPath:     "dev2/repo",
 			out:               "Inviting user...\nInvite complete! The user dev1 is now a member of the dev2/repo repository.\n",
@@ -67,19 +59,11 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 				username: "dev1",
 				force:    true,
 			},
-			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					ReturnsUser: &api.User{
-						Username: "dev1",
-					},
-				},
-			},
 			repoUserService: fakeclient.RepoUserService{
 				RepoInviter: fakeclient.RepoInviter{
 					Err: testErr,
 				},
 			},
-			getArgUsername:    "dev1",
 			inviteArgUsername: "dev1",
 			inviteArgPath:     "dev2/repo",
 			out:               "Inviting user...\n",
@@ -92,11 +76,11 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return nil, tc.newClientErr
 				}
 			} else {
-				tc.cmd.newClient = func() (secrethub.Client, error) {
+				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						RepoService: &fakeclient.RepoService{
 							UserService: &tc.repoUserService,

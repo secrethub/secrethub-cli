@@ -123,7 +123,7 @@ func TestNewMaskedWriter(t *testing.T) {
 	maskString := "<redacted by SecretHub>"
 
 	timeout10s := time.Second * 10
-	timeout1ms := time.Millisecond * 1
+	timeout1us := time.Microsecond * 1
 	timeout0 := time.Second * 0
 
 	randomIn, err := randchar.NewGenerator(true).Generate(10000)
@@ -204,11 +204,11 @@ func TestNewMaskedWriter(t *testing.T) {
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("fo"))
 				assert.OK(t, err)
-				time.Sleep(time.Millisecond * 5)
+				time.Sleep(time.Second * 2)
 				_, err = w.Write([]byte("o bar test"))
 				assert.OK(t, err)
 			},
-			timeout:  &timeout1ms,
+			timeout:  &timeout1us,
 			expected: "foo " + maskString + " test",
 		},
 		"no timeout": {

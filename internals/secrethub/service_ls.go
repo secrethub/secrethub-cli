@@ -44,6 +44,7 @@ func NewServiceAWSLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceLsCommand) Register(r Registerer) {
 	clause := r.Command("ls", "List all service accounts in a given repository.")
+	clause.Alias("list")
 	clause.Arg("repo-path", "The path to the repository to list services for (<namespace>/<repo>).").Required().SetValue(&cmd.repoPath)
 	clause.Flag("quiet", "Only print service IDs.").Short('q').BoolVar(&cmd.quiet)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)

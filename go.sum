@@ -66,6 +66,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
+github.com/secrethub/kingpin v0.0.0-20190920111600-67b1cb231087 h1:n4V94OQPe04crRRmcyAURLk3AImueFd44Ne99sN5TO8=
+github.com/secrethub/kingpin v0.0.0-20190920111600-67b1cb231087/go.mod h1:idxgS9pV6OOpAhZvx+gcoGRMX9/tt0iqkw/pNxI0C14=
 github.com/secrethub/secrethub-go v0.21.0 h1:5xbC+gdku7MXUQmlP5SPhAPLF+/U31soLKbyXwNyM+M=
 github.com/secrethub/secrethub-go v0.21.0/go.mod h1:rc2IfKKBJ4L0wGec0u4XnF5/pe0FFPE4Q1MWfrFso7s=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=

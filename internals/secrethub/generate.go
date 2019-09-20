@@ -27,10 +27,10 @@ type GenerateSecretCommand struct {
 	useSymbols bool
 	generator  randchar.Generator
 	io         ui.IO
-	lengthFlag *int
+	lengthFlag intValue
 	firstArg   string
 	secondArg  string
-	lengthArg  *int
+	lengthArg  intValue
 	newClient  newClientFunc
 }
 
@@ -47,11 +47,11 @@ func (cmd *GenerateSecretCommand) Register(r Registerer) {
 	clause := r.Command("generate", "Generate a random secret.")
 	clause.HelpLong("By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
 	clause.Arg("secret-path", "The path to write the generated secret to (<namespace>/<repo>[/<dir>]/<secret>)").Required().StringVar(&cmd.firstArg)
-	cmd.lengthFlag = clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Int()
+	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).SetValue(&cmd.lengthFlag)
 	clause.Flag("symbols", "Include symbols in secret.").Short('s').BoolVar(&cmd.useSymbols)
 
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
-	cmd.lengthArg = clause.Arg("length", "").Hidden().Int()
+	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
 	// TODO SHDEV-528: implement --clip
 	// clause.Flag("clip", "Copy the secret value to the clipboard. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(cmd.clip)
@@ -111,14 +111,14 @@ func (cmd *GenerateSecretCommand) run() error {
 }
 
 func (cmd *GenerateSecretCommand) length() (int, error) {
-	if cmd.lengthArg != nil && cmd.lengthFlag != nil {
+	if cmd.lengthArg.IsSet() && cmd.lengthFlag.IsSet() {
 		return 0, ErrCannotUseLengthArgAndFlag
 	}
-	if cmd.lengthFlag != nil {
-		return *cmd.lengthFlag, nil
+	if cmd.lengthFlag.IsSet() {
+		return cmd.lengthFlag.Get(), nil
 	}
-	if cmd.lengthArg != nil {
-		return *cmd.lengthArg, nil
+	if cmd.lengthArg.IsSet() {
+		return cmd.lengthArg.Get(), nil
 	}
 	return defaultLength, nil
 }
@@ -128,4 +128,32 @@ func (cmd *GenerateSecretCommand) path() (string, error) {
 		return cmd.secondArg, api.ValidateSecretPath(cmd.secondArg)
 	}
 	return cmd.firstArg, api.ValidateSecretPath(cmd.firstArg)
+}
+
+type intValue struct {
+	v *int
+}
+
+func (iv *intValue) Get() int {
+	if iv.v == nil {
+		return 0
+	}
+	return *iv.v
+}
+
+func (iv *intValue) IsSet() bool {
+	return iv.v != nil
+}
+
+func (iv *intValue) Set(s string) error {
+	f, err := strconv.ParseFloat(s, 64)
+	if err == nil {
+		v := (int)(f)
+		iv.v = &v
+	}
+	return err
+}
+
+func (iv *intValue) String() string {
+	return fmt.Sprintf("%v", iv.v)
 }

@@ -131,7 +131,7 @@ func (cmd *GenerateSecretCommand) path() (string, error) {
 		return "", fmt.Errorf("unexpected %s", cmd.secondArg)
 	}
 	if cmd.lengthArg.IsSet() {
-		return "", fmt.Errorf("unexpected %d", cmd.lengthArg)
+		return "", fmt.Errorf("unexpected %d", cmd.lengthArg.Get())
 	}
 	return cmd.firstArg, api.ValidateSecretPath(cmd.firstArg)
 }

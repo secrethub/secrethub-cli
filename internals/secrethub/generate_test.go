@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -12,6 +13,10 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )
+
+func newIntValue(v int) intValue {
+	return intValue{v: &v}
+}
 
 func TestGenerateSecretCommand_run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
@@ -31,8 +36,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				path:   "namespace/repo/secret",
-				length: 23,
+				firstArg: "namespace/repo/secret",
 			},
 			service: fakeclient.SecretService{
 				Writer: fakeclient.Writer{
@@ -49,19 +53,101 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				"Writing secret value...\n" +
 				"Write complete! A randomly generated secret has been written to namespace/repo/secret:1.\n",
 		},
-		"length 0": {
+		"length flag": {
 			cmd: GenerateSecretCommand{
-				length: 0,
+				generator: randchargeneratorfakes.FakeRandomGenerator{
+					Ret: []byte("random generated secret"),
+					Err: nil,
+				},
+				firstArg:   "namespace/repo/secret",
+				lengthFlag: newIntValue(24),
+			},
+			service: fakeclient.SecretService{
+				Writer: fakeclient.Writer{
+					ReturnsVersion: &api.SecretVersion{
+						Version: 1,
+					},
+					Err: nil,
+				},
+			},
+			path: "namespace/repo/secret",
+			data: []byte("random generated secret"),
+			err:  nil,
+			out: "Generating secret value...\n" +
+				"Writing secret value...\n" +
+				"Write complete! A randomly generated secret has been written to namespace/repo/secret:1.\n",
+		},
+		"length flag and arg": {
+			cmd: GenerateSecretCommand{
+				generator: randchargeneratorfakes.FakeRandomGenerator{
+					Ret: []byte("random generated secret"),
+					Err: nil,
+				},
+				firstArg:   "rand",
+				secondArg:  "namespace/repo/secret",
+				lengthFlag: newIntValue(24),
+				lengthArg:  newIntValue(24),
+			},
+			err: ErrCannotUseLengthArgAndFlag,
+		},
+		"backwards compatibility rand": {
+			cmd: GenerateSecretCommand{
+				generator: randchargeneratorfakes.FakeRandomGenerator{
+					Ret: []byte("random generated secret"),
+					Err: nil,
+				},
+				firstArg:  "rand",
+				secondArg: "namespace/repo/secret",
+				lengthArg: newIntValue(23),
+			},
+			service: fakeclient.SecretService{
+				Writer: fakeclient.Writer{
+					ReturnsVersion: &api.SecretVersion{
+						Version: 1,
+					},
+					Err: nil,
+				},
+			},
+			path: "namespace/repo/secret",
+			data: []byte("random generated secret"),
+			err:  nil,
+			out: "Generating secret value...\n" +
+				"Writing secret value...\n" +
+				"Write complete! A randomly generated secret has been written to namespace/repo/secret:1.\n",
+		},
+		"length arg 0": {
+			cmd: GenerateSecretCommand{
+				firstArg:  "rand",
+				secondArg: "namespace/repo/secret",
+				lengthArg: newIntValue(0),
 			},
 			err: ErrInvalidRandLength,
 			out: "",
 		},
-		"negative length": {
+		"length arg negative": {
 			cmd: GenerateSecretCommand{
-				length: -1,
+				firstArg:  "rand",
+				secondArg: "namespace/repo/secret",
+				lengthArg: newIntValue(-1),
 			},
 			err: ErrInvalidRandLength,
 			out: "",
+		},
+		// The length arg is only for backwards compatibility of the `generate rand` command.
+		"length arg without rand": {
+			cmd: GenerateSecretCommand{
+				firstArg: "namespace/repo/secret",
+				lengthArg:newIntValue(24),
+			},
+			err: errors.New("unexpected 24"),
+		},
+		// The second arg should only be used to supply the path when the first arg is `rand` (backwards compatibility).
+		"second arg without rand": {
+			cmd: GenerateSecretCommand{
+				firstArg: "namespace/repo/secret",
+				secondArg: "namespace/repo/secret2",
+			},
+			err: errors.New("unexpected namespace/repo/secret2"),
 		},
 		"generate error": {
 			cmd: GenerateSecretCommand{
@@ -69,7 +155,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: nil,
 					Err: testErr,
 				},
-				length: 22,
+				firstArg: "namespace/repo/secret",
 			},
 			err: testErr,
 			out: "Generating secret value...\n",
@@ -80,7 +166,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				length: 23,
+				firstArg: "namespace/repo/secret",
 			},
 			clientCreationErr: testErr,
 			err:               testErr,
@@ -92,8 +178,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				path:   "namespace/repo/secret",
-				length: 23,
+				firstArg: "namespace/repo/secret",
 			},
 			service: fakeclient.SecretService{
 				Writer: fakeclient.Writer{

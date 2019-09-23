@@ -136,15 +136,15 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		// The length arg is only for backwards compatibility of the `generate rand` command.
 		"length arg without rand": {
 			cmd: GenerateSecretCommand{
-				firstArg: "namespace/repo/secret",
-				lengthArg:newIntValue(24),
+				firstArg:  "namespace/repo/secret",
+				lengthArg: newIntValue(24),
 			},
 			err: errors.New("unexpected 24"),
 		},
 		// The second arg should only be used to supply the path when the first arg is `rand` (backwards compatibility).
 		"second arg without rand": {
 			cmd: GenerateSecretCommand{
-				firstArg: "namespace/repo/secret",
+				firstArg:  "namespace/repo/secret",
 				secondArg: "namespace/repo/secret2",
 			},
 			err: errors.New("unexpected namespace/repo/secret2"),

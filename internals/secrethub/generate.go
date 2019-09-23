@@ -127,6 +127,12 @@ func (cmd *GenerateSecretCommand) path() (string, error) {
 	if cmd.firstArg == "rand" {
 		return cmd.secondArg, api.ValidateSecretPath(cmd.secondArg)
 	}
+	if cmd.secondArg != "" {
+		return "", fmt.Errorf("unexpected %s", cmd.secondArg)
+	}
+	if cmd.lengthArg.IsSet() {
+		return "", fmt.Errorf("unexpected %d", cmd.lengthArg)
+	}
 	return cmd.firstArg, api.ValidateSecretPath(cmd.firstArg)
 }
 

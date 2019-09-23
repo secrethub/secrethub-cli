@@ -24,14 +24,14 @@ const defaultLength = 22
 
 // GenerateSecretCommand generates a new secret and writes to the output path.
 type GenerateSecretCommand struct {
-	useSymbols bool
-	generator  randchar.Generator
-	io         ui.IO
-	lengthFlag intValue
-	firstArg   string
-	secondArg  string
-	lengthArg  intValue
-	newClient  newClientFunc
+	symbolsFlag boolValue
+	generator   randchar.Generator
+	io          ui.IO
+	lengthFlag  intValue
+	firstArg    string
+	secondArg   string
+	lengthArg   intValue
+	newClient   newClientFunc
 }
 
 // NewGenerateSecretCommand creates a new GenerateSecretCommand.
@@ -48,7 +48,7 @@ func (cmd *GenerateSecretCommand) Register(r Registerer) {
 	clause.HelpLong("By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
 	clause.Arg("secret-path", "The path to write the generated secret to (<namespace>/<repo>[/<dir>]/<secret>)").Required().StringVar(&cmd.firstArg)
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
-	clause.Flag("symbols", "Include symbols in secret.").Short('s').BoolVar(&cmd.useSymbols)
+	clause.Flag("symbols", "Include symbols in secret.").Short('s').SetValue(&cmd.symbolsFlag)
 
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
@@ -61,18 +61,10 @@ func (cmd *GenerateSecretCommand) Register(r Registerer) {
 
 // before configures the command using the flag values.
 func (cmd *GenerateSecretCommand) before() error {
-	useSymbols := false
-
-	useSymbolsEnv := os.Getenv("SECRETHUB_GENERATE_RAND_SYMBOLS")
-	if useSymbolsEnv != "" {
-		b, err := strconv.ParseBool(useSymbolsEnv)
-		if err != nil {
-			return err
-		}
-		useSymbols = useSymbols || b
+	useSymbols, err := cmd.useSymbols()
+	if err != nil {
+		return err
 	}
-
-	useSymbols = useSymbols || cmd.useSymbols
 
 	cmd.generator = randchar.NewGenerator(useSymbols)
 
@@ -154,6 +146,23 @@ func (cmd *GenerateSecretCommand) path() (string, error) {
 	return cmd.firstArg, api.ValidateSecretPath(cmd.firstArg)
 }
 
+func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {
+	if cmd.symbolsFlag.IsSet() {
+		return cmd.symbolsFlag.Get(), nil
+	}
+
+	useSymbolsEnv := os.Getenv("SECRETHUB_GENERATE_RAND_SYMBOLS")
+	if useSymbolsEnv != "" {
+		b, err := strconv.ParseBool(useSymbolsEnv)
+		if err != nil {
+			return false, err
+		}
+		return b, nil
+	}
+
+	return false, nil
+}
+
 type intValue struct {
 	v *int
 }
@@ -179,5 +188,32 @@ func (iv *intValue) Set(s string) error {
 }
 
 func (iv *intValue) String() string {
+	return fmt.Sprintf("%v", iv.v)
+}
+
+type boolValue struct {
+	v *bool
+}
+
+func (iv *boolValue) Get() bool {
+	if iv.v == nil {
+		return false
+	}
+	return *iv.v
+}
+
+func (iv *boolValue) IsSet() bool {
+	return iv.v != nil
+}
+
+func (iv *boolValue) Set(s string) error {
+	b, err := strconv.ParseBool(s)
+	if err == nil {
+		iv.v = &b
+	}
+	return err
+}
+
+func (iv *boolValue) String() string {
 	return fmt.Sprintf("%v", iv.v)
 }

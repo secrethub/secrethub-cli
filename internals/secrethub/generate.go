@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -59,13 +60,31 @@ func (cmd *GenerateSecretCommand) Register(r Registerer) {
 }
 
 // before configures the command using the flag values.
-func (cmd *GenerateSecretCommand) before() {
-	cmd.generator = randchar.NewGenerator(cmd.useSymbols)
+func (cmd *GenerateSecretCommand) before() error {
+	useSymbols := false
+
+	useSymbolsEnv := os.Getenv("SECRETHUB_GENERATE_RAND_SYMBOLS")
+	if useSymbolsEnv != "" {
+		b, err := strconv.ParseBool(useSymbolsEnv)
+		if err != nil {
+			return err
+		}
+		useSymbols = useSymbols || b
+	}
+
+	useSymbols = useSymbols || cmd.useSymbols
+
+	cmd.generator = randchar.NewGenerator(useSymbols)
+
+	return nil
 }
 
 // Run generates a new secret and writes to the output path.
 func (cmd *GenerateSecretCommand) Run() error {
-	cmd.before()
+	err := cmd.before()
+	if err != nil {
+		return err
+	}
 	return cmd.run()
 }
 

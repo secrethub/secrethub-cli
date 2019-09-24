@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/randchar"
+
+	"github.com/docker/go-units"
 )
 
 var (
@@ -25,22 +29,27 @@ const defaultLength = 22
 
 // GenerateSecretCommand generates a new secret and writes to the output path.
 type GenerateSecretCommand struct {
-	useSymbolsFlag boolValue
-	symbolsFlag    boolValue
-	generator      randchar.Generator
-	io             ui.IO
-	lengthFlag     intValue
-	firstArg       string
-	secondArg      string
-	lengthArg      intValue
-	newClient      newClientFunc
+	useSymbolsFlag      boolValue
+	symbolsFlag         boolValue
+	generator           randchar.Generator
+	io                  ui.IO
+	lengthFlag          intValue
+	firstArg            string
+	secondArg           string
+	lengthArg           intValue
+	copyToClipboard     bool
+	clearClipboardAfter time.Duration
+	clipper             clip.Clipper
+	newClient           newClientFunc
 }
 
 // NewGenerateSecretCommand creates a new GenerateSecretCommand.
 func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecretCommand {
 	return &GenerateSecretCommand{
-		io:        io,
-		newClient: newClient,
+		io:                  io,
+		newClient:           newClient,
+		clearClipboardAfter: defaultClearClipboardAfter,
+		clipper:             clip.NewClipboard(),
 	}
 }
 
@@ -51,13 +60,11 @@ func (cmd *GenerateSecretCommand) Register(r Registerer) {
 	clause.Arg("secret-path", "The path to write the generated secret to (<namespace>/<repo>[/<dir>]/<secret>)").Required().StringVar(&cmd.firstArg)
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Flag("use-symbols", "Include symbols in secret.").Short('s').SetValue(&cmd.useSymbolsFlag)
+	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
 
 	clause.Flag("symbols", "").Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
-
-	// TODO SHDEV-528: implement --clip
-	// clause.Flag("clip", "Copy the secret value to the clipboard. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(cmd.clip)
 
 	BindAction(clause, cmd.Run)
 }
@@ -115,6 +122,19 @@ func (cmd *GenerateSecretCommand) run() error {
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "A randomly generated secret has been written to %s:%d.\n", path, version.Version)
+
+	if cmd.copyToClipboard {
+		err = WriteClipboardAutoClear(data, cmd.clearClipboardAfter, cmd.clipper)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(
+			cmd.io.Stdout(),
+			"The generated value has been copied to the clipboard. It will be cleared after %s.\n",
+			units.HumanDuration(cmd.clearClipboardAfter),
+		)
+	}
 
 	return nil
 }

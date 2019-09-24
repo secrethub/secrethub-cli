@@ -20,14 +20,16 @@ var (
 	errGenerate = errio.Namespace("generate")
 
 	// ErrInvalidRandLength is returned when an invalid length is given.
-	ErrInvalidRandLength         = errGenerate.Code("invalid_rand_length").Error("The secret length must be larger than 0")
-	ErrCannotUseLengthArgAndFlag = errGenerate.Code("length_arg_and_flag").Error("length cannot be provided as an argument and a flag at the same time")
+	ErrInvalidRandLength                 = errGenerate.Code("invalid_rand_length").Error("The secret length must be larger than 0")
+	ErrCannotUseLengthArgAndFlag         = errGenerate.Code("length_arg_and_flag").Error("length cannot be provided as an argument and a flag at the same time")
+	ErrCannotUseSymbolsAndUseSymbolsFlag = errGenerate.Code("use_symbols_and_symbols_flag").Error("use-symbols and symbols flag cannot be used together")
 )
 
 const defaultLength = 22
 
 // GenerateSecretCommand generates a new secret and writes to the output path.
 type GenerateSecretCommand struct {
+	useSymbolsFlag      boolValue
 	symbolsFlag         boolValue
 	generator           randchar.Generator
 	io                  ui.IO
@@ -57,9 +59,10 @@ func (cmd *GenerateSecretCommand) Register(r Registerer) {
 	clause.HelpLong("By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
 	clause.Arg("secret-path", "The path to write the generated secret to (<namespace>/<repo>[/<dir>]/<secret>)").Required().StringVar(&cmd.firstArg)
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
-	clause.Flag("symbols", "Include symbols in secret.").Short('s').SetValue(&cmd.symbolsFlag)
+	clause.Flag("use-symbols", "Include symbols in secret.").Short('s').SetValue(&cmd.useSymbolsFlag)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
 
+	clause.Flag("symbols", "").Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
@@ -167,6 +170,13 @@ func (cmd *GenerateSecretCommand) path() (string, error) {
 }
 
 func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {
+	if cmd.useSymbolsFlag.IsSet() {
+		if cmd.symbolsFlag.IsSet() {
+			return false, ErrCannotUseSymbolsAndUseSymbolsFlag
+		}
+		return cmd.useSymbolsFlag.Get(), nil
+	}
+
 	if cmd.symbolsFlag.IsSet() {
 		return cmd.symbolsFlag.Get(), nil
 	}

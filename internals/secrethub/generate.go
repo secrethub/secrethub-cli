@@ -135,7 +135,7 @@ func (cmd *GenerateSecretCommand) run() error {
 
 		fmt.Fprintf(
 			cmd.io.Stdout(),
-			"The generated value is copied to the clipboard. It will be cleared after %s.\n",
+			"The generated value has been copied to the clipboard. It will be cleared after %s.\n",
 			units.HumanDuration(cmd.clearClipboardAfter),
 		)
 	}

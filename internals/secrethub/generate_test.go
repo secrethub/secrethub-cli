@@ -49,9 +49,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			path: "namespace/repo/secret",
 			data: []byte("random generated secret"),
 			err:  nil,
-			out: "Generating secret value...\n" +
-				"Writing secret value...\n" +
-				"Write complete! A randomly generated secret has been written to namespace/repo/secret:1.\n",
+			out:  "A randomly generated secret has been written to namespace/repo/secret:1.\n",
 		},
 		"length flag": {
 			cmd: GenerateSecretCommand{
@@ -73,9 +71,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			path: "namespace/repo/secret",
 			data: []byte("random generated secret"),
 			err:  nil,
-			out: "Generating secret value...\n" +
-				"Writing secret value...\n" +
-				"Write complete! A randomly generated secret has been written to namespace/repo/secret:1.\n",
+			out:  "A randomly generated secret has been written to namespace/repo/secret:1.\n",
 		},
 		"length flag and arg": {
 			cmd: GenerateSecretCommand{
@@ -111,9 +107,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			path: "namespace/repo/secret",
 			data: []byte("random generated secret"),
 			err:  nil,
-			out: "Generating secret value...\n" +
-				"Writing secret value...\n" +
-				"Write complete! A randomly generated secret has been written to namespace/repo/secret:1.\n",
+			out:  "A randomly generated secret has been written to namespace/repo/secret:1.\n",
 		},
 		"length arg 0": {
 			cmd: GenerateSecretCommand{
@@ -158,7 +152,6 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				firstArg: "namespace/repo/secret",
 			},
 			err: testErr,
-			out: "Generating secret value...\n",
 		},
 		"client creation error": {
 			cmd: GenerateSecretCommand{
@@ -170,7 +163,6 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			},
 			clientCreationErr: testErr,
 			err:               testErr,
-			out:               "Generating secret value...\n",
 		},
 		"client error": {
 			cmd: GenerateSecretCommand{
@@ -189,8 +181,6 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			path: "namespace/repo/secret",
 			data: []byte("random generated secret"),
 			err:  testErr,
-			out: "Generating secret value...\n" +
-				"Writing secret value...\n",
 		},
 	}
 

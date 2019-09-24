@@ -96,8 +96,6 @@ func (cmd *GenerateSecretCommand) run() error {
 		return ErrInvalidRandLength
 	}
 
-	fmt.Fprint(cmd.io.Stdout(), "Generating secret value...\n")
-
 	data, err := cmd.generator.Generate(length)
 	if err != nil {
 		return err
@@ -108,14 +106,12 @@ func (cmd *GenerateSecretCommand) run() error {
 		return err
 	}
 
-	fmt.Fprint(cmd.io.Stdout(), "Writing secret value...\n")
-
 	version, err := client.Secrets().Write(path, data)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Write complete! A randomly generated secret has been written to %s:%d.\n", path, version.Version)
+	fmt.Fprintf(cmd.io.Stdout(), "A randomly generated secret has been written to %s:%d.\n", path, version.Version)
 
 	return nil
 }

@@ -1,7 +1,9 @@
 project_name: secrethub
 
 builds:
-  - binary: "secrethub"
+  - &default
+    id: default
+    binary: "bin/secrethub"
     env:
       - CGO_ENABLED=0
     goos:
@@ -33,9 +35,14 @@ builds:
       - -s -w -X "github.com/secrethub/secrethub-cli/internals/secrethub.Commit={{ .ShortCommit }}" -X "github.com/secrethub/secrethub-cli/internals/secrethub.Version={{ .Version }}"
     flags:
       - -tags=production
+  - <<: *default
+    id: "without-bin-dir"
+    binary: "secrethub"
 
 archive:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  builds:
+    - default
   format_overrides:
     - goos: windows
       format: zip
@@ -47,6 +54,8 @@ checksum:
 
 brew:
   name: secrethub-cli
+  ids:
+    - default
   github:
     owner: secrethub
     name: homebrew-tools
@@ -57,6 +66,8 @@ brew:
 
 snapcraft:
   name: secrethub-cli
+  builds:
+    - default
   publish: true
   summary: Command-line interface for SecretHub
   description: SecretHub is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts. It enables you to securely share passwords and other secrets with your team and infrastructure.
@@ -79,11 +90,14 @@ scoop:
 
 nfpms:
   -
+    builds:
+      - without-bin-dir
     vendor: SecretHub
     homepage: https://secrethub.io/
     description: CLI for using the SecretHub Secret Management Service
     maintainer: SecretHub Support <support@secrethub.io>
     license: Apache 2.0
+    bindir: /usr/bin
     formats:
       - rpm
       - deb

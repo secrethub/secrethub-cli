@@ -1,11 +1,9 @@
 #!/usr/bin/env sh
 
-if [ -d /etc/bash_completion.d/ ]; then
+BASH_COMPLETION_DIR=$(pkg-config --variable=completionsdir bash-completion)
+if [ -d ${BASH_COMPLETION_DIR} ]; then
     echo -e "==> Installing completion for Bash"
-    /usr/local/bin/secrethub --completion-script-bash > /etc/bash_completion.d/secrethub
-elif [ -d /usr/local/etc/bash_completion.d/ ]; then
-    echo -e "==> Installing completion for Bash"
-    /usr/local/bin/secrethub --completion-script-bash > /usr/local/etc/bash_completion.d/secrethub
+    /usr/bin/secrethub --completion-script-bash > ${BASH_COMPLETION_DIR}/secrethub
 fi
 
 if command -v zsh > /dev/null 2>&1; then

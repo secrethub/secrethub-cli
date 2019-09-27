@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
@@ -297,9 +298,23 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 		return err
 	}
 
+	repoPath := secretpath.Join(me.Username, "start")
+	_, err = client.Repos().Create(secretpath.Join(repoPath))
+	if err != nil {
+		return err
+	}
+
+	secretPath := secretpath.Join(repoPath, "hello")
+	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", me.FullName, secretPath)
+
+	_, err = client.Secrets().Write(secretPath, []byte(message))
+	if err != nil {
+		return err
+	}
+
 	fmt.Fprintln(cmd.io.Stdout(), " Done")
 
-	return createStartRepo(client, cmd.io.Stdout(), me.Username, me.FullName)
+	return nil
 }
 
 // waitForCredentialToBeAdded returns a channel on which is returned when the credential is added and a channel

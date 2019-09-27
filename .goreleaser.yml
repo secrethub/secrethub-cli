@@ -39,43 +39,43 @@ builds:
     id: "without-bin-dir"
     binary: "secrethub"
 
-archive:
-  name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
-  builds:
-    - default
-  format_overrides:
-    - goos: windows
-      format: zip
-  files:
-  - LICENSE
+archives:
+  - name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    builds:
+      - default
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+    - LICENSE
 
 checksum:
   name_template: "{{ .ProjectName }}-{{ .Tag }}-checksums.txt"
 
-brew:
-  name: secrethub-cli
-  ids:
-    - default
-  github:
-    owner: secrethub
-    name: homebrew-tools
-  folder: Formula
+brews:
+  - name: secrethub-cli
+    ids:
+      - default
+    github:
+      owner: secrethub
+      name: homebrew-tools
+    folder: Formula
 
-  homepage: https://secrethub.io
-  description: Command-line interface for SecretHub
+    homepage: https://secrethub.io
+    description: Command-line interface for SecretHub
 
-snapcraft:
-  name: secrethub-cli
-  builds:
-    - default
-  publish: true
-  summary: Command-line interface for SecretHub
-  description: SecretHub is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts. It enables you to securely share passwords and other secrets with your team and infrastructure.
-  apps:
-    secrethub:
-      plugs:
-        - home
-        - network
+snapcrafts:
+  - name: secrethub-cli
+    builds:
+      - default
+    publish: true
+    summary: Command-line interface for SecretHub
+    description: SecretHub is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts. It enables you to securely share passwords and other secrets with your team and infrastructure.
+    apps:
+      secrethub:
+        plugs:
+          - home
+          - network
 
 scoop:
   name: secrethub-cli

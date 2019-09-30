@@ -1,4 +1,4 @@
-package example_app
+package app
 
 const page = `
 <!doctype html>

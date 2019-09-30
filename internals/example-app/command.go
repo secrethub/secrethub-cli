@@ -1,8 +1,6 @@
 package example_app
 
 import (
-	"fmt"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
@@ -24,12 +22,4 @@ func (cmd *Command) Register(r command.Registerer) {
 	clause := r.Command("example-app", "Runs the secrethub example app as used in different guides.")
 
 	NewServeCommand(cmd.io).Register(clause)
-
-}
-
-// Run handles the command with the options as specified in the command.
-func (cmd *Command) Run() error {
-	fmt.Println("test")
-
-	return nil
 }

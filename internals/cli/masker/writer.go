@@ -145,8 +145,8 @@ func (mw *MaskedWriter) process() {
 				mw.flushBuffer()
 			}
 		case p := <-mw.incomingBytesCh:
-			matchInProgress := false
 			for _, b := range p {
+				matchInProgress := false
 				mw.buf = append(mw.buf, maskByte{byte: b})
 
 				for _, matcher := range mw.matchers {

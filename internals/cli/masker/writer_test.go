@@ -11,6 +11,8 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/randchar"
 )
 
+var maskString = "<redacted by SecretHub>"
+
 func TestMatcher(t *testing.T) {
 	tests := []struct {
 		matchString     string
@@ -120,8 +122,6 @@ func TestMatcher(t *testing.T) {
 }
 
 func TestNewMaskedWriter(t *testing.T) {
-	maskString := "<redacted by SecretHub>"
-
 	timeout10s := time.Second * 10
 	timeout1us := time.Microsecond * 1
 	timeout0 := time.Second * 0
@@ -268,6 +268,35 @@ func TestNewMaskedWriter(t *testing.T) {
 			assert.OK(t, err)
 			assert.Equal(t, buf.String(), tc.expected)
 		})
+	}
+}
+
+func TestNewMaskedWriter_OnlyFlushingOnTimeoutBug(t *testing.T) {
+	// There was a bug in MaskedWriter where it was only flushed on a timeout when a secret was found in the middle
+	// of write. This test assures this bug is not present by writing a secret in the middle of a Write and
+	// checking whether Flush() returns before the timeout of the MaskedWriter.
+
+	var buf bytes.Buffer
+
+	maskStrings := [][]byte{[]byte("foo")}
+
+	w := NewMaskedWriter(&buf, maskStrings, maskString, time.Second*10)
+
+	go w.Run()
+	_, err := w.Write([]byte("teststring foo more text"))
+	assert.OK(t, err)
+
+	done := make(chan struct{})
+	go func() {
+		err := w.Flush()
+		assert.OK(t, err)
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-time.After(5 * time.Second):
+		t.Error("MaskedWriter was not flushed before timeout")
+	case <-done:
 	}
 }
 

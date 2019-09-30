@@ -271,7 +271,7 @@ func TestNewMaskedWriter(t *testing.T) {
 	}
 }
 
-func TestNewMaskedWriter_OnlyFlushingOnTimeoutBug(t *testing.T) {
+func TestNewMaskedWriter_FlushBeforeTimeout(t *testing.T) {
 	// There was a bug in MaskedWriter where it was only flushed on a timeout when a secret was found in the middle
 	// of write. This test assures this bug is not present by writing a secret in the middle of a Write and
 	// checking whether Flush() returns before the timeout of the MaskedWriter.

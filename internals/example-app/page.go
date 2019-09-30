@@ -8,7 +8,7 @@ const page = `
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="description" content="">
 	<meta name="author" content="">
-	<link rel="icon" href="/docs/4.0/assets/img/favicons/favicon.ico">
+	<link rel="icon" href="https://secrethub.io/img/favicon/favicon.ico">
 
 	<title>SecretHub Example App</title>
 
@@ -78,7 +78,7 @@ const page = `
 
 <body class="text-center">
 <div class="container">
-	<img class="mb-4" src="https://secrethub.io/img/secrethub-logo-rgb-shield-square.png" alt="" width="150" height="150">
+	<img class="mb-4" src="https://secrethub.io/img/secrethub-logo-rgb-shield-square.png" alt="SecretHub logo" width="60" height="60">
 	<h1 class="h3 mb-3 font-weight-normal">Example App</h1>
 	<p id="status">Trying to connect to https://demo.secrethub.io/api...</p>
 	<i id="animation" class="fas fa-spinner fa-spin fa-3x"> </i>
@@ -87,7 +87,7 @@ const page = `
 		<div class="card" id="result">
 		</div>
 	</div>
-	<!--<p class="mt-5 mb-3 text-muted"><a href="https://secrethub.io/docs/reference/example-app/" target="_blank">documentation</a></p>-->
+	<p class="mt-5 mb-3 text-muted">Read the <a href="https://secrethub.io/docs/reference/cli/example-app/" target="_blank">documentation</a> for this app</p>
 </div>
 </body>
 </html>

@@ -2,15 +2,22 @@ package secrethub
 
 import (
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
+	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
 	units "github.com/docker/go-units"
+)
+
+// Errors
+var (
+	errClipAndOutFile = errMain.Code("clip_and_out-file").Error("clip and out-file cannot be used together")
 )
 
 // ReadCommand is a command to read a secret.
@@ -20,6 +27,8 @@ type ReadCommand struct {
 	useClipboard        bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
+	outFile             string
+	fileMode            filemode.FileMode
 	newClient           newClientFunc
 }
 
@@ -44,6 +53,8 @@ func (cmd *ReadCommand) Register(r Registerer) {
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
 	).Short('c').BoolVar(&cmd.useClipboard)
+	clause.Flag("out-file", "Write the secret value to this file.").Short('o').StringVar(&cmd.outFile)
+	clause.Flag("file-mode", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
 
 	BindAction(clause, cmd.Run)
 }
@@ -60,6 +71,10 @@ func (cmd *ReadCommand) Run() error {
 		return err
 	}
 
+	if cmd.useClipboard && cmd.outFile != "" {
+		return errClipAndOutFile
+	}
+
 	if cmd.useClipboard {
 		err = WriteClipboardAutoClear(secret.Data, cmd.clearClipboardAfter, cmd.clipper)
 		if err != nil {
@@ -72,6 +87,11 @@ func (cmd *ReadCommand) Run() error {
 			cmd.path,
 			units.HumanDuration(cmd.clearClipboardAfter),
 		)
+	} else if cmd.outFile != "" {
+		err = ioutil.WriteFile(cmd.outFile, posix.AddNewLine(secret.Data), cmd.fileMode.FileMode())
+		if err != nil {
+			return ErrCannotWrite(cmd.outFile, err)
+		}
 	} else {
 		fmt.Fprintf(cmd.io.Stdout(), "%s", string(posix.AddNewLine(secret.Data)))
 	}

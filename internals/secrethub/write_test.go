@@ -193,7 +193,7 @@ func TestWriteCommand_Run(t *testing.T) {
 		},
 		"clip and in-file": {
 			cmd: WriteCommand{
-				inFile: "file",
+				inFile:       "file",
 				useClipboard: true,
 			},
 			err: errClipAndInFile,

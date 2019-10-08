@@ -1,8 +1,20 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/golang:1.12
     steps:
       - checkout
       - run: make test
+  verify-goreleaser:
+    docker:
+      - image: goreleaser/goreleaser:v0.117
+    steps:
+      - checkout
+      - run: goreleaser check
+workflows:
+  version: 2
+  pipeline:
+    jobs:
+      - test
+      - verify-goreleaser

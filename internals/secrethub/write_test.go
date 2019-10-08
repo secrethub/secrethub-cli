@@ -191,6 +191,13 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			err: clip.ErrCannotRead("read error"),
 		},
+		"clip and in-file": {
+			cmd: WriteCommand{
+				inFile: "file",
+				useClipboard: true,
+			},
+			err: errClipAndInFile,
+		},
 	}
 
 	for name, tc := range cases {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	exampleapp "github.com/secrethub/secrethub-cli/internals/example-app"
+	"github.com/secrethub/secrethub-cli/internals/demo-app"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -184,5 +184,5 @@ func (app *App) registerCommands() {
 	NewClearClipboardCommand().Register(app.cli)
 	NewKeyringClearCommand().Register(app.cli)
 
-	exampleapp.NewCommand(app.io).Register(app.cli)
+	demo_app.NewCommand(app.io).Register(app.cli)
 }

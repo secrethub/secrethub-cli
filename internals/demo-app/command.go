@@ -1,4 +1,4 @@
-package example_app
+package demo_app
 
 import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -19,7 +19,7 @@ func NewCommand(io ui.IO) *Command {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *Command) Register(r command.Registerer) {
-	clause := r.Command("example-app", "Runs the secrethub example app as used in different guides.")
+	clause := r.Command("demo", "Runs the secrethub demo app as used in different guides.")
 
 	NewServeCommand(cmd.io).Register(clause)
 }

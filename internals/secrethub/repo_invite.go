@@ -43,12 +43,12 @@ func (cmd *RepoInviteCommand) Run() error {
 		return err
 	}
 
-	user, err := client.Users().Get(cmd.username)
-	if err != nil {
-		return err
-	}
-
 	if !cmd.force {
+		user, err := client.Users().Get(cmd.username)
+		if err != nil {
+			return err
+		}
+
 		msg := fmt.Sprintf("Are you sure you want to add %s to the %s repository?",
 			user.PrettyName(),
 			cmd.path)
@@ -70,7 +70,7 @@ func (cmd *RepoInviteCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Invite complete! The user %s is now a member of the %s repository.\n", user.Username, cmd.path)
+	fmt.Fprintf(cmd.io.Stdout(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username, cmd.path)
 
 	return nil
 }

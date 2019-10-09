@@ -15,12 +15,14 @@ import (
 var (
 	errCannotWriteToVersion = errMain.Code("cannot_write_version").Error("cannot (over)write a specific secret version, they are append only")
 	errEmptySecret          = errMain.Code("cannot_write_empty_secret").Error("secret is empty or contains only whitespace")
+	errClipAndInFile        = errMain.Code("clip_and_in_file").Error("clip and in-file cannot be used together")
 )
 
 // WriteCommand is a command to write content to a secret.
 type WriteCommand struct {
 	io           ui.IO
 	path         api.SecretPath
+	inFile       string
 	useClipboard bool
 	noTrim       bool
 	clipper      clip.Clipper
@@ -42,6 +44,7 @@ func (cmd *WriteCommand) Register(r command.Registerer) {
 	clause.Arg("secret-path", "The path to the secret (<namespace>/<repo>[/<dir>]/<secret>)").Required().SetValue(&cmd.path)
 	clause.Flag("clip", "Use clipboard content as input.").Short('c').BoolVar(&cmd.useClipboard)
 	clause.Flag("no-trim", "Do not trim leading and trailing whitespace in the secret.").BoolVar(&cmd.noTrim)
+	clause.Flag("in-file", "Use the contents of this file as the value of the secret.").Short('i').StringVar(&cmd.inFile)
 
 	command.BindAction(clause, cmd.Run)
 }
@@ -57,11 +60,20 @@ func (cmd *WriteCommand) Run() error {
 		return errCannotWriteToVersion
 	}
 
+	if cmd.useClipboard && cmd.inFile != "" {
+		return errClipAndInFile
+	}
+
 	var data []byte
 	if cmd.useClipboard {
 		data, err = cmd.clipper.ReadAll()
 		if err != nil {
 			return err
+		}
+	} else if cmd.inFile != "" {
+		data, err = ioutil.ReadFile(cmd.inFile)
+		if err != nil {
+			return ErrReadFile(cmd.inFile, err)
 		}
 	} else if cmd.io.Stdin().IsPiped() {
 		data, err = ioutil.ReadAll(cmd.io.Stdin())

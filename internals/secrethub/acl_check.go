@@ -43,19 +43,21 @@ func (cmd *ACLCheckCommand) Run() error {
 		return err
 	}
 
-	if cmd.accountName != "" {
-		level, err := client.AccessRules().Get(cmd.path.Value(), cmd.accountName.Value())
-		if err != nil {
-			return err
-		}
-
-		fmt.Fprintf(cmd.io.Stdout(), "%s\n", level.Permission.String())
-		return nil
-	}
-
 	levels, err := client.AccessRules().ListLevels(cmd.path.Value())
 	if err != nil {
 		return err
+	}
+
+	if cmd.accountName != "" {
+		for _, level := range levels {
+			if level.Account.Name == cmd.accountName {
+				fmt.Fprintf(cmd.io.Stdout(), "%s\n", level.Permission.String())
+				return nil
+			}
+		}
+
+		fmt.Fprintln(cmd.io.Stdout(), api.PermissionNone.String())
+		return nil
 	}
 
 	sort.Sort(api.SortAccessLevels(levels))

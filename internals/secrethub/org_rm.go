@@ -28,6 +28,7 @@ func NewOrgRmCommand(io ui.IO, newClient newClientFunc) *OrgRmCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgRmCommand) Register(r command.Registerer) {
 	clause := r.Command("rm", "Permanently delete an organization and all the repositories it owns.")
+	clause.Alias("remove")
 	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	command.BindAction(clause, cmd.Run)

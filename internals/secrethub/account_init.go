@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
@@ -233,6 +234,8 @@ func (cmd *AccountInitCommand) Run() error {
 // createAccountKey polls the server on /me/user until the credential is
 // added to the account. When the credential is added to the account, it
 // creates an account key for the credential.
+// When the account key is created, a start repository is created, so that
+// the user can start by reading their first secret.
 func (cmd *AccountInitCommand) createAccountKey() error {
 	client, err := cmd.newClient()
 	if err != nil {
@@ -293,6 +296,20 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 	_, err = client.Accounts().Keys().Create(key.Verifier(), key.Encrypter())
 	if err != nil {
 		fmt.Fprintln(cmd.io.Stdout(), " Failed")
+		return err
+	}
+
+	repoPath := secretpath.Join(me.Username, "start")
+	_, err = client.Repos().Create(secretpath.Join(repoPath))
+	if err != nil {
+		return err
+	}
+
+	secretPath := secretpath.Join(repoPath, "hello")
+	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", me.FullName, secretPath)
+
+	_, err = client.Secrets().Write(secretPath, []byte(message))
+	if err != nil {
 		return err
 	}
 

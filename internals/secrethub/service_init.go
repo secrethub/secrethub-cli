@@ -115,7 +115,7 @@ func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause.Flag("description", "A description for the service so others will recognize it.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <permission> format to give permission on the root of the repo and <subdirectory>:<permission> to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <subdirectory>:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
 	// TODO make 45 sec configurable
 	clause.Flag("clip", "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(&cmd.clip)
 	clause.Flag("file", "Write the service account configuration to a file instead of stdout.").StringVar(&cmd.file)

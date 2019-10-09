@@ -15,6 +15,7 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -86,13 +87,21 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Stdout(), "Detected access to AWS account %s.", accountID)
 
-	region := sess.Config.Region
-	if isSet(region) {
-		fmt.Fprintf(cmd.io.Stdout(), "Using region %s.", *region)
+	if cfg.Region == nil && cmd.kmsKeyID != "" {
+		// When the region is not configured in the AWS configuration and not supplied using the flag, use
+		// the region from the KMS key if the key is supplied as an ARN.
+		kmsARN, err := arn.Parse(cmd.kmsKeyID)
+		if err == nil {
+			cfg = cfg.WithRegion(kmsARN.Region)
+		}
+	}
+
+	if cfg.Region != nil {
+		fmt.Fprintf(cmd.io.Stdout(), "Using region %s.", *cfg.Region)
 	}
 	fmt.Fprintln(cmd.io.Stdout())
 
-	if !isSet(region) {
+	if cfg.Region == nil {
 		region, err := ui.Choose(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true, "region")
 		if err != nil {
 			return err
@@ -155,7 +164,7 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use <permission> format to give permission on the root of the repo and <subdirectory>:<permission> to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <subdirectory>:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
 
 	clause.HelpLong("The native AWS identity provider uses a combination of AWS IAM and AWS KMS to provide access to SecretHub for any service running on AWS (e.g. EC2, Lambda or ECS). For this to work, an IAM role and a KMS key are needed.\n" +
 		"\n" +
@@ -309,10 +318,6 @@ func handleAWSErr(err error) error {
 		err = errio.Namespace("aws").Code(errAWS.Code()).Error(errAWS.Message())
 	}
 	return fmt.Errorf("error fetching available KMS keys: %s", err)
-}
-
-func isSet(v *string) bool {
-	return v != nil && *v != ""
 }
 
 func checkIsNotEmpty(name string) func(string) error {

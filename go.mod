@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	bitbucket.org/zombiezen/cardcpx v0.0.0-20150417151802-902f68ff43ef
-	github.com/alecthomas/kingpin v0.0.0-20190705085659-95eb9edaa399
+	github.com/alecthomas/kingpin v0.0.0-20190930021037-0a108b7f5563
 	github.com/atotto/clipboard v0.1.2
 	github.com/aws/aws-sdk-go v1.19.38
 	github.com/danieljoos/wincred v1.0.2 // indirect

@@ -118,7 +118,9 @@ func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout tim
 // This function never returns an error. These can instead be caught with Flush().
 func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
 	mw.wg.Add(len(p))
-	mw.incomingBytesCh <- p
+	tmp := make([]byte, len(p))
+	copy(tmp, p)
+	mw.incomingBytesCh <- tmp
 	return len(p), nil
 }
 
@@ -143,8 +145,8 @@ func (mw *MaskedWriter) process() {
 				mw.flushBuffer()
 			}
 		case p := <-mw.incomingBytesCh:
-			matchInProgress := false
 			for _, b := range p {
+				matchInProgress := false
 				mw.buf = append(mw.buf, maskByte{byte: b})
 
 				for _, matcher := range mw.matchers {

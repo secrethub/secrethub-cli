@@ -60,7 +60,8 @@ brews:
       owner: secrethub
       name: homebrew-tools
     folder: Formula
-
+    install: |
+      bin.install "bin/secrethub"
     homepage: https://secrethub.io
     description: Command-line interface for SecretHub
 

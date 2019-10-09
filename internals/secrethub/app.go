@@ -165,6 +165,7 @@ func (app *App) registerCommands() {
 	NewACLCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewServiceCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewAccountCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
+	NewDemoCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
 
 	// Commands

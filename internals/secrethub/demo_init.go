@@ -1,0 +1,70 @@
+package secrethub
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
+)
+
+type DemoInitCommand struct {
+	repo string
+
+	io        ui.IO
+	newClient newClientFunc
+}
+
+func NewDemoInitCommand(io ui.IO, newClient newClientFunc) *DemoInitCommand {
+	return &DemoInitCommand{
+		io:        io,
+		newClient: newClient,
+	}
+}
+
+// Register registers the command, arguments and flags on the provided Registerer.
+func (cmd *DemoInitCommand) Register(r Registerer) {
+	clause := r.Command("init", "Create the secrets necessary to connect with the demo application.")
+	clause.HelpLong("The demo init command creates a repository in your personal namespace (called `demo` by default). In that repository, it writes the username and password needed to connect to the demo API.")
+
+	clause.Flag("repo", "The name of the repository to create.").Default("demo").StringVar(&cmd.repo)
+
+	BindAction(clause, cmd.Run)
+}
+
+// Run handles the command with the options as specified in the command.
+func (cmd *DemoInitCommand) Run() error {
+	client, err := cmd.newClient()
+	if err != nil {
+		return err
+	}
+
+	me, err := client.Me().GetUser()
+	if err != nil {
+		return err
+	}
+
+	repoPath := secretpath.Join(me.Username, cmd.repo)
+
+	_, err = client.Repos().Create(repoPath)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Secrets().Write(secretpath.Join(repoPath, "username"), []byte(me.Username))
+	if err != nil {
+		return err
+	}
+
+	h := hmac.New(sha256.New, []byte("this-is-no-good-way-to-generate-a-password-that-is-why-we-only-use-it-for-demo-purposes"))
+	password := base64.RawStdEncoding.EncodeToString(h.Sum([]byte(me.Username)))[:20]
+
+	_, err = client.Secrets().Write(secretpath.Join(repoPath, "password"), []byte(password))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

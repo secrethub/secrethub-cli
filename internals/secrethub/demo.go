@@ -6,7 +6,7 @@ import (
 
 // DemoCommand handles operations on the demo application.
 type DemoCommand struct {
-	io ui.IO
+	io        ui.IO
 	newClient newClientFunc
 }
 

@@ -14,7 +14,7 @@ import (
 var (
 	errCannotWriteToVersion = errMain.Code("cannot_write_version").Error("cannot (over)write a specific secret version, they are append only")
 	errEmptySecret          = errMain.Code("cannot_write_empty_secret").Error("secret is empty or contains only whitespace")
-	errClipAndInFile        = errMain.Code("clip_and_in-file").Error("clip and in-file cannot be used together")
+	errClipAndInFile        = errMain.Code("clip_and_in_file").Error("clip and in-file cannot be used together")
 )
 
 // WriteCommand is a command to write content to a secret.

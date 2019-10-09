@@ -1,4 +1,4 @@
-package demo_app
+package demo
 
 import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"

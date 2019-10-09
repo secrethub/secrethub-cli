@@ -51,32 +51,35 @@ func (s *Server) ServeAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 
 	if s.appUsername == "" {
-		writeError(w, http.StatusInternalServerError, "DEMO_USERNAME environment variable not set")
+		writeServerError(w, "DEMO_USERNAME environment variable not set")
 		return
 	}
 
 	if s.appPassword == "" {
-		writeError(w, http.StatusInternalServerError, "DEMO_PASSWORD environment variable not set")
+		writeServerError(w, "DEMO_PASSWORD environment variable not set")
 		return
 	}
 
 	req, err := http.NewRequest("GET", "https://demo.secrethub.io/api/v1/basic-auth", nil)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, err.Error())
 		return
 	}
 
 	req.SetBasicAuth(s.appUsername, s.appPassword)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		writeServerError(w, err.Error())
 		return
 	}
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func writeError(w http.ResponseWriter, statusCode int, message string) {
-	w.WriteHeader(statusCode)
+func writeServerError(w http.ResponseWriter, message string) {
+	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprint(w, message)
 }

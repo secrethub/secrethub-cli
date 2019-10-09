@@ -1,10 +1,10 @@
-package demo_app
+package demo
 
 import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/demo-app/app"
+	"github.com/secrethub/secrethub-cli/internals/demo/app"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 

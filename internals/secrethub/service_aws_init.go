@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	shaws "github.com/secrethub/secrethub-go/internals/aws"
@@ -154,7 +155,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
+func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 	clause := r.Command("init", "Create a new service account that is tied to an AWS IAM role.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().SetValue(&cmd.repo)
 	clause.Flag("kms-key", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
@@ -175,7 +176,7 @@ func (cmd *ServiceAWSInitCommand) Register(r Registerer) {
 		"If no system-wide default for the AWS region is provided (e.g. with $AWS_REGION), the AWS-region where the KMS key resides should be explicitly provided to this command with the --region flag.",
 	)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {

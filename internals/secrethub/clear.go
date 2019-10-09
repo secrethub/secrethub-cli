@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-cli/internals/secretspec"
 )
 
@@ -23,11 +24,11 @@ func NewClearCommand(io ui.IO) *ClearCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ClearCommand) Register(r Registerer) {
+func (cmd *ClearCommand) Register(r command.Registerer) {
 	clause := r.Command("clear", "Clear the secrets from your local environment. This reads and parses the secrets.yml file in the current working directory.").Hidden()
 	clause.Flag("in", "The path to a secrets.yml file to read").Short('i').Default("secrets.yml").ExistingFileVar(&cmd.in)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run clears the secrets from the system.

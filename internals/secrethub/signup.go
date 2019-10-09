@@ -6,6 +6,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
@@ -40,14 +41,14 @@ func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore Credent
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *SignUpCommand) Register(r Registerer) {
+func (cmd *SignUpCommand) Register(r command.Registerer) {
 	clause := r.Command("signup", "Create a free personal developer account.")
 	clause.Flag("username", "The username you would like to use on SecretHub. If not set, you will be asked for it.").StringVar(&cmd.username)
 	clause.Flag("full-name", "If not set, you will be asked to provide your full name.").StringVar(&cmd.fullName)
 	clause.Flag("email", "If not set, you will be asked to provide your email address.").StringVar(&cmd.email)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run signs up a new user and configures his account for use on this machine.

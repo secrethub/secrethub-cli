@@ -7,6 +7,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/demo"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -68,11 +69,6 @@ type App struct {
 	cli             *cli.App
 	io              ui.IO
 	logger          cli.Logger
-}
-
-// Registerer allows others to register commands on it.
-type Registerer interface {
-	Command(cmd string, help string) *cli.CommandClause
 }
 
 // newClientFunc creates a ClientAdapater.
@@ -187,4 +183,6 @@ func (app *App) registerCommands() {
 	NewSetCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewClearClipboardCommand().Register(app.cli)
 	NewKeyringClearCommand().Register(app.cli)
+
+	demo.NewCommand(app.io).Register(app.cli)
 }

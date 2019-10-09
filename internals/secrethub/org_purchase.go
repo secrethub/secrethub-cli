@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // OrgPurchaseCommand prints instructions on purchasing a SecretHub subscription.
@@ -19,10 +20,10 @@ func NewOrgPurchaseCommand(io ui.IO) *OrgPurchaseCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgPurchaseCommand) Register(r Registerer) {
+func (cmd *OrgPurchaseCommand) Register(r command.Registerer) {
 	clause := r.Command("purchase", "Purchase a SecretHub subscription.")
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run prints instructions on purchasing a SecretHub subscription.

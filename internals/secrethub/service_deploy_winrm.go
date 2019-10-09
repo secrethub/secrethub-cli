@@ -3,17 +3,16 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
-
 	"io/ioutil"
+	"net/url"
 	"os"
-
 	"strconv"
 
-	"net/url"
+	"github.com/secrethub/secrethub-go/internals/errio"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-cli/internals/winrm"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // DefaultServiceConfigFilemode configures the filemode used for writing service configuration files.
@@ -58,7 +57,7 @@ func NewServiceDeployWinRmCommand(io ui.IO) *ServiceDeployWinRmCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceDeployWinRmCommand) Register(r Registerer) {
+func (cmd *ServiceDeployWinRmCommand) Register(r command.Registerer) {
 	clause := r.Command("winrm", "Read a service account configuration from stdin and deploy it to a running instance with WinRM. The instance needs to be reachable, have WinRM enabled, and have PowerShell installed.")
 	clause.Arg("resource-uri", "Hostname, optional connection protocol and port of the host ([http[s]://]<host>[:<port>]). This defaults to https and port 5986.").Required().URLVar(&cmd.resourceURI)
 	clause.Flag("auth-type", "Authentication type (basic/cert)").HintOptions("basic", "cert").Default("basic").StringVar(&cmd.authType)
@@ -69,7 +68,7 @@ func (cmd *ServiceDeployWinRmCommand) Register(r Registerer) {
 	clause.Flag("ca-cert", "Path to CA certificate used to verify server TLS certificate.").ExistingFileVar(&cmd.caCert)
 	clause.Flag("insecure-no-verify-cert", "Do not verify server TLS certificate (insecure).").BoolVar(&cmd.noVerify)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run creates a service and installs the configuration using WinRM.

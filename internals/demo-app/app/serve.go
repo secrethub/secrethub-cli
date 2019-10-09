@@ -17,8 +17,8 @@ type Server struct {
 }
 
 func NewServer(host string, port int) *Server {
-	username := os.Getenv("APP_USERNAME")
-	password := os.Getenv("APP_PASSWORD")
+	username := os.Getenv("DEMO_USERNAME")
+	password := os.Getenv("DEMO_PASSWORD")
 
 	return &Server{
 		host:        host,
@@ -37,7 +37,7 @@ func (s *Server) Serve() error {
 }
 
 func (s *Server) ServeIndex(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.New("test").Parse(page)
+	tmpl, err := template.New("tpl").Parse(page)
 	if err != nil {
 		panic(err)
 	}
@@ -51,16 +51,16 @@ func (s *Server) ServeAPI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 
 	if s.appUsername == "" {
-		writeError(w, http.StatusInternalServerError, "APP_USERNAME not set")
+		writeError(w, http.StatusInternalServerError, "DEMO_USERNAME environment variable not set")
 		return
 	}
 
 	if s.appPassword == "" {
-		writeError(w, http.StatusInternalServerError, "APP_PASSWORD not set")
+		writeError(w, http.StatusInternalServerError, "DEMO_PASSWORD environment variable not set")
 		return
 	}
 
-	req, err := http.NewRequest("GET", "http://httpbin.org/basic-auth/demo/very-secret-password", nil)
+	req, err := http.NewRequest("GET", "https://demo.secrethub.io/api/v1/basic-auth", nil)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -73,11 +73,7 @@ func (s *Server) ServeAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(resp.StatusCode)
-	if resp.StatusCode == http.StatusUnauthorized {
-		fmt.Fprint(w, "unauthorized")
-	} else {
-		io.Copy(w, resp.Body)
-	}
+	io.Copy(w, resp.Body)
 }
 
 func writeError(w http.ResponseWriter, statusCode int, message string) {

@@ -53,7 +53,12 @@ const page = `
             $("#animation").css("color", color);
             if(result !== "") {
                 $(".result-container").attr("hidden",false);
-                $("#result").html(result);
+				 try {
+					j = JSON.parse(result);
+					$("#result").html(j['message']);
+				} catch (e) {
+					$("#result").html(result);
+				}
 			}
 		}
 
@@ -79,15 +84,17 @@ const page = `
 <body class="text-center">
 <div class="container">
 	<img class="mb-4" src="https://secrethub.io/img/secrethub-logo-rgb-shield-square.png" alt="SecretHub logo" width="60" height="60">
-	<h1 class="h3 mb-3 font-weight-normal">Example App</h1>
+	<h1 class="h3 mb-3 font-weight-normal">Demo App</h1>
+	<i id="animation" class="fas fa-spinner fa-spin fa-3x"> </i>	
 	<p id="status">Trying to connect to https://demo.secrethub.io/api...</p>
-	<i id="animation" class="fas fa-spinner fa-spin fa-3x"> </i>
-	<div class="result-container mt-3" hidden>
-		<h4>Result</h4>
-		<div class="card" id="result">
+	<div class="result-container mt-3 card" hidden>
+ 		<div class="card-header">
+			Result
+		</div>
+		<div class="card-body" id="result">
 		</div>
 	</div>
-	<p class="mt-5 mb-3 text-muted">Read the <a href="https://secrethub.io/docs/reference/cli/example-app/" target="_blank">documentation</a> for this app</p>
+	<p class="mt-5 mb-3 text-muted">Read the <a href="https://secrethub.io/docs/reference/cli/demo/" target="_blank">documentation</a> for this app</p>
 </div>
 </body>
 </html>

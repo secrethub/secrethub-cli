@@ -12,9 +12,9 @@
 [![Version]( https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)][discord]
 
-The SecretHub CLI provides the command-line interface to interact with SecretHub.
+The SecretHub CLI provides the command-line interface to interact with the SecretHub API.
 
-> [SecretHub][secrethub] is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts.
+> [SecretHub][secrethub] is an end-to-end encrypted secret management service that helps developers keep database passwords, API keys, and other secrets out of source code.
 
 ## Usage
 

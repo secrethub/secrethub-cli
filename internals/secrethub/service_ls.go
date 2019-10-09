@@ -19,6 +19,7 @@ type ServiceLsCommand struct {
 	newClient       newClientFunc
 	newServiceTable func(t TimeFormatter) serviceTable
 	filters         []func(service *api.Service) bool
+	help            string
 }
 
 // NewServiceLsCommand creates a new ServiceLsCommand.
@@ -27,6 +28,7 @@ func NewServiceLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand {
 		io:              io,
 		newClient:       newClient,
 		newServiceTable: newKeyServiceTable,
+		help:            "List all service accounts in a given repository.",
 	}
 }
 
@@ -38,12 +40,13 @@ func NewServiceAWSLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 		filters: []func(service *api.Service) bool{
 			isAWSService,
 		},
+		help: "List all AWS service accounts in a given repository.",
 	}
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceLsCommand) Register(r Registerer) {
-	clause := r.Command("ls", "List all service accounts in a given repository.")
+	clause := r.Command("ls", cmd.help)
 	clause.Alias("list")
 	clause.Arg("repo-path", "The path to the repository to list services for (<namespace>/<repo>).").Required().SetValue(&cmd.repoPath)
 	clause.Flag("quiet", "Only print service IDs.").Short('q').BoolVar(&cmd.quiet)

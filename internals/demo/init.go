@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"errors"
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -66,7 +65,7 @@ func (cmd *InitCommand) Run() error {
 
 	_, err = client.Repos().Create(repoPath)
 	if err == api.ErrRepoAlreadyExists && cmd.repo == "" {
-		return errors.New("demo repo already exists, use --repo to specify another repo to use")
+		return fmt.Errorf("demo repo %s already exists, use --repo to specify another repo to use", repoPath)
 	} else if err != nil {
 		return err
 	}

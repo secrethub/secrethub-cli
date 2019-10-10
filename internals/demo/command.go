@@ -7,13 +7,15 @@ import (
 
 // Command is a command to run the secrethub example app.
 type Command struct {
-	io ui.IO
+	io        ui.IO
+	newClient newClientFunc
 }
 
 // NewCommand creates a new example app command.
-func NewCommand(io ui.IO) *Command {
+func NewCommand(io ui.IO, newClient newClientFunc) *Command {
 	return &Command{
-		io: io,
+		io:        io,
+		newClient: newClient,
 	}
 }
 
@@ -21,5 +23,6 @@ func NewCommand(io ui.IO) *Command {
 func (cmd *Command) Register(r command.Registerer) {
 	clause := r.Command("demo", "Runs the secrethub demo app as used in different guides.")
 
+	NewInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewServeCommand(cmd.io).Register(clause)
 }

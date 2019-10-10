@@ -1,4 +1,4 @@
-package secrethub
+package demo
 
 import (
 	"crypto/hmac"
@@ -7,39 +7,43 @@ import (
 	"errors"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
 
+type newClientFunc func() (secrethub.ClientInterface, error)
+
 const defaultDemoRepo = "demo"
 
-type DemoInitCommand struct {
+type InitCommand struct {
 	repo string
 
 	io        ui.IO
 	newClient newClientFunc
 }
 
-func NewDemoInitCommand(io ui.IO, newClient newClientFunc) *DemoInitCommand {
-	return &DemoInitCommand{
+func NewInitCommand(io ui.IO, newClient newClientFunc) *InitCommand {
+	return &InitCommand{
 		io:        io,
 		newClient: newClient,
 	}
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *DemoInitCommand) Register(r Registerer) {
+func (cmd *InitCommand) Register(r command.Registerer) {
 	clause := r.Command("init", "Create the secrets necessary to connect with the demo application.")
 	clause.HelpLong("The demo init command creates a repository in your personal namespace (called `" + defaultDemoRepo + "` by default). In that repository, it writes the username and password needed to connect to the demo API.")
 
 	clause.Flag("repo", "The name of the repository to create.").Default(defaultDemoRepo).StringVar(&cmd.repo)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
-func (cmd *DemoInitCommand) Run() error {
+func (cmd *InitCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
 		return err

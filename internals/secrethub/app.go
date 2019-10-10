@@ -161,7 +161,6 @@ func (app *App) registerCommands() {
 	NewACLCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewServiceCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewAccountCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
-	NewDemoCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
 
 	// Commands
@@ -185,5 +184,5 @@ func (app *App) registerCommands() {
 	NewClearClipboardCommand().Register(app.cli)
 	NewKeyringClearCommand().Register(app.cli)
 
-	demo.NewCommand(app.io).Register(app.cli)
+	demo.NewCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 }

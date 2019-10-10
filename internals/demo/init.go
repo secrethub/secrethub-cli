@@ -19,7 +19,7 @@ type newClientFunc func() (secrethub.ClientInterface, error)
 const defaultDemoRepo = "demo"
 
 type InitCommand struct {
-	repo string
+	repo api.RepoPath
 
 	io        ui.IO
 	newClient newClientFunc
@@ -35,9 +35,9 @@ func NewInitCommand(io ui.IO, newClient newClientFunc) *InitCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *InitCommand) Register(r command.Registerer) {
 	clause := r.Command("init", "Create the secrets necessary to connect with the demo application.")
-	clause.HelpLong("The demo init command creates a repository in your personal namespace (called `" + defaultDemoRepo + "` by default). In that repository, it writes the username and password needed to connect to the demo API.")
+	clause.HelpLong("demo init creates a repository with the username and password needed to connect to the demo API.")
 
-	clause.Flag("repo", "The name of the repository to create.").Default(defaultDemoRepo).StringVar(&cmd.repo)
+	clause.Flag("repo", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.").SetValue(&cmd.repo)
 
 	command.BindAction(clause, cmd.Run)
 }
@@ -54,10 +54,13 @@ func (cmd *InitCommand) Run() error {
 		return err
 	}
 
-	repoPath := secretpath.Join(me.Username, cmd.repo)
+	repoPath := secretpath.Join(me.Username, defaultDemoRepo)
+	if cmd.repo != "" {
+		repoPath = cmd.repo.Value()
+	}
 
 	_, err = client.Repos().Create(repoPath)
-	if err == api.ErrRepoAlreadyExists && cmd.repo == defaultDemoRepo {
+	if err == api.ErrRepoAlreadyExists && cmd.repo == "" {
 		return errors.New("demo repo already exists, use --repo to specify another repo to use")
 	} else if err != nil {
 		return err

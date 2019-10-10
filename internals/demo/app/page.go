@@ -67,7 +67,7 @@ const page = `
 		}
 
 		$(function(){
-		    $.get("http://127.0.0.1:{{.}}/api", {}, function(res, status, xhr){
+		    $.get("/api", {}, function(res, status, xhr){
 		        if(xhr.status === 200) {
                     processResult("Successfully connected to https://demo.secrethub.io/api!", "check", "green", res);
                 } else {

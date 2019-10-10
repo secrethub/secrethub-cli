@@ -49,13 +49,17 @@ func (cmd *InitCommand) Run() error {
 		return err
 	}
 
-	me, err := client.Me().GetUser()
-	if err != nil {
-		return err
-	}
-
-	repoPath := secretpath.Join(me.Username, defaultDemoRepo)
-	if cmd.repo != "" {
+	var repoPath string
+	var username string
+	if cmd.repo == "" {
+		me, err := client.Me().GetUser()
+		if err != nil {
+			return err
+		}
+		username = me.Username
+		repoPath = secretpath.Join(me.Username, defaultDemoRepo)
+	} else {
+		username = secretpath.Namespace(cmd.repo.Value())
 		repoPath = cmd.repo.Value()
 	}
 
@@ -66,13 +70,13 @@ func (cmd *InitCommand) Run() error {
 		return err
 	}
 
-	_, err = client.Secrets().Write(secretpath.Join(repoPath, "username"), []byte(me.Username))
+	_, err = client.Secrets().Write(secretpath.Join(repoPath, "username"), []byte(username))
 	if err != nil {
 		return err
 	}
 
 	h := hmac.New(sha256.New, []byte("this-is-no-good-way-to-generate-a-password-that-is-why-we-only-use-it-for-demo-purposes"))
-	password := base64.RawStdEncoding.EncodeToString(h.Sum([]byte(me.Username)))[:20]
+	password := base64.RawStdEncoding.EncodeToString(h.Sum([]byte(username)))[:20]
 
 	_, err = client.Secrets().Write(secretpath.Join(repoPath, "password"), []byte(password))
 	if err != nil {

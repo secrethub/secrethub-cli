@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -70,7 +71,8 @@ func (cmd *InitCommand) Run() error {
 		return err
 	}
 
-	_, err = client.Secrets().Write(secretpath.Join(repoPath, "username"), []byte(username))
+	usernamePath := secretpath.Join(repoPath, "username")
+	_, err = client.Secrets().Write(usernamePath, []byte(username))
 	if err != nil {
 		return err
 	}
@@ -78,10 +80,13 @@ func (cmd *InitCommand) Run() error {
 	h := hmac.New(sha256.New, []byte("this-is-no-good-way-to-generate-a-password-that-is-why-we-only-use-it-for-demo-purposes"))
 	password := base64.RawStdEncoding.EncodeToString(h.Sum([]byte(username)))[:20]
 
-	_, err = client.Secrets().Write(secretpath.Join(repoPath, "password"), []byte(password))
+	passwordPath := secretpath.Join(repoPath, "password")
+	_, err = client.Secrets().Write(passwordPath, []byte(password))
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("Created the following secrets:\n%s\n%s\n", usernamePath, passwordPath)
 
 	return nil
 }

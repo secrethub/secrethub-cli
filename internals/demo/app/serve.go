@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"html/template"
 	"io"
 	"net/http"
 	"os"
@@ -37,13 +36,9 @@ func (s *Server) Serve() error {
 }
 
 func (s *Server) ServeIndex(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.New("tpl").Parse(page)
+	_, err := w.Write([]byte(page))
 	if err != nil {
-		panic(err)
-	}
-	err = tmpl.Execute(w, s.port)
-	if err != nil {
-		panic(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // AccountEmailVerifyCommand is a command to inspect account details.
@@ -21,10 +22,10 @@ func NewAccountEmailVerifyCommand(io ui.IO, newClient newClientFunc) *AccountEma
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *AccountEmailVerifyCommand) Register(r Registerer) {
+func (cmd *AccountEmailVerifyCommand) Register(r command.Registerer) {
 	clause := r.Command("verify-email", "Send an email to the registered email address to prove you own that email address.")
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.

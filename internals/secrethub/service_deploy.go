@@ -1,6 +1,9 @@
 package secrethub
 
-import "github.com/secrethub/secrethub-cli/internals/cli/ui"
+import (
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+)
 
 // ServiceDeployCommand handles deploying a service.
 type ServiceDeployCommand struct {
@@ -15,7 +18,7 @@ func NewServiceDeployCommand(io ui.IO) *ServiceDeployCommand {
 }
 
 // Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *ServiceDeployCommand) Register(r Registerer) {
+func (cmd *ServiceDeployCommand) Register(r command.Registerer) {
 	clause := r.Command("deploy", "Deploy a service account to a destination.")
 	NewServiceDeployWinRmCommand(cmd.io).Register(clause)
 }

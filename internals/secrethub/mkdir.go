@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -28,11 +30,11 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *MkDirCommand) Register(r Registerer) {
+func (cmd *MkDirCommand) Register(r command.Registerer) {
 	clause := r.Command("mkdir", "Create a new directory.")
 	clause.Arg("dir-path", "The path to the directory (<namespace>/<repo>/<dir>[/<dir>])").Required().SetValue(&cmd.path)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run executes the command.

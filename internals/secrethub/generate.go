@@ -8,6 +8,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -52,7 +53,7 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *GenerateSecretCommand) Register(r Registerer) {
+func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause := r.Command("generate", "Generate a random secret.")
 	clause.HelpLong("By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
 	clause.Arg("secret-path", "The path to write the generated secret to (<namespace>/<repo>[/<dir>]/<secret>)").Required().StringVar(&cmd.firstArg)
@@ -63,7 +64,7 @@ func (cmd *GenerateSecretCommand) Register(r Registerer) {
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // before configures the command using the flag values.

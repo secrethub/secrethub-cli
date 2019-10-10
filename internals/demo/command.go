@@ -21,7 +21,7 @@ func NewCommand(io ui.IO, newClient newClientFunc) *Command {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *Command) Register(r command.Registerer) {
-	clause := r.Command("demo", "Runs the secrethub demo app as used in different guides.")
+	clause := r.Command("demo", "Manage the demo application.")
 
 	NewInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewServeCommand(cmd.io).Register(clause)

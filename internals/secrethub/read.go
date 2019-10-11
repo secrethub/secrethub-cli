@@ -2,15 +2,18 @@ package secrethub
 
 import (
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
+	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
-	units "github.com/docker/go-units"
+	"github.com/docker/go-units"
 )
 
 // ReadCommand is a command to read a secret.
@@ -20,6 +23,8 @@ type ReadCommand struct {
 	useClipboard        bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
+	outFile             string
+	fileMode            filemode.FileMode
 	newClient           newClientFunc
 }
 
@@ -34,7 +39,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ReadCommand) Register(r Registerer) {
+func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.Command("read", "Read a secret.")
 	clause.Arg("secret-path", "The path to the secret (<namespace>/<repo>[/<dir>]/<secret>)").Required().SetValue(&cmd.path)
 	clause.Flag(
@@ -44,8 +49,10 @@ func (cmd *ReadCommand) Register(r Registerer) {
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
 	).Short('c').BoolVar(&cmd.useClipboard)
+	clause.Flag("out-file", "Write the secret value to this file.").Short('o').StringVar(&cmd.outFile)
+	clause.Flag("file-mode", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -72,7 +79,16 @@ func (cmd *ReadCommand) Run() error {
 			cmd.path,
 			units.HumanDuration(cmd.clearClipboardAfter),
 		)
-	} else {
+	}
+
+	if cmd.outFile != "" {
+		err = ioutil.WriteFile(cmd.outFile, posix.AddNewLine(secret.Data), cmd.fileMode.FileMode())
+		if err != nil {
+			return ErrCannotWrite(cmd.outFile, err)
+		}
+	}
+
+	if cmd.outFile == "" && !cmd.useClipboard {
 		fmt.Fprintf(cmd.io.Stdout(), "%s", string(posix.AddNewLine(secret.Data)))
 	}
 

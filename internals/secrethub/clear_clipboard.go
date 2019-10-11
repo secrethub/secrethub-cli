@@ -6,6 +6,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,12 +29,12 @@ func NewClearClipboardCommand() *ClearClipboardCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ClearClipboardCommand) Register(r Registerer) {
+func (cmd *ClearClipboardCommand) Register(r command.Registerer) {
 	clause := r.Command("clipboard-clear", "Removes secret from clipboard.").Hidden()
 	clause.Arg("hash", "Hash from the secret to be cleared").Required().HexBytesVar(&cmd.hash)
 	clause.Flag("timeout", "Time to wait before clearing in seconds").DurationVar(&cmd.timeout)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.

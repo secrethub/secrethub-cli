@@ -9,6 +9,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -35,12 +36,12 @@ func NewRepoExportCommand(io ui.IO, newClient newClientFunc) *RepoExportCommand 
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoExportCommand) Register(r Registerer) {
+func (cmd *RepoExportCommand) Register(r command.Registerer) {
 	clause := r.Command("export", "Export the repository to a zip file.")
 	clause.Arg("repo-path", "The repository to export (<namespace>/<repo>)").Required().SetValue(&cmd.path)
 	clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run exports a repo to a zip file

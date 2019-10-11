@@ -2,11 +2,12 @@ package secrethub
 
 import (
 	"fmt"
+	"io"
 	"text/tabwriter"
 
-	"io"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -27,12 +28,12 @@ func NewOrgRevokeCommand(io ui.IO, newClient newClientFunc) *OrgRevokeCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgRevokeCommand) Register(r Registerer) {
+func (cmd *OrgRevokeCommand) Register(r command.Registerer) {
 	clause := r.Command("revoke", "Revoke a user from an organization. This automatically revokes the user from all of the organization's repositories. A list of repositories containing secrets that should be rotated will be printed out.")
 	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run revokes an organization member.

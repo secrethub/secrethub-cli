@@ -184,5 +184,5 @@ func (app *App) registerCommands() {
 	NewClearClipboardCommand().Register(app.cli)
 	NewKeyringClearCommand().Register(app.cli)
 
-	demo.NewCommand(app.io).Register(app.cli)
+	demo.NewCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 }

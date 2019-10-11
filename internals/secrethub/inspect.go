@@ -2,6 +2,8 @@ package secrethub
 
 import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -27,11 +29,11 @@ func NewInspectCommand(io ui.IO, newClient newClientFunc) *InspectCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *InspectCommand) Register(r Registerer) {
+func (cmd *InspectCommand) Register(r command.Registerer) {
 	clause := r.Command("inspect", "Print details of a resource.")
 	clause.Arg("repo or secret-path", "Path to the repository or the secret to inspect").Required().SetValue(&cmd.path)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run inspects a repository or a secret

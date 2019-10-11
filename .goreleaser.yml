@@ -1,4 +1,4 @@
-project_name: secrethub
+project_name: secrethub-cli
 
 builds:
   - &default
@@ -40,7 +40,7 @@ builds:
     binary: "secrethub"
 
 archives:
-  - name_template: "{{ .ProjectName }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  - name_template: "secrethub-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     builds:
       - default
     format_overrides:
@@ -50,7 +50,7 @@ archives:
     - LICENSE
 
 checksum:
-  name_template: "{{ .ProjectName }}-{{ .Tag }}-checksums.txt"
+  name_template: "secrethub-{{ .Tag }}-checksums.txt"
 
 brews:
   - name: secrethub-cli

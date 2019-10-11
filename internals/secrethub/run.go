@@ -122,7 +122,7 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	osEnv, err := parseKeyValueStringsToMap(os.Environ())
+	osEnv, passthroughEnv := parseKeyValueStringsToMap(os.Environ())
 	if err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func (cmd *RunCommand) Run() error {
 	maskedStderr := masker.NewMaskedWriter(os.Stderr, valuesToMask, maskString, cmd.maskingTimeout)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
-	command.Env = mapToKeyValueStrings(environment)
+	command.Env = append(passthroughEnv, mapToKeyValueStrings(environment)...)
 	command.Stdin = os.Stdin
 	if cmd.noMasking {
 		command.Stdout = os.Stdout
@@ -324,8 +324,9 @@ func mapToKeyValueStrings(pairs map[string]string) []string {
 // parseKeyValueStringsToMap converts a slice of "key=value" strings to a
 // map of "key":"value" pairs. When duplicate keys occur, the last value is
 // used.
-func parseKeyValueStringsToMap(values []string) (map[string]string, error) {
-	result := make(map[string]string)
+func parseKeyValueStringsToMap(values []string) (map[string]string, []string) {
+	parsedLines := make(map[string]string)
+	var unparsableLines []string
 	for _, kv := range values {
 		split := strings.SplitN(kv, "=", 2)
 		key := strings.TrimSpace(split[0])
@@ -336,13 +337,13 @@ func parseKeyValueStringsToMap(values []string) (map[string]string, error) {
 
 		err := validation.ValidateEnvarName(key)
 		if err != nil {
-			return nil, err
+			unparsableLines = append(unparsableLines, kv)
+		} else {
+			parsedLines[key] = value
 		}
-
-		result[key] = value
 	}
 
-	return result, nil
+	return parsedLines, unparsableLines
 }
 
 // EnvSource defines a method of reading environment variables from a source.

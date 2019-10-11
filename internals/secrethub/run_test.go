@@ -657,3 +657,21 @@ func TestTrimQuotes(t *testing.T) {
 		})
 	}
 }
+
+func Test_parseKeyValueStringsToMap(t *testing.T) {
+	input := []string{
+		"A=B",
+		"B",
+		"=::=::\\",
+	}
+
+	parsableValues, unparsableValues := parseKeyValueStringsToMap(input)
+
+	assert.Equal(t, parsableValues, map[string]string{
+		"A": "B",
+		"B": "",
+	})
+	assert.Equal(t, unparsableValues, []string{
+		"=::=::\\",
+	})
+}

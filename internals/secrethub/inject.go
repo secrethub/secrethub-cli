@@ -99,10 +99,7 @@ func (cmd *InjectCommand) Run() error {
 
 	templateVars := make(map[string]string)
 
-	osEnv, err := parseKeyValueStringsToMap(os.Environ())
-	if err != nil {
-		return err
-	}
+	osEnv, _ := parseKeyValueStringsToMap(os.Environ())
 
 	for k, v := range osEnv {
 		if strings.HasPrefix(k, templateVarEnvVarPrefix) {

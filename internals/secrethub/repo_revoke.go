@@ -31,7 +31,7 @@ func NewRepoRevokeCommand(io ui.IO, newClient newClientFunc) *RepoRevokeCommand 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoRevokeCommand) Register(r command.Registerer) {
 	clause := r.Command("revoke", "Revoke an account's access to a repository. A list of secrets that should be rotated will be printed out.")
-	clause.Arg("repo-path", "The repository to revoke the account from (<namespace>/<repo>)").Required().SetValue(&cmd.path)
+	clause.Arg("repo-path", "The repository to revoke the account from").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	clause.Arg("account-name", "The account name (username or service name) to revoke access for").Required().SetValue(&cmd.accountName)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 

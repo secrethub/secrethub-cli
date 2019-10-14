@@ -22,7 +22,7 @@ Commands:
 
 {{define "FormatAppUsage"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
+{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
 {{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
 {{.Help}}\
@@ -43,7 +43,7 @@ Args:
 
 {{define "FormatCommandUsage"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
+{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
 {{if .Commands}} <command> [<args> ...]{{end}}
 {{ if .Help}}
 {{.Help}}\

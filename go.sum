@@ -68,8 +68,15 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
+github.com/secrethub/demo-app v0.0.0-20191015143627-8b86c8671e54 h1:u1tfHZH5FE6Lv8CcV9dnimz5uMZUFvHKTyOqbsqlGFo=
+github.com/secrethub/demo-app v0.0.0-20191015143627-8b86c8671e54/go.mod h1:ymjm8+WXTSDTFqsGVBNVmHSnwtZMYi7KptHvpo/fLH4=
+github.com/secrethub/demo-app v0.0.0-20191015144738-eed4af2178f4 h1:04IDTEVBJUVXqXAFwdoOvHeO87a8uTzMHb5nzqHtIVk=
+github.com/secrethub/demo-app v0.0.0-20191015144738-eed4af2178f4/go.mod h1:ymjm8+WXTSDTFqsGVBNVmHSnwtZMYi7KptHvpo/fLH4=
+github.com/secrethub/demo-app v0.0.0-20191015145040-d297a9c939a6 h1:BA2nciOEMOjuy0xMcMyEDcaKhvAyB7cVG8H6LW1/XUg=
+github.com/secrethub/demo-app v0.0.0-20191015145040-d297a9c939a6/go.mod h1:ymjm8+WXTSDTFqsGVBNVmHSnwtZMYi7KptHvpo/fLH4=
 github.com/secrethub/kingpin v0.0.0-20190920111600-67b1cb231087 h1:n4V94OQPe04crRRmcyAURLk3AImueFd44Ne99sN5TO8=
 github.com/secrethub/kingpin v0.0.0-20190920111600-67b1cb231087/go.mod h1:idxgS9pV6OOpAhZvx+gcoGRMX9/tt0iqkw/pNxI0C14=
+github.com/secrethub/secrethub-cli v0.30.0/go.mod h1:dC0wd40v+iQdV83/0rUrOa01LYq+8Yj2AtJB1vzh2ao=
 github.com/secrethub/secrethub-go v0.21.0 h1:5xbC+gdku7MXUQmlP5SPhAPLF+/U31soLKbyXwNyM+M=
 github.com/secrethub/secrethub-go v0.21.0/go.mod h1:rc2IfKKBJ4L0wGec0u4XnF5/pe0FFPE4Q1MWfrFso7s=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=

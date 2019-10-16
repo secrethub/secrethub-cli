@@ -5,7 +5,14 @@ jobs:
       - image: circleci/golang:1.12
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - go-modules-{{ checksum "go.mod" }}
       - run: make test
+      - save_cache:
+          key: go-modules-{{ checksum "go.mod" }}
+          paths:
+            - /go/pkg/mod
   verify-goreleaser:
     docker:
       - image: goreleaser/goreleaser:v0.117

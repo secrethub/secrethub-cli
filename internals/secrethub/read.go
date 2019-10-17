@@ -41,7 +41,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.Command("read", "Read a secret.")
-	clause.Arg("secret-path", "The path to the secret (<namespace>/<repo>[/<dir>]/<secret>)").Required().SetValue(&cmd.path)
+	clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathOptionalVersionPlaceHolder).SetValue(&cmd.path)
 	clause.Flag(
 		"clip",
 		fmt.Sprintf(

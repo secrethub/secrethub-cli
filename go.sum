@@ -74,6 +74,8 @@ github.com/secrethub/demo-app v0.0.0-20191015144738-eed4af2178f4 h1:04IDTEVBJUVX
 github.com/secrethub/demo-app v0.0.0-20191015144738-eed4af2178f4/go.mod h1:ymjm8+WXTSDTFqsGVBNVmHSnwtZMYi7KptHvpo/fLH4=
 github.com/secrethub/demo-app v0.0.0-20191015145040-d297a9c939a6 h1:BA2nciOEMOjuy0xMcMyEDcaKhvAyB7cVG8H6LW1/XUg=
 github.com/secrethub/demo-app v0.0.0-20191015145040-d297a9c939a6/go.mod h1:ymjm8+WXTSDTFqsGVBNVmHSnwtZMYi7KptHvpo/fLH4=
+github.com/secrethub/demo-app v0.1.0 h1:HwPPxuiSvx4TBE7Qppzu3A9eHqmsBrIz4Ko8u8pqMqw=
+github.com/secrethub/demo-app v0.1.0/go.mod h1:ymjm8+WXTSDTFqsGVBNVmHSnwtZMYi7KptHvpo/fLH4=
 github.com/secrethub/kingpin v0.0.0-20190920111600-67b1cb231087 h1:n4V94OQPe04crRRmcyAURLk3AImueFd44Ne99sN5TO8=
 github.com/secrethub/kingpin v0.0.0-20190920111600-67b1cb231087/go.mod h1:idxgS9pV6OOpAhZvx+gcoGRMX9/tt0iqkw/pNxI0C14=
 github.com/secrethub/secrethub-cli v0.30.0/go.mod h1:dC0wd40v+iQdV83/0rUrOa01LYq+8Yj2AtJB1vzh2ao=

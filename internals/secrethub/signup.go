@@ -20,16 +20,16 @@ var (
 
 // SignUpCommand signs up a new user and configures his account for use on this machine.
 type SignUpCommand struct {
-	username        string
-	fullName        string
-	email           string
-	org             string
-	orgDescription  string
-	force           bool
-	io              ui.IO
-	newClient       newClientFunc
-	credentialStore CredentialConfig
-	progressPrinter progress.Printer
+	username             string
+	fullName             string
+	email                string
+	workspace            string
+	workspaceDescription string
+	force                bool
+	io                   ui.IO
+	newClient            newClientFunc
+	credentialStore      CredentialConfig
+	progressPrinter      progress.Printer
 }
 
 // NewSignUpCommand creates a new SignUpCommand.
@@ -48,8 +48,8 @@ func (cmd *SignUpCommand) Register(r command.Registerer) {
 	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
 	clause.Flag("full-name", "Your email address.").StringVar(&cmd.fullName)
 	clause.Flag("email", "The email address we will use for all correspondence.").StringVar(&cmd.email)
-	clause.Flag("org", "The name of your organization.").StringVar(&cmd.org)
-	clause.Flag("org-description", "A description (max 144 chars) for your organization so others will recognize it.").StringVar(&cmd.orgDescription)
+	clause.Flag("workspace", "Workspace name for your team (e.g. your company").StringVar(&cmd.workspace)
+	clause.Flag("workspace-description", "A description (max 144 chars) for your workspace so others will recognize it.").StringVar(&cmd.workspaceDescription)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	command.BindAction(clause, cmd.Run)
@@ -83,7 +83,7 @@ func (cmd *SignUpCommand) Run() error {
 			}
 		}
 
-		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" || cmd.org == "" || cmd.orgDescription == "" {
+		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" || cmd.workspace == "" || cmd.workspaceDescription == "" {
 			_, promptOut, err := cmd.io.Prompts()
 			if err != nil {
 				return err
@@ -112,14 +112,14 @@ func (cmd *SignUpCommand) Run() error {
 					return err
 				}
 			}
-			if cmd.org == "" {
-				cmd.org, err = ui.AskAndValidate(cmd.io, "Workspace name for your team (e.g. your company, leave empty to skip for now): ", 2, allowEmpty(api.ValidateOrgName))
+			if cmd.workspace == "" {
+				cmd.workspace, err = ui.AskAndValidate(cmd.io, "Workspace name for your team (e.g. your company, leave empty to skip for now): ", 2, allowEmpty(api.ValidateOrgName))
 				if err != nil {
 					return err
 				}
 			}
-			if cmd.org != "" && cmd.orgDescription == "" {
-				cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your team workspace so others will recognize it:\n", 2, api.ValidateOrgDescription)
+			if cmd.workspace != "" && cmd.workspaceDescription == "" {
+				cmd.workspaceDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your team workspace so others will recognize it:\n", 2, api.ValidateOrgDescription)
 				if err != nil {
 					return err
 				}
@@ -196,11 +196,11 @@ func (cmd *SignUpCommand) Run() error {
 		return err
 	}
 
-	if cmd.org != "" {
-		_, err := client.Orgs().Create(cmd.org, cmd.orgDescription)
+	if cmd.workspace != "" {
+		_, err := client.Orgs().Create(cmd.workspace, cmd.workspaceDescription)
 		cmd.progressPrinter.Stop()
 		if err == api.ErrOrgAlreadyExists {
-			fmt.Fprintln(cmd.io.Stdout(), "The organization already exists. Ask a colleague to invite you to the organization.")
+			fmt.Fprintln(cmd.io.Stdout(), "The workspace already exists. If it's yours, ask a colleague to invite you to the workspace. You can also create a new one using `secrethub org init`.")
 		} else if err != nil {
 			return err
 		}

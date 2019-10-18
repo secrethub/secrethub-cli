@@ -8,11 +8,12 @@ jobs:
       - restore_cache:
           keys:
             - go-modules-{{ checksum "go.mod" }}
-      - run: make test
+      - run: go mod download
       - save_cache:
           key: go-modules-{{ checksum "go.mod" }}
           paths:
             - /go/pkg/mod
+      - run: make test
   verify-goreleaser:
     docker:
       - image: goreleaser/goreleaser:v0.117

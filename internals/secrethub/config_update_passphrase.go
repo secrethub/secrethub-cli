@@ -6,6 +6,7 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 type ConfigUpdatePassphraseCommand struct {
@@ -22,10 +23,10 @@ func NewConfigUpdatePassphraseCommand(io ui.IO, credentialStore CredentialConfig
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ConfigUpdatePassphraseCommand) Register(r Registerer) {
+func (cmd *ConfigUpdatePassphraseCommand) Register(r command.Registerer) {
 	clause := r.Command("update-passphrase", "Update the passphrase of your local key credential file.")
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run upgrades the configuration in the profile directory to the new version.

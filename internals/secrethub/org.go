@@ -1,6 +1,9 @@
 package secrethub
 
-import "github.com/secrethub/secrethub-cli/internals/cli/ui"
+import (
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+)
 
 // OrgCommand handles operations on organizations.
 type OrgCommand struct {
@@ -17,7 +20,7 @@ func NewOrgCommand(io ui.IO, newClient newClientFunc) *OrgCommand {
 }
 
 // Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *OrgCommand) Register(r Registerer) {
+func (cmd *OrgCommand) Register(r command.Registerer) {
 	clause := r.Command("org", "Manage shared organization workspaces.")
 	NewOrgInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgInspectCommand(cmd.io, cmd.newClient).Register(clause)

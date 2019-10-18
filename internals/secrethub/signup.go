@@ -2,14 +2,13 @@ package secrethub
 
 import (
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
@@ -44,7 +43,7 @@ func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore Credent
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *SignUpCommand) Register(r Registerer) {
+func (cmd *SignUpCommand) Register(r command.Registerer) {
 	clause := r.Command("signup", "Create a free personal developer account.")
 	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
 	clause.Flag("full-name", "Your email address.").StringVar(&cmd.fullName)
@@ -53,7 +52,7 @@ func (cmd *SignUpCommand) Register(r Registerer) {
 	clause.Flag("org-description", "A description (max 144 chars) for your organization so others will recognize it.").StringVar(&cmd.orgDescription)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run signs up a new user and configures his account for use on this machine.
@@ -153,12 +152,12 @@ func (cmd *SignUpCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprint(cmd.io.Stdout(), "Signing you up...")
+	fmt.Fprint(cmd.io.Stdout(), "Setting up your account...")
 	cmd.progressPrinter.Start()
 	credential := credentials.CreateKey()
 	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential)
-	cmd.progressPrinter.Stop()
 	if err != nil {
+		cmd.progressPrinter.Stop()
 		return err
 	}
 
@@ -169,47 +168,47 @@ func (cmd *SignUpCommand) Run() error {
 
 	encodedCredential, err := credential.Export()
 	if err != nil {
+		cmd.progressPrinter.Stop()
 		return err
 	}
 	err = cmd.credentialStore.ConfigDir().Credential().Write(encodedCredential)
 	if err != nil {
+		cmd.progressPrinter.Stop()
+		return err
+	}
+
+	// create a start repository and write a fist secret to it, so that
+	// the user can start by reading their first secret.
+	// This is intended to smoothen onboarding.
+	repoPath := secretpath.Join(cmd.username, "start")
+	_, err = client.Repos().Create(secretpath.Join(repoPath))
+	if err != nil {
+		cmd.progressPrinter.Stop()
+		return err
+	}
+
+	secretPath := secretpath.Join(repoPath, "hello")
+	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", cmd.fullName, secretPath)
+
+	_, err = client.Secrets().Write(secretPath, []byte(message))
+	if err != nil {
+		cmd.progressPrinter.Stop()
 		return err
 	}
 
 	if cmd.org != "" {
 		_, err := client.Orgs().Create(cmd.org, cmd.orgDescription)
+		cmd.progressPrinter.Stop()
 		if err == api.ErrOrgAlreadyExists {
 			fmt.Fprintln(cmd.io.Stdout(), "The organization already exists. Ask a colleague to invite you to the organization.")
 		} else if err != nil {
 			return err
 		}
+	} else {
+		cmd.progressPrinter.Stop()
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Signup complete! You're now on SecretHub.")
-
-	return createStartRepo(client, cmd.io.Stdout(), cmd.username, cmd.fullName)
-}
-
-// createStartRepo creates a start repository and write a fist secret to it, so that
-// the user can start by reading their first secret. This is intended to smoothen
-// onboarding.
-func createStartRepo(client secrethub.ClientInterface, w io.Writer, workspace string, name string) error {
-	fmt.Fprintln(w, "Setting up your workspace...")
-	repoPath := secretpath.Join(workspace, "start")
-	_, err := client.Repos().Create(secretpath.Join(repoPath))
-	if err != nil {
-		return err
-	}
-
-	secretPath := secretpath.Join(repoPath, "hello")
-	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", name, secretPath)
-
-	_, err = client.Secrets().Write(secretPath, []byte(message))
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintf(w, "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
+	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 	return nil
 }
 

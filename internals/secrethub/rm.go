@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
@@ -34,13 +36,14 @@ func NewRmCommand(io ui.IO, newClient newClientFunc) *RmCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RmCommand) Register(r Registerer) {
+func (cmd *RmCommand) Register(r command.Registerer) {
 	clause := r.Command("rm", "Remove a directory, secret or version.")
+	clause.Alias("remove")
 	clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
 	clause.Flag("recursive", "Remove directories and their contents recursively.").Short('r').BoolVar(&cmd.recursive)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run removes the resource at the given path.

@@ -13,6 +13,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/docker/go-units"
 )
@@ -51,7 +52,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 
 // Register adds a CommandClause and it's args and flags to a cli.App.
 // Register adds args and flags.
-func (cmd *InjectCommand) Register(r Registerer) {
+func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause := r.Command("inject", "Inject secrets into a template.")
 	clause.Flag(
 		"clip",
@@ -68,7 +69,7 @@ func (cmd *InjectCommand) Register(r Registerer) {
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -98,10 +99,7 @@ func (cmd *InjectCommand) Run() error {
 
 	templateVars := make(map[string]string)
 
-	osEnv, err := parseKeyValueStringsToMap(os.Environ())
-	if err != nil {
-		return err
-	}
+	osEnv, _ := parseKeyValueStringsToMap(os.Environ())
 
 	for k, v := range osEnv {
 		if strings.HasPrefix(k, templateVarEnvVarPrefix) {

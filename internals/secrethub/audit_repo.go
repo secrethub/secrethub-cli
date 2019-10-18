@@ -5,6 +5,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -15,24 +16,6 @@ type AuditRepoCommand struct {
 	timeFormatter TimeFormatter
 	useTimestamps bool
 	newClient     newClientFunc
-}
-
-// NewAuditRepoCommand creates a new audit repository command.
-func NewAuditRepoCommand(io ui.IO, newClient newClientFunc) *AuditRepoCommand {
-	return &AuditRepoCommand{
-		io:            io,
-		timeFormatter: NewTimeFormatter(false),
-		newClient:     newClient,
-	}
-}
-
-// Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *AuditRepoCommand) Register(r Registerer) {
-	clause := r.Command("repo", "Show an audit log of all actions on a repository.").Hidden()
-	clause.Arg("repo-path", "The repository to audit (<namespace>/<repo>)").SetValue(&cmd.path)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
-
-	BindAction(clause, cmd.Run)
 }
 
 // Run prints all audit events for the given repository.

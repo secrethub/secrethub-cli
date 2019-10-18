@@ -5,6 +5,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -27,11 +28,11 @@ func NewRepoInspectCommand(io ui.IO, newClient newClientFunc) *RepoInspectComman
 }
 
 // Register registers the command, args, and flags on the provided registerer.
-func (cmd *RepoInspectCommand) Register(r Registerer) {
+func (cmd *RepoInspectCommand) Register(r command.Registerer) {
 	clause := r.Command("inspect", "Show the details of a repository.")
-	clause.Arg("repo-path", "Path to the repository (<namespace>/<repo>)").Required().SetValue(&cmd.path)
+	clause.Arg("repo-path", "Path to the repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run prints out the details of a repo.

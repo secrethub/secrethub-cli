@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -25,13 +27,13 @@ func NewRepoInviteCommand(io ui.IO, newClient newClientFunc) *RepoInviteCommand 
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoInviteCommand) Register(r Registerer) {
+func (cmd *RepoInviteCommand) Register(r command.Registerer) {
 	clause := r.Command("invite", "Invite a user to collaborate on a repository.")
-	clause.Arg("repo-path", "The repository to invite the user to (<namespace>/<repo>)").Required().SetValue(&cmd.path)
+	clause.Arg("repo-path", "The repository to invite the user to").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run invites the configured user to collaborate on the repo.

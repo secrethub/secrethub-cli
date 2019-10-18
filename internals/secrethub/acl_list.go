@@ -8,6 +8,8 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -31,14 +33,15 @@ func NewACLListCommand(io ui.IO, newClient newClientFunc) *ACLListCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ACLListCommand) Register(r Registerer) {
+func (cmd *ACLListCommand) Register(r command.Registerer) {
 	clause := r.Command("ls", "List access rules of a directory and its children.")
-	clause.Arg("dir-path", "The path of the directory to list the access rules for (<namespace>/<repo>[/<dir>])").Required().SetValue(&cmd.path)
+	clause.Alias("list")
+	clause.Arg("dir-path", "The path of the directory to list the access rules for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("depth", "The maximum depth to which the rules of child directories should be displayed. Defaults to -1 (no limit).").Short('d').Default("-1").IntVar(&cmd.depth)
 	clause.Flag("all", "List all rules that apply on the directory, including rules on parent directories.").Short('a').BoolVar(&cmd.ancestors)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run prints access rules for the given directory.

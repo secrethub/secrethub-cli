@@ -6,6 +6,8 @@ import (
 	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -28,13 +30,14 @@ func NewRepoLSCommand(io ui.IO, newClient newClientFunc) *RepoLSCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoLSCommand) Register(r Registerer) {
+func (cmd *RepoLSCommand) Register(r command.Registerer) {
 	clause := r.Command("ls", "List all repositories you have access to.")
+	clause.Alias("list")
 	clause.Flag("quiet", "Only print paths.").Short('q').BoolVar(&cmd.quiet)
 	clause.Arg("workspace", "When supplied, results are limited to repositories in this workspace.").SetValue(&cmd.workspace)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // Run lists the repositories a user has access to.

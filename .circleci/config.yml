@@ -1,8 +1,27 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/golang:1.12
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - go-modules-{{ checksum "go.mod" }}
       - run: make test
+      - save_cache:
+          key: go-modules-{{ checksum "go.mod" }}
+          paths:
+            - /go/pkg/mod
+  verify-goreleaser:
+    docker:
+      - image: goreleaser/goreleaser:v0.117
+    steps:
+      - checkout
+      - run: goreleaser check
+workflows:
+  version: 2
+  pipeline:
+    jobs:
+      - test
+      - verify-goreleaser

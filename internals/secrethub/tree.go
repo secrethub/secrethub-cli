@@ -2,11 +2,12 @@ package secrethub
 
 import (
 	"fmt"
+	"io"
 	"sort"
 
-	"io"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -42,11 +43,11 @@ func (cmd *TreeCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *TreeCommand) Register(r Registerer) {
+func (cmd *TreeCommand) Register(r command.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
-	clause.Arg("dir-path", "The path to to show contents for (<namespace>/<repo>[/<dir>])").Required().SetValue(&cmd.path)
+	clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
-	BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.Run)
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.

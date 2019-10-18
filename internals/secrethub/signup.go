@@ -83,7 +83,7 @@ func (cmd *SignUpCommand) Run() error {
 			}
 		}
 
-		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" || cmd.workspace == "" || cmd.workspaceDescription == "" {
+		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" {
 			_, promptOut, err := cmd.io.Prompts()
 			if err != nil {
 				return err
@@ -108,18 +108,6 @@ func (cmd *SignUpCommand) Run() error {
 			}
 			if cmd.email == "" {
 				cmd.email, err = ui.AskAndValidate(cmd.io, "Your email address: ", 2, api.ValidateEmail)
-				if err != nil {
-					return err
-				}
-			}
-			if cmd.workspace == "" {
-				cmd.workspace, err = ui.AskAndValidate(cmd.io, "Workspace name for your team (e.g. your company, leave empty to skip for now): ", 2, allowEmpty(api.ValidateOrgName))
-				if err != nil {
-					return err
-				}
-			}
-			if cmd.workspace != "" && cmd.workspaceDescription == "" {
-				cmd.workspaceDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your team workspace so others will recognize it:\n", 2, api.ValidateOrgDescription)
 				if err != nil {
 					return err
 				}
@@ -196,29 +184,38 @@ func (cmd *SignUpCommand) Run() error {
 		return err
 	}
 
-	if cmd.workspace != "" {
+	cmd.progressPrinter.Stop()
+	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
+
+	createWorkspace := cmd.workspace != ""
+	if !createWorkspace {
+		createWorkspace, err = ui.AskYesNo(cmd.io, "Do you want to create a shared workspace for your team?", ui.DefaultYes)
+		if err != nil {
+			return err
+		}
+	}
+	if createWorkspace {
+		fmt.Fprint(cmd.io.Stdout(), "Please answer the questions below, followed by an [ENTER]\n\n")
+		if cmd.workspace == "" {
+			cmd.workspace, err = ui.AskAndValidate(cmd.io, "workspace name for your team (e.g. your company name): ", 2, api.ValidateOrgName)
+			if err != nil {
+				return err
+			}
+		}
+		if cmd.workspaceDescription == "" {
+			cmd.workspaceDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your team workspace so others will recognize it:\n", 2, api.ValidateOrgDescription)
+			if err != nil {
+				return err
+			}
+		}
+
 		_, err := client.Orgs().Create(cmd.workspace, cmd.workspaceDescription)
-		cmd.progressPrinter.Stop()
 		if err == api.ErrOrgAlreadyExists {
 			fmt.Fprintln(cmd.io.Stdout(), "The workspace already exists. If it's yours, ask a colleague to invite you to the workspace. You can also create a new one using `secrethub org init`.")
 		} else if err != nil {
 			return err
 		}
-	} else {
-		cmd.progressPrinter.Stop()
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 	return nil
-}
-
-// allowEmpty takes a validation function and returns a function that accepts the empty string input
-// and validates all other input using the given validation function.
-func allowEmpty(f func(string) error) func(string) error {
-	return func(v string) error {
-		if v == "" {
-			return nil
-		}
-		return f(v)
-	}
 }

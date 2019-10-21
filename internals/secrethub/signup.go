@@ -197,7 +197,7 @@ func (cmd *SignUpCommand) Run() error {
 	if createWorkspace {
 		fmt.Fprint(cmd.io.Stdout(), "Please answer the questions below, followed by an [ENTER]\n\n")
 		if cmd.org == "" {
-			cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "workspace name for your team (e.g. your company name): ", 2, api.ValidateOrgName)
+			cmd.org, err = ui.AskAndValidate(cmd.io, "workspace name for your team (e.g. your company name): ", 2, api.ValidateOrgName)
 			if err != nil {
 				return err
 			}

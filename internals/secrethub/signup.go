@@ -193,6 +193,9 @@ func (cmd *SignUpCommand) Run() error {
 		if err != nil {
 			return err
 		}
+		if !createWorkspace {
+			fmt.Fprintln(cmd.io.Stdout(), "You can create a shared workspace later using `secrethub org init`.")
+		}
 	}
 	if createWorkspace {
 		fmt.Fprint(cmd.io.Stdout(), "Please answer the questions below, followed by an [ENTER]\n\n")

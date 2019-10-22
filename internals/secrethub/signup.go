@@ -46,8 +46,8 @@ func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore Credent
 func (cmd *SignUpCommand) Register(r command.Registerer) {
 	clause := r.Command("signup", "Create a free personal developer account.")
 	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
-	clause.Flag("full-name", "Your email address.").StringVar(&cmd.fullName)
-	clause.Flag("email", "The email address we will use for all correspondence.").StringVar(&cmd.email)
+	clause.Flag("full-name", "Your full name.").StringVar(&cmd.fullName)
+	clause.Flag("email", "Your (work) email address we will use for all correspondence.").StringVar(&cmd.email)
 	clause.Flag("org", "The name of your organization.").StringVar(&cmd.org)
 	clause.Flag("org-description", "A description (max 144 chars) for your organization so others will recognize it.").StringVar(&cmd.orgDescription)
 	registerForceFlag(clause).BoolVar(&cmd.force)
@@ -107,7 +107,7 @@ func (cmd *SignUpCommand) Run() error {
 				}
 			}
 			if cmd.email == "" {
-				cmd.email, err = ui.AskAndValidate(cmd.io, "Your email address: ", 2, api.ValidateEmail)
+				cmd.email, err = ui.AskAndValidate(cmd.io, "Your (work) email address: ", 2, api.ValidateEmail)
 				if err != nil {
 					return err
 				}

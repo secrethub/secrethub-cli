@@ -112,14 +112,14 @@ func TestACLListCommand_run(t *testing.T) {
 					ReturnsTree: &api.Tree{
 						ParentPath: "namespace",
 						Dirs: map[uuid.UUID]*api.Dir{
-							*dir1ID: {
+							dir1ID: {
 								Name:  "repo",
 								DirID: dir1ID,
 							},
-							*dir2ID: {
+							dir2ID: {
 								Name:     "dir",
 								DirID:    dir2ID,
-								ParentID: dir1ID,
+								ParentID: &dir1ID,
 							},
 						},
 						RootDir: &api.Dir{

@@ -74,14 +74,14 @@ func (cmd *ACLListCommand) run() error {
 	// Separate all rules into lists of rules per directory.
 	ruleIDMap := make(map[uuid.UUID][]int)
 	for i, rule := range rules {
-		list := ruleIDMap[*rule.DirID]
-		ruleIDMap[*rule.DirID] = append(list, i)
+		list := ruleIDMap[rule.DirID]
+		ruleIDMap[rule.DirID] = append(list, i)
 	}
 
 	// Map the directories to rule lists.
 	ruleMap := make(map[api.DirPath][]*api.AccessRule)
 	for dirID, list := range ruleIDMap {
-		dirPath, err := tree.AbsDirPath(&dirID)
+		dirPath, err := tree.AbsDirPath(dirID)
 		if err != nil {
 			return err
 		}

@@ -39,7 +39,7 @@ func TestInspectRepo_Run(t *testing.T) {
 					ReturnsRepo: &api.Repo{
 						Name:        "bar",
 						Owner:       "Repo Owner",
-						CreatedAt:   &testTime,
+						CreatedAt:   testTime,
 						SecretCount: 1,
 					},
 				},

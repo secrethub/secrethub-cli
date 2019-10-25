@@ -112,6 +112,7 @@ func (cmd *SignUpCommand) Run() error {
 					return err
 				}
 			}
+			fmt.Fprintln(cmd.io.Stdout())
 		}
 	}
 
@@ -185,7 +186,7 @@ func (cmd *SignUpCommand) Run() error {
 	}
 
 	cmd.progressPrinter.Stop()
-	fmt.Fprintln(cmd.io.Stdout(), "Created your account.")
+	fmt.Fprint(cmd.io.Stdout(), "Created your account.\n\n")
 
 	createWorkspace := cmd.org != ""
 	if !createWorkspace {
@@ -193,7 +194,7 @@ func (cmd *SignUpCommand) Run() error {
 		if err != nil {
 			return err
 		}
-		fmt.Println()
+		fmt.Fprintln(cmd.io.Stdout())
 		if !createWorkspace {
 			fmt.Fprint(cmd.io.Stdout(), "You can create a shared workspace later using `secrethub org init`.\n\n")
 		}
@@ -221,7 +222,7 @@ func (cmd *SignUpCommand) Run() error {
 			fmt.Fprintln(cmd.io.Stdout(), "\nCreated your shared workspace.")
 		}
 	}
-	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
+	fmt.Fprintf(cmd.io.Stdout(), "To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 
 	return nil
 }

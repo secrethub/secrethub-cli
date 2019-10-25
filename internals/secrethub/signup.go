@@ -199,7 +199,7 @@ func (cmd *SignUpCommand) Run() error {
 	}
 	if createWorkspace {
 		if cmd.org == "" {
-			cmd.org, err = ui.AskAndValidate(cmd.io, "Workspace name for your team (e.g. your company name): ", 2, api.ValidateOrgName)
+			cmd.org, err = ui.AskAndValidate(cmd.io, "Workspace name (e.g. your company name): ", 2, api.ValidateOrgName)
 			if err != nil {
 				return err
 			}

@@ -13,6 +13,7 @@ type AuditCommand struct {
 	path          api.Path
 	useTimestamps bool
 	newClient     newClientFunc
+	perPage       int
 }
 
 // NewAuditCommand creates a new audit command.
@@ -20,6 +21,7 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 	return &AuditCommand{
 		io:        io,
 		newClient: newClient,
+		perPage:   10,
 	}
 }
 
@@ -41,6 +43,7 @@ func (cmd *AuditCommand) Run() error {
 			path:          repoPath,
 			useTimestamps: cmd.useTimestamps,
 			newClient:     cmd.newClient,
+			perPage:       cmd.perPage,
 		}
 		return auditRepoCommand.Run()
 	}
@@ -52,6 +55,7 @@ func (cmd *AuditCommand) Run() error {
 			path:          secretPath,
 			useTimestamps: cmd.useTimestamps,
 			newClient:     cmd.newClient,
+			perPage:       cmd.perPage,
 		}
 		return auditSecretCommand.Run()
 	}

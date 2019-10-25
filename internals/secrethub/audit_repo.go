@@ -5,6 +5,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -16,6 +17,7 @@ type AuditRepoCommand struct {
 	timeFormatter TimeFormatter
 	useTimestamps bool
 	newClient     newClientFunc
+	perPage       int
 }
 
 // Run prints all audit events for the given repository.
@@ -36,11 +38,6 @@ func (cmd *AuditRepoCommand) run() error {
 		return err
 	}
 
-	events, err := client.Repos().ListEvents(cmd.path.Value(), nil)
-	if err != nil {
-		return err
-	}
-
 	dirFS, err := client.Dirs().GetTree(cmd.path.GetDirPath().Value(), -1, false)
 	if err != nil {
 		return err
@@ -48,11 +45,22 @@ func (cmd *AuditRepoCommand) run() error {
 
 	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
 
-	fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%s\t%s\n", "AUTHOR", "EVENT", "EVENT SUBJECT", "IP ADDRESS", "DATE")
+	header := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\n", "AUTHOR", "EVENT", "EVENT SUBJECT", "IP ADDRESS", "DATE")
+	fmt.Fprintf(tabWriter, header)
 
-	for i := range events {
-		// Loop through list in reverse
-		event := events[len(events)-1-i]
+	// interactive mode is assumed, except when output is piped.
+	interactive := !cmd.io.Stdout().IsPiped()
+
+	iter := client.Repos().EventIterator(cmd.path.Value(), nil)
+	i := 0
+	for {
+		i++
+		event, err := iter.Next()
+		if err == iterator.Done {
+			break
+		} else if err != nil {
+			return err
+		}
 
 		actor, err := getAuditActor(event)
 		if err != nil {
@@ -71,6 +79,22 @@ func (cmd *AuditRepoCommand) run() error {
 			event.IPAddress,
 			cmd.timeFormatter.Format(event.LoggedAt),
 		)
+
+		if interactive && i == cmd.perPage {
+			err = tabWriter.Flush()
+			if err != nil {
+				return err
+			}
+			i = 0
+			fmt.Fprintln(cmd.io.Stdout(), "Press <ENTER> to show more results. Press <CTRL+C> to exit.")
+
+			// wait for <ENTER> to continue.
+			_, err := ui.Readln(cmd.io.Stdin())
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(tabWriter, header)
+		}
 	}
 
 	err = tabWriter.Flush()

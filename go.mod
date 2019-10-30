@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/kingpin v0.0.0-20191009151950-9e366cbf24ad
 	github.com/atotto/clipboard v0.1.2
 	github.com/aws/aws-sdk-go v1.19.38
-	github.com/docker/go-units v0.3.3
+	github.com/docker/go-units v0.4.0
 	github.com/fatih/color v1.7.0
 	github.com/masterzen/winrm v0.0.0-20190308153735-1d17eaf15943
 	github.com/mattn/go-colorable v0.1.1

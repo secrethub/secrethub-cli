@@ -72,9 +72,10 @@ func AskMultiline(io IO, question string) ([]byte, error) {
 	}
 
 	raw, err := ioutil.ReadAll(promptIn)
-
+	if err != nil {
+		return nil, err
+	}
 	fmt.Fprintln(promptOut)
-
 	return raw, nil
 }
 

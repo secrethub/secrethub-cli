@@ -30,3 +30,7 @@ func (c colorStdout) IsPiped() bool {
 	return os.Getenv("TERM") == "dumb" ||
 		(!isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()))
 }
+
+func eofKey() string {
+	return "CTRL-Z + ENTER"
+}

@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -55,6 +56,27 @@ func AskSecret(io IO, question string) (string, error) {
 	fmt.Fprintln(promptOut, "")
 
 	return string(raw), nil
+}
+
+// AskMultiline prints out the question and reads back the input until an EOF is reached.
+// The input is displayed to the user.
+func AskMultiline(io IO, question string) ([]byte, error) {
+	promptIn, promptOut, err := io.Prompts()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = fmt.Fprintf(promptOut, "%s\n", question)
+	if err != nil {
+		return nil, err
+	}
+
+	raw, err := ioutil.ReadAll(promptIn)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Fprintln(promptOut)
+	return raw, nil
 }
 
 // AskAndValidate asks the user a question and re-prompts the configured amount of times

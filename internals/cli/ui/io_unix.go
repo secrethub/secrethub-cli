@@ -18,3 +18,7 @@ func NewUserIO() UserIO {
 
 	return NewStdUserIO()
 }
+
+func eofKey() string {
+	return "CTRL-D"
+}

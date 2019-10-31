@@ -115,3 +115,9 @@ func (f file) IsPiped() bool {
 
 	return (stat.Mode() & os.ModeCharDevice) == 0
 }
+
+// EOFKey returns the key that should be pressed to enter an EOF.
+// This can be used to end multiline input.
+func EOFKey() string {
+	return eofKey()
+}

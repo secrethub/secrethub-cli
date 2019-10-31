@@ -45,7 +45,7 @@ func (cmd *WriteCommand) Register(r command.Registerer) {
 	clause := r.Command("write", "Write a secret.")
 	clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("clip", "Use clipboard content as input.").Short('c').BoolVar(&cmd.useClipboard)
-	clause.Flag("multiline", "Prompt for multiple lines of input, until CTRL+D is pressed or an EOF is reached.").Short('m').BoolVar(&cmd.multiline)
+	clause.Flag("multiline", "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.").Short('m').BoolVar(&cmd.multiline)
 	clause.Flag("no-trim", "Do not trim leading and trailing whitespace in the secret.").BoolVar(&cmd.noTrim)
 	clause.Flag("in-file", "Use the contents of this file as the value of the secret.").Short('i').StringVar(&cmd.inFile)
 
@@ -89,7 +89,7 @@ func (cmd *WriteCommand) Run() error {
 		}
 	} else if cmd.multiline {
 		var err error
-		data, err = ui.AskMultiline(cmd.io, "Please type in the value of the secret, followed by [CTRL+D]:")
+		data, err = ui.AskMultiline(cmd.io, "Please type in the value of the secret, followed by ["+ui.EOFKey()+"]:")
 		if err != nil {
 			return err
 		}

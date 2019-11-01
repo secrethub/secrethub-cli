@@ -5,7 +5,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -17,24 +16,6 @@ type AuditSecretCommand struct {
 	timeFormatter TimeFormatter
 	useTimestamps bool
 	newClient     newClientFunc
-}
-
-// NewAuditSecretCommand creates a new audit repository command.
-func NewAuditSecretCommand(io ui.IO, newClient newClientFunc) *AuditSecretCommand {
-	return &AuditSecretCommand{
-		io:            io,
-		timeFormatter: NewTimeFormatter(false),
-		newClient:     newClient,
-	}
-}
-
-// Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *AuditSecretCommand) Register(r command.Registerer) {
-	clause := r.Command("secret", "Show an audit log of all actions on a secret.").Hidden()
-	clause.Arg("secret-path", "The path to the secret to audit (<namespace>/<repo>[/<dir>]/<secret>)").SetValue(&cmd.path)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
-
-	command.BindAction(clause, cmd.Run)
 }
 
 // Run prints all audit events for the given secret.

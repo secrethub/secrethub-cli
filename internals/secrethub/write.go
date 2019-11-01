@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	errCannotWriteToVersion = errMain.Code("cannot_write_version").Error("cannot (over)write a specific secret version, they are append only")
-	errEmptySecret          = errMain.Code("cannot_write_empty_secret").Error("secret is empty or contains only whitespace")
-	errClipAndInFile        = errMain.Code("clip_and_in_file").Error("clip and in-file cannot be used together")
+	errCannotWriteToVersion            = errMain.Code("cannot_write_version").Error("cannot (over)write a specific secret version, they are append only")
+	errEmptySecret                     = errMain.Code("cannot_write_empty_secret").Error("secret is empty or contains only whitespace")
+	errClipAndInFile                   = errMain.Code("clip_and_in_file").Error("clip and in-file cannot be used together")
+	errMultilineWithNonInteractiveFlag = errMain.Code("multiline_flag_conflict").Error("multiline cannot be used together with clip or in-file")
 )
 
 // WriteCommand is a command to write content to a secret.
@@ -23,6 +24,7 @@ type WriteCommand struct {
 	io           ui.IO
 	path         api.SecretPath
 	inFile       string
+	multiline    bool
 	useClipboard bool
 	noTrim       bool
 	clipper      clip.Clipper
@@ -41,8 +43,9 @@ func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *WriteCommand) Register(r command.Registerer) {
 	clause := r.Command("write", "Write a secret.")
-	clause.Arg("secret-path", "The path to the secret (<namespace>/<repo>[/<dir>]/<secret>)").Required().SetValue(&cmd.path)
+	clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("clip", "Use clipboard content as input.").Short('c').BoolVar(&cmd.useClipboard)
+	clause.Flag("multiline", "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.").Short('m').BoolVar(&cmd.multiline)
 	clause.Flag("no-trim", "Do not trim leading and trailing whitespace in the secret.").BoolVar(&cmd.noTrim)
 	clause.Flag("in-file", "Use the contents of this file as the value of the secret.").Short('i').StringVar(&cmd.inFile)
 
@@ -58,6 +61,10 @@ func (cmd *WriteCommand) Run() error {
 	// Without this check here, the user would be prompted for input when io.Stdin is not piped, but the path is incorrect.
 	if cmd.path.HasVersion() {
 		return errCannotWriteToVersion
+	}
+
+	if cmd.multiline && (cmd.useClipboard || cmd.inFile != "") {
+		return errMultilineWithNonInteractiveFlag
 	}
 
 	if cmd.useClipboard && cmd.inFile != "" {
@@ -79,6 +86,12 @@ func (cmd *WriteCommand) Run() error {
 		data, err = ioutil.ReadAll(cmd.io.Stdin())
 		if err != nil {
 			return ui.ErrReadInput(err)
+		}
+	} else if cmd.multiline {
+		var err error
+		data, err = ui.AskMultiline(cmd.io, "Please type in the value of the secret, followed by ["+ui.EOFKey()+"]:")
+		if err != nil {
+			return err
 		}
 	} else {
 		str, err := ui.AskSecret(cmd.io, "Please type in the value of the secret, followed by an [ENTER]:")

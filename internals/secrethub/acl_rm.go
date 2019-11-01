@@ -30,7 +30,7 @@ func NewACLRmCommand(io ui.IO, newClient newClientFunc) *ACLRmCommand {
 func (cmd *ACLRmCommand) Register(r command.Registerer) {
 	clause := r.Command("rm", "Remove an account's access rules on a given directory. Although the server will deny the account access afterwards, note that removing an access rule does not actually revoke an account and does NOT trigger secret rotation.")
 	clause.Alias("remove")
-	clause.Arg("dir-path", "The path of the directory to remove the access rule for (<namespace>/<repo>[/<dir>])").Required().SetValue(&cmd.path)
+	clause.Arg("dir-path", "The path of the directory to remove the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	clause.Arg("account-name", "The account name (username or service name) whose rule to remove").Required().SetValue(&cmd.accountName)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 

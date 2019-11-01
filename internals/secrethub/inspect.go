@@ -31,7 +31,7 @@ func NewInspectCommand(io ui.IO, newClient newClientFunc) *InspectCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *InspectCommand) Register(r command.Registerer) {
 	clause := r.Command("inspect", "Print details of a resource.")
-	clause.Arg("repo or secret-path", "Path to the repository or the secret to inspect").Required().SetValue(&cmd.path)
+	clause.Arg("repo or secret-path", "Path to the repository or the secret to inspect "+repoPathPlaceHolder+" or "+secretPathOptionalVersionPlaceHolder).Required().SetValue(&cmd.path)
 
 	command.BindAction(clause, cmd.Run)
 }

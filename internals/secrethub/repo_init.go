@@ -27,7 +27,7 @@ func NewRepoInitCommand(io ui.IO, newClient newClientFunc) *RepoInitCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoInitCommand) Register(r command.Registerer) {
 	clause := r.Command("init", "Initialize a new repository.")
-	clause.Arg("repo-path", "Path to the new repository (<namespace>/<repo>)").Required().SetValue(&cmd.path)
+	clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	command.BindAction(clause, cmd.Run)
 }

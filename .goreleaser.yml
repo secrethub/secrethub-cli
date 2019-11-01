@@ -102,6 +102,8 @@ nfpms:
     formats:
       - rpm
       - deb
+    dependencies:
+      - ca-certificates
     recommends:
       - xclip
     scripts:

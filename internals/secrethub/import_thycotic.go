@@ -82,7 +82,7 @@ func (cmd *ImportThycoticCommand) Run() error {
 
 		dirPath := record[1]
 		if strings.ContainsAny(dirPath, "/") {
-			return fmt.Errorf("path %s contains '/' character, which is not allowed; paths should be separated with \\", dirPath)
+			return fmt.Errorf("path %s contains a '/' character (forward slash), which is not allowed; paths should be separated with '\\' characters (backslash)", dirPath)
 		}
 		dirPath = strings.ReplaceAll(dirPath, "\\", "/")
 
@@ -103,20 +103,23 @@ func (cmd *ImportThycoticCommand) Run() error {
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "You're about to create the following resources:")
-	fmt.Fprintln(cmd.io.Stdout(), "Directories:")
+	fmt.Fprintf(cmd.io.Stdout(), "%d directories:\n\n", len(dirs))
 	for dirPath := range dirs {
 		fmt.Fprintln(cmd.io.Stdout(), dirPath)
 	}
-	fmt.Fprintln(cmd.io.Stdout(), "Secrets:")
+
+	fmt.Fprintf(cmd.io.Stdout(), "\n%d secrets:\n\n", len(secrets))
 	for secretPath := range secrets {
 		fmt.Fprintln(cmd.io.Stdout(), secretPath)
 	}
-	confirmed, err := ui.AskYesNo(cmd.io, "Would you like to import these resources?", ui.DefaultYes)
+
+	fmt.Fprintln(cmd.io.Stdout(), "")
+	confirmed, err := ui.AskYesNo(cmd.io, "Are you sure you want to proceed?", ui.DefaultYes)
 	if err != nil {
 		return err
 	}
 	if !confirmed {
-		return fmt.Errorf("aborting")
+		return fmt.Errorf("Aborting...")
 	}
 
 	for dirPath := range dirs {

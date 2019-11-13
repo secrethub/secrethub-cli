@@ -162,6 +162,7 @@ func (app *App) registerCommands() {
 	NewServiceCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewAccountCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
+	NewImportCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 
 	// Commands
 	NewSignUpCommand(app.io, app.clientFactory.NewUnauthenticatedClient, app.credentialStore).Register(app.cli)

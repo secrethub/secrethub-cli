@@ -95,6 +95,23 @@ func (cmd *ImportThycoticCommand) Run() error {
 		}
 	}
 
+	fmt.Fprintln(cmd.io.Stdout(), "You're about to create the following resources:")
+	fmt.Fprintln(cmd.io.Stdout(), "Directories:")
+	for dirPath := range dirs {
+		fmt.Fprintln(cmd.io.Stdout(), dirPath)
+	}
+	fmt.Fprintln(cmd.io.Stdout(), "Secrets:")
+	for secretPath := range secrets {
+		fmt.Fprintln(cmd.io.Stdout(), secretPath)
+	}
+	confirmed, err := ui.AskYesNo(cmd.io, "Would you like to import these resources?", ui.DefaultYes)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		return fmt.Errorf("aborting")
+	}
+
 	for dirPath := range dirs {
 		err = client.Dirs().CreateAll(dirPath)
 		if err != nil {

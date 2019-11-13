@@ -109,6 +109,8 @@ func (cmd *ImportThycoticCommand) Run() error {
 		}
 	}
 
+	fmt.Fprintf(cmd.io.Stdout(), "Successfully imported %d directories containing %d secrets\n", len(dirs), len(secrets))
+
 	return nil
 }
 

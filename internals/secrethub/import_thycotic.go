@@ -30,14 +30,14 @@ func NewImportThycoticCommand(io ui.IO, newClient newClientFunc) *ImportThycotic
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *ImportThycoticCommand) Register(r command.Registerer) {
-	clause := r.Command("thycotic", "Import secrets from a Thycotic CSV export file.")
-	clause.Arg("file", "Path to CSV export of your Thycotic secrets.").Required().StringVar(&cmd.file)
+	clause := r.Command("thycotic", "Import secrets from a Thycotic .csv export file.")
+	clause.Arg("file", "Path to .csv export file of your Thycotic secrets.").Required().StringVar(&cmd.file)
 	command.BindAction(clause, cmd.Run)
 }
 
 func (cmd *ImportThycoticCommand) Run() error {
 	if !strings.HasSuffix(cmd.file, ".csv") {
-		return fmt.Errorf("currently only csv imports are supported")
+		return fmt.Errorf("currently only .csv files are supported")
 	}
 
 	r, err := os.Open(cmd.file)
@@ -48,15 +48,15 @@ func (cmd *ImportThycoticCommand) Run() error {
 	csvReader := csv.NewReader(r)
 	header, err := csvReader.Read()
 	if err != nil {
-		return fmt.Errorf("could not read from csv file: %s", err)
+		return fmt.Errorf("could not read from .csv file: %s", err)
 	}
 
 	if len(header) < 1 || header[0] != "SecretName" {
-		return fmt.Errorf("first column of csv file should contain the SecretName")
+		return fmt.Errorf("first column of .csv file should contain the SecretName")
 	}
 
 	if len(header) < 2 || header[1] != "FolderPath" {
-		return fmt.Errorf("second column of csv file should contain the FolderPath")
+		return fmt.Errorf("second column of .csv file should contain the FolderPath")
 	}
 
 	if len(header) < 3 {

@@ -75,7 +75,10 @@ func (cmd *ImportThycoticCommand) Run() error {
 			return fmt.Errorf("path %s contains '/' character, which is not allowed; paths should be separated with \\", dirPath)
 		}
 		dirPath = strings.ReplaceAll(dirPath, "\\", "/")
+
 		dirPath = secretpath.Join(dirPath, record[0])
+
+		dirPath = strings.ReplaceAll(dirPath, " ", "_")
 
 		err = client.Dirs().CreateAll(dirPath)
 		if err != nil {

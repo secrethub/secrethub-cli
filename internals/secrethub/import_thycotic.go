@@ -78,7 +78,7 @@ func (cmd *ImportThycoticCommand) Run() error {
 		}
 
 		for i, field := range record[1:] {
-			secretPath := secretpath.Join(dirPath, header[i])
+			secretPath := secretpath.Join(dirPath, strings.ReplaceAll(header[i], " ", "_"))
 			_, err = client.Secrets().Write(secretPath, []byte(field))
 			if err != nil {
 				return fmt.Errorf("could not write secret: %s", err)

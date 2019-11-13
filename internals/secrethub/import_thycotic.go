@@ -44,12 +44,16 @@ func (cmd *ImportThycoticCommand) Run() error {
 		return fmt.Errorf("could not read from csv file: %s", err)
 	}
 
-	if len(header) < 2 {
-		return fmt.Errorf("csv should have at least 2 columns")
+	if len(header) < 1 || header[0] != "SecretName" {
+		return fmt.Errorf("first column of csv file should contain the SecretName")
 	}
 
-	if header[0] != "SecretName" {
-		return fmt.Errorf("first column of csv file should contain the SecretName")
+	if len(header) < 2 || header[1] != "FolderPath" {
+		return fmt.Errorf("second column of csv file should contain the FolderPath")
+	}
+
+	if len(header) < 3 {
+		return fmt.Errorf("nothing to import; there should be at least one column next to SecretName and FolderPath, that contains secrets to import")
 	}
 
 	client, err := cmd.newClient()
@@ -66,11 +70,12 @@ func (cmd *ImportThycoticCommand) Run() error {
 			return fmt.Errorf("could not read record: %s", err)
 		}
 
-		dirPath := record[0]
+		dirPath := record[1]
 		if strings.ContainsAny(dirPath, "/") {
 			return fmt.Errorf("path %s contains '/' character, which is not allowed; paths should be separated with \\", dirPath)
 		}
 		dirPath = strings.ReplaceAll(dirPath, "\\", "/")
+		dirPath = secretpath.Join(dirPath, record[0])
 
 		err = client.Dirs().CreateAll(dirPath)
 		if err != nil {

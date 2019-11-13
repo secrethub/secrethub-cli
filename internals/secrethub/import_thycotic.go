@@ -28,6 +28,13 @@ func NewImportThycoticCommand(io ui.IO, newClient newClientFunc) *ImportThycotic
 	}
 }
 
+// Register registers the command and its sub-commands on the provided Registerer.
+func (cmd *ImportThycoticCommand) Register(r command.Registerer) {
+	clause := r.Command("thycotic", "Import secrets from a Thycotic CSV export file.")
+	clause.Arg("file", "Path to CSV export of your Thycotic secrets.").Required().StringVar(&cmd.file)
+	command.BindAction(clause, cmd.Run)
+}
+
 func (cmd *ImportThycoticCommand) Run() error {
 	if !strings.HasSuffix(cmd.file, ".csv") {
 		return fmt.Errorf("currently only csv imports are supported")
@@ -129,11 +136,4 @@ func (cmd *ImportThycoticCommand) Run() error {
 	fmt.Fprintf(cmd.io.Stdout(), "Successfully imported %d directories containing %d secrets\n", len(dirs), len(secrets))
 
 	return nil
-}
-
-// Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *ImportThycoticCommand) Register(r command.Registerer) {
-	clause := r.Command("thycotic", "Import secrets from Thycotic.")
-	clause.Arg("file", "Path to CSV export of your Thycotic secrets.").Required().StringVar(&cmd.file)
-	command.BindAction(clause, cmd.Run)
 }

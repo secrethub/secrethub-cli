@@ -61,6 +61,9 @@ func (cmd *ImportThycoticCommand) Run() error {
 		return err
 	}
 
+	dirs := map[string]struct{}{}
+	secrets := map[string][]byte{}
+
 	for {
 		record, err := csvReader.Read()
 		if err == io.EOF {
@@ -80,17 +83,29 @@ func (cmd *ImportThycoticCommand) Run() error {
 
 		dirPath = strings.ReplaceAll(dirPath, " ", "_")
 
-		err = client.Dirs().CreateAll(dirPath)
-		if err != nil {
-			return fmt.Errorf("could not create directory: %s", err)
-		}
+		dirs[dirPath] = struct{}{}
 
 		for i, field := range record[1:] {
 			secretPath := secretpath.Join(dirPath, strings.ReplaceAll(header[i], " ", "_"))
-			_, err = client.Secrets().Write(secretPath, []byte(field))
-			if err != nil {
-				return fmt.Errorf("could not write secret: %s", err)
+			_, exists := secrets[secretPath]
+			if exists {
+				return fmt.Errorf("secret '%s' encountered twice", secretPath)
 			}
+			secrets[secretPath] = []byte(field)
+		}
+	}
+
+	for dirPath := range dirs {
+		err = client.Dirs().CreateAll(dirPath)
+		if err != nil {
+			return fmt.Errorf("could not create directory '%s': %s", dirPath, err)
+		}
+	}
+
+	for secretPath, value := range secrets {
+		_, err = client.Secrets().Write(secretPath, value)
+		if err != nil {
+			return fmt.Errorf("could not write secret '%s': %s", secretPath, err)
 		}
 	}
 

@@ -222,7 +222,7 @@ func (cmd *SignUpCommand) Run() error {
 			fmt.Fprintln(cmd.io.Stdout(), "\nCreated your shared workspace.")
 		}
 	}
-	fmt.Fprintf(cmd.io.Stdout(), "To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
+	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 
 	return nil
 }

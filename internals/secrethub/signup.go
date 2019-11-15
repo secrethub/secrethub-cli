@@ -23,6 +23,8 @@ type SignUpCommand struct {
 	username        string
 	fullName        string
 	email           string
+	org             string
+	orgDescription  string
 	force           bool
 	io              ui.IO
 	newClient       newClientFunc
@@ -43,9 +45,11 @@ func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore Credent
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *SignUpCommand) Register(r command.Registerer) {
 	clause := r.Command("signup", "Create a free personal developer account.")
-	clause.Flag("username", "The username you would like to use on SecretHub. If not set, you will be asked for it.").StringVar(&cmd.username)
-	clause.Flag("full-name", "If not set, you will be asked to provide your full name.").StringVar(&cmd.fullName)
-	clause.Flag("email", "If not set, you will be asked to provide your email address.").StringVar(&cmd.email)
+	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
+	clause.Flag("full-name", "Your full name.").StringVar(&cmd.fullName)
+	clause.Flag("email", "Your (work) email address we will use for all correspondence.").StringVar(&cmd.email)
+	clause.Flag("org", "The name of your organization.").StringVar(&cmd.org)
+	clause.Flag("org-description", "A description (max 144 chars) for your organization so others will recognize it.").StringVar(&cmd.orgDescription)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	command.BindAction(clause, cmd.Run)
@@ -103,11 +107,12 @@ func (cmd *SignUpCommand) Run() error {
 				}
 			}
 			if cmd.email == "" {
-				cmd.email, err = ui.AskAndValidate(cmd.io, "Your email address: ", 2, api.ValidateEmail)
+				cmd.email, err = ui.AskAndValidate(cmd.io, "Your (work) email address: ", 2, api.ValidateEmail)
 				if err != nil {
 					return err
 				}
 			}
+			fmt.Fprintln(cmd.io.Stdout())
 		}
 	}
 
@@ -181,7 +186,43 @@ func (cmd *SignUpCommand) Run() error {
 	}
 
 	cmd.progressPrinter.Stop()
+	fmt.Fprint(cmd.io.Stdout(), "Created your account.\n\n")
 
+	createWorkspace := cmd.org != ""
+	if !createWorkspace {
+		createWorkspace, err = ui.AskYesNo(cmd.io, "Do you want to create a shared workspace for your team?", ui.DefaultYes)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(cmd.io.Stdout())
+		if !createWorkspace {
+			fmt.Fprint(cmd.io.Stdout(), "You can create a shared workspace later using `secrethub org init`.\n\n")
+		}
+	}
+	if createWorkspace {
+		if cmd.org == "" {
+			cmd.org, err = ui.AskAndValidate(cmd.io, "Workspace name (e.g. your company name): ", 2, api.ValidateOrgName)
+			if err != nil {
+				return err
+			}
+		}
+		if cmd.orgDescription == "" {
+			cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your team workspace so others will recognize it:\n", 2, api.ValidateOrgDescription)
+			if err != nil {
+				return err
+			}
+		}
+
+		_, err := client.Orgs().Create(cmd.org, cmd.orgDescription)
+		if err == api.ErrOrgAlreadyExists {
+			fmt.Fprintf(cmd.io.Stdout(), "The workspace %s already exists. If it is your organization, ask a colleague to invite you to the workspace. You can also create a new one using `secrethub org init`.\n", cmd.org)
+		} else if err != nil {
+			return err
+		} else {
+			fmt.Fprintln(cmd.io.Stdout(), "\nCreated your shared workspace.")
+		}
+	}
 	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
+
 	return nil
 }

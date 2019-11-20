@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
-
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -29,7 +28,9 @@ func TestAuditRepoCommand_run(t *testing.T) {
 					return &fakeclient.Client{
 						DirService: &fakeclient.DirService{},
 						RepoService: &fakeclient.RepoService{
-							EventLister: fakeclient.RepoEventLister{},
+							AuditEventIterator: &fakeclient.AuditEventIterator{
+								Events: []api.Audit{},
+							},
 						},
 					}, nil
 				},
@@ -43,8 +44,8 @@ func TestAuditRepoCommand_run(t *testing.T) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{},
 						RepoService: &fakeclient.RepoService{
-							EventLister: fakeclient.RepoEventLister{
-								ReturnsAuditEvents: []*api.Audit{
+							AuditEventIterator: &fakeclient.AuditEventIterator{
+								Events: []api.Audit{
 									{
 										Action: "create",
 										Actor: api.AuditActor{
@@ -63,7 +64,6 @@ func TestAuditRepoCommand_run(t *testing.T) {
 										IPAddress: "127.0.0.1",
 									},
 								},
-								Err: nil,
 							},
 						},
 					}, nil
@@ -77,6 +77,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"client creation error": {
 			cmd: AuditCommand{
+				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return nil, ErrCannotFindHomeDir()
 				},
@@ -85,12 +86,16 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"list audit events error": {
 			cmd: AuditCommand{
+				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						RepoService: &fakeclient.RepoService{
-							EventLister: fakeclient.RepoEventLister{
+							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Err: testError,
 							},
+						},
+						DirService: &fakeclient.DirService{
+							TreeGetter: fakeclient.TreeGetter{},
 						},
 					}, nil
 				},
@@ -99,6 +104,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"get dir error": {
 			cmd: AuditCommand{
+				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{
@@ -116,15 +122,22 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"invalid audit actor": {
 			cmd: AuditCommand{
+				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{},
 						RepoService: &fakeclient.RepoService{
-							EventLister: fakeclient.RepoEventLister{
-								ReturnsAuditEvents: []*api.Audit{
-									{},
+							AuditEventIterator: &fakeclient.AuditEventIterator{
+								Events: []api.Audit{
+									{
+										Subject: api.AuditSubject{
+											Type: api.AuditSubjectService,
+											Service: &api.Service{
+												ServiceID: "<service id>",
+											},
+										},
+									},
 								},
-								Err: nil,
 							},
 						},
 					}, nil
@@ -135,12 +148,13 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		},
 		"invalid audit subject": {
 			cmd: AuditCommand{
+				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{},
 						RepoService: &fakeclient.RepoService{
-							EventLister: fakeclient.RepoEventLister{
-								ReturnsAuditEvents: []*api.Audit{
+							AuditEventIterator: &fakeclient.AuditEventIterator{
+								Events: []api.Audit{
 									{
 										Actor: api.AuditActor{
 											Type: "user",
@@ -150,7 +164,6 @@ func TestAuditRepoCommand_run(t *testing.T) {
 										},
 									},
 								},
-								Err: nil,
 							},
 						},
 					}, nil

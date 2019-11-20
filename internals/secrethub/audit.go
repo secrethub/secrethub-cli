@@ -91,7 +91,7 @@ func (cmd *AuditCommand) run() error {
 
 	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
 	header := strings.Join(auditTable.header(), "\t") + "\n"
-	fmt.Fprintf(tabWriter, header)
+	fmt.Fprint(tabWriter, header)
 
 	// interactive mode is assumed, except when output is piped.
 	interactive := !cmd.io.Stdout().IsPiped()
@@ -123,7 +123,7 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		fmt.Fprintf(tabWriter, strings.Join(row, "\t")+"\n")
+		fmt.Fprint(tabWriter, strings.Join(row, "\t")+"\n")
 
 		if interactive && i == cmd.perPage {
 			err = tabWriter.Flush()
@@ -138,7 +138,7 @@ func (cmd *AuditCommand) run() error {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(tabWriter, header)
+			fmt.Fprint(tabWriter, header)
 		}
 	}
 

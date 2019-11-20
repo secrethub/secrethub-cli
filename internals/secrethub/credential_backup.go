@@ -63,7 +63,12 @@ func (cmd *CredentialBackupCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "This is your backup code: \n%s\n", backupCode.Code())
+	code, err := backupCode.Code()
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(cmd.io.Stdout(), "This is your backup code: \n%s\n", code)
 	fmt.Fprintln(cmd.io.Stdout(), "Write it down and store it in a safe location! "+
 		"You can restore your account by running `secrethub init`.")
 

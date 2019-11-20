@@ -18,6 +18,7 @@ var (
 type MkDirCommand struct {
 	io        ui.IO
 	path      api.DirPath
+	parents   bool
 	newClient newClientFunc
 }
 
@@ -33,6 +34,7 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 func (cmd *MkDirCommand) Register(r command.Registerer) {
 	clause := r.Command("mkdir", "Create a new directory.")
 	clause.Arg("dir-path", "The path to the directory").Required().PlaceHolder(dirPathPlaceHolder).SetValue(&cmd.path)
+	clause.Flag("parents", "Create parent directories if needed. Does not error when directories already exist.").Short('p').BoolVar(&cmd.parents)
 
 	command.BindAction(clause, cmd.Run)
 }
@@ -48,9 +50,16 @@ func (cmd *MkDirCommand) Run() error {
 		return err
 	}
 
-	_, err = client.Dirs().Create(cmd.path.Value())
-	if err != nil {
-		return err
+	if cmd.parents {
+		err = client.Dirs().CreateAll(cmd.path.Value())
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = client.Dirs().Create(cmd.path.Value())
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Fprintf(cmd.io.Stdout(), "Created a new directory at %s\n", cmd.path)

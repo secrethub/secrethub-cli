@@ -10,17 +10,15 @@ import (
 
 // CredentialBackupCommand creates a backup code to restore a credential from a code.
 type CredentialBackupCommand struct {
-	io              ui.IO
-	credentialStore CredentialConfig
-	newClient       newClientFunc
+	io        ui.IO
+	newClient newClientFunc
 }
 
 // NewAccountInitCommand creates a new AccountInitCommand.
-func NewCredentialBackupCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *CredentialBackupCommand {
+func NewCredentialBackupCommand(io ui.IO, newClient newClientFunc) *CredentialBackupCommand {
 	return &CredentialBackupCommand{
-		io:              io,
-		credentialStore: credentialStore,
-		newClient:       newClient,
+		io:        io,
+		newClient: newClient,
 	}
 }
 

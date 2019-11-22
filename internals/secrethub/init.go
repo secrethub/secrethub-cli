@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
@@ -85,19 +84,19 @@ func (cmd *InitCommand) Run() error {
 		if cmd.force {
 			return ErrMissingFlags
 		}
-		fmt.Fprintf(cmd.io.Stdout(), "How do you want to initiliaze your SecretHub account on this device?\n"+
-			"1) Signup for a new account\n"+
-			"2) Use a backup code to recover an existing account\n")
-
-		option, err := ui.Ask(cmd.io, "Choose an option [1,2]: ")
+		option, err := ui.Choose(cmd.io, "How do you want to initiliaze your SecretHub account on this device?",
+			[]string{
+				"Signup for a new account",
+				"Use a backup code to recover an existing account",
+			}, 3)
 		if err != nil {
 			return err
 		}
 
-		switch strings.Trim(option, " ).") {
-		case "1":
+		switch option {
+		case 0:
 			mode = InitModeSignup
-		case "2":
+		case 1:
 			mode = InitModeBackupCode
 		}
 	}

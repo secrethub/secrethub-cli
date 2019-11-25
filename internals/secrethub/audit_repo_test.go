@@ -34,6 +34,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			out: "AUTHOR    EVENT    EVENT SUBJECT    IP ADDRESS    DATE\n",
 		},
@@ -68,6 +69,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 				timeFormatter: &fakes.TimeFormatter{
 					Response: "2018-01-01T01:01:01+01:00",
 				},
@@ -81,6 +83,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return nil, ErrCannotFindHomeDir()
 				},
+				perPage: 20,
 			},
 			err: ErrCannotFindHomeDir(),
 		},
@@ -99,6 +102,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			err: testError,
 		},
@@ -117,6 +121,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			err: testError,
 		},
@@ -142,6 +147,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			err: ErrInvalidAuditActor,
 			out: "",
@@ -168,6 +174,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			err: ErrInvalidAuditSubject,
 			out: "",

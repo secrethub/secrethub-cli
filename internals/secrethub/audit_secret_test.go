@@ -49,6 +49,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 				timeFormatter: &fakes.TimeFormatter{
 					Response: "2018-01-01T01:01:01+01:00",
 				},
@@ -68,12 +69,14 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			out: "AUTHOR    EVENT    IP ADDRESS    DATE\n",
 		},
 		"error secret version": {
 			cmd: AuditCommand{
-				path: "namespace/repo/secret:1",
+				path:    "namespace/repo/secret:1",
+				perPage: 20,
 			},
 			err: ErrCannotAuditSecretVersion,
 		},
@@ -83,6 +86,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return nil, ErrCannotFindHomeDir()
 				},
+				perPage: 20,
 			},
 			err: ErrCannotFindHomeDir(),
 		},
@@ -103,6 +107,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			err: ErrCannotAuditDir,
 		},
@@ -123,6 +128,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			err: api.ErrSecretNotFound,
 		},
@@ -138,6 +144,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			err: testError,
 		},
@@ -155,6 +162,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				perPage: 20,
 			},
 			err: ErrInvalidAuditActor,
 			out: "",

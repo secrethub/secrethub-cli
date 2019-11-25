@@ -74,7 +74,7 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		iter = client.Repos().EventIterator(repoPath.Value(), nil)
+		iter = client.Repos().EventIterator(repoPath.Value(), &secrethub.AuditEventIteratorParams{})
 		auditTable = newRepoAuditTable(tree, cmd.timeFormatter)
 	} else {
 		secretPath, err := cmd.path.ToSecretPath()
@@ -88,7 +88,7 @@ func (cmd *AuditCommand) run() error {
 				return err
 			}
 
-			iter = client.Secrets().EventIterator(secretPath.Value(), nil)
+			iter = client.Secrets().EventIterator(secretPath.Value(), &secrethub.AuditEventIteratorParams{})
 			auditTable = newSecretAuditTable(cmd.timeFormatter)
 		} else {
 			return ErrNoValidRepoOrSecretPath

@@ -132,6 +132,11 @@ func (cmd *AuditCommand) run() error {
 		fmt.Fprint(tabWriter, strings.Join(row, "\t")+"\n")
 
 		if interactive && i == cmd.perPage {
+			promptIn, _, err := cmd.io.Prompts()
+			if err != nil {
+				continue
+			}
+
 			err = tabWriter.Flush()
 			if err != nil {
 				return err
@@ -140,7 +145,7 @@ func (cmd *AuditCommand) run() error {
 			fmt.Fprintln(cmd.io.Stdout(), "Press <ENTER> to show more results. Press <CTRL+C> to exit.")
 
 			// wait for <ENTER> to continue.
-			_, err := ui.Readln(cmd.io.Stdin())
+			_, err = ui.Readln(promptIn)
 			if err != nil {
 				return err
 			}

@@ -56,7 +56,7 @@ func (cmd *CredentialBackupCommand) Run() error {
 
 	backupCode := credentials.CreateBackupCode()
 
-	err = client.Credentials().Create(backupCode)
+	err = client.Credentials().Create("", backupCode)
 	if err != nil {
 		return err
 	}

@@ -28,7 +28,6 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 	return &AuditCommand{
 		io:        io,
 		newClient: newClient,
-		perPage:   10,
 	}
 }
 
@@ -36,6 +35,7 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
+	clause.Flag("per-page", "number of audit events shown per page").Default("20").IntVar(&cmd.perPage)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -54,6 +54,10 @@ func (cmd *AuditCommand) beforeRun() {
 
 // Run prints all audit events for the given repository or secret.
 func (cmd *AuditCommand) run() error {
+	if cmd.perPage < 1 {
+		return fmt.Errorf("per-page should be positive, got %d", cmd.perPage)
+	}
+
 	var auditTable auditTable
 	var iter secrethub.AuditEventIterator
 

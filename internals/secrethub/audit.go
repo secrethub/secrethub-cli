@@ -21,6 +21,7 @@ type AuditCommand struct {
 	timeFormatter TimeFormatter
 	newClient     newClientFunc
 	perPage       int
+	noPrompt      bool
 }
 
 // NewAuditCommand creates a new audit command.
@@ -36,6 +37,7 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "number of audit events shown per page").Default("20").IntVar(&cmd.perPage)
+	clause.Flag("no-prompt", "Don't paginate events.").BoolVar(&cmd.noPrompt)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -98,7 +100,7 @@ func (cmd *AuditCommand) run() error {
 	fmt.Fprint(tabWriter, header)
 
 	// interactive mode is assumed, except when output is piped.
-	interactive := !cmd.io.Stdout().IsPiped()
+	interactive := !cmd.io.Stdout().IsPiped() && !cmd.noPrompt
 
 	i := 0
 	for {

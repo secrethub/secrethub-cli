@@ -21,7 +21,6 @@ type AuditCommand struct {
 	timeFormatter TimeFormatter
 	newClient     newClientFunc
 	perPage       int
-	noPrompt      bool
 }
 
 // NewAuditCommand creates a new audit command.
@@ -37,7 +36,6 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "number of audit events shown per page").Default("20").IntVar(&cmd.perPage)
-	clause.Flag("no-prompt", "Don't paginate events.").BoolVar(&cmd.noPrompt)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -104,9 +102,6 @@ func (cmd *AuditCommand) run() error {
 	header := strings.Join(auditTable.header(), "\t") + "\n"
 	fmt.Fprint(tabWriter, header)
 
-	// interactive mode is assumed, except when output is piped.
-	interactive := !cmd.io.Stdout().IsPiped() && !cmd.noPrompt
-
 	i := 0
 	for {
 		i++
@@ -124,17 +119,19 @@ func (cmd *AuditCommand) run() error {
 
 		fmt.Fprint(tabWriter, strings.Join(row, "\t")+"\n")
 
-		if interactive && i == cmd.perPage {
-			promptIn, _, err := cmd.io.Prompts()
-			if err != nil {
-				continue
-			}
-
+		if i == cmd.perPage {
 			err = tabWriter.Flush()
 			if err != nil {
 				return err
 			}
 			i = 0
+
+			promptIn, _, err := cmd.io.Prompts()
+			if err != nil {
+				// When prompting is not possible, only one page is shown.
+				return nil
+			}
+
 			fmt.Fprintln(cmd.io.Stdout(), "Press <ENTER> to show more results. Press <CTRL+C> to exit.")
 
 			// wait for <ENTER> to continue.

@@ -126,16 +126,8 @@ func (cmd *AuditCommand) run() error {
 			}
 			i = 0
 
-			promptIn, _, err := cmd.io.Prompts()
-			if err != nil {
-				// When prompting is not possible, only one page is shown.
-				return nil
-			}
-
-			fmt.Fprintln(cmd.io.Stdout(), "Press <ENTER> to show more results. Press <CTRL+C> to exit.")
-
 			// wait for <ENTER> to continue.
-			_, err = ui.Readln(promptIn)
+			_, err := ui.Ask(cmd.io, "Press <ENTER> to show more results. Press <CTRL+C> to exit.")
 			if err != nil {
 				return err
 			}

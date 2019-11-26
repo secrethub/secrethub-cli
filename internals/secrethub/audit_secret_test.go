@@ -27,6 +27,11 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				path: "namespace/repo/secret",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
+						DirService: &fakeclient.DirService{
+							ExistsFunc: func(_ string) (bool, error) {
+								return false, nil
+							},
+						},
 						SecretService: &fakeclient.SecretService{
 							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Events: []api.Audit{
@@ -62,6 +67,11 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				path: "namespace/repo/secret",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
+						DirService: &fakeclient.DirService{
+							ExistsFunc: func(_ string) (bool, error) {
+								return false, nil
+							},
+						},
 						SecretService: &fakeclient.SecretService{
 							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Events: []api.Audit{},
@@ -96,8 +106,8 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{
-							TreeGetter: fakeclient.TreeGetter{
-								Err: nil,
+							ExistsFunc: func(_ string) (bool, error) {
+								return true, nil
 							},
 						},
 						SecretService: &fakeclient.SecretService{
@@ -111,32 +121,16 @@ func TestAuditSecretCommand_run(t *testing.T) {
 			},
 			err: ErrCannotAuditDir,
 		},
-		"error secret not found": {
-			cmd: AuditCommand{
-				path: "namespace/repo/secret",
-				newClient: func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						DirService: &fakeclient.DirService{
-							TreeGetter: fakeclient.TreeGetter{
-								Err: api.ErrDirNotFound,
-							},
-						},
-						SecretService: &fakeclient.SecretService{
-							AuditEventIterator: &fakeclient.AuditEventIterator{
-								Err: api.ErrSecretNotFound,
-							},
-						},
-					}, nil
-				},
-				perPage: 20,
-			},
-			err: api.ErrSecretNotFound,
-		},
 		"other list audit events error": {
 			cmd: AuditCommand{
 				path: "namespace/repo/secret",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
+						DirService: &fakeclient.DirService{
+							ExistsFunc: func(_ string) (bool, error) {
+								return false, nil
+							},
+						},
 						SecretService: &fakeclient.SecretService{
 							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Err: testError,
@@ -153,6 +147,11 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				path: "namespace/repo/secret",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
+						DirService: &fakeclient.DirService{
+							ExistsFunc: func(_ string) (bool, error) {
+								return false, nil
+							},
+						},
 						SecretService: &fakeclient.SecretService{
 							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Events: []api.Audit{

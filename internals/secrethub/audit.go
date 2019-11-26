@@ -88,6 +88,11 @@ func (cmd *AuditCommand) run() error {
 				return err
 			}
 
+			isDir, err := client.Dirs().Exists(secretPath.Value())
+			if err == nil && isDir {
+				return ErrCannotAuditDir
+			}
+
 			iter = client.Secrets().EventIterator(secretPath.Value(), &secrethub.AuditEventIteratorParams{})
 			auditTable = newSecretAuditTable(cmd.timeFormatter)
 		} else {
@@ -108,18 +113,6 @@ func (cmd *AuditCommand) run() error {
 		event, err := iter.Next()
 		if err == iterator.Done {
 			break
-		} else if err == api.ErrSecretNotFound {
-			// Check if we're attempting to audit a dir.
-			client, err := cmd.newClient()
-			if err != nil {
-				return err
-			}
-
-			_, err = client.Dirs().GetTree(api.DirPath(cmd.path).Value(), 1, false)
-			if err == nil {
-				return ErrCannotAuditDir
-			}
-			return api.ErrSecretNotFound
 		} else if err != nil {
 			return err
 		}

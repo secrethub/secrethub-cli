@@ -59,6 +59,9 @@ func (cmd *AuditCommand) run() error {
 	}
 
 	iter, auditTable, err := cmd.iterAndAuditTable()
+	if err != nil {
+		return err
+	}
 
 	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
 	header := strings.Join(auditTable.header(), "\t") + "\n"

@@ -20,7 +20,7 @@ type AuditCommand struct {
 	useTimestamps bool
 	timeFormatter TimeFormatter
 	newClient     newClientFunc
-	perPage       int
+	perPage       uint
 }
 
 // NewAuditCommand creates a new audit command.
@@ -35,7 +35,7 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flag("per-page", "number of audit events shown per page").Default("20").IntVar(&cmd.perPage)
+	clause.Flag("per-page", "number of audit events shown per page").Default("20").UintVar(&cmd.perPage)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -102,7 +102,7 @@ func (cmd *AuditCommand) run() error {
 	header := strings.Join(auditTable.header(), "\t") + "\n"
 	fmt.Fprint(tabWriter, header)
 
-	i := 0
+	var i uint = 0
 	for {
 		i++
 		event, err := iter.Next()

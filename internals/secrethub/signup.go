@@ -212,7 +212,7 @@ func (cmd *SignUpCommand) Run() error {
 				return err
 			}
 		}
-		fmt.Fprintln(cmd.io.Stdout(), "Creating your shared workspace...")
+		fmt.Fprint(cmd.io.Stdout(), "Creating your shared workspace...")
 		cmd.progressPrinter.Start()
 
 		_, err := client.Orgs().Create(cmd.org, cmd.orgDescription)

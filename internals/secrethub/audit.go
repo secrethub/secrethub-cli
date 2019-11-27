@@ -58,45 +58,7 @@ func (cmd *AuditCommand) run() error {
 		return fmt.Errorf("per-page should be positive, got %d", cmd.perPage)
 	}
 
-	var auditTable auditTable
-	var iter secrethub.AuditEventIterator
-
-	repoPath, err := cmd.path.ToRepoPath()
-	if err == nil {
-		client, err := cmd.newClient()
-		if err != nil {
-			return err
-		}
-		tree, err := client.Dirs().GetTree(repoPath.GetDirPath().Value(), -1, false)
-		if err != nil {
-			return err
-		}
-
-		iter = client.Repos().EventIterator(repoPath.Value(), &secrethub.AuditEventIteratorParams{})
-		auditTable = newRepoAuditTable(tree, cmd.timeFormatter)
-	} else {
-		secretPath, err := cmd.path.ToSecretPath()
-		if err == nil {
-			if cmd.path.HasVersion() {
-				return ErrCannotAuditSecretVersion
-			}
-
-			client, err := cmd.newClient()
-			if err != nil {
-				return err
-			}
-
-			isDir, err := client.Dirs().Exists(secretPath.Value())
-			if err == nil && isDir {
-				return ErrCannotAuditDir
-			}
-
-			iter = client.Secrets().EventIterator(secretPath.Value(), &secrethub.AuditEventIteratorParams{})
-			auditTable = newSecretAuditTable(cmd.timeFormatter)
-		} else {
-			return ErrNoValidRepoOrSecretPath
-		}
-	}
+	iter, auditTable, err := cmd.iterAndAuditTable()
 
 	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
 	header := strings.Join(auditTable.header(), "\t") + "\n"
@@ -141,6 +103,48 @@ func (cmd *AuditCommand) run() error {
 	}
 
 	return nil
+}
+
+func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, auditTable, error) {
+	repoPath, err := cmd.path.ToRepoPath()
+	if err == nil {
+		client, err := cmd.newClient()
+		if err != nil {
+			return nil, nil, err
+		}
+		tree, err := client.Dirs().GetTree(repoPath.GetDirPath().Value(), -1, false)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		iter := client.Repos().EventIterator(repoPath.Value(), &secrethub.AuditEventIteratorParams{})
+		auditTable := newRepoAuditTable(tree, cmd.timeFormatter)
+		return iter, auditTable, nil
+
+	}
+
+	secretPath, err := cmd.path.ToSecretPath()
+	if err == nil {
+		if cmd.path.HasVersion() {
+			return nil, nil, ErrCannotAuditSecretVersion
+		}
+
+		client, err := cmd.newClient()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		isDir, err := client.Dirs().Exists(secretPath.Value())
+		if err == nil && isDir {
+			return nil, nil, ErrCannotAuditDir
+		}
+
+		iter := client.Secrets().EventIterator(secretPath.Value(), &secrethub.AuditEventIteratorParams{})
+		auditTable := newSecretAuditTable(cmd.timeFormatter)
+		return iter, auditTable, nil
+	}
+
+	return nil, nil, ErrNoValidRepoOrSecretPath
 }
 
 type auditTable interface {

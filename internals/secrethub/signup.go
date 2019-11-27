@@ -212,8 +212,11 @@ func (cmd *SignUpCommand) Run() error {
 				return err
 			}
 		}
+		fmt.Fprintln(cmd.io.Stdout(), "Creating your shared workspace...")
+		cmd.progressPrinter.Start()
 
 		_, err := client.Orgs().Create(cmd.org, cmd.orgDescription)
+		cmd.progressPrinter.Stop()
 		if err == api.ErrOrgAlreadyExists {
 			fmt.Fprintf(cmd.io.Stdout(), "The workspace %s already exists. If it is your organization, ask a colleague to invite you to the workspace. You can also create a new one using `secrethub org init`.\n", cmd.org)
 		} else if err != nil {

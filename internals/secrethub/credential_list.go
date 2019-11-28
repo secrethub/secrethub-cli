@@ -5,6 +5,9 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
@@ -41,11 +44,6 @@ func (cmd *CredentialListCommand) Run() error {
 		return err
 	}
 
-	credentials, err := client.Credentials().ListMine()
-	if err != nil {
-		return err
-	}
-
 	timeFormatter := NewTimeFormatter(cmd.useTimestamps)
 
 	w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
@@ -56,7 +54,15 @@ func (cmd *CredentialListCommand) Run() error {
 			"STATUS\t"+
 			"CREATED")
 
-	for _, cred := range credentials {
+	it := client.Credentials().List(&secrethub.CredentialListParams{})
+	for {
+		cred, err := it.Next()
+		if err == iterator.Done {
+			break
+		} else if err != nil {
+			return err
+		}
+
 		row := []string{
 			cred.Name,
 			string(cred.Type),

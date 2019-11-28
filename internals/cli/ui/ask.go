@@ -36,6 +36,19 @@ func Ask(io IO, question string) (string, error) {
 	return Readln(r)
 }
 
+// AskWithDefault  prints out the question and reads the first line of input.
+// If no input is given, the default value is returned.
+func AskWithDefault(io IO, question, defaultValue string) (string, error) {
+	res, err := Ask(io, fmt.Sprintf("%s [%s] ", question, defaultValue))
+	if err != nil {
+		return "", err
+	}
+	if res == "" {
+		return defaultValue, nil
+	}
+	return res, nil
+}
+
 // AskSecret prints out the question and reads back the input,
 // without echoing it back. Useful for passwords and other sensitive inputs.
 func AskSecret(io IO, question string) (string, error) {

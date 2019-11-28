@@ -9,6 +9,45 @@ import (
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
+func TestAskWithDefault(t *testing.T) {
+	question := "foo?"
+	defaultValue := "bar"
+	defaultOutput := "foo? [" + defaultValue + "] "
+	cases := map[string]struct {
+		in          []string
+		expected    string
+		expectedOut string
+	}{
+		"value entered": {
+			in:          []string{"foobar\n"},
+			expected:    "foobar",
+			expectedOut: defaultOutput,
+		},
+		"no value entered": {
+			in:          []string{"\n"},
+			expected:    defaultValue,
+			expectedOut: defaultOutput,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			io := NewFakeIO()
+			io.PromptIn.Reads = tc.in
+
+			// Run
+			actual, err := AskWithDefault(io, question, defaultValue)
+
+			// Assert
+			assert.OK(t, err)
+			assert.Equal(t, actual, tc.expected)
+
+			assert.Equal(t, io.PromptOut.String(), tc.expectedOut)
+		})
+	}
+}
+
 func TestConfirmCaseInsensitive(t *testing.T) {
 	cases := map[string]struct {
 		expectedConfirmation []string

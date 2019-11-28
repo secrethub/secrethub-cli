@@ -3,6 +3,7 @@ package secrethub
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"time"
 
@@ -156,8 +157,23 @@ func (cmd *InitCommand) Run() error {
 			return nil
 		}
 
+		deviceName := ""
+		question := "What is the name of this device?"
+		hostName, err := os.Hostname()
+		if err == nil {
+			deviceName, err = ui.AskWithDefault(cmd.io, question, hostName)
+			if err != nil {
+				return err
+			}
+		} else {
+			deviceName, err = ui.Ask(cmd.io, question)
+			if err != nil {
+				return err
+			}
+		}
+
 		key := credentials.CreateKey()
-		err = client.Credentials().Create(key)
+		err = client.Credentials().Create(key, deviceName)
 		if err != nil {
 			return err
 		}

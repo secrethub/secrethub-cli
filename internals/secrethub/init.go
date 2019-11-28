@@ -172,13 +172,30 @@ func (cmd *InitCommand) Run() error {
 			}
 		}
 
-		key := credentials.CreateKey()
-		err = client.Credentials().Create(key, deviceName)
+		// Only prompt for a passphrase when the user hasn't used --force.
+		// Otherwise, we assume the passphrase was intentionally not
+		// configured to output a plaintext credential.
+		var passphrase string
+		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
+			var err error
+			passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+			if err != nil {
+				return err
+			}
+		}
+
+		credential := credentials.CreateKey()
+		err = client.Credentials().Create(credential, deviceName)
 		if err != nil {
 			return err
 		}
 
-		exportedKey, err := key.Export()
+		exportKey := credential.Key
+		if passphrase != "" {
+			exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
+		}
+
+		exportedKey, err := exportKey.Export()
 		if err != nil {
 			return err
 		}

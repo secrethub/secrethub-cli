@@ -85,7 +85,7 @@ func (cmd *InitCommand) Run() error {
 		if cmd.force {
 			return ErrMissingFlags
 		}
-		option, err := ui.Choose(cmd.io, "How do you want to initiliaze your SecretHub account on this device?",
+		option, err := ui.Choose(cmd.io, "How do you want to initialize your SecretHub account on this device?",
 			[]string{
 				"Signup for a new account",
 				"Use a backup code to recover an existing account",

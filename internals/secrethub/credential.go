@@ -26,4 +26,5 @@ func (cmd *CredentialCommand) Register(r command.Registerer) {
 	clause := r.Command("credential", "Manage your credentials")
 	NewCredentialListCommand(cmd.io, cmd.clientFactory.NewClient).Register(clause)
 	NewCredentialBackupCommand(cmd.io, cmd.clientFactory.NewClient).Register(clause)
+	NewCredentialDisableCommand(cmd.io, cmd.clientFactory.NewClient).Register(clause)
 }

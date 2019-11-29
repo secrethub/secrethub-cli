@@ -2,11 +2,51 @@ package ui
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
 )
+
+func TestAskWithDefault(t *testing.T) {
+	question := "foo?"
+	defaultValue := "bar"
+	defaultOutput := "foo? [" + defaultValue + "] "
+	cases := map[string]struct {
+		in          []string
+		expected    string
+		expectedOut string
+	}{
+		"value entered": {
+			in:          []string{"foobar\n"},
+			expected:    "foobar",
+			expectedOut: defaultOutput,
+		},
+		"no value entered": {
+			in:          []string{"\n"},
+			expected:    defaultValue,
+			expectedOut: defaultOutput,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			io := NewFakeIO()
+			io.PromptIn.Reads = tc.in
+
+			// Run
+			actual, err := AskWithDefault(io, question, defaultValue)
+
+			// Assert
+			assert.OK(t, err)
+			assert.Equal(t, actual, tc.expected)
+
+			assert.Equal(t, io.PromptOut.String(), tc.expectedOut)
+		})
+	}
+}
 
 func TestConfirmCaseInsensitive(t *testing.T) {
 	cases := map[string]struct {
@@ -214,6 +254,88 @@ func TestAskYesNo(t *testing.T) {
 }
 
 func TestChoose(t *testing.T) {
+	question := "foo?"
+	defaultOptions := []string{
+		"option 1",
+		"second option",
+	}
+	defaultOutput := "foo?\n" +
+		"  1) option 1\n" +
+		"  2) second option\n" +
+		"Give the number of an option: "
+
+	cases := map[string]struct {
+		in          []string
+		options     []string
+		n           int
+		expected    int
+		expectedErr error
+		expectedOut string
+	}{
+		"first option": {
+			in:          []string{"1\n"},
+			options:     defaultOptions,
+			n:           3,
+			expected:    0,
+			expectedOut: defaultOutput,
+		},
+		"retry": {
+			in:          []string{"a\n", "1\n"},
+			options:     defaultOptions,
+			n:           3,
+			expected:    0,
+			expectedOut: defaultOutput + "\nInvalid input: not a valid number\nPlease try again.\nGive the number of an option: ",
+		},
+		"filter out )": {
+			in:          []string{"1)\n"},
+			options:     defaultOptions,
+			n:           3,
+			expected:    0,
+			expectedOut: defaultOutput,
+		},
+		"out of bounds lower": {
+			in:          []string{"0\n"},
+			options:     defaultOptions,
+			n:           1,
+			expectedErr: errors.New("out of bounds"),
+			expectedOut: defaultOutput + "\nInvalid input: out of bounds\n",
+		},
+		"out of bounds upper": {
+			in:          []string{"3\n"},
+			options:     defaultOptions,
+			n:           1,
+			expectedErr: errors.New("out of bounds"),
+			expectedOut: defaultOutput + "\nInvalid input: out of bounds\n",
+		},
+		"not a number": {
+			in:          []string{"abc\n"},
+			options:     defaultOptions,
+			n:           1,
+			expectedErr: errors.New("not a valid number"),
+			expectedOut: defaultOutput + "\nInvalid input: not a valid number\n",
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			io := NewFakeIO()
+			io.PromptIn.Reads = tc.in
+
+			// Run
+			actual, err := Choose(io, question, tc.options, tc.n)
+
+			// Assert
+			assert.Equal(t, err, tc.expectedErr)
+			if tc.expectedErr == nil {
+				assert.Equal(t, actual, tc.expected)
+			}
+			assert.Equal(t, io.PromptOut.String(), tc.expectedOut)
+		})
+	}
+}
+
+func TestChooseDynamicOptions(t *testing.T) {
 	cases := map[string]struct {
 		question   string
 		getOptions func() ([]Option, bool, error)
@@ -302,7 +424,7 @@ func TestChoose(t *testing.T) {
 			}
 
 			// Run
-			actual, err := Choose(io, tc.question, tc.getOptions, tc.addOwn, "value")
+			actual, err := ChooseDynamicOptions(io, tc.question, tc.getOptions, tc.addOwn, "value")
 
 			// Assert
 			assert.Equal(t, err, nil)

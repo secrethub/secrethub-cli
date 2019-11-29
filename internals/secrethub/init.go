@@ -3,8 +3,8 @@ package secrethub
 import (
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
@@ -40,7 +40,7 @@ func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentia
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *InitCommand) Register(r command.Registerer) {
 	clause := r.Command("init", "Initialize the SecretHub client for first use on this device.")
-	clause.Flag("backup-code", "The backup code used for initializing the account on this device.").StringVar(&cmd.backupCode)
+	clause.Flag("backup-code", "The backup code used to restore an existing account to this device.").StringVar(&cmd.backupCode)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	command.BindAction(clause, cmd.Run)
@@ -85,19 +85,19 @@ func (cmd *InitCommand) Run() error {
 		if cmd.force {
 			return ErrMissingFlags
 		}
-		fmt.Fprintf(cmd.io.Stdout(), "How do you want to initiliaze your SecretHub account on this device?\n"+
-			"1) Signup for a new account\n"+
-			"2) Use a backup code to recover an existing account\n")
-
-		option, err := ui.Ask(cmd.io, "Choose an option [1,2]: ")
+		option, err := ui.Choose(cmd.io, "How do you want to initialize your SecretHub account on this device?",
+			[]string{
+				"Signup for a new account",
+				"Use a backup code to recover an existing account",
+			}, 3)
 		if err != nil {
 			return err
 		}
 
-		switch strings.Trim(option, " ).") {
-		case "1":
+		switch option {
+		case 0:
 			mode = InitModeSignup
-		case "2":
+		case 1:
 			mode = InitModeBackupCode
 		}
 	}
@@ -157,13 +157,45 @@ func (cmd *InitCommand) Run() error {
 			return nil
 		}
 
-		key := credentials.CreateKey()
-		err = client.Credentials().Create(key)
+		deviceName := ""
+		question := "What is the name of this device?"
+		hostName, err := os.Hostname()
+		if err == nil {
+			deviceName, err = ui.AskWithDefault(cmd.io, question, hostName)
+			if err != nil {
+				return err
+			}
+		} else {
+			deviceName, err = ui.Ask(cmd.io, question)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Only prompt for a passphrase when the user hasn't used --force.
+		// Otherwise, we assume the passphrase was intentionally not
+		// configured to output a plaintext credential.
+		var passphrase string
+		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
+			var err error
+			passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+			if err != nil {
+				return err
+			}
+		}
+
+		credential := credentials.CreateKey()
+		err = client.Credentials().Create(credential, deviceName)
 		if err != nil {
 			return err
 		}
 
-		exportedKey, err := key.Export()
+		exportKey := credential.Key
+		if passphrase != "" {
+			exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
+		}
+
+		exportedKey, err := exportKey.Export()
 		if err != nil {
 			return err
 		}

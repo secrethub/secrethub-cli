@@ -48,11 +48,11 @@ func (cmd *CredentialListCommand) Run() error {
 
 	w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
 	fmt.Fprintln(w,
-		"NAME\t"+
+		"FINGERPRINT\t"+
 			"TYPE\t"+
-			"FINGERPRINT\t"+
-			"STATUS\t"+
-			"CREATED")
+			"ENABLED\t"+
+			"CREATED\t"+
+			"DESCRIPTION")
 
 	it := client.Credentials().List(&secrethub.CredentialListParams{})
 	for {
@@ -63,12 +63,17 @@ func (cmd *CredentialListCommand) Run() error {
 			return err
 		}
 
+		enabled := "no"
+		if cred.Enabled {
+			enabled = "yes"
+		}
+
 		row := []string{
-			cred.Name,
-			string(cred.Type),
 			cred.Fingerprint[:16],
-			"active",
+			string(cred.Type),
+			enabled,
 			timeFormatter.Format(cred.CreatedAt),
+			cred.Description,
 		}
 		fmt.Fprintln(w, strings.Join(row, "\t"))
 	}

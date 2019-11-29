@@ -185,7 +185,7 @@ func (cmd *InitCommand) Run() error {
 		}
 
 		credential := credentials.CreateKey()
-		err = client.Credentials().Create(credential, deviceName)
+		_, err = client.Credentials().Create(credential, deviceName)
 		if err != nil {
 			return err
 		}

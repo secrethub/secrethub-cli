@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -33,6 +34,19 @@ func Ask(io IO, question string) (string, error) {
 		return "", err
 	}
 	return Readln(r)
+}
+
+// AskWithDefault  prints out the question and reads the first line of input.
+// If no input is given, the default value is returned.
+func AskWithDefault(io IO, question, defaultValue string) (string, error) {
+	res, err := Ask(io, fmt.Sprintf("%s [%s] ", question, defaultValue))
+	if err != nil {
+		return "", err
+	}
+	if res == "" {
+		return defaultValue, nil
+	}
+	return res, nil
 }
 
 // AskSecret prints out the question and reads back the input,
@@ -211,6 +225,44 @@ func AskYesNo(io IO, question string, t ConfirmationType) (bool, error) {
 	return false, nil
 }
 
+// Choose gives the user the provided options asks them to choose one.
+// It returns the index of the option chosen, starting with 0.
+func Choose(io IO, question string, options []string, n int) (int, error) {
+	_, w, err := io.Prompts()
+	if err != nil {
+		return 0, err
+	}
+
+	_, err = fmt.Fprintf(w, "%s\n", question)
+	if err != nil {
+		return 0, err
+	}
+
+	for i, option := range options {
+		fmt.Fprintf(w, "  %d) %s\n", i+1, option)
+	}
+
+	parseFunc := func(in string) (int, error) {
+		res, err := strconv.Atoi(strings.Trim(in, " )."))
+		if err != nil {
+			return 0, errors.New("not a valid number")
+		}
+		if res < 1 || res > len(options) {
+			return 0, errors.New("out of bounds")
+		}
+		return res - 1, nil
+	}
+
+	res, err := AskAndValidate(io, "Give the number of an option: ", n, func(option string) error {
+		_, err := parseFunc(option)
+		return err
+	})
+	if err != nil {
+		return 0, err
+	}
+	return parseFunc(res)
+}
+
 type Option struct {
 	Value   string
 	Display string
@@ -220,7 +272,7 @@ func (o Option) String() string {
 	return o.Display
 }
 
-func Choose(io IO, question string, getOptions func() ([]Option, bool, error), addOwn bool, optionName string) (string, error) {
+func ChooseDynamicOptions(io IO, question string, getOptions func() ([]Option, bool, error), addOwn bool, optionName string) (string, error) {
 	r, w, err := io.Prompts()
 	if err != nil {
 		return "", err

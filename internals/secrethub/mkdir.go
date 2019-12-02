@@ -34,7 +34,7 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 func (cmd *MkDirCommand) Register(r command.Registerer) {
 	clause := r.Command("mkdir", "Create a new directory.")
 	clause.Arg("dir-path", "The path to the directory").Required().PlaceHolder(dirPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flag("parents", "Create parent directories if needed. Does not error when directories already exist.").Short('p').BoolVar(&cmd.parents)
+	clause.Flag("parents", "Create parent directories if needed. Does not error when directories already exist.").BoolVar(&cmd.parents)
 
 	command.BindAction(clause, cmd.Run)
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
@@ -113,26 +112,15 @@ func (cmd *InitCommand) Run() error {
 		}
 		return signupCommand.Run()
 	case InitModeBackupCode:
-		filterFunc := func(code string) string {
-			reg := regexp.MustCompile("[^a-zA-Z0-9]+")
-			return reg.ReplaceAllString(code, "")
-		}
-
 		backupCode := cmd.backupCode
 
 		if backupCode == "" {
 			var err error
-			backupCode, err = ui.AskAndValidate(cmd.io, "What is your backup code?\n", 3, func(code string) error {
-				if len(filterFunc(code)) != 64 {
-					return errors.New("code should consist of 64 hexadecimal characters")
-				}
-				return nil
-			})
+			backupCode, err = ui.AskAndValidate(cmd.io, "What is your backup code?\n", 3, credentials.ValidateBootstrapCode)
 			if err != nil {
 				return err
 			}
 		}
-		backupCode = filterFunc(backupCode)
 
 		client, err := cmd.newClientWithoutCredentials(credentials.UseBackupCode(backupCode))
 		if err != nil {

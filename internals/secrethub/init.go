@@ -113,13 +113,14 @@ func (cmd *InitCommand) Run() error {
 		}
 		return signupCommand.Run()
 	case InitModeBackupCode:
-		backupCode := cmd.backupCode
-		if backupCode == "" {
-			filterFunc := func(code string) string {
-				reg := regexp.MustCompile("[^a-zA-Z0-9]+")
-				return reg.ReplaceAllString(code, "")
-			}
+		filterFunc := func(code string) string {
+			reg := regexp.MustCompile("[^a-zA-Z0-9]+")
+			return reg.ReplaceAllString(code, "")
+		}
 
+		backupCode := cmd.backupCode
+
+		if backupCode == "" {
 			var err error
 			backupCode, err = ui.AskAndValidate(cmd.io, "What is your backup code?\n", 3, func(code string) error {
 				if len(filterFunc(code)) != 64 {
@@ -130,8 +131,8 @@ func (cmd *InitCommand) Run() error {
 			if err != nil {
 				return err
 			}
-			backupCode = filterFunc(backupCode)
 		}
+		backupCode = filterFunc(backupCode)
 
 		client, err := cmd.newClientWithoutCredentials(credentials.UseBackupCode(backupCode))
 		if err != nil {

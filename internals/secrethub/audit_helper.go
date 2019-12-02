@@ -6,7 +6,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
-func getAuditActor(event *api.Audit) (string, error) {
+func getAuditActor(event api.Audit) (string, error) {
 	if event.Actor.Deleted {
 		return event.Actor.ActorID.String(), nil
 	}
@@ -21,7 +21,7 @@ func getAuditActor(event *api.Audit) (string, error) {
 	return "", ErrInvalidAuditActor
 }
 
-func getAuditSubject(event *api.Audit, tree *api.Tree) (string, error) {
+func getAuditSubject(event api.Audit, tree *api.Tree) (string, error) {
 	if event.Subject.Deleted {
 		return event.Subject.SubjectID.String(), nil
 	}
@@ -65,7 +65,7 @@ func getAuditSubject(event *api.Audit, tree *api.Tree) (string, error) {
 
 }
 
-func getEventAction(event *api.Audit) string {
+func getEventAction(event api.Audit) string {
 	action := event.Action
 	subjectType := event.Subject.Type
 

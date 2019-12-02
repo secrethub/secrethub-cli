@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-CONF_DIR=$(pkg-config --variable=completionsdir bash-completion)
+CONF_DIR=$(pkg-config --variable=completionsdir bash-completion 2> /dev/null) || true
 if [ "${CONF_DIR}" != "" ]; then
   BASH_COMPLETION_DIR=$CONF_DIR
 elif [ -d /usr/share/bash-completion/completions/ ]; then

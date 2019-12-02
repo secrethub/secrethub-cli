@@ -161,9 +161,11 @@ func (app *App) registerCommands() {
 	NewACLCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewServiceCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewAccountCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
+	NewCredentialCommand(app.io, app.clientFactory, app.credentialStore).Register(app.cli)
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
 
 	// Commands
+	NewInitCommand(app.io, app.clientFactory.NewUnauthenticatedClient, app.clientFactory.NewClientWithCredentials, app.credentialStore).Register(app.cli)
 	NewSignUpCommand(app.io, app.clientFactory.NewUnauthenticatedClient, app.credentialStore).Register(app.cli)
 	NewWriteCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewReadCommand(app.io, app.clientFactory.NewClient).Register(app.cli)

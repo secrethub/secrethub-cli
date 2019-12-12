@@ -31,6 +31,7 @@ func NewOrgListUsersCommand(io ui.IO, newClient newClientFunc) *OrgListUsersComm
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgListUsersCommand) Register(r command.Registerer) {
 	clause := r.Command("list-users", "List all members of an organization.")
+	clause.Alias("list-members")
 	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 

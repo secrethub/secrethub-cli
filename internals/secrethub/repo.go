@@ -22,6 +22,9 @@ func NewRepoCommand(io ui.IO, newClient newClientFunc) *RepoCommand {
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *RepoCommand) Register(r command.Registerer) {
 	clause := r.Command("repo", "Manage repositories.")
+	clause.Alias("repository")
+	clause.Alias("repos")
+	clause.Alias("repositories")
 	NewRepoInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewRepoInspectCommand(cmd.io, cmd.newClient).Register(clause)
 	NewRepoInviteCommand(cmd.io, cmd.newClient).Register(clause)

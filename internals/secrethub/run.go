@@ -83,6 +83,7 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 
 	clause := r.Command("run", helpShort)
 	clause.HelpLong(helpLong)
+	clause.Alias("exec")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&cmd.envFile)

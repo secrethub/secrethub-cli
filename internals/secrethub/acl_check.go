@@ -5,6 +5,8 @@ import (
 	"sort"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
@@ -43,8 +45,21 @@ func (cmd *ACLCheckCommand) Run() error {
 		return err
 	}
 
-	levels, err := client.AccessRules().ListLevels(cmd.path.Value())
-	if err != nil {
+	path := cmd.path.Value()
+
+	levels, err := client.AccessRules().ListLevels(path)
+	if api.IsErrNotFound(err) {
+		isSecret, err := client.Secrets().Exists(path)
+		if err != nil {
+			return err
+		}
+		if isSecret {
+			levels, err = client.AccessRules().ListLevels(secretpath.Parent(path))
+			if err != nil {
+				return err
+			}
+		}
+	} else if err != nil {
 		return err
 	}
 

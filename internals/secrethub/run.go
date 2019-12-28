@@ -16,6 +16,8 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -53,21 +55,24 @@ const (
 // defined with --envar or --env-file flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
-	command              []string
-	envar                map[string]string
-	envFile              string
-	templateVars         map[string]string
-	templateVersion      string
-	env                  string
-	noMasking            bool
-	maskingTimeout       time.Duration
-	newClient            newClientFunc
-	ignoreMissingSecrets bool
+	io                       ui.IO
+	command                  []string
+	envar                    map[string]string
+	envFile                  string
+	templateVars             map[string]string
+	templateVersion          string
+	env                      string
+	noMasking                bool
+	maskingTimeout           time.Duration
+	newClient                newClientFunc
+	ignoreMissingSecrets     bool
+	dontPromptMissingSecrets bool
 }
 
 // NewRunCommand creates a new RunCommand.
-func NewRunCommand(newClient newClientFunc) *RunCommand {
+func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 	return &RunCommand{
+		io:           io,
 		envar:        make(map[string]string),
 		templateVars: make(map[string]string),
 		newClient:    newClient,
@@ -94,6 +99,7 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
 	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
+	clause.Flag("no-prompt", "Do not prompt when a secret does not exist and return an error instead.").BoolVar(&cmd.dontPromptMissingSecrets)
 
 	command.BindAction(clause, cmd.Run)
 }
@@ -182,8 +188,10 @@ func (cmd *RunCommand) Run() error {
 			secrets[path] = ""
 		}
 	}
-
 	var sr tpl.SecretReader = newSecretReader(cmd.newClient)
+	if !cmd.dontPromptMissingSecrets {
+		sr = newPromptMissingSecretReader(cmd.io, sr)
+	}
 	if cmd.ignoreMissingSecrets {
 		sr = newIgnoreMissingSecretReader(sr)
 	}
@@ -196,7 +204,6 @@ func (cmd *RunCommand) Run() error {
 		}
 		secrets[path] = secret
 	}
-
 	// Construct the environment, sourcing variables from the configured sources.
 	environment := make(map[string]string)
 	for _, source := range envSources {

@@ -474,7 +474,8 @@ func TestRunCommand_Run(t *testing.T) {
 						},
 					}, nil
 				},
-				ignoreMissingSecrets: false,
+				ignoreMissingSecrets:     false,
+				dontPromptMissingSecrets: true,
 			},
 			err: api.ErrSecretNotFound,
 		},
@@ -495,7 +496,8 @@ func TestRunCommand_Run(t *testing.T) {
 						},
 					}, nil
 				},
-				ignoreMissingSecrets: true,
+				ignoreMissingSecrets:     true,
+				dontPromptMissingSecrets: true,
 			},
 			err: nil,
 		},
@@ -516,7 +518,8 @@ func TestRunCommand_Run(t *testing.T) {
 						},
 					}, nil
 				},
-				ignoreMissingSecrets: true,
+				ignoreMissingSecrets:     true,
+				dontPromptMissingSecrets: true,
 			},
 			err: nil,
 		},

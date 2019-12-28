@@ -1,6 +1,9 @@
 package secrethub
 
 import (
+	"fmt"
+
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
@@ -78,6 +81,29 @@ func (sr *ignoreMissingSecretReader) ReadSecret(path string) (string, error) {
 	secret, err := sr.secretReader.ReadSecret(path)
 	if isErrNotFound(err) {
 		return "", nil
+	}
+	return secret, err
+}
+
+func newPromptMissingSecretReader(io ui.IO, reader tpl.SecretReader) tpl.SecretReader {
+	return &promptMissingSecretReader{
+		io:           io,
+		secretReader: reader,
+	}
+}
+
+type promptMissingSecretReader struct {
+	secretReader tpl.SecretReader
+	io           ui.IO
+}
+
+// ReadSecret uses the underlying secret reader to read the secret and
+// prompts the user for any missing secrets.
+func (sr *promptMissingSecretReader) ReadSecret(path string) (string, error) {
+	secret, err := sr.secretReader.ReadSecret(path)
+	if isErrNotFound(err) {
+		question := fmt.Sprintf("%s=", path)
+		secret, err = ui.AskSecret(sr.io, question)
 	}
 	return secret, err
 }

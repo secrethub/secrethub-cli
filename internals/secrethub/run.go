@@ -205,6 +205,7 @@ func (cmd *RunCommand) Run() error {
 		}
 		secrets[path] = secret
 	}
+
 	// Construct the environment, sourcing variables from the configured sources.
 	environment := make(map[string]string)
 	for _, source := range envSources {

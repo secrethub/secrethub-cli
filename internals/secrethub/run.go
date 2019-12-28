@@ -189,11 +189,11 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 	var sr tpl.SecretReader = newSecretReader(cmd.newClient)
-	if !cmd.dontPromptMissingSecrets {
-		sr = newPromptMissingSecretReader(cmd.io, sr)
-	}
 	if cmd.ignoreMissingSecrets {
 		sr = newIgnoreMissingSecretReader(sr)
+	}
+	if !cmd.dontPromptMissingSecrets {
+		sr = newPromptMissingSecretReader(cmd.io, sr)
 	}
 	secretReader := newBufferedSecretReader(sr)
 

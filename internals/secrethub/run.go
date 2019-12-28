@@ -188,6 +188,7 @@ func (cmd *RunCommand) Run() error {
 			secrets[path] = ""
 		}
 	}
+
 	var sr tpl.SecretReader = newSecretReader(cmd.newClient)
 	if cmd.ignoreMissingSecrets {
 		sr = newIgnoreMissingSecretReader(sr)

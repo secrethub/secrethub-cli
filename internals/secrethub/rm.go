@@ -71,7 +71,7 @@ func (cmd *RmCommand) Run() error {
 				return ErrCannotRemoveDir
 			}
 			return rmDir(client, dirPath, cmd.force, cmd.io)
-		} else if err != api.ErrDirNotFound {
+		} else if !api.IsErrNotFound(err) {
 			return err
 		}
 	}
@@ -87,7 +87,7 @@ func (cmd *RmCommand) Run() error {
 
 	// Check if the secret exists first so we can return a generic error here instead of ErrSecretNotFound.
 	_, err = client.Secrets().Get(secretPath.Value())
-	if err == api.ErrSecretNotFound {
+	if api.IsErrNotFound(err) {
 		return ErrResourceNotFound(cmd.path)
 	}
 

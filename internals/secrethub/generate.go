@@ -37,6 +37,7 @@ type GenerateSecretCommand struct {
 	secondArg           string
 	lengthArg           intValue
 	includes            []string
+	excludes            []string
 	copyToClipboard     bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
@@ -60,6 +61,7 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Flag("include", "Include given characters in the set of characters to randomly choose a password from.").StringsVar(&cmd.includes)
+	clause.Flag("exclude", "Ensure the password does not contain any characters from the given character set.").StringsVar(&cmd.excludes)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
 
 	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
@@ -86,12 +88,21 @@ func (cmd *GenerateSecretCommand) before() error {
 		}
 	}
 
-	for _, include := range cmd.includes {
-		charsetToInclude, found := randchar.CharsetByName(include)
+	for _, charsetName := range cmd.includes {
+		charsetToInclude, found := randchar.CharsetByName(charsetName)
 		if found {
 			charset = charset.Add(charsetToInclude)
 		} else {
-			return fmt.Errorf("could not find charset: %s", include)
+			return fmt.Errorf("could not find charset: %s", charsetName)
+		}
+	}
+
+	for _, charsetName := range cmd.excludes {
+		charsetToExclude, found := randchar.CharsetByName(charsetName)
+		if found {
+			charset = charset.Subtract(charsetToExclude)
+		} else {
+			return fmt.Errorf("could not find charset: %s", charsetName)
 		}
 	}
 

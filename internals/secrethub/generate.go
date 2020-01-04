@@ -36,6 +36,7 @@ type GenerateSecretCommand struct {
 	firstArg            string
 	secondArg           string
 	lengthArg           intValue
+	includes            []string
 	copyToClipboard     bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
@@ -58,9 +59,10 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause.HelpLong("By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
 	clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
-	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
+	clause.Flag("include", "Include given characters in the set of characters to randomly choose a password from.").StringsVar(&cmd.includes)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
 
+	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
@@ -74,7 +76,29 @@ func (cmd *GenerateSecretCommand) before() error {
 		return err
 	}
 
-	cmd.generator = randchar.NewGenerator(useSymbols)
+	charset := randchar.Alphanumeric
+	if useSymbols {
+		symbols, found := randchar.CharsetByName("symbols")
+		if found {
+			charset = charset.Add(symbols)
+		} else {
+			return fmt.Errorf("could not find charset: %s", "symbols")
+		}
+	}
+
+	for _, include := range cmd.includes {
+		charsetToInclude, found := randchar.CharsetByName(include)
+		if found {
+			charset = charset.Add(charsetToInclude)
+		} else {
+			return fmt.Errorf("could not find charset: %s", include)
+		}
+	}
+
+	cmd.generator, err = randchar.NewRand(charset)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

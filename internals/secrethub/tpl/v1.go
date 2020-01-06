@@ -40,8 +40,8 @@ func (p parserV1) Parse(raw string, _, _ int) (Template, error) {
 
 // InjectVars takes a map of template variables with their corresponding values. It replaces
 // the template variables with their values in the template.
-func (t templateV1) Evaluate(vars map[string]string, sr SecretReader) (string, error) {
-	if len(vars) > 0 {
+func (t templateV1) Evaluate(varReader VariableReader, sr SecretReader) (string, error) {
+	if varReader != nil {
 		return "", ErrTemplateVarsNotSupported
 	}
 

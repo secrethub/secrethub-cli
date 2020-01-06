@@ -28,7 +28,7 @@ func NewV2Parser() Parser {
 }
 
 type context struct {
-	vars         map[string]string
+	varReader    VariableReader
 	secretReader SecretReader
 }
 
@@ -62,9 +62,9 @@ type variable struct {
 }
 
 func (v variable) evaluate(ctx context) (string, error) {
-	res, ok := ctx.vars[v.key]
-	if !ok {
-		return "", ErrTemplateVarNotFound(v.key)
+	res, err := ctx.varReader.ReadVariable(v.key)
+	if err != nil {
+		return "", err
 	}
 	return res, nil
 }
@@ -434,11 +434,16 @@ type SecretReader interface {
 	ReadSecret(path string) (string, error)
 }
 
+// VariableReader fetches a template variable by its name.
+type VariableReader interface {
+	ReadVariable(name string) (string, error)
+}
+
 // Evaluate renders a template. It replaces all variable- and secret tags in the template.
 // The supplied variables should have lowercase keys.
-func (t templateV2) Evaluate(vars map[string]string, sr SecretReader) (string, error) {
+func (t templateV2) Evaluate(varReader VariableReader, sr SecretReader) (string, error) {
 	ctx := context{
-		vars:         vars,
+		varReader:    varReader,
 		secretReader: sr,
 	}
 

@@ -118,6 +118,8 @@ func (cmd *InjectCommand) Run() error {
 		}
 	}
 
+	templateVariableReader := newVariableReader(templateVars)
+
 	parser, err := getTemplateParser(raw, cmd.templateVersion)
 	if err != nil {
 		return err
@@ -128,7 +130,7 @@ func (cmd *InjectCommand) Run() error {
 		return err
 	}
 
-	injected, err := template.Evaluate(templateVars, newSecretReader(cmd.newClient))
+	injected, err := template.Evaluate(templateVariableReader, newSecretReader(cmd.newClient))
 	if err != nil {
 		return err
 	}

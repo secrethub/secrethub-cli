@@ -147,6 +147,8 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
+	variableReader := newVariableReader(templateVars)
+
 	if cmd.envFile != "" {
 		raw, err := ioutil.ReadFile(cmd.envFile)
 		if err != nil {
@@ -158,7 +160,7 @@ func (cmd *RunCommand) Run() error {
 			return err
 		}
 
-		envFile, err := ReadEnvFile(cmd.envFile, templateVars, parser)
+		envFile, err := ReadEnvFile(cmd.envFile, variableReader, parser)
 		if err != nil {
 			return err
 		}
@@ -356,8 +358,8 @@ type EnvSource interface {
 }
 
 type envTemplate struct {
-	envVars      []envvarTpls
-	templateVars map[string]string
+	envVars           []envvarTpls
+	templateVarReader tpl.VariableReader
 }
 
 type envvarTpls struct {
@@ -377,7 +379,7 @@ func (sr secretReaderNotAllowed) ReadSecret(path string) (string, error) {
 func (t envTemplate) Env(secrets map[string]string, sr tpl.SecretReader) (map[string]string, error) {
 	result := make(map[string]string)
 	for _, tpls := range t.envVars {
-		key, err := tpls.key.Evaluate(t.templateVars, secretReaderNotAllowed{})
+		key, err := tpls.key.Evaluate(t.templateVarReader, secretReaderNotAllowed{})
 		if err != nil {
 			return nil, err
 		}
@@ -387,7 +389,7 @@ func (t envTemplate) Env(secrets map[string]string, sr tpl.SecretReader) (map[st
 			return nil, templateError(tpls.lineNo, err)
 		}
 
-		value, err := tpls.value.Evaluate(t.templateVars, sr)
+		value, err := tpls.value.Evaluate(t.templateVarReader, sr)
 		if err != nil {
 			return nil, err
 		}
@@ -411,12 +413,12 @@ func (t envTemplate) Secrets() []string {
 }
 
 // ReadEnvFile reads and parses a .env file.
-func ReadEnvFile(filepath string, vars map[string]string, parser tpl.Parser) (EnvFile, error) {
+func ReadEnvFile(filepath string, varReader tpl.VariableReader, parser tpl.Parser) (EnvFile, error) {
 	r, err := os.Open(filepath)
 	if err != nil {
 		return EnvFile{}, ErrCannotReadFile(filepath, err)
 	}
-	env, err := NewEnv(r, vars, parser)
+	env, err := NewEnv(r, varReader, parser)
 	if err != nil {
 		return EnvFile{}, err
 	}
@@ -448,7 +450,7 @@ func (e EnvFile) Secrets() []string {
 
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
-func NewEnv(r io.Reader, vars map[string]string, parser tpl.Parser) (EnvSource, error) {
+func NewEnv(r io.Reader, varReader tpl.VariableReader, parser tpl.Parser) (EnvSource, error) {
 	env, err := parseEnvironment(r)
 	if err != nil {
 		return nil, err
@@ -479,8 +481,8 @@ func NewEnv(r io.Reader, vars map[string]string, parser tpl.Parser) (EnvSource, 
 	}
 
 	return envTemplate{
-		envVars:      secretTemplates,
-		templateVars: vars,
+		envVars:           secretTemplates,
+		templateVarReader: varReader,
 	}, nil
 }
 

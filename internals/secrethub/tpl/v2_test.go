@@ -2,6 +2,7 @@ package tpl
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
@@ -667,7 +668,7 @@ func TestV2(t *testing.T) {
 			secrets: map[string]string{
 				"company/helloworld/greeting": "world",
 			},
-			evalErr: ErrTemplateVarNotFound("app"),
+			evalErr: errors.New("variable not found: app"),
 		},
 		"missing var with spaces": {
 			raw:  "hello {{ ${ app }/greeting }}",
@@ -675,7 +676,7 @@ func TestV2(t *testing.T) {
 			secrets: map[string]string{
 				"company/helloworld/greeting": "world",
 			},
-			evalErr: ErrTemplateVarNotFound("app"),
+			evalErr: errors.New("variable not found: app"),
 		},
 	}
 
@@ -688,7 +689,7 @@ func TestV2(t *testing.T) {
 				return
 			}
 
-			actual, err := parsed.Evaluate(tc.vars, fakes.FakeSecretReader{Secrets: tc.secrets})
+			actual, err := parsed.Evaluate(fakes.FakeVariableReader{Variables: tc.vars}, fakes.FakeSecretReader{Secrets: tc.secrets})
 			assert.Equal(t, err, tc.evalErr)
 			assert.Equal(t, actual, tc.expected)
 		})

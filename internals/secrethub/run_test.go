@@ -380,9 +380,11 @@ func TestNewEnv(t *testing.T) {
 			replacements: map[string]string{
 				"company/application/db/pass": "secret",
 			},
-			templateVarReader: testTemplateVariableReader(map[string]string{
-				"app": "company/application",
-			}),
+			templateVarReader: fakes.FakeVariableReader{
+				Variables: map[string]string{
+					"app": "company/application",
+				},
+			},
 			expected: map[string]string{
 				"foo": "bar",
 				"baz": "secret",
@@ -390,9 +392,11 @@ func TestNewEnv(t *testing.T) {
 		},
 		"success with var in key": {
 			raw: "${var}=value",
-			templateVarReader: testTemplateVariableReader(map[string]string{
-				"var": "key",
-			}),
+			templateVarReader: fakes.FakeVariableReader{
+				Variables: map[string]string{
+					"var": "key",
+				},
+			},
 			expected: map[string]string{
 				"key": "value",
 			},
@@ -445,11 +449,6 @@ func TestNewEnv(t *testing.T) {
 			}
 		})
 	}
-}
-
-func testTemplateVariableReader(templateVars map[string]string) tpl.VariableReader {
-	reader, _ := newVariableReader(nil, templateVars)
-	return reader
 }
 
 func TestRunCommand_Run(t *testing.T) {

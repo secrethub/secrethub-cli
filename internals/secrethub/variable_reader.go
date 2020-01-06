@@ -2,6 +2,9 @@ package secrethub
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
@@ -11,10 +14,29 @@ type variableReader struct {
 	vars map[string]string
 }
 
-func newVariableReader(vars map[string]string) *variableReader {
-	return &variableReader{
-		vars: vars,
+func newVariableReader(osEnv map[string]string, commandTemplateVars map[string]string) (*variableReader, error) {
+	templateVars := make(map[string]string)
+
+	for k, v := range osEnv {
+		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
+			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
+			templateVars[strings.ToLower(k)] = v
+		}
 	}
+
+	for k, v := range commandTemplateVars {
+		templateVars[strings.ToLower(k)] = v
+	}
+
+	for k := range templateVars {
+		if !validation.IsEnvarNamePosix(k) {
+			return nil, ErrInvalidTemplateVar(k)
+		}
+	}
+
+	return &variableReader{
+		vars: templateVars,
+	}, nil
 }
 
 func (v *variableReader) ReadVariable(name string) (string, error) {

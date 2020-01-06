@@ -128,26 +128,10 @@ func (cmd *RunCommand) Run() error {
 		return err
 	}
 
-	templateVars := make(map[string]string)
-
-	for k, v := range osEnv {
-		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
-			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
-			templateVars[strings.ToLower(k)] = v
-		}
+	variableReader, err := newVariableReader(osEnv, cmd.templateVars)
+	if err != nil {
+		return err
 	}
-
-	for k, v := range cmd.templateVars {
-		templateVars[strings.ToLower(k)] = v
-	}
-
-	for k := range templateVars {
-		if !validation.IsEnvarNamePosix(k) {
-			return ErrInvalidTemplateVar(k)
-		}
-	}
-
-	variableReader := newVariableReader(templateVars)
 
 	if cmd.envFile != "" {
 		raw, err := ioutil.ReadFile(cmd.envFile)

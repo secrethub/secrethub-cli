@@ -5,14 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/docker/go-units"
@@ -97,28 +95,12 @@ func (cmd *InjectCommand) Run() error {
 		}
 	}
 
-	templateVars := make(map[string]string)
-
 	osEnv, _ := parseKeyValueStringsToMap(os.Environ())
 
-	for k, v := range osEnv {
-		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
-			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
-			templateVars[strings.ToLower(k)] = v
-		}
+	templateVariableReader, err := newVariableReader(osEnv, cmd.templateVars)
+	if err != nil {
+		return err
 	}
-
-	for k, v := range cmd.templateVars {
-		templateVars[strings.ToLower(k)] = v
-	}
-
-	for k := range templateVars {
-		if !validation.IsEnvarNamePosix(k) {
-			return ErrInvalidTemplateVar(k)
-		}
-	}
-
-	templateVariableReader := newVariableReader(templateVars)
 
 	parser, err := getTemplateParser(raw, cmd.templateVersion)
 	if err != nil {

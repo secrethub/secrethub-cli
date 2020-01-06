@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
@@ -38,6 +39,7 @@ type GenerateSecretCommand struct {
 	lengthArg           intValue
 	includes            []string
 	excludes            []string
+	mins                []string
 	copyToClipboard     bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
@@ -62,6 +64,7 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Flag("include", "Include given characters in the set of characters to randomly choose a password from.").StringsVar(&cmd.includes)
 	clause.Flag("exclude", "Ensure the password does not contain any characters from the given character set.").StringsVar(&cmd.excludes)
+	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set.").StringsVar(&cmd.mins)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
 
 	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
@@ -106,7 +109,16 @@ func (cmd *GenerateSecretCommand) before() error {
 		}
 	}
 
-	cmd.generator, err = randchar.NewRand(charset)
+	var options []randchar.Option
+	for _, minFlag := range cmd.mins {
+		charset, count, err := parseMinFlag(minFlag)
+		if err != nil {
+			return err
+		}
+		options = append(options, randchar.Min(count, charset))
+	}
+
+	cmd.generator, err = randchar.NewRand(charset, options...)
 	if err != nil {
 		return err
 	}
@@ -170,6 +182,31 @@ func (cmd *GenerateSecretCommand) run() error {
 	}
 
 	return nil
+}
+
+// parseMinFlag takes a min flag value of the following format:
+// <charset>:<count>
+// and returns the charset and count specified in the flag or error
+// if the flag has an invalid format.
+func parseMinFlag(flag string) (randchar.Charset, int, error) {
+	elements := strings.Split(flag, ":")
+	if len(elements) != 2 {
+		return randchar.Charset{}, 0, nil
+	}
+
+	count, err := strconv.Atoi(elements[1])
+	if err != nil {
+		return randchar.Charset{}, 0, fmt.Errorf("second part of --min flag is not an integer: %s", elements[1])
+	} else if count <= 0 {
+		return randchar.Charset{}, 0, fmt.Errorf("second part of --min flag is not strictly positive: %s", elements[1])
+	}
+
+	charset, found := randchar.CharsetByName(elements[0])
+	if !found {
+		return randchar.Charset{}, 0, fmt.Errorf("could not find charset: %s", elements[0])
+	}
+
+	return charset, count, nil
 }
 
 func (cmd *GenerateSecretCommand) length() (int, error) {

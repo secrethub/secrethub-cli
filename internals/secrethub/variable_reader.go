@@ -14,6 +14,9 @@ type variableReader struct {
 	vars map[string]string
 }
 
+// newVariableReader returns a new template variable reader that fetches template variables from the
+// specified OS environment variables and commandFlags. An error is returned if any of the provided variable
+// names is invalid.
 func newVariableReader(osEnv map[string]string, commandTemplateVars map[string]string) (*variableReader, error) {
 	templateVars := make(map[string]string)
 
@@ -39,6 +42,7 @@ func newVariableReader(osEnv map[string]string, commandTemplateVars map[string]s
 	}, nil
 }
 
+// ReadVariable fetches a template variable by name and errors if it is not found.
 func (v *variableReader) ReadVariable(name string) (string, error) {
 	variable, ok := v.vars[name]
 	if !ok {
@@ -59,6 +63,7 @@ func newPromptMissingVariableReader(reader tpl.VariableReader, io ui.IO) *prompt
 	}
 }
 
+// ReadVariable fetches a template variable and prompts the user if it is not found.
 func (p *promptMissingVariableReader) ReadVariable(name string) (string, error) {
 	variable, err := p.reader.ReadVariable(name)
 	if err == tpl.ErrTemplateVarNotFound(name) {

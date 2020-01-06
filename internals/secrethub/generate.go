@@ -26,6 +26,7 @@ var (
 	ErrCannotUseLengthArgAndFlag = errGenerate.Code("length_arg_and_flag").Error("length cannot be provided as an argument and a flag at the same time")
 	ErrCouldNotFindCharSet       = errGenerate.Code("charset_not_found").ErrorPref("could not find charset: %s")
 	ErrMinFlagInvalidInteger     = errGenerate.Code("min_flag_invalid_int").ErrorPref("second part of --min flag is not an integer: %s")
+	ErrCharsetSizeNonPositive    = errGenerate.Code("charset_size_non_positive").Error("charset size must be > 0")
 )
 
 const defaultLength = 22
@@ -118,6 +119,10 @@ func (cmd *GenerateSecretCommand) before() error {
 			return err
 		}
 		options = append(options, randchar.Min(count, charset))
+	}
+
+	if charset.Size() <= 0 {
+		return ErrCharsetSizeNonPositive
 	}
 
 	cmd.generator, err = randchar.NewRand(charset, options...)

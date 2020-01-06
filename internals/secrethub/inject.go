@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
@@ -24,17 +26,18 @@ var (
 
 // InjectCommand is a command to read a secret.
 type InjectCommand struct {
-	outFile             string
-	inFile              string
-	fileMode            filemode.FileMode
-	force               bool
-	io                  ui.IO
-	useClipboard        bool
-	clearClipboardAfter time.Duration
-	clipper             clip.Clipper
-	newClient           newClientFunc
-	templateVars        map[string]string
-	templateVersion     string
+	outFile                       string
+	inFile                        string
+	fileMode                      filemode.FileMode
+	force                         bool
+	io                            ui.IO
+	useClipboard                  bool
+	clearClipboardAfter           time.Duration
+	clipper                       clip.Clipper
+	newClient                     newClientFunc
+	templateVars                  map[string]string
+	templateVersion               string
+	dontPromptMissingTemplateVars bool
 }
 
 // NewInjectCommand creates a new InjectCommand.
@@ -65,6 +68,8 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause.Flag("file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
+	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&cmd.dontPromptMissingTemplateVars)
+
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
 	command.BindAction(clause, cmd.Run)
@@ -97,9 +102,14 @@ func (cmd *InjectCommand) Run() error {
 
 	osEnv, _ := parseKeyValueStringsToMap(os.Environ())
 
-	templateVariableReader, err := newVariableReader(osEnv, cmd.templateVars)
+	var templateVariableReader tpl.VariableReader
+	templateVariableReader, err = newVariableReader(osEnv, cmd.templateVars)
 	if err != nil {
 		return err
+	}
+
+	if !cmd.dontPromptMissingTemplateVars {
+		templateVariableReader = newPromptMissingVariableReader(templateVariableReader, cmd.io)
 	}
 
 	parser, err := getTemplateParser(raw, cmd.templateVersion)

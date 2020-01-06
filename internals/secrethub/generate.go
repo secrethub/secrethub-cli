@@ -24,6 +24,8 @@ var (
 	// ErrInvalidRandLength is returned when an invalid length is given.
 	ErrInvalidRandLength         = errGenerate.Code("invalid_rand_length").Error("The secret length must be larger than 0")
 	ErrCannotUseLengthArgAndFlag = errGenerate.Code("length_arg_and_flag").Error("length cannot be provided as an argument and a flag at the same time")
+	ErrCouldNotFindCharSet       = errGenerate.Code("charset_not_found").ErrorPref("could not find charset: %s")
+	ErrMinFlagInvalidInteger     = errGenerate.Code("min_flag_invalid_int").ErrorPref("second part of --min flag is not an integer: %s")
 )
 
 const defaultLength = 22
@@ -87,7 +89,7 @@ func (cmd *GenerateSecretCommand) before() error {
 		if found {
 			charset = charset.Add(symbols)
 		} else {
-			return fmt.Errorf("could not find charset: %s", "symbols")
+			return ErrCouldNotFindCharSet("symbols")
 		}
 	}
 
@@ -96,7 +98,7 @@ func (cmd *GenerateSecretCommand) before() error {
 		if found {
 			charset = charset.Add(charsetToInclude)
 		} else {
-			return fmt.Errorf("could not find charset: %s", charsetName)
+			return ErrCouldNotFindCharSet(charsetName)
 		}
 	}
 
@@ -105,7 +107,7 @@ func (cmd *GenerateSecretCommand) before() error {
 		if found {
 			charset = charset.Subtract(charsetToExclude)
 		} else {
-			return fmt.Errorf("could not find charset: %s", charsetName)
+			return ErrCouldNotFindCharSet(charsetName)
 		}
 	}
 
@@ -196,14 +198,12 @@ func parseMinFlag(flag string) (randchar.Charset, int, error) {
 
 	count, err := strconv.Atoi(elements[1])
 	if err != nil {
-		return randchar.Charset{}, 0, fmt.Errorf("second part of --min flag is not an integer: %s", elements[1])
-	} else if count <= 0 {
-		return randchar.Charset{}, 0, fmt.Errorf("second part of --min flag is not strictly positive: %s", elements[1])
+		return randchar.Charset{}, 0, ErrMinFlagInvalidInteger(elements[1])
 	}
 
 	charset, found := randchar.CharsetByName(elements[0])
 	if !found {
-		return randchar.Charset{}, 0, fmt.Errorf("could not find charset: %s", elements[0])
+		return randchar.Charset{}, 0, ErrCouldNotFindCharSet(elements[0])
 	}
 
 	return charset, count, nil

@@ -96,20 +96,18 @@ func (cmd *GenerateSecretCommand) before() error {
 
 	for _, charsetName := range cmd.includes {
 		charsetToInclude, found := randchar.CharsetByName(charsetName)
-		if found {
-			charset = charset.Add(charsetToInclude)
-		} else {
+		if !found {
 			return ErrCouldNotFindCharSet(charsetName)
 		}
+		charset = charset.Add(charsetToInclude)
 	}
 
 	for _, charsetName := range cmd.excludes {
 		charsetToExclude, found := randchar.CharsetByName(charsetName)
-		if found {
-			charset = charset.Subtract(charsetToExclude)
-		} else {
+		if !found {
 			return ErrCouldNotFindCharSet(charsetName)
 		}
+		charset = charset.Subtract(charsetToExclude)
 	}
 
 	var options []randchar.Option

@@ -27,6 +27,7 @@ var (
 	ErrCouldNotFindCharSet       = errGenerate.Code("charset_not_found").ErrorPref("could not find charset: %s")
 	ErrMinFlagInvalidInteger     = errGenerate.Code("min_flag_invalid_int").ErrorPref("second part of --min flag is not an integer: %s")
 	ErrCharsetSizeNonPositive    = errGenerate.Code("charset_size_non_positive").Error("charset size must be > 0")
+	ErrFlagsMutuallyExclusive    = errGenerate.Code("include_exclide_flags_mutually_exclusive").ErrorPref("the following flags are mutually exclusive: --include %s, --exclude %s")
 )
 
 const defaultLength = 22
@@ -94,12 +95,14 @@ func (cmd *GenerateSecretCommand) before() error {
 		}
 	}
 
+	var includedCharsets []randchar.Charset
 	for _, charsetName := range cmd.includes {
 		charsetToInclude, found := randchar.CharsetByName(charsetName)
 		if !found {
 			return ErrCouldNotFindCharSet(charsetName)
 		}
 		charset = charset.Add(charsetToInclude)
+		includedCharsets = append(includedCharsets, charsetToInclude)
 	}
 
 	for _, charsetName := range cmd.excludes {
@@ -108,6 +111,11 @@ func (cmd *GenerateSecretCommand) before() error {
 			return ErrCouldNotFindCharSet(charsetName)
 		}
 		charset = charset.Subtract(charsetToExclude)
+		for i, includedCharset := range includedCharsets {
+			if charsetToExclude.Equals(includedCharset) {
+				return ErrFlagsMutuallyExclusive(cmd.includes[i], charsetName)
+			}
+		}
 	}
 
 	var options []randchar.Option

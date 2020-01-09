@@ -18,6 +18,7 @@ github.com/atotto/clipboard v0.1.2 h1:YZCtFu5Ie8qX2VmVTBnrqLSiU9XOWwqNRmdT3gIQzb
 github.com/atotto/clipboard v0.1.2/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aws/aws-sdk-go v1.19.38 h1:WKjobgPO4Ua1ww2NJJl2/zQNreUZxvqmEzwMlRjjm9g=
 github.com/aws/aws-sdk-go v1.19.38/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
+github.com/aws/aws-sdk-go v1.25.49/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/danieljoos/wincred v1.0.2 h1:zf4bhty2iLuwgjgpraD2E9UbvO+fe54XXGJbOwe23fU=
 github.com/danieljoos/wincred v1.0.2/go.mod h1:SnuYRW9lp1oJrZX/dXJqr0cPK5gYXqx3EJbmjhLdK9U=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
@@ -72,6 +73,8 @@ github.com/secrethub/demo-app v0.1.0 h1:HwPPxuiSvx4TBE7Qppzu3A9eHqmsBrIz4Ko8u8pq
 github.com/secrethub/demo-app v0.1.0/go.mod h1:ymjm8+WXTSDTFqsGVBNVmHSnwtZMYi7KptHvpo/fLH4=
 github.com/secrethub/secrethub-cli v0.30.0/go.mod h1:dC0wd40v+iQdV83/0rUrOa01LYq+8Yj2AtJB1vzh2ao=
 github.com/secrethub/secrethub-go v0.21.0/go.mod h1:rc2IfKKBJ4L0wGec0u4XnF5/pe0FFPE4Q1MWfrFso7s=
+github.com/secrethub/secrethub-go v0.23.1-0.20200107095959-f2362c5fc32f h1:DcbipEDRfHpTES7Zwk7LyDuUUa7r6H8itIL+cUGaDp4=
+github.com/secrethub/secrethub-go v0.23.1-0.20200107095959-f2362c5fc32f/go.mod h1:zJp3b1ebz9art/Li1jOxkb+Sn+Dw/Y7+OMOFtNvK5Aw=
 github.com/secrethub/secrethub-go v0.25.0 h1:cpYmkLRurrrw6NNE4PagPNDOn7kvY6UMrnnDxrvuI1M=
 github.com/secrethub/secrethub-go v0.25.0/go.mod h1:rc2IfKKBJ4L0wGec0u4XnF5/pe0FFPE4Q1MWfrFso7s=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=

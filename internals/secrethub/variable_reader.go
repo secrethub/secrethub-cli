@@ -17,7 +17,7 @@ type variableReader struct {
 // newVariableReader returns a new template variable reader that fetches template variables from the
 // specified OS environment variables and commandFlags. An error is returned if any of the provided variable
 // names is invalid.
-func newVariableReader(osEnv map[string]string, commandTemplateVars map[string]string) (*variableReader, error) {
+func newVariableReader(osEnv map[string]string, commandTemplateVars map[string]string) (tpl.VariableReader, error) {
 	templateVars := make(map[string]string)
 
 	for k, v := range osEnv {
@@ -56,7 +56,7 @@ type promptMissingVariableReader struct {
 	io     ui.IO
 }
 
-func newPromptMissingVariableReader(reader tpl.VariableReader, io ui.IO) *promptMissingVariableReader {
+func newPromptMissingVariableReader(reader tpl.VariableReader, io ui.IO) tpl.VariableReader {
 	return &promptMissingVariableReader{
 		reader: reader,
 		io:     io,

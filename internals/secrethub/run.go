@@ -134,17 +134,16 @@ func (cmd *RunCommand) Run() error {
 		return err
 	}
 
-	var variableReader tpl.VariableReader
-	variableReader, err = newVariableReader(osEnv, cmd.templateVars)
-	if err != nil {
-		return err
-	}
-
-	if !cmd.dontPromptMissingTemplateVar {
-		variableReader = newPromptMissingVariableReader(variableReader, cmd.io)
-	}
-
 	if cmd.envFile != "" {
+		templateVariableReader, err := newVariableReader(osEnv, cmd.templateVars)
+		if err != nil {
+			return err
+		}
+
+		if !cmd.dontPromptMissingTemplateVar {
+			templateVariableReader = newPromptMissingVariableReader(templateVariableReader, cmd.io)
+		}
+
 		raw, err := ioutil.ReadFile(cmd.envFile)
 		if err != nil {
 			return ErrCannotReadFile(cmd.envFile, err)
@@ -155,7 +154,7 @@ func (cmd *RunCommand) Run() error {
 			return err
 		}
 
-		envFile, err := ReadEnvFile(cmd.envFile, variableReader, parser)
+		envFile, err := ReadEnvFile(cmd.envFile, templateVariableReader, parser)
 		if err != nil {
 			return err
 		}

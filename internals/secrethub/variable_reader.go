@@ -67,7 +67,7 @@ func newPromptMissingVariableReader(reader tpl.VariableReader, io ui.IO) tpl.Var
 func (p *promptMissingVariableReader) ReadVariable(name string) (string, error) {
 	variable, err := p.reader.ReadVariable(name)
 	if err == tpl.ErrTemplateVarNotFound(name) {
-		question := fmt.Sprintf("%s=", name)
+		question := fmt.Sprintf("What is the value of the \"%s\" template variable?", name)
 		return ui.Ask(p.io, question)
 	} else if err != nil {
 		return "", err

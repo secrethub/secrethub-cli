@@ -28,6 +28,7 @@ var (
 	ErrMinFlagInvalidInteger     = errGenerate.Code("min_flag_invalid_int").ErrorPref("second part of --min flag is not an integer: %s")
 	ErrCharsetSizeNonPositive    = errGenerate.Code("charset_size_non_positive").Error("charset size must be > 0")
 	ErrFlagsMutuallyExclusive    = errGenerate.Code("include_exclude_flags_mutually_exclusive").ErrorPref("the following flags are mutually exclusive: --include %s, --exclude %s")
+	ErrInvalidMinFlag            = errGenerate.Code("min_flag_invalid").ErrorPref("min flag is invalid: %s")
 )
 
 const defaultLength = 22
@@ -87,12 +88,7 @@ func (cmd *GenerateSecretCommand) before() error {
 
 	charset := randchar.Alphanumeric
 	if useSymbols {
-		symbols, found := randchar.CharsetByName("symbols")
-		if found {
-			charset = charset.Add(symbols)
-		} else {
-			return ErrCouldNotFindCharSet("symbols")
-		}
+		charset = charset.Add(randchar.Symbols)
 	}
 
 	var includedCharsets []randchar.Charset
@@ -204,7 +200,7 @@ func (cmd *GenerateSecretCommand) run() error {
 func parseMinFlag(flag string) (randchar.Charset, int, error) {
 	elements := strings.Split(flag, ":")
 	if len(elements) != 2 {
-		return randchar.Charset{}, 0, nil
+		return randchar.Charset{}, 0, ErrInvalidMinFlag(flag)
 	}
 
 	count, err := strconv.Atoi(elements[1])

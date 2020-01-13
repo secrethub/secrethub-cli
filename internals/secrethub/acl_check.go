@@ -40,26 +40,8 @@ func (cmd *ACLCheckCommand) Register(r command.Registerer) {
 
 // Run prints the access level(s) on the given directory.
 func (cmd *ACLCheckCommand) Run() error {
-	client, err := cmd.newClient()
+	levels, err := cmd.listLevels()
 	if err != nil {
-		return err
-	}
-
-	path := cmd.path.Value()
-
-	levels, err := client.AccessRules().ListLevels(path)
-	if api.IsErrNotFound(err) {
-		isSecret, err := client.Secrets().Exists(path)
-		if err != nil {
-			return err
-		}
-		if isSecret {
-			levels, err = client.AccessRules().ListLevels(secretpath.Parent(path))
-			if err != nil {
-				return err
-			}
-		}
-	} else if err != nil {
 		return err
 	}
 
@@ -93,4 +75,32 @@ func (cmd *ACLCheckCommand) Run() error {
 	}
 
 	return nil
+}
+
+func (cmd *ACLCheckCommand) listLevels() ([]*api.AccessLevel, error) {
+	client, err := cmd.newClient()
+	if err != nil {
+		return nil, err
+	}
+
+	path := cmd.path.Value()
+
+	levels, err := client.AccessRules().ListLevels(path)
+	if api.IsErrNotFound(err) {
+		isSecret, isSecretErr := client.Secrets().Exists(path)
+		if isSecretErr != nil {
+			return nil, err
+		}
+		if isSecret {
+			levels, err = client.AccessRules().ListLevels(secretpath.Parent(path))
+			if err != nil {
+				return nil, err
+			}
+			return levels, nil
+		}
+	} else if err != nil {
+		return nil, err
+	}
+
+	return levels, nil
 }

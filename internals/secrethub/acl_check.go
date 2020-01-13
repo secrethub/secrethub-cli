@@ -97,6 +97,8 @@ func (cmd *ACLCheckCommand) listLevels() ([]*api.AccessLevel, error) {
 				return nil, err
 			}
 			return levels, nil
+		} else {
+			return nil, err
 		}
 	} else if err != nil {
 		return nil, err

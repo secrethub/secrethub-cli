@@ -105,5 +105,4 @@ func (cmd *ACLCheckCommand) listLevels() ([]*api.AccessLevel, error) {
 		return levels, nil
 	}
 	return nil, listLevelsErr
-
 }

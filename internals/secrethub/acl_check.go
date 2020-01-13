@@ -86,23 +86,24 @@ func (cmd *ACLCheckCommand) listLevels() ([]*api.AccessLevel, error) {
 	path := cmd.path.Value()
 
 	levels, err := client.AccessRules().ListLevels(path)
-	if api.IsErrNotFound(err) {
-		isSecret, isSecretErr := client.Secrets().Exists(path)
-		if isSecretErr != nil {
-			return nil, err
-		}
-		if isSecret {
-			levels, err = client.AccessRules().ListLevels(secretpath.Parent(path))
-			if err != nil {
-				return nil, err
-			}
-			return levels, nil
-		} else {
-			return nil, err
-		}
-	} else if err != nil {
+	if err == nil {
+		return levels, nil
+	}
+	if !api.IsErrNotFound(err) {
 		return nil, err
 	}
 
-	return levels, nil
+	isSecret, isSecretErr := client.Secrets().Exists(path)
+	if isSecretErr != nil {
+		return nil, err
+	}
+	if isSecret {
+		levels, err = client.AccessRules().ListLevels(secretpath.Parent(path))
+		if err != nil {
+			return nil, err
+		}
+		return levels, nil
+	}
+	return nil, err
+
 }

@@ -114,33 +114,27 @@ func TestPromptVariableReader(t *testing.T) {
 		"test4": "testD",
 	}
 
-	reader, err := newVariableReader(osEnv, commandTemplateVars)
-	assert.OK(t, err)
-	io := ui.NewFakeIO()
-	io.PromptIn.Reads = []string{"foobar\n"}
-	reader = newPromptMissingVariableReader(reader, io)
+	t.Run("prompt", func(t *testing.T) {
+		reader, err := newVariableReader(osEnv, commandTemplateVars)
+		assert.OK(t, err)
+		io := ui.NewFakeIO()
+		io.PromptIn.Reads = []string{"foobar\n"}
+		reader = newPromptMissingVariableReader(reader, io)
 
-	val, err := reader.ReadVariable("test5")
-	assert.Equal(t, val, "foobar")
-	assert.Equal(t, err, nil)
-}
+		val, err := reader.ReadVariable("test5")
+		assert.Equal(t, val, "foobar")
+		assert.Equal(t, err, nil)
+	})
 
-func TestPromptVariableReader_NoPrompt(t *testing.T) {
-	osEnv := map[string]string{
-		templateVarEnvVarPrefix + "TEST1": "testA",
-		templateVarEnvVarPrefix + "TEST2": "testB",
-	}
-	commandTemplateVars := map[string]string{
-		"test3": "testC",
-		"test4": "testD",
-	}
+	t.Run("no prompt", func(t *testing.T) {
+		reader, err := newVariableReader(osEnv, commandTemplateVars)
+		assert.OK(t, err)
+		io := ui.NewFakeIO()
+		reader = newPromptMissingVariableReader(reader, io)
 
-	reader, err := newVariableReader(osEnv, commandTemplateVars)
-	assert.OK(t, err)
-	io := ui.NewFakeIO()
-	reader = newPromptMissingVariableReader(reader, io)
+		val, err := reader.ReadVariable("test4")
+		assert.Equal(t, val, "testD")
+		assert.Equal(t, err, nil)
+	})
 
-	val, err := reader.ReadVariable("test4")
-	assert.Equal(t, val, "testD")
-	assert.Equal(t, err, nil)
 }

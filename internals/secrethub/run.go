@@ -37,7 +37,7 @@ var (
 	ErrReadEnvFile            = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
 	ErrEnvDirNotFound         = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
 	ErrTemplate               = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
-	ErrParsingTemplate        = errRun.Code("template_parsing_failed").ErrorPref("error while parsing template file '%s': %s")
+	ErrParsingTemplate        = errRun.Code("template_parsing_failed").ErrorPref("error while processing template file '%s': %s")
 	ErrInvalidTemplateVar     = errRun.Code("invalid_template_var").ErrorPref("template variable '%s' is invalid: template variables may only contain uppercase letters, digits, and the '_' (underscore) and are not allowed to start with a number")
 	ErrSecretsNotAllowedInKey = errRun.Code("secret_in_key").Error("secrets are not allowed in run template keys")
 )

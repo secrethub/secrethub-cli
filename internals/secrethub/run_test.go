@@ -526,6 +526,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"invalid template var: start with a number": {
 			command: RunCommand{
+				envFile: "secrethub.env",
 				templateVars: map[string]string{
 					"0foo": "value",
 				},
@@ -535,6 +536,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"invalid template var: illegal character": {
 			command: RunCommand{
+				envFile: "secrethub.env",
 				templateVars: map[string]string{
 					"foo@bar": "value",
 				},

@@ -476,7 +476,7 @@ func TestRunCommand_Run(t *testing.T) {
 				},
 				ignoreMissingSecrets: false,
 			},
-			err: api.ErrSecretNotFound,
+			err: ErrSecretNotFound{"path/to/unexisting/secret"},
 		},
 		"missing secret ignored": {
 			command: RunCommand{

@@ -91,7 +91,7 @@ func (cmd *GenerateSecretCommand) before() error {
 		charset = charset.Add(randchar.Symbols)
 	}
 
-	var includedCharsets []randchar.Charset
+	includedCharsets := make([]randchar.Charset, 0)
 	for _, charsetName := range cmd.includes {
 		charsetToInclude, found := randchar.CharsetByName(charsetName)
 		if !found {
@@ -114,7 +114,7 @@ func (cmd *GenerateSecretCommand) before() error {
 		}
 	}
 
-	var options []randchar.Option
+	options := make([]randchar.Option, 0)
 	for _, minFlag := range cmd.mins {
 		charset, count, err := parseMinFlag(minFlag)
 		if err != nil {

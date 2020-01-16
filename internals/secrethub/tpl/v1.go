@@ -4,11 +4,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/tpl"
 )
 
-// Errors
-var (
-	ErrTemplateVarsNotSupported = tplError.Code("template_vars_not_supported").Error("the v1 template syntax does not support template variables")
-)
-
 // NewV1Parser returns a parser for the v1 template syntax.
 //
 // V1 templates can contain secret paths between ${}:
@@ -40,11 +35,7 @@ func (p parserV1) Parse(raw string, _, _ int) (Template, error) {
 
 // InjectVars takes a map of template variables with their corresponding values. It replaces
 // the template variables with their values in the template.
-func (t templateV1) Evaluate(varReader VariableReader, sr SecretReader) (string, error) {
-	if varReader != nil {
-		return "", ErrTemplateVarsNotSupported
-	}
-
+func (t templateV1) Evaluate(_ VariableReader, sr SecretReader) (string, error) {
 	keys := t.template.Keys()
 	secrets := make(map[string]string, len(keys))
 	for _, path := range keys {

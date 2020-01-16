@@ -122,6 +122,7 @@ func TestPromptVariableReader(t *testing.T) {
 
 	val, err := reader.ReadVariable("test5")
 	assert.Equal(t, val, "foobar")
+	assert.Equal(t, err, nil)
 }
 
 func TestPromptVariableReader_NoPrompt(t *testing.T) {
@@ -141,4 +142,5 @@ func TestPromptVariableReader_NoPrompt(t *testing.T) {
 
 	val, err := reader.ReadVariable("test4")
 	assert.Equal(t, val, "testD")
+	assert.Equal(t, err, nil)
 }

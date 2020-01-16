@@ -46,7 +46,6 @@ var (
 			"This usually happens when you run the command in a non-Unix terminal and pipe either the input or output of the command. " +
 			"If you are sure you want to perform this action, run the same command with the --force or -f flag.")
 	ErrSecretAlreadyExists      = errMain.Code("already_exists").Error("the secret already exists. To overwrite it, run the same command with the --force or -f flag")
-	ErrSecretNotFound           = errMain.Code("secret_not_found").ErrorPref("the secret %s does not exist")
 	ErrSecretVersionNotFound    = errMain.Code("version_not_found").ErrorPref("version %s of secret %s does not exist")
 	ErrResourceNotFound         = errMain.Code("resource_not_found").ErrorPref("the resource at path %s does not exist")
 	ErrCannotAuditSecretVersion = errMain.Code("cannot_audit_version").Error("auditing a specific version of a secret is not yet supported")

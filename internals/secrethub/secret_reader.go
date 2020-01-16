@@ -1,9 +1,20 @@
 package secrethub
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-	"github.com/secrethub/secrethub-go/internals/errio"
+	"github.com/secrethub/secrethub-go/internals/api"
 )
+
+type ErrSecretNotFound struct {
+	path string
+}
+
+func (err ErrSecretNotFound) Error() string {
+	return fmt.Sprintf("secret %s not found", err.path)
+}
 
 type secretReader struct {
 	newClient newClientFunc
@@ -25,7 +36,7 @@ func (sr secretReader) ReadSecret(path string) (string, error) {
 
 	secret, err := client.Secrets().Versions().GetWithData(path)
 	if err != nil {
-		return "", err
+		return "", ErrSecretNotFound{path: path}
 	}
 
 	return string(secret.Data), nil
@@ -83,11 +94,12 @@ func (sr *ignoreMissingSecretReader) ReadSecret(path string) (string, error) {
 }
 
 // isErrNotFound returns whether the given error is caused by a un-existing resource.
-// TODO: Replace this function with github.com/secrethub/secrethub-go/blob/develop/internals/api.IsErrNotFound once that is released.
 func isErrNotFound(err error) bool {
-	statusError, ok := err.(errio.PublicStatusError)
-	if !ok {
-		return false
+	if api.IsErrNotFound(err) {
+		return true
 	}
-	return statusError.StatusCode == 404
+	if errors.As(err, &ErrSecretNotFound{}) {
+		return true
+	}
+	return false
 }

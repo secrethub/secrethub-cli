@@ -177,7 +177,7 @@ func (app *App) registerCommands() {
 	NewInspectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewAuditCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewInjectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewRunCommand(app.clientFactory.NewClient).Register(app.cli)
+	NewRunCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewPrintEnvCommand(app.cli, app.io).Register(app.cli)
 
 	// Hidden commands

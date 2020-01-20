@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -120,39 +119,56 @@ func TestPromptVariableReader(t *testing.T) {
 	assert.OK(t, err)
 
 	cases := map[string]struct {
-		promptIn string
-		varName  string
-		expected string
-		err      error
+		promptIn []string
+		varNames []string
+		expected []string
+		err      []error
 	}{
 		"prompt": {
-			promptIn: "foobar",
-			varName:  "test5",
-			expected: "foobar",
+			promptIn: []string{"foobar\n"},
+			varNames: []string{"test5"},
+			expected: []string{"foobar"},
 		},
 		"no prompt": {
-			varName:  "test4",
-			expected: "testD",
+			varNames: []string{"test4"},
+			expected: []string{"testD"},
 		},
 		"from os env": {
-			varName:  "test2",
-			expected: "testB",
+			varNames: []string{"test2"},
+			expected: []string{"testB"},
 		},
 		"template vars shadow os env": {
-			varName:  "test1",
-			expected: "testAA",
+			varNames: []string{"test1"},
+			expected: []string{"testAA"},
+		},
+		"only prompt once": {
+			promptIn: []string{"foobar\n"},
+			varNames: []string{"test8", "test8"},
+			expected: []string{"foobar", "foobar"},
+		},
+		"prompt for each new variable": {
+			promptIn: []string{"foobar\n", "foo\n"},
+			varNames: []string{"test8", "test8", "test2", "test9", "test8", "test2"},
+			expected: []string{"foobar", "foobar", "testB", "foo", "foobar", "testB"},
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			io := ui.NewFakeIO()
-			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
-			reader = newPromptMissingVariableReader(reader, io)
+			io.PromptIn.Reads = tc.promptIn
 
-			val, err := reader.ReadVariable(tc.varName)
-			assert.Equal(t, val, tc.expected)
-			assert.Equal(t, err, tc.err)
+			reader := newPromptMissingVariableReader(reader, io)
+
+			for i, varName := range tc.varNames {
+				val, err := reader.ReadVariable(varName)
+				if tc.err != nil {
+					assert.Equal(t, err, tc.err[i])
+				} else {
+					assert.OK(t, err)
+				}
+				assert.Equal(t, val, tc.expected[i])
+			}
 		})
 	}
 }

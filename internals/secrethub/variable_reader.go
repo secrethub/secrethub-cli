@@ -52,30 +52,37 @@ func (v *variableReader) ReadVariable(name string) (string, error) {
 }
 
 type promptMissingVariableReader struct {
-	reader tpl.VariableReader
-	io     ui.IO
+	reader  tpl.VariableReader
+	io      ui.IO
+	answers map[string]string
 }
 
 func newPromptMissingVariableReader(reader tpl.VariableReader, io ui.IO) tpl.VariableReader {
 	return &promptMissingVariableReader{
-		reader: reader,
-		io:     io,
+		reader:  reader,
+		io:      io,
+		answers: map[string]string{},
 	}
 }
 
 // ReadVariable fetches a template variable and prompts the user if it is not found.
 func (p *promptMissingVariableReader) ReadVariable(name string) (string, error) {
 	variable, err := p.reader.ReadVariable(name)
-	if err == tpl.ErrTemplateVarNotFound(name) {
-		question := fmt.Sprintf("What is the value of the \"%s\" template variable?\n", name)
-		answer, err := ui.Ask(p.io, question)
-		if err != nil {
-			return "", tpl.ErrTemplateVarNotFound(name)
-		}
-		return answer, nil
-	} else if err != nil {
-		return "", err
+	if err != tpl.ErrTemplateVarNotFound(name) {
+		return variable, err
 	}
+
+	variable, ok := p.answers[name]
+	if ok {
+		return variable, nil
+	}
+
+	question := fmt.Sprintf("What is the value of the \"%s\" template variable?\n", name)
+	variable, err = ui.Ask(p.io, question)
+	if err != nil {
+		return "", tpl.ErrTemplateVarNotFound(name)
+	}
+	p.answers[name] = variable
 
 	return variable, err
 }

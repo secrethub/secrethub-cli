@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -118,40 +119,40 @@ func TestPromptVariableReader(t *testing.T) {
 	reader, err := newVariableReader(osEnv, commandTemplateVars)
 	assert.OK(t, err)
 
-	t.Run("prompt", func(t *testing.T) {
-		io := ui.NewFakeIO()
-		io.PromptIn.Reads = []string{"foobar\n"}
-		reader = newPromptMissingVariableReader(reader, io)
+	cases := map[string]struct {
+		promptIn string
+		varName  string
+		expected string
+		err      error
+	}{
+		"prompt": {
+			promptIn: "foobar",
+			varName:  "test5",
+			expected: "foobar",
+		},
+		"no prompt": {
+			varName:  "test4",
+			expected: "testD",
+		},
+		"from os env": {
+			varName:  "test2",
+			expected: "testB",
+		},
+		"template vars shadow os env": {
+			varName:  "test1",
+			expected: "testAA",
+		},
+	}
 
-		val, err := reader.ReadVariable("test5")
-		assert.Equal(t, val, "foobar")
-		assert.Equal(t, err, nil)
-	})
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			io := ui.NewFakeIO()
+			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
+			reader = newPromptMissingVariableReader(reader, io)
 
-	t.Run("no prompt", func(t *testing.T) {
-		io := ui.NewFakeIO()
-		reader = newPromptMissingVariableReader(reader, io)
-
-		val, err := reader.ReadVariable("test4")
-		assert.Equal(t, val, "testD")
-		assert.Equal(t, err, nil)
-	})
-
-	t.Run("from os env", func(t *testing.T) {
-		io := ui.NewFakeIO()
-		reader = newPromptMissingVariableReader(reader, io)
-
-		val, err := reader.ReadVariable("test2")
-		assert.Equal(t, val, "testB")
-		assert.Equal(t, err, nil)
-	})
-
-	t.Run("template vars shadow os env", func(t *testing.T) {
-		io := ui.NewFakeIO()
-		reader = newPromptMissingVariableReader(reader, io)
-
-		val, err := reader.ReadVariable("test1")
-		assert.Equal(t, val, "testAA")
-		assert.Equal(t, err, nil)
-	})
+			val, err := reader.ReadVariable(tc.varName)
+			assert.Equal(t, val, tc.expected)
+			assert.Equal(t, err, tc.err)
+		})
+	}
 }

@@ -148,6 +148,21 @@ func (a *App) PrintEnv(w io.Writer, verbose bool) error {
 	return nil
 }
 
+// CheckStrictEnv checks that every environment variable that starts with the app name is recognized by the application.
+func (a *App) CheckStrictEnv() error {
+	for _, envVar := range os.Environ() {
+		key, _, match := splitVar(a.name, a.separator, envVar)
+		if match {
+			key = strings.ToUpper(key)
+			_, isKnown := a.knownEnvVars[key]
+			if !(isKnown || a.isExtraEnvVar(key)) {
+				return fmt.Errorf("environment variable set, but not recognized: %s", key)
+			}
+		}
+	}
+	return nil
+}
+
 // CommandClause represents a command clause in a command0-line application.
 type CommandClause struct {
 	*kingpin.CmdClause

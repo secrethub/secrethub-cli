@@ -22,6 +22,11 @@ func NewOrgCommand(io ui.IO, newClient newClientFunc) *OrgCommand {
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *OrgCommand) Register(r command.Registerer) {
 	clause := r.Command("org", "Manage shared organization workspaces.")
+	clause.Alias("organization")
+	clause.Alias("organisation")
+	clause.Alias("orgs")
+	clause.Alias("organizations")
+	clause.Alias("organisations")
 	NewOrgInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgInspectCommand(cmd.io, cmd.newClient).Register(clause)
 	NewOrgInviteCommand(cmd.io, cmd.newClient).Register(clause)

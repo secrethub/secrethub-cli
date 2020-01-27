@@ -359,11 +359,11 @@ func TestParseYML(t *testing.T) {
 
 func TestNewEnv(t *testing.T) {
 	cases := map[string]struct {
-		raw          string
-		replacements map[string]string
-		templateVars map[string]string
-		expected     map[string]string
-		err          error
+		raw               string
+		replacements      map[string]string
+		templateVarReader tpl.VariableReader
+		expected          map[string]string
+		err               error
 	}{
 		"success": {
 			raw: "foo=bar\nbaz={{path/to/secret}}",
@@ -380,8 +380,10 @@ func TestNewEnv(t *testing.T) {
 			replacements: map[string]string{
 				"company/application/db/pass": "secret",
 			},
-			templateVars: map[string]string{
-				"app": "company/application",
+			templateVarReader: fakes.FakeVariableReader{
+				Variables: map[string]string{
+					"app": "company/application",
+				},
 			},
 			expected: map[string]string{
 				"foo": "bar",
@@ -390,8 +392,10 @@ func TestNewEnv(t *testing.T) {
 		},
 		"success with var in key": {
 			raw: "${var}=value",
-			templateVars: map[string]string{
-				"var": "key",
+			templateVarReader: fakes.FakeVariableReader{
+				Variables: map[string]string{
+					"var": "key",
+				},
 			},
 			expected: map[string]string{
 				"key": "value",
@@ -434,7 +438,7 @@ func TestNewEnv(t *testing.T) {
 			parser, err := getTemplateParser([]byte(tc.raw), "auto")
 			assert.OK(t, err)
 
-			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVars, parser)
+			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVarReader, parser)
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {
@@ -522,6 +526,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"invalid template var: start with a number": {
 			command: RunCommand{
+				envFile: "secrethub.env",
 				templateVars: map[string]string{
 					"0foo": "value",
 				},
@@ -531,6 +536,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"invalid template var: illegal character": {
 			command: RunCommand{
+				envFile: "secrethub.env",
 				templateVars: map[string]string{
 					"foo@bar": "value",
 				},

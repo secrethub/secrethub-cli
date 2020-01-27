@@ -149,7 +149,8 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		}
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Successfully created the service account. Any host that assumes the IAM role %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", roleNameFromRole(cmd.role))
+	fmt.Fprintln(cmd.io.Stdout(), "Successfully created a new service account with ID: "+service.ServiceID)
+	fmt.Fprintf(cmd.io.Stdout(), "Any host that assumes the IAM role %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", roleNameFromRole(cmd.role))
 
 	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"sort"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
@@ -38,12 +40,7 @@ func (cmd *ACLCheckCommand) Register(r command.Registerer) {
 
 // Run prints the access level(s) on the given directory.
 func (cmd *ACLCheckCommand) Run() error {
-	client, err := cmd.newClient()
-	if err != nil {
-		return err
-	}
-
-	levels, err := client.AccessRules().ListLevels(cmd.path.Value())
+	levels, err := cmd.listLevels()
 	if err != nil {
 		return err
 	}
@@ -78,4 +75,34 @@ func (cmd *ACLCheckCommand) Run() error {
 	}
 
 	return nil
+}
+
+func (cmd *ACLCheckCommand) listLevels() ([]*api.AccessLevel, error) {
+	client, err := cmd.newClient()
+	if err != nil {
+		return nil, err
+	}
+
+	path := cmd.path.Value()
+
+	levels, listLevelsErr := client.AccessRules().ListLevels(path)
+	if listLevelsErr == nil {
+		return levels, nil
+	}
+	if !api.IsErrNotFound(listLevelsErr) {
+		return nil, listLevelsErr
+	}
+
+	isSecret, isSecretErr := client.Secrets().Exists(path)
+	if isSecretErr != nil {
+		return nil, listLevelsErr
+	}
+	if isSecret {
+		levels, err = client.AccessRules().ListLevels(secretpath.Parent(path))
+		if err != nil {
+			return nil, err
+		}
+		return levels, nil
+	}
+	return nil, listLevelsErr
 }

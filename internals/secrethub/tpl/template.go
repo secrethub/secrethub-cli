@@ -20,7 +20,7 @@ type Parser interface {
 type Template interface {
 	// Evaluate renders a template. It replaces all variable- and secret tags in the template.
 	// The supplied variables should have lowercase keys.
-	Evaluate(vars map[string]string, sr SecretReader) (string, error)
+	Evaluate(varReader VariableReader, sr SecretReader) (string, error)
 }
 
 // NewParser returns a parser for the latest template syntax.

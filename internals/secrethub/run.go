@@ -16,6 +16,8 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -37,7 +39,7 @@ var (
 	ErrReadEnvFile            = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
 	ErrEnvDirNotFound         = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
 	ErrTemplate               = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
-	ErrTemplateFile           = errRun.Code("invalid_template_file").ErrorPref("template file '%s' is invalid: %s")
+	ErrParsingTemplate        = errRun.Code("template_parsing_failed").ErrorPref("error while processing template file '%s': %s")
 	ErrInvalidTemplateVar     = errRun.Code("invalid_template_var").ErrorPref("template variable '%s' is invalid: template variables may only contain uppercase letters, digits, and the '_' (underscore) and are not allowed to start with a number")
 	ErrSecretsNotAllowedInKey = errRun.Code("secret_in_key").Error("secrets are not allowed in run template keys")
 )
@@ -53,21 +55,24 @@ const (
 // defined with --envar or --env-file flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
-	command              []string
-	envar                map[string]string
-	envFile              string
-	templateVars         map[string]string
-	templateVersion      string
-	env                  string
-	noMasking            bool
-	maskingTimeout       time.Duration
-	newClient            newClientFunc
-	ignoreMissingSecrets bool
+	command                      []string
+	io                           ui.IO
+	envar                        map[string]string
+	envFile                      string
+	templateVars                 map[string]string
+	templateVersion              string
+	env                          string
+	noMasking                    bool
+	maskingTimeout               time.Duration
+	newClient                    newClientFunc
+	ignoreMissingSecrets         bool
+	dontPromptMissingTemplateVar bool
 }
 
 // NewRunCommand creates a new RunCommand.
-func NewRunCommand(newClient newClientFunc) *RunCommand {
+func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 	return &RunCommand{
+		io:           io,
 		envar:        make(map[string]string),
 		templateVars: make(map[string]string),
 		newClient:    newClient,
@@ -83,6 +88,7 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 
 	clause := r.Command("run", helpShort)
 	clause.HelpLong(helpLong)
+	clause.Alias("exec")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
 	clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&cmd.envFile)
@@ -93,6 +99,7 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
 	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
+	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&cmd.dontPromptMissingTemplateVar)
 
 	command.BindAction(clause, cmd.Run)
 }
@@ -127,26 +134,16 @@ func (cmd *RunCommand) Run() error {
 		return err
 	}
 
-	templateVars := make(map[string]string)
-
-	for k, v := range osEnv {
-		if strings.HasPrefix(k, templateVarEnvVarPrefix) {
-			k = strings.TrimPrefix(k, templateVarEnvVarPrefix)
-			templateVars[strings.ToLower(k)] = v
-		}
-	}
-
-	for k, v := range cmd.templateVars {
-		templateVars[strings.ToLower(k)] = v
-	}
-
-	for k := range templateVars {
-		if !validation.IsEnvarNamePosix(k) {
-			return ErrInvalidTemplateVar(k)
-		}
-	}
-
 	if cmd.envFile != "" {
+		templateVariableReader, err := newVariableReader(osEnv, cmd.templateVars)
+		if err != nil {
+			return err
+		}
+
+		if !cmd.dontPromptMissingTemplateVar {
+			templateVariableReader = newPromptMissingVariableReader(templateVariableReader, cmd.io)
+		}
+
 		raw, err := ioutil.ReadFile(cmd.envFile)
 		if err != nil {
 			return ErrCannotReadFile(cmd.envFile, err)
@@ -157,7 +154,7 @@ func (cmd *RunCommand) Run() error {
 			return err
 		}
 
-		envFile, err := ReadEnvFile(cmd.envFile, templateVars, parser)
+		envFile, err := ReadEnvFile(cmd.envFile, templateVariableReader, parser)
 		if err != nil {
 			return err
 		}
@@ -355,8 +352,8 @@ type EnvSource interface {
 }
 
 type envTemplate struct {
-	envVars      []envvarTpls
-	templateVars map[string]string
+	envVars           []envvarTpls
+	templateVarReader tpl.VariableReader
 }
 
 type envvarTpls struct {
@@ -376,7 +373,7 @@ func (sr secretReaderNotAllowed) ReadSecret(path string) (string, error) {
 func (t envTemplate) Env(secrets map[string]string, sr tpl.SecretReader) (map[string]string, error) {
 	result := make(map[string]string)
 	for _, tpls := range t.envVars {
-		key, err := tpls.key.Evaluate(t.templateVars, secretReaderNotAllowed{})
+		key, err := tpls.key.Evaluate(t.templateVarReader, secretReaderNotAllowed{})
 		if err != nil {
 			return nil, err
 		}
@@ -386,7 +383,7 @@ func (t envTemplate) Env(secrets map[string]string, sr tpl.SecretReader) (map[st
 			return nil, templateError(tpls.lineNo, err)
 		}
 
-		value, err := tpls.value.Evaluate(t.templateVars, sr)
+		value, err := tpls.value.Evaluate(t.templateVarReader, sr)
 		if err != nil {
 			return nil, err
 		}
@@ -410,14 +407,14 @@ func (t envTemplate) Secrets() []string {
 }
 
 // ReadEnvFile reads and parses a .env file.
-func ReadEnvFile(filepath string, vars map[string]string, parser tpl.Parser) (EnvFile, error) {
+func ReadEnvFile(filepath string, varReader tpl.VariableReader, parser tpl.Parser) (EnvFile, error) {
 	r, err := os.Open(filepath)
 	if err != nil {
 		return EnvFile{}, ErrCannotReadFile(filepath, err)
 	}
-	env, err := NewEnv(r, vars, parser)
+	env, err := NewEnv(r, varReader, parser)
 	if err != nil {
-		return EnvFile{}, err
+		return EnvFile{}, ErrParsingTemplate(filepath, err)
 	}
 	return EnvFile{
 		path: filepath,
@@ -435,7 +432,7 @@ type EnvFile struct {
 func (e EnvFile) Env(secrets map[string]string, sr tpl.SecretReader) (map[string]string, error) {
 	env, err := e.env.Env(secrets, sr)
 	if err != nil {
-		return nil, ErrTemplateFile(e.path, err)
+		return nil, ErrParsingTemplate(e.path, err)
 	}
 	return env, nil
 }
@@ -447,7 +444,7 @@ func (e EnvFile) Secrets() []string {
 
 // NewEnv loads an environment of key-value pairs from a string.
 // The format of the string can be `key: value` or `key=value` pairs.
-func NewEnv(r io.Reader, vars map[string]string, parser tpl.Parser) (EnvSource, error) {
+func NewEnv(r io.Reader, varReader tpl.VariableReader, parser tpl.Parser) (EnvSource, error) {
 	env, err := parseEnvironment(r)
 	if err != nil {
 		return nil, err
@@ -478,8 +475,8 @@ func NewEnv(r io.Reader, vars map[string]string, parser tpl.Parser) (EnvSource, 
 	}
 
 	return envTemplate{
-		envVars:      secretTemplates,
-		templateVars: vars,
+		envVars:           secretTemplates,
+		templateVarReader: varReader,
 	}, nil
 }
 

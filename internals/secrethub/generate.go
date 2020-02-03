@@ -68,7 +68,7 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set.").SetValue(&cmd.mins)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
-	clause.Flag("charset", "Charset(s) to use when generating secret.").SetValue(&cmd.charsetFlag)
+	clause.Flag("charset", "Define the set of characters to randomly choose a password from. Defaults to alphanumeric.").SetValue(&cmd.charsetFlag)
 	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)

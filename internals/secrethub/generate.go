@@ -27,7 +27,6 @@ var (
 	ErrCouldNotFindCharSet       = errGenerate.Code("charset_not_found").ErrorPref("could not find charset: %s")
 	ErrMinFlagInvalidInteger     = errGenerate.Code("min_flag_invalid_int").ErrorPref("second part of --min flag is not an integer: %s")
 	ErrCharsetSizeNonPositive    = errGenerate.Code("charset_size_non_positive").Error("charset size must be > 0")
-	ErrFlagsMutuallyExclusive    = errGenerate.Code("include_exclude_flags_mutually_exclusive").ErrorPref("the following flags are mutually exclusive: --include %s, --exclude %s")
 	ErrInvalidMinFlag            = errGenerate.Code("min_flag_invalid").ErrorPref("min flag must be of the form <charset name>:<minimum count>, invalid min flag: %s")
 )
 

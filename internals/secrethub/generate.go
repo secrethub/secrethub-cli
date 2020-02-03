@@ -43,7 +43,7 @@ type GenerateSecretCommand struct {
 	secondArg           string
 	lengthArg           intValue
 	charsetFlag         charsetValue
-	mins                []string
+	mins                optionsValue
 	copyToClipboard     bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
@@ -66,7 +66,7 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause.HelpLong("By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
 	clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
-	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set.").StringsVar(&cmd.mins)
+	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set.").SetValue(&cmd.mins)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
 	clause.Flag("charset", "Charset(s) to use when generating secret.").SetValue(&cmd.charsetFlag)
 	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
@@ -88,20 +88,11 @@ func (cmd *GenerateSecretCommand) before() error {
 		charset = charset.Add(randchar.Symbols)
 	}
 
-	options := make([]randchar.Option, 0)
-	for _, minFlag := range cmd.mins {
-		charset, count, err := parseMinFlag(minFlag)
-		if err != nil {
-			return err
-		}
-		options = append(options, randchar.Min(count, charset))
-	}
-
 	if charset.Size() <= 0 {
 		return ErrCharsetSizeNonPositive
 	}
 
-	cmd.generator, err = randchar.NewRand(charset, options...)
+	cmd.generator, err = randchar.NewRand(charset, cmd.mins.options...)
 	if err != nil {
 		return err
 	}
@@ -167,29 +158,6 @@ func (cmd *GenerateSecretCommand) run() error {
 	return nil
 }
 
-// parseMinFlag takes a min flag value of the following format:
-// <charset>:<count>
-// and returns the charset and count specified in the flag or error
-// if the flag has an invalid format.
-func parseMinFlag(flag string) (randchar.Charset, int, error) {
-	elements := strings.Split(flag, ":")
-	if len(elements) != 2 {
-		return randchar.Charset{}, 0, ErrInvalidMinFlag(flag)
-	}
-
-	count, err := strconv.Atoi(elements[1])
-	if err != nil {
-		return randchar.Charset{}, 0, ErrMinFlagInvalidInteger(elements[1])
-	}
-
-	charset, found := randchar.CharsetByName(elements[0])
-	if !found {
-		return randchar.Charset{}, 0, ErrCouldNotFindCharSet(elements[0])
-	}
-
-	return charset, count, nil
-}
-
 func (cmd *GenerateSecretCommand) length() (int, error) {
 	if cmd.lengthArg.IsSet() && cmd.lengthFlag.IsSet() {
 		return 0, ErrCannotUseLengthArgAndFlag
@@ -231,6 +199,38 @@ func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {
 	}
 
 	return false, nil
+}
+
+type optionsValue struct {
+	options []randchar.Option
+}
+
+func (v *optionsValue) String() string {
+	return ""
+}
+
+func (v *optionsValue) Set(flagValue string) error {
+	elements := strings.Split(flagValue, ":")
+	if len(elements) != 2 {
+		return ErrInvalidMinFlag(flagValue)
+	}
+
+	count, err := strconv.Atoi(elements[1])
+	if err != nil {
+		return ErrMinFlagInvalidInteger(elements[1])
+	}
+
+	charset, found := randchar.CharsetByName(elements[0])
+	if !found {
+		return ErrCouldNotFindCharSet(elements[0])
+	}
+
+	v.options = append(v.options, randchar.Min(count, charset))
+	return nil
+}
+
+func (v *optionsValue) IsCumulative() bool {
+	return true
 }
 
 type charsetValue struct {

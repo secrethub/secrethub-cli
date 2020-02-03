@@ -26,7 +26,6 @@ var (
 	ErrCannotUseLengthArgAndFlag = errGenerate.Code("length_arg_and_flag").Error("length cannot be provided as an argument and a flag at the same time")
 	ErrCouldNotFindCharSet       = errGenerate.Code("charset_not_found").ErrorPref("could not find charset: %s")
 	ErrMinFlagInvalidInteger     = errGenerate.Code("min_flag_invalid_int").ErrorPref("second part of --min flag is not an integer: %s")
-	ErrCharsetSizeNonPositive    = errGenerate.Code("charset_size_non_positive").Error("charset size must be > 0")
 	ErrInvalidMinFlag            = errGenerate.Code("min_flag_invalid").ErrorPref("min flag must be of the form <charset name>:<minimum count>, invalid min flag: %s")
 )
 
@@ -67,7 +66,7 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set.").SetValue(&cmd.mins)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
-	clause.Flag("charset", "Define the set of characters to randomly choose a password from. Defaults to alphanumeric.").SetValue(&cmd.charsetFlag)
+	clause.Flag("charset", "Define the set of characters to randomly choose a password from. Defaults to alphanumeric.").Default("alphanumeric").SetValue(&cmd.charsetFlag)
 	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
@@ -85,10 +84,6 @@ func (cmd *GenerateSecretCommand) before() error {
 	charset := cmd.charsetFlag.v
 	if useSymbols {
 		charset = charset.Add(randchar.Symbols)
-	}
-
-	if charset.Size() <= 0 {
-		return ErrCharsetSizeNonPositive
 	}
 
 	cmd.generator, err = randchar.NewRand(charset, cmd.mins.v...)

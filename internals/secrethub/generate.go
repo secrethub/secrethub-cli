@@ -42,8 +42,7 @@ type GenerateSecretCommand struct {
 	firstArg            string
 	secondArg           string
 	lengthArg           intValue
-	includes            []string
-	excludes            []string
+	charsetFlag         charsetValue
 	mins                []string
 	copyToClipboard     bool
 	clearClipboardAfter time.Duration
@@ -67,11 +66,9 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause.HelpLong("By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
 	clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
-	clause.Flag("include", "Include given characters in the set of characters to randomly choose a password from.").StringsVar(&cmd.includes)
-	clause.Flag("exclude", "Ensure the password does not contain any characters from the given character set.").StringsVar(&cmd.excludes)
 	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set.").StringsVar(&cmd.mins)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
-
+	clause.Flag("charset", "Charset(s) to use when generating secret.").SetValue(&cmd.charsetFlag)
 	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
@@ -86,32 +83,9 @@ func (cmd *GenerateSecretCommand) before() error {
 		return err
 	}
 
-	charset := randchar.Alphanumeric
+	charset := cmd.charsetFlag.charset
 	if useSymbols {
 		charset = charset.Add(randchar.Symbols)
-	}
-
-	includedCharsets := make([]randchar.Charset, 0)
-	for _, charsetName := range cmd.includes {
-		charsetToInclude, found := randchar.CharsetByName(charsetName)
-		if !found {
-			return ErrCouldNotFindCharSet(charsetName)
-		}
-		charset = charset.Add(charsetToInclude)
-		includedCharsets = append(includedCharsets, charsetToInclude)
-	}
-
-	for _, charsetName := range cmd.excludes {
-		charsetToExclude, found := randchar.CharsetByName(charsetName)
-		if !found {
-			return ErrCouldNotFindCharSet(charsetName)
-		}
-		charset = charset.Subtract(charsetToExclude)
-		for i, includedCharset := range includedCharsets {
-			if charsetToExclude.Equals(includedCharset) {
-				return ErrFlagsMutuallyExclusive(cmd.includes[i], charsetName)
-			}
-		}
 	}
 
 	options := make([]randchar.Option, 0)
@@ -257,6 +231,30 @@ func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {
 	}
 
 	return false, nil
+}
+
+type charsetValue struct {
+	charset randchar.Charset
+}
+
+func (c *charsetValue) String() string {
+	return ""
+}
+
+func (c *charsetValue) Set(flagValue string) error {
+	charsetNames := strings.Split(flagValue, ",")
+	for _, charsetName := range charsetNames {
+		charset, ok := randchar.CharsetByName(charsetName)
+		if !ok {
+			return ErrCouldNotFindCharSet(charsetName)
+		}
+		c.charset = c.charset.Add(charset)
+	}
+	return nil
+}
+
+func (c *charsetValue) IsCumulative() bool {
+	return true
 }
 
 type intValue struct {

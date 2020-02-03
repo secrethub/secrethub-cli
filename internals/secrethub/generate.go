@@ -83,7 +83,7 @@ func (cmd *GenerateSecretCommand) before() error {
 		return err
 	}
 
-	charset := cmd.charsetFlag.charset
+	charset := cmd.charsetFlag.v
 	if useSymbols {
 		charset = charset.Add(randchar.Symbols)
 	}
@@ -92,7 +92,7 @@ func (cmd *GenerateSecretCommand) before() error {
 		return ErrCharsetSizeNonPositive
 	}
 
-	cmd.generator, err = randchar.NewRand(charset, cmd.mins.options...)
+	cmd.generator, err = randchar.NewRand(charset, cmd.mins.v...)
 	if err != nil {
 		return err
 	}
@@ -202,14 +202,14 @@ func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {
 }
 
 type optionsValue struct {
-	options []randchar.Option
+	v []randchar.Option
 }
 
-func (v *optionsValue) String() string {
+func (ov *optionsValue) String() string {
 	return ""
 }
 
-func (v *optionsValue) Set(flagValue string) error {
+func (ov *optionsValue) Set(flagValue string) error {
 	elements := strings.Split(flagValue, ":")
 	if len(elements) != 2 {
 		return ErrInvalidMinFlag(flagValue)
@@ -225,35 +225,35 @@ func (v *optionsValue) Set(flagValue string) error {
 		return ErrCouldNotFindCharSet(elements[0])
 	}
 
-	v.options = append(v.options, randchar.Min(count, charset))
+	ov.v = append(ov.v, randchar.Min(count, charset))
 	return nil
 }
 
-func (v *optionsValue) IsCumulative() bool {
+func (ov *optionsValue) IsCumulative() bool {
 	return true
 }
 
 type charsetValue struct {
-	charset randchar.Charset
+	v randchar.Charset
 }
 
-func (c *charsetValue) String() string {
+func (cv *charsetValue) String() string {
 	return ""
 }
 
-func (c *charsetValue) Set(flagValue string) error {
+func (cv *charsetValue) Set(flagValue string) error {
 	charsetNames := strings.Split(flagValue, ",")
 	for _, charsetName := range charsetNames {
 		charset, ok := randchar.CharsetByName(charsetName)
 		if !ok {
 			return ErrCouldNotFindCharSet(charsetName)
 		}
-		c.charset = c.charset.Add(charset)
+		cv.v = cv.v.Add(charset)
 	}
 	return nil
 }
 
-func (c *charsetValue) IsCumulative() bool {
+func (cv *charsetValue) IsCumulative() bool {
 	return true
 }
 

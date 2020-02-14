@@ -110,6 +110,11 @@ func (cmd *RunCommand) Run() error {
 	// Parse
 	envSources := []EnvSource{}
 
+	osEnv, passthroughEnv := parseKeyValueStringsToMap(os.Environ())
+
+	osEnvSource := NewOsEnvSource(osEnv)
+	envSources = append(envSources, osEnvSource)
+
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
 	flagSource, err := NewEnvFlags(cmd.envar)
 	if err != nil {
@@ -127,11 +132,6 @@ func (cmd *RunCommand) Run() error {
 		} else {
 			cmd.envFile = defaultEnvFile
 		}
-	}
-
-	osEnv, passthroughEnv := parseKeyValueStringsToMap(os.Environ())
-	if err != nil {
-		return err
 	}
 
 	if cmd.envFile != "" {
@@ -420,6 +420,48 @@ func ReadEnvFile(filepath string, varReader tpl.VariableReader, parser tpl.Parse
 		path: filepath,
 		env:  env,
 	}, nil
+}
+
+// OsEnv is an environment with secrets configured with the
+// secrethub:// syntax in the os environment variables.
+type OsEnv struct {
+	envVars map[string]string
+}
+
+// NewOsEnvSource returns an environment with secrets configured in the
+// os environment with the secrethub:// syntax.
+func NewOsEnvSource(osEnv map[string]string) *OsEnv {
+	envVars := make(map[string]string)
+	for key, value := range osEnv {
+		if strings.HasPrefix(value, "secrethub://") {
+			envVars[key] = strings.TrimPrefix(value, "secrethub://")
+		}
+	}
+	return &OsEnv{
+		envVars: envVars,
+	}
+}
+
+// Env returns a map of key value pairs with the secrets configured with the
+// secrethub:// syntax.
+func (env *OsEnv) Env(secrets map[string]string, _ tpl.SecretReader) (map[string]string, error) {
+	envVarsWithSecrets := make(map[string]string)
+	for key, path := range env.envVars {
+		envVarsWithSecrets[key] = secrets[path]
+	}
+	return envVarsWithSecrets, nil
+}
+
+// Secrets returns a slice of secrets used in the environment, namely the ones
+// configured with the secrethub:// syntax.
+func (env *OsEnv) Secrets() []string {
+	secrets := make([]string, len(env.envVars))
+	i := 0
+	for _, path := range env.envVars {
+		secrets[i] = path
+		i++
+	}
+	return secrets
 }
 
 // EnvFile contains an environment that is read from a file.

@@ -49,6 +49,9 @@ const (
 	// templateVarEnvVarPrefix is used to prefix environment variables
 	// that should be used as template variables.
 	templateVarEnvVarPrefix = "SECRETHUB_VAR_"
+	// prefix of the values of environment variables that will be
+	// substituted with secrets
+	secretReferencePrefix = "secrethub://"
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -435,8 +438,8 @@ type referenceEnv struct {
 func newReferenceEnv(osEnv map[string]string) *referenceEnv {
 	envVars := make(map[string]string)
 	for key, value := range osEnv {
-		if strings.HasPrefix(value, "secrethub://") {
-			envVars[key] = strings.TrimPrefix(value, "secrethub://")
+		if strings.HasPrefix(value, secretReferencePrefix) {
+			envVars[key] = strings.TrimPrefix(value, secretReferencePrefix)
 		}
 	}
 	return &referenceEnv{

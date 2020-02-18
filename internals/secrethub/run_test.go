@@ -550,6 +550,46 @@ func TestRunCommand_Run(t *testing.T) {
 			},
 			err: ErrInvalidTemplateVar("foo@bar"),
 		},
+		"os env secret not found": {
+			command: RunCommand{
+				osEnv: func() []string {
+					return []string{"TEST=secrethub://nonexistent/secret/path"}
+				},
+				command: []string{"echo", "test"},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			err: api.ErrSecretNotFound,
+		},
+		"os env secret not found ignored": {
+			command: RunCommand{
+				osEnv: func() []string {
+					return []string{"TEST=secrethub://nonexistent/secret/path"}
+				},
+				ignoreMissingSecrets: true,
+				command:              []string{"echo", "test"},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+			},
+		},
 	}
 
 	for name, tc := range cases {

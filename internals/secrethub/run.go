@@ -60,7 +60,7 @@ const (
 type RunCommand struct {
 	command                      []string
 	io                           ui.IO
-	osEnv                        func() []string
+	osEnv                        []string
 	envar                        map[string]string
 	envFile                      string
 	templateVars                 map[string]string
@@ -77,7 +77,7 @@ type RunCommand struct {
 func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 	return &RunCommand{
 		io:           io,
-		osEnv:        os.Environ,
+		osEnv:        os.Environ(),
 		envar:        make(map[string]string),
 		templateVars: make(map[string]string),
 		newClient:    newClient,
@@ -115,7 +115,7 @@ func (cmd *RunCommand) Run() error {
 	// Parse
 	envSources := []EnvSource{}
 
-	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv())
+	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv)
 
 	referenceEnv := newReferenceEnv(osEnv)
 	envSources = append(envSources, referenceEnv)

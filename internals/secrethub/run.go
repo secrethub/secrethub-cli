@@ -114,8 +114,8 @@ func (cmd *RunCommand) Run() error {
 
 	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv())
 
-	osEnvSource := NewOsEnvSource(osEnv)
-	envSources = append(envSources, osEnvSource)
+	referenceEnv := NewReferenceEnv(osEnv)
+	envSources = append(envSources, referenceEnv)
 
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
 	flagSource, err := NewEnvFlags(cmd.envar)
@@ -424,29 +424,29 @@ func ReadEnvFile(filepath string, varReader tpl.VariableReader, parser tpl.Parse
 	}, nil
 }
 
-// OsEnv is an environment with secrets configured with the
+// referenceEnv is an environment with secrets configured with the
 // secrethub:// syntax in the os environment variables.
-type OsEnv struct {
+type referenceEnv struct {
 	envVars map[string]string
 }
 
-// NewOsEnvSource returns an environment with secrets configured in the
+// NewReferenceEnv returns an environment with secrets configured in the
 // os environment with the secrethub:// syntax.
-func NewOsEnvSource(osEnv map[string]string) *OsEnv {
+func NewReferenceEnv(osEnv map[string]string) *referenceEnv {
 	envVars := make(map[string]string)
 	for key, value := range osEnv {
 		if strings.HasPrefix(value, "secrethub://") {
 			envVars[key] = strings.TrimPrefix(value, "secrethub://")
 		}
 	}
-	return &OsEnv{
+	return &referenceEnv{
 		envVars: envVars,
 	}
 }
 
 // Env returns a map of key value pairs with the secrets configured with the
 // secrethub:// syntax.
-func (env *OsEnv) Env(_ map[string]string, secretReader tpl.SecretReader) (map[string]string, error) {
+func (env *referenceEnv) Env(_ map[string]string, secretReader tpl.SecretReader) (map[string]string, error) {
 	envVarsWithSecrets := make(map[string]string)
 	for key, path := range env.envVars {
 		secret, err := secretReader.ReadSecret(path)
@@ -458,9 +458,7 @@ func (env *OsEnv) Env(_ map[string]string, secretReader tpl.SecretReader) (map[s
 	return envVarsWithSecrets, nil
 }
 
-// Secrets returns a slice of secrets used in the environment, namely the ones
-// configured with the secrethub:// syntax.
-func (env *OsEnv) Secrets() []string {
+func (env *referenceEnv) Secrets() []string {
 	return nil
 }
 

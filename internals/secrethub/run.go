@@ -446,10 +446,14 @@ func NewOsEnvSource(osEnv map[string]string) *OsEnv {
 
 // Env returns a map of key value pairs with the secrets configured with the
 // secrethub:// syntax.
-func (env *OsEnv) Env(secrets map[string]string, _ tpl.SecretReader) (map[string]string, error) {
+func (env *OsEnv) Env(_ map[string]string, secretReader tpl.SecretReader) (map[string]string, error) {
 	envVarsWithSecrets := make(map[string]string)
 	for key, path := range env.envVars {
-		envVarsWithSecrets[key] = secrets[path]
+		secret, err := secretReader.ReadSecret(path)
+		if err != nil {
+			return nil, err
+		}
+		envVarsWithSecrets[key] = secret
 	}
 	return envVarsWithSecrets, nil
 }
@@ -457,13 +461,7 @@ func (env *OsEnv) Env(secrets map[string]string, _ tpl.SecretReader) (map[string
 // Secrets returns a slice of secrets used in the environment, namely the ones
 // configured with the secrethub:// syntax.
 func (env *OsEnv) Secrets() []string {
-	secrets := make([]string, len(env.envVars))
-	i := 0
-	for _, path := range env.envVars {
-		secrets[i] = path
-		i++
-	}
-	return secrets
+	return nil
 }
 
 // EnvFile contains an environment that is read from a file.

@@ -34,6 +34,7 @@ type InjectCommand struct {
 	useClipboard                  bool
 	clearClipboardAfter           time.Duration
 	clipper                       clip.Clipper
+	osEnv                         func() []string
 	newClient                     newClientFunc
 	templateVars                  map[string]string
 	templateVersion               string
@@ -44,6 +45,7 @@ type InjectCommand struct {
 func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 	return &InjectCommand{
 		clipper:             clip.NewClipboard(),
+		osEnv:               os.Environ,
 		clearClipboardAfter: defaultClearClipboardAfter,
 		io:                  io,
 		newClient:           newClient,
@@ -99,7 +101,7 @@ func (cmd *InjectCommand) Run() error {
 		}
 	}
 
-	osEnv, _ := parseKeyValueStringsToMap(os.Environ())
+	osEnv, _ := parseKeyValueStringsToMap(cmd.osEnv())
 
 	var templateVariableReader tpl.VariableReader
 	templateVariableReader, err = newVariableReader(osEnv, cmd.templateVars)

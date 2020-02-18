@@ -103,12 +103,12 @@ func (a *App) isExtraEnvVar(key string) bool {
 // of environment variables are not printed out for security reasons. The list
 // is limited to variables that are actually set in the environment. Setting
 // verbose to true will also include all known variables that are not set.
-func (a *App) PrintEnv(w io.Writer, verbose bool) error {
+func (a *App) PrintEnv(w io.Writer, verbose bool, osEnv func() []string) error {
 	tabWriter := tabwriter.NewWriter(w, 0, 4, 4, ' ', 0)
 	fmt.Fprintf(tabWriter, "%s\t%s\n", "NAME", "STATUS")
 
 	envVarStatus := make(map[string]string)
-	for _, envVar := range os.Environ() {
+	for _, envVar := range osEnv() {
 		key, _, match := splitVar(a.name, a.separator, envVar)
 		key = strings.ToUpper(key)
 		if match {

@@ -458,11 +458,13 @@ func TestRunCommand_Run(t *testing.T) {
 	}{
 		"success, no secrets": {
 			command: RunCommand{
+				osEnv:   func() []string { return []string{} },
 				command: []string{"echo", "test"},
 			},
 		},
 		"missing secret": {
 			command: RunCommand{
+				osEnv:   func() []string { return []string{} },
 				command: []string{"echo", "test"},
 				envar: map[string]string{
 					"missing": "path/to/unexisting/secret",
@@ -484,6 +486,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"missing secret ignored": {
 			command: RunCommand{
+				osEnv:   func() []string { return []string{} },
 				command: []string{"echo", "test"},
 				envar: map[string]string{
 					"missing": "path/to/unexisting/secret",
@@ -505,6 +508,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"repo does not exist ignored": {
 			command: RunCommand{
+				osEnv:   func() []string { return []string{} },
 				command: []string{"echo", "test"},
 				envar: map[string]string{
 					"missing": "unexisting/repo/secret",
@@ -526,6 +530,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"invalid template var: start with a number": {
 			command: RunCommand{
+				osEnv:   func() []string { return []string{} },
 				envFile: "secrethub.env",
 				templateVars: map[string]string{
 					"0foo": "value",
@@ -536,6 +541,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"invalid template var: illegal character": {
 			command: RunCommand{
+				osEnv:   func() []string { return []string{} },
 				envFile: "secrethub.env",
 				templateVars: map[string]string{
 					"foo@bar": "value",

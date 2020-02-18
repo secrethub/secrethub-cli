@@ -114,7 +114,7 @@ func (cmd *RunCommand) Run() error {
 
 	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv())
 
-	referenceEnv := NewReferenceEnv(osEnv)
+	referenceEnv := newReferenceEnv(osEnv)
 	envSources = append(envSources, referenceEnv)
 
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
@@ -430,9 +430,9 @@ type referenceEnv struct {
 	envVars map[string]string
 }
 
-// NewReferenceEnv returns an environment with secrets configured in the
+// newReferenceEnv returns an environment with secrets configured in the
 // os environment with the secrethub:// syntax.
-func NewReferenceEnv(osEnv map[string]string) *referenceEnv {
+func newReferenceEnv(osEnv map[string]string) *referenceEnv {
 	envVars := make(map[string]string)
 	for key, value := range osEnv {
 		if strings.HasPrefix(value, "secrethub://") {

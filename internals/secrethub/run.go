@@ -49,6 +49,9 @@ const (
 	// templateVarEnvVarPrefix is used to prefix environment variables
 	// that should be used as template variables.
 	templateVarEnvVarPrefix = "SECRETHUB_VAR_"
+	// prefix of the values of environment variables that will be
+	// substituted with secrets
+	secretReferencePrefix = "secrethub://"
 )
 
 // RunCommand runs a program and passes environment variables to it that are
@@ -57,7 +60,7 @@ const (
 type RunCommand struct {
 	command                      []string
 	io                           ui.IO
-	osEnv                        func() []string
+	osEnv                        []string
 	envar                        map[string]string
 	envFile                      string
 	templateVars                 map[string]string
@@ -74,7 +77,7 @@ type RunCommand struct {
 func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 	return &RunCommand{
 		io:           io,
-		osEnv:        os.Environ,
+		osEnv:        os.Environ(),
 		envar:        make(map[string]string),
 		templateVars: make(map[string]string),
 		newClient:    newClient,
@@ -112,6 +115,11 @@ func (cmd *RunCommand) Run() error {
 	// Parse
 	envSources := []EnvSource{}
 
+	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv)
+
+	referenceEnv := newReferenceEnv(osEnv)
+	envSources = append(envSources, referenceEnv)
+
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
 	flagSource, err := NewEnvFlags(cmd.envar)
 	if err != nil {
@@ -129,11 +137,6 @@ func (cmd *RunCommand) Run() error {
 		} else {
 			cmd.envFile = defaultEnvFile
 		}
-	}
-
-	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv())
-	if err != nil {
-		return err
 	}
 
 	if cmd.envFile != "" {
@@ -422,6 +425,44 @@ func ReadEnvFile(filepath string, varReader tpl.VariableReader, parser tpl.Parse
 		path: filepath,
 		env:  env,
 	}, nil
+}
+
+// referenceEnv is an environment with secrets configured with the
+// secrethub:// syntax in the os environment variables.
+type referenceEnv struct {
+	envVars map[string]string
+}
+
+// newReferenceEnv returns an environment with secrets configured in the
+// os environment with the secrethub:// syntax.
+func newReferenceEnv(osEnv map[string]string) *referenceEnv {
+	envVars := make(map[string]string)
+	for key, value := range osEnv {
+		if strings.HasPrefix(value, secretReferencePrefix) {
+			envVars[key] = strings.TrimPrefix(value, secretReferencePrefix)
+		}
+	}
+	return &referenceEnv{
+		envVars: envVars,
+	}
+}
+
+// Env returns a map of key value pairs with the secrets configured with the
+// secrethub:// syntax.
+func (env *referenceEnv) Env(_ map[string]string, secretReader tpl.SecretReader) (map[string]string, error) {
+	envVarsWithSecrets := make(map[string]string)
+	for key, path := range env.envVars {
+		secret, err := secretReader.ReadSecret(path)
+		if err != nil {
+			return nil, err
+		}
+		envVarsWithSecrets[key] = secret
+	}
+	return envVarsWithSecrets, nil
+}
+
+func (env *referenceEnv) Secrets() []string {
+	return nil
 }
 
 // EnvFile contains an environment that is read from a file.

@@ -138,7 +138,7 @@ func (cmd *RunCommand) Run() error {
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = environment
-	command.Stdin = cmd.io.Stdin()
+	command.Stdin = os.Stdin
 	if cmd.noMasking {
 		command.Stdout = cmd.io.Stdout()
 		command.Stderr = os.Stderr

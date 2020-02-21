@@ -693,7 +693,8 @@ func TestRunCommand_environment(t *testing.T) {
 			expectedSecrets: []string{"bbb"},
 			expectedEnv:     []string{"TEST=bbb"},
 		},
-		"secret reference has priority over .env file": {
+		// TODO Add test case for: envar flag has precedence over secret reference - requires refactoring of fakeclient
+		"secret reference has precedence over .env file": {
 			command: RunCommand{
 				readFile:                     readFileFuncFromMap(map[string]string{"secrethub.env": "TEST=aaa"}),
 				osStat:                       osStatFuncFromMap(map[string]error{"secrethub.env": nil}),

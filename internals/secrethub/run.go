@@ -238,14 +238,14 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	maskedStdout := masker.NewMaskedWriter(os.Stdout, valuesToMask, maskString, cmd.maskingTimeout)
+	maskedStdout := masker.NewMaskedWriter(cmd.io.Stdout(), valuesToMask, maskString, cmd.maskingTimeout)
 	maskedStderr := masker.NewMaskedWriter(os.Stderr, valuesToMask, maskString, cmd.maskingTimeout)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = append(passthroughEnv, mapToKeyValueStrings(environment)...)
-	command.Stdin = os.Stdin
+	command.Stdin = cmd.io.Stdin()
 	if cmd.noMasking {
-		command.Stdout = os.Stdout
+		command.Stdout = cmd.io.Stdout()
 		command.Stderr = os.Stderr
 	} else {
 		command.Stdout = maskedStdout

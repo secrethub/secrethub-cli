@@ -716,6 +716,39 @@ func TestRunCommand_environment(t *testing.T) {
 			expectedSecrets: []string{"bbb"},
 			expectedEnv:     []string{"TEST=bbb"},
 		},
+		".env file has precedence over other os variables": {
+			command: RunCommand{
+				readFile:                     readFileFuncFromMap(map[string]string{"secrethub.env": "TEST=aaa"}),
+				osStat:                       osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				dontPromptMissingTemplateVar: true,
+				templateVersion:              "2",
+				osEnv:                        []string{"TEST=bbb"},
+			},
+			expectedSecrets: []string{},
+			expectedEnv:     []string{"TEST=aaa"},
+		},
+		".env file secret has precedence over other os variables": {
+			command: RunCommand{
+				readFile:                     readFileFuncFromMap(map[string]string{"secrethub.env": "TEST={{path/to/secret}}"}),
+				osStat:                       osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				dontPromptMissingTemplateVar: true,
+				templateVersion:              "2",
+				osEnv:                        []string{"TEST=bbb"},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									ReturnsVersion: &api.SecretVersion{Data: []byte("aaa")},
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"aaa"},
+			expectedEnv:     []string{"TEST=aaa"},
+		},
 		"ignore missing secrets": {
 			command: RunCommand{
 				ignoreMissingSecrets: true,

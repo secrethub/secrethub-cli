@@ -840,6 +840,29 @@ func TestRunCommand_environment(t *testing.T) {
 			},
 			err: ErrParsingTemplate("secrethub.env", api.ErrSecretNotFound),
 		},
+		"template var set by flag has precedence over var set by environment": {
+			command: RunCommand{
+				command:                      []string{"/bin/sh", "./test.sh"},
+				readFile:                     readFileFuncFromMap(map[string]string{"secrethub.env": "TEST=$variable"}),
+				osStat:                       osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				dontPromptMissingTemplateVar: true,
+				templateVersion:              "2",
+				templateVars:                 map[string]string{"variable": "foo"},
+				osEnv:                        []string{"SECRETHUB_VAR_VARIABLE=bar"},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedEnv: []string{"TEST=foo", "SECRETHUB_VAR_VARIABLE=bar"},
+		},
 		"v1 template syntax success": {
 			command: RunCommand{
 				command:         []string{"/bin/sh", "./test.sh"},

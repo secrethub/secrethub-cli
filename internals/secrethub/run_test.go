@@ -648,6 +648,17 @@ func TestRunCommand_environment(t *testing.T) {
 			},
 			err: ErrParsingTemplate("secrethub.env", "template syntax error at 1:23: expected the closing of a secret tag `}}`, but reached the end of the template. (template.secret_tag_not_closed) "),
 		},
+		"default env file does not exist": {
+			command: RunCommand{
+				osStat: osStatFuncFromMap(nil),
+			},
+		},
+		"default env file exists but cannot be read": {
+			command: RunCommand{
+				osStat: osStatFuncFromMap(map[string]error{"secrethub.env": os.ErrPermission}),
+			},
+			err: ErrReadDefaultEnvFile(defaultEnvFile, os.ErrPermission),
+		},
 		"env file secret does not exist": {
 			command: RunCommand{
 				command:         []string{"echo", "test"},

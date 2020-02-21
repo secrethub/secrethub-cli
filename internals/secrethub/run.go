@@ -37,6 +37,7 @@ var (
 	ErrSignalFailed           = errRun.Code("signal_failed").ErrorPref("error while propagating signal to process: %s")
 	ErrReadEnvDir             = errRun.Code("env_dir_read_error").ErrorPref("could not read the environment directory: %s")
 	ErrReadEnvFile            = errRun.Code("env_file_read_error").ErrorPref("could not read the environment file %s: %s")
+	ErrReadDefaultEnvFile     = errRun.Code("default_env_file_read_error").ErrorPref("could not read default run env-file %s: %s")
 	ErrEnvDirNotFound         = errRun.Code("env_dir_not_found").Error(fmt.Sprintf("could not find specified environment. Make sure you have executed `%s set`.", ApplicationName))
 	ErrTemplate               = errRun.Code("invalid_template").ErrorPref("could not parse template at line %d: %s")
 	ErrParsingTemplate        = errRun.Code("template_parsing_failed").ErrorPref("error while processing template file '%s': %s")
@@ -45,7 +46,8 @@ var (
 )
 
 const (
-	maskString = "<redacted by SecretHub>"
+	defaultEnvFile = "secrethub.env"
+	maskString     = "<redacted by SecretHub>"
 	// templateVarEnvVarPrefix is used to prefix environment variables
 	// that should be used as template variables.
 	templateVarEnvVarPrefix = "SECRETHUB_VAR_"
@@ -224,12 +226,11 @@ func (cmd *RunCommand) sourceEnvironment() ([]string, []string, error) {
 	envSources = append(envSources, flagSource)
 
 	if cmd.envFile == "" {
-		const defaultEnvFile = "secrethub.env"
 		_, err := cmd.osStat(defaultEnvFile)
 		if err == nil {
 			cmd.envFile = defaultEnvFile
 		} else if !os.IsNotExist(err) {
-			return nil, nil, fmt.Errorf("could not read default run env-file %s: %s", defaultEnvFile, err)
+			return nil, nil, ErrReadDefaultEnvFile(defaultEnvFile, err)
 		}
 	}
 

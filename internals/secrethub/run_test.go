@@ -458,6 +458,10 @@ func TestNewEnv(t *testing.T) {
 }
 
 func TestRunCommand_Run(t *testing.T) {
+	osStatNotExist := func(_ string) (info os.FileInfo, err error) {
+		return nil, os.ErrNotExist
+	}
+
 	cases := map[string]struct {
 		command RunCommand
 		err     error
@@ -465,6 +469,7 @@ func TestRunCommand_Run(t *testing.T) {
 		"success, no secrets": {
 			command: RunCommand{
 				io:      ui.NewFakeIO(),
+				osStat:  osStatNotExist,
 				command: []string{"echo", "test"},
 			},
 		},
@@ -474,6 +479,7 @@ func TestRunCommand_Run(t *testing.T) {
 				envar: map[string]string{
 					"missing": "path/to/unexisting/secret",
 				},
+				osStat: osStatNotExist,
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
@@ -492,6 +498,7 @@ func TestRunCommand_Run(t *testing.T) {
 		"missing secret ignored": {
 			command: RunCommand{
 				command: []string{"echo", "test"},
+				osStat:  osStatNotExist,
 				envar: map[string]string{
 					"missing": "path/to/unexisting/secret",
 				},
@@ -517,7 +524,8 @@ func TestRunCommand_Run(t *testing.T) {
 				envar: map[string]string{
 					"missing": "unexisting/repo/secret",
 				},
-				io: ui.NewFakeIO(),
+				io:     ui.NewFakeIO(),
+				osStat: osStatNotExist,
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
@@ -536,6 +544,7 @@ func TestRunCommand_Run(t *testing.T) {
 		"invalid template var: start with a number": {
 			command: RunCommand{
 				envFile: "secrethub.env",
+				osStat:  osStatNotExist,
 				templateVars: map[string]string{
 					"0foo": "value",
 				},
@@ -546,6 +555,7 @@ func TestRunCommand_Run(t *testing.T) {
 		"invalid template var: illegal character": {
 			command: RunCommand{
 				envFile: "secrethub.env",
+				osStat:  osStatNotExist,
 				templateVars: map[string]string{
 					"foo@bar": "value",
 				},
@@ -558,6 +568,7 @@ func TestRunCommand_Run(t *testing.T) {
 				osEnv:   []string{"TEST=secrethub://nonexistent/secret/path"},
 				command: []string{"echo", "test"},
 				io:      ui.NewFakeIO(),
+				osStat:  osStatNotExist,
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
@@ -578,6 +589,7 @@ func TestRunCommand_Run(t *testing.T) {
 				ignoreMissingSecrets: true,
 				command:              []string{"echo", "test"},
 				io:                   ui.NewFakeIO(),
+				osStat:               osStatNotExist,
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
@@ -601,27 +613,46 @@ func TestRunCommand_Run(t *testing.T) {
 	}
 }
 
-func TestRunCommand_RunWithFile(t *testing.T) {
+func readFileFuncFromMap(files map[string]string) func(string) ([]byte, error) {
+	return func(filename string) ([]byte, error) {
+		if data, ok := files[filename]; ok {
+			return []byte(data), nil
+		}
+		return nil, os.ErrNotExist
+	}
+}
+
+func osStatFuncFromMap(errs map[string]error) func(string) (os.FileInfo, error) {
+	return func(filename string) (os.FileInfo, error) {
+		if err, ok := errs[filename]; ok {
+			return nil, err
+		}
+		return nil, os.ErrNotExist
+	}
+}
+
+func TestRunCommand_environment(t *testing.T) {
 	cases := map[string]struct {
-		envFileContent string
-		script         string
-		command        RunCommand
-		err            error
-		expectedStdOut string
+		command         RunCommand
+		expectedEnv     []string
+		expectedSecrets []string
+		err             error
 	}{
 		"invalid template syntax": {
-			envFileContent: "TEST= {{ unexistent/secret/path }",
 			command: RunCommand{
 				command:         []string{"echo", "test"},
+				readFile:        readFileFuncFromMap(map[string]string{"secrethub.env": "TEST={{path/to/secret}"}),
+				osStat:          osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
 				envFile:         "secrethub.env",
 				templateVersion: "2",
 			},
-			err: ErrParsingTemplate(os.TempDir()+"/secrethub.env", "template syntax error at 1:34: expected the closing of a secret tag `}}`, but reached the end of the template. (template.secret_tag_not_closed) "),
+			err: ErrParsingTemplate("secrethub.env", "template syntax error at 1:23: expected the closing of a secret tag `}}`, but reached the end of the template. (template.secret_tag_not_closed) "),
 		},
 		"env file secret does not exist": {
-			envFileContent: "TEST= {{ unexistent/secret/path }}",
 			command: RunCommand{
 				command:         []string{"echo", "test"},
+				readFile:        readFileFuncFromMap(map[string]string{"secrethub.env": "TEST= {{ unexistent/secret/path }}"}),
+				osStat:          osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
 				envFile:         "secrethub.env",
 				templateVersion: "2",
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -636,15 +667,13 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 					}, nil
 				},
 			},
-			err: ErrParsingTemplate(os.TempDir()+"/secrethub.env", api.ErrSecretNotFound),
+			err: ErrParsingTemplate("secrethub.env", api.ErrSecretNotFound),
 		},
 		"envar flag has precedence over env file": {
-			envFileContent: "TEST=aaa",
-			script:         "echo $TEST",
 			command: RunCommand{
-				command:   []string{"/bin/sh", "./test.sh"},
-				noMasking: true,
-				envFile:   "secrethub.env",
+				readFile: readFileFuncFromMap(map[string]string{"secrethub.env": "TEST=aaa"}),
+				osStat:   osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				envFile:  "secrethub.env",
 				envar: map[string]string{
 					"TEST": "test/test/test",
 				},
@@ -661,13 +690,183 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 					}, nil
 				},
 			},
-			expectedStdOut: "bbb\n",
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"TEST=bbb"},
 		},
+		"secret reference has priority over .env file": {
+			command: RunCommand{
+				readFile:                     readFileFuncFromMap(map[string]string{"secrethub.env": "TEST=aaa"}),
+				osStat:                       osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				dontPromptMissingTemplateVar: true,
+				templateVersion:              "2",
+				osEnv:                        []string{"TEST=secrethub://test/test/test"},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"TEST=bbb"},
+		},
+		"ignore missing secrets": {
+			command: RunCommand{
+				ignoreMissingSecrets: true,
+				envFile:              "secrethub.env",
+				readFile:             readFileFuncFromMap(map[string]string{"secrethub.env": ""}),
+				osStat:               osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				envar: map[string]string{
+					"TEST": "test/test/test",
+				},
+				templateVersion: "2",
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedEnv:     []string{"TEST="},
+			expectedSecrets: []string{""},
+		},
+		"--no-prompt": {
+			command: RunCommand{
+				readFile:                     readFileFuncFromMap(map[string]string{"secrethub.env": "TEST = {{ test/$variable/test }}"}),
+				osStat:                       osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				noMasking:                    true,
+				dontPromptMissingTemplateVar: true,
+				envFile:                      "secrethub.env",
+				templateVersion:              "2",
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			err: ErrParsingTemplate("secrethub.env", tpl.ErrTemplateVarNotFound("variable")),
+		},
+		"template var set in os environment": {
+			command: RunCommand{
+				readFile:                     readFileFuncFromMap(map[string]string{"secrethub.env": "TEST = {{ test/$variable/test }}"}),
+				osStat:                       osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				noMasking:                    true,
+				dontPromptMissingTemplateVar: true,
+				templateVersion:              "2",
+				osEnv:                        []string{"SECRETHUB_VAR_VARIABLE=test"},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			err: ErrParsingTemplate("secrethub.env", api.ErrSecretNotFound),
+		},
+		"template var set by flag": {
+			command: RunCommand{
+				command:                      []string{"/bin/sh", "./test.sh"},
+				readFile:                     readFileFuncFromMap(map[string]string{"secrethub.env": "TEST = {{ test/$variable/test }}"}),
+				osStat:                       osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				dontPromptMissingTemplateVar: true,
+				templateVersion:              "2",
+				templateVars:                 map[string]string{"variable": "test"},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									Err: api.ErrSecretNotFound,
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			err: ErrParsingTemplate("secrethub.env", api.ErrSecretNotFound),
+		},
+		"v1 template syntax success": {
+			command: RunCommand{
+				command:         []string{"/bin/sh", "./test.sh"},
+				readFile:        readFileFuncFromMap(map[string]string{"secrethub.env": "TEST= ${path/to/secret}"}),
+				osStat:          osStatFuncFromMap(map[string]error{"secrethub.env": nil}),
+				templateVersion: "1",
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								WithDataGetter: fakeclient.WithDataGetter{
+									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"TEST=bbb"},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			env, secrets, err := tc.command.sourceEnvironment()
+			assert.Equal(t, env, tc.expectedEnv)
+			assert.Equal(t, secrets, tc.expectedSecrets)
+			assert.Equal(t, err, tc.err)
+		})
+	}
+}
+
+func TestRunCommand_RunWithFile(t *testing.T) {
+	readFileWithContent := func(content string) func(string) ([]byte, error) {
+		return func(_ string) ([]byte, error) {
+			return []byte(content), nil
+		}
+	}
+
+	osStatOnlySecrethubEnv := func(filename string) (info os.FileInfo, err error) {
+		if filename == "secrethub.env" {
+			return nil, nil
+		}
+		return nil, os.ErrNotExist
+	}
+
+	cases := map[string]struct {
+		envFileContent string
+		script         string
+		command        RunCommand
+		err            error
+		expectedStdOut string
+	}{
 		"--no-masking flag": {
 			script: "echo $TEST",
 			command: RunCommand{
 				command:   []string{"/bin/sh", "./test.sh"},
 				noMasking: true,
+				osStat:    osStatOnlySecrethubEnv,
+				readFile:  readFileWithContent(""),
 				envFile:   "secrethub.env",
 				envar: map[string]string{
 					"TEST": "test/test/test",
@@ -690,8 +889,10 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 		"secret masking": {
 			script: "echo $TEST",
 			command: RunCommand{
-				command: []string{"/bin/sh", "./test.sh"},
-				envFile: "secrethub.env",
+				command:  []string{"/bin/sh", "./test.sh"},
+				envFile:  "secrethub.env",
+				readFile: readFileWithContent(""),
+				osStat:   osStatOnlySecrethubEnv,
 				envar: map[string]string{
 					"TEST": "test/test/test",
 				},
@@ -709,148 +910,6 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 				},
 			},
 			expectedStdOut: maskString + "\n",
-		},
-		"ignore missing secrets": {
-			script: "echo $TEST",
-			command: RunCommand{
-				command:              []string{"/bin/sh", "./test.sh"},
-				noMasking:            true,
-				ignoreMissingSecrets: true,
-				envFile:              "secrethub.env",
-				envar: map[string]string{
-					"TEST": "test/test/test",
-				},
-				templateVersion: "2",
-				newClient: func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						SecretService: &fakeclient.SecretService{
-							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
-								},
-							},
-						},
-					}, nil
-				},
-			},
-			expectedStdOut: "\n",
-		},
-		"--no-prompt": {
-			script:         "echo $TEST",
-			envFileContent: "TEST = {{ test/$variable/test }}",
-			command: RunCommand{
-				command:                      []string{"/bin/sh", "./test.sh"},
-				noMasking:                    true,
-				dontPromptMissingTemplateVar: true,
-				envFile:                      "secrethub.env",
-				templateVersion:              "2",
-				newClient: func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						SecretService: &fakeclient.SecretService{
-							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
-								},
-							},
-						},
-					}, nil
-				},
-			},
-			err: ErrParsingTemplate(os.TempDir()+"/secrethub.env", tpl.ErrTemplateVarNotFound("variable")),
-		},
-		"template var set in os environment": {
-			script:         "echo $TEST",
-			envFileContent: "TEST = {{ test/$variable/test }}",
-			command: RunCommand{
-				command:                      []string{"/bin/sh", "./test.sh"},
-				noMasking:                    true,
-				dontPromptMissingTemplateVar: true,
-				envFile:                      "secrethub.env",
-				templateVersion:              "2",
-				osEnv:                        []string{"SECRETHUB_VAR_VARIABLE=test"},
-				newClient: func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						SecretService: &fakeclient.SecretService{
-							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
-								},
-							},
-						},
-					}, nil
-				},
-			},
-			err: ErrParsingTemplate(os.TempDir()+"/secrethub.env", api.ErrSecretNotFound),
-		},
-		"template var set by flag": {
-			script:         "echo $TEST",
-			envFileContent: "TEST = {{ test/$variable/test }}",
-			command: RunCommand{
-				command:                      []string{"/bin/sh", "./test.sh"},
-				noMasking:                    true,
-				dontPromptMissingTemplateVar: true,
-				envFile:                      "secrethub.env",
-				templateVersion:              "2",
-				templateVars:                 map[string]string{"variable": "test"},
-				newClient: func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						SecretService: &fakeclient.SecretService{
-							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
-								},
-							},
-						},
-					}, nil
-				},
-			},
-			err: ErrParsingTemplate(os.TempDir()+"/secrethub.env", api.ErrSecretNotFound),
-		},
-		"secret reference has priority over .env file": {
-			script:         "echo $TEST",
-			envFileContent: "TEST=aaa",
-			command: RunCommand{
-				command:                      []string{"/bin/sh", "./test.sh"},
-				noMasking:                    true,
-				dontPromptMissingTemplateVar: true,
-				envFile:                      "secrethub.env",
-				templateVersion:              "2",
-				osEnv:                        []string{"TEST=secrethub://test/test/test"},
-				newClient: func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						SecretService: &fakeclient.SecretService{
-							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
-								},
-							},
-						},
-					}, nil
-				},
-			},
-			expectedStdOut: "bbb\n",
-		},
-		"v1 template syntax success": {
-			envFileContent: "TEST= ${path/to/secret}",
-			script:         "echo $TEST",
-			command: RunCommand{
-				command:         []string{"/bin/sh", "./test.sh"},
-				noMasking:       true,
-				envFile:         "secrethub.env",
-				templateVersion: "1",
-				newClient: func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						SecretService: &fakeclient.SecretService{
-							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
-								},
-							},
-						},
-					}, nil
-				},
-			},
-			expectedStdOut: "bbb\n",
 		},
 	}
 

@@ -1,6 +1,8 @@
 package secrethub
 
 import (
+	"os"
+
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -10,20 +12,22 @@ import (
 type PrintEnvCommand struct {
 	app     *cli.App
 	io      ui.IO
+	osEnv   func() []string
 	verbose bool
 }
 
 // NewPrintEnvCommand creates a new PrintEnvCommand.
 func NewPrintEnvCommand(app *cli.App, io ui.IO) *PrintEnvCommand {
 	return &PrintEnvCommand{
-		app: app,
-		io:  io,
+		app:   app,
+		io:    io,
+		osEnv: os.Environ,
 	}
 }
 
 // Run prints out debug statements about all environment variables.
 func (cmd *PrintEnvCommand) Run() error {
-	err := cmd.app.PrintEnv(cmd.io.Stdout(), cmd.verbose)
+	err := cmd.app.PrintEnv(cmd.io.Stdout(), cmd.verbose, cmd.osEnv)
 	if err != nil {
 		return err
 	}

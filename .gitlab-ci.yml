@@ -1,0 +1,6 @@
+release:
+  trigger: secrethub/operations/cli-releaser
+  variables:
+    SECRETHUB_CLI_VERSION: $CI_COMMIT_TAG
+  only:
+    - tags

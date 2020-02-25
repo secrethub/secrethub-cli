@@ -943,7 +943,6 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		envFileContent string
 		script         string
 		command        RunCommand
 		err            error
@@ -1004,16 +1003,9 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			envFile := filepath.Join(os.TempDir(), tc.command.envFile)
-			err := ioutil.WriteFile(envFile, []byte(tc.envFileContent), os.ModePerm)
-			if err != nil {
-				log.Fatal("Cannot create file for test", err)
-			}
-			defer os.Remove(envFile)
-
 			if tc.script != "" {
 				scriptFile := filepath.Join(os.TempDir(), tc.command.command[1])
-				err = ioutil.WriteFile(scriptFile, []byte(tc.script), os.ModePerm)
+				err := ioutil.WriteFile(scriptFile, []byte(tc.script), os.ModePerm)
 				if err != nil {
 					log.Fatal("Cannot create file for test", err)
 				}
@@ -1024,9 +1016,7 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 			fakeIO := ui.NewFakeIO()
 			tc.command.io = fakeIO
 
-			tc.command.envFile = envFile
-
-			err = tc.command.Run()
+			err := tc.command.Run()
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, fakeIO.StdOut.String(), tc.expectedStdOut)
 		})

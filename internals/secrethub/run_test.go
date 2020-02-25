@@ -935,7 +935,7 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 		}
 	}
 
-	osStatOnlySecrethubEnv := func(filename string) (info os.FileInfo, err error) {
+	osStatOnlySecretHubEnv := func(filename string) (info os.FileInfo, err error) {
 		if filename == "secrethub.env" {
 			return nil, nil
 		}
@@ -953,7 +953,7 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 			command: RunCommand{
 				command:   []string{"/bin/sh", "./test.sh"},
 				noMasking: true,
-				osStat:    osStatOnlySecrethubEnv,
+				osStat:    osStatOnlySecretHubEnv,
 				readFile:  readFileWithContent(""),
 				envFile:   "secrethub.env",
 				envar: map[string]string{
@@ -980,7 +980,7 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 				command:  []string{"/bin/sh", "./test.sh"},
 				envFile:  "secrethub.env",
 				readFile: readFileWithContent(""),
-				osStat:   osStatOnlySecrethubEnv,
+				osStat:   osStatOnlySecretHubEnv,
 				envar: map[string]string{
 					"TEST": "test/test/test",
 				},

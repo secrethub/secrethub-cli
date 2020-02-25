@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -921,6 +922,12 @@ func TestRunCommand_environment(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			env, secrets, err := tc.command.sourceEnvironment()
+
+			sort.Strings(env)
+			sort.Strings(tc.expectedEnv)
+			sort.Strings(secrets)
+			sort.Strings(tc.expectedSecrets)
+
 			assert.Equal(t, env, tc.expectedEnv)
 			assert.Equal(t, secrets, tc.expectedSecrets)
 			assert.Equal(t, err, tc.err)

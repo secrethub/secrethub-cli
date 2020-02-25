@@ -659,6 +659,27 @@ func TestRunCommand_environment(t *testing.T) {
 			},
 			err: ErrReadDefaultEnvFile(defaultEnvFile, os.ErrPermission),
 		},
+		"custom env file does not exist": {
+			command: RunCommand{
+				envFile: "foo.env",
+				readFile: func(filename string) ([]byte, error) {
+					if filename == "foo.env" {
+						return nil, &os.PathError{Op: "open", Path: "foo.env", Err: os.ErrNotExist}
+					}
+					return nil, nil
+				},
+			},
+			err: ErrCannotReadFile("foo.env", &os.PathError{Op: "open", Path: "foo.env", Err: os.ErrNotExist}),
+		},
+		"custom env file success": {
+			command: RunCommand{
+				envFile:         "foo.env",
+				templateVersion: "2",
+				osStat:          osStatFuncFromMap(map[string]error{"foo.env": nil}),
+				readFile:        readFileFuncFromMap(map[string]string{"foo.env": "TEST=test"}),
+			},
+			expectedEnv: []string{"TEST=test"},
+		},
 		"env file secret does not exist": {
 			command: RunCommand{
 				command:         []string{"echo", "test"},

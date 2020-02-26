@@ -2,7 +2,7 @@ package secrethub
 
 import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-	"github.com/secrethub/secrethub-go/internals/errio"
+	"github.com/secrethub/secrethub-go/internals/api"
 )
 
 type secretReader struct {
@@ -76,18 +76,8 @@ func newIgnoreMissingSecretReader(sr tpl.SecretReader) *ignoreMissingSecretReade
 // errors for non-existing secrets. Instead, it returns the empty string.
 func (sr *ignoreMissingSecretReader) ReadSecret(path string) (string, error) {
 	secret, err := sr.secretReader.ReadSecret(path)
-	if isErrNotFound(err) {
+	if api.IsErrNotFound(err) {
 		return "", nil
 	}
 	return secret, err
-}
-
-// isErrNotFound returns whether the given error is caused by a un-existing resource.
-// TODO: Replace this function with github.com/secrethub/secrethub-go/blob/develop/internals/api.IsErrNotFound once that is released.
-func isErrNotFound(err error) bool {
-	statusError, ok := err.(errio.PublicStatusError)
-	if !ok {
-		return false
-	}
-	return statusError.StatusCode == 404
 }

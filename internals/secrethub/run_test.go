@@ -445,13 +445,21 @@ func TestNewEnv(t *testing.T) {
 			parser, err := getTemplateParser([]byte(tc.raw), "auto")
 			assert.OK(t, err)
 
-			env, err := NewEnv(strings.NewReader(tc.raw), tc.templateVarReader, parser)
+			env, err := NewEnv("secrethub.env", strings.NewReader(tc.raw), tc.templateVarReader, parser)
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {
-				actual, err := env.Env(map[string]string{}, fakes.FakeSecretReader{Secrets: tc.replacements})
+				actualValues, err := env.Env()
 				assert.Equal(t, err, tc.err)
 
+				// resolve values
+				actual := make(map[string]string, len(actualValues))
+				for name, value := range actualValues {
+					actual[name], err = value.resolve(fakes.FakeSecretReader{Secrets: tc.replacements})
+					if err != nil {
+						t.Fail()
+					}
+				}
 				assert.Equal(t, actual, tc.expected)
 			}
 		})

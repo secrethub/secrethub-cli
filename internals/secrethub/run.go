@@ -117,15 +117,15 @@ func (cmd *RunCommand) Run() error {
 
 	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv)
 
-	referenceEnv := newReferenceEnv(osEnv)
-	envSources = append(envSources, referenceEnv)
-
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
 	flagSource, err := NewEnvFlags(cmd.envar)
 	if err != nil {
 		return err
 	}
 	envSources = append(envSources, flagSource)
+
+	referenceEnv := newReferenceEnv(osEnv)
+	envSources = append(envSources, referenceEnv)
 
 	if cmd.envFile == "" {
 		const defaultEnvFile = "secrethub.env"

@@ -6,15 +6,127 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
+
+	"github.com/secrethub/secrethub-cli/internals/cli"
+
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"gopkg.in/yaml.v2"
 )
+
+type environment struct {
+	io                           ui.IO
+	osEnv                        []string
+	readFile                     func(filename string) ([]byte, error)
+	osStat                       func(filename string) (os.FileInfo, error)
+	envar                        map[string]string
+	envFile                      string
+	templateVars                 map[string]string
+	templateVersion              string
+	dontPromptMissingTemplateVar bool
+}
+
+func newEnvironment(io ui.IO) *environment {
+	return &environment{
+		io:           io,
+		osEnv:        os.Environ(),
+		readFile:     ioutil.ReadFile,
+		osStat:       os.Stat,
+		templateVars: make(map[string]string),
+		envar:        make(map[string]string),
+	}
+}
+
+func (env *environment) register(clause *cli.CommandClause) {
+	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&env.envar)
+	clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&env.envFile)
+	clause.Flag("template", "").Hidden().StringVar(&env.envFile)
+	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
+	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&env.templateVersion)
+	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
+}
+
+func (env *environment) Env() (map[string]value, error) {
+	osEnv, _ := parseKeyValueStringsToMap(env.osEnv)
+	var sources []EnvSource
+
+	//secrethub.env file
+	if env.envFile == "" {
+		_, err := env.osStat(defaultEnvFile)
+		if err == nil {
+			env.envFile = defaultEnvFile
+		} else if !os.IsNotExist(err) {
+			return nil, ErrReadDefaultEnvFile(defaultEnvFile, err)
+		}
+	}
+
+	if env.envFile != "" {
+		templateVariableReader, err := newVariableReader(osEnv, env.templateVars)
+		if err != nil {
+			return nil, err
+		}
+
+		if !env.dontPromptMissingTemplateVar {
+			templateVariableReader = newPromptMissingVariableReader(templateVariableReader, env.io)
+		}
+
+		raw, err := env.readFile(env.envFile)
+		if err != nil {
+			return nil, ErrCannotReadFile(env.envFile, err)
+		}
+
+		parser, err := getTemplateParser(raw, env.templateVersion)
+		if err != nil {
+			return nil, err
+		}
+
+		envFile, err := ReadEnvFile(env.envFile, bytes.NewReader(raw), templateVariableReader, parser)
+		if err != nil {
+			return nil, err
+		}
+		sources = append(sources, envFile)
+	}
+
+	// secret references (secrethub://)
+	referenceEnv := newReferenceEnv(osEnv)
+	sources = append(sources, referenceEnv)
+
+	// --envar flag
+	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
+	flagEnv, err := NewEnvFlags(env.envar)
+	if err != nil {
+		return nil, err
+	}
+	sources = append(sources, flagEnv)
+
+	var envs []map[string]value
+	for _, source := range sources {
+		env, err := source.Env()
+		if err != nil {
+			return nil, err
+		}
+		envs = append(envs, env)
+	}
+
+	return mergeEnvs(envs...), nil
+}
+
+func mergeEnvs(envs ...map[string]value) map[string]value {
+	result := map[string]value{}
+	for _, env := range envs {
+		for name, value := range env {
+			result[name] = value
+		}
+	}
+	return result
+}
 
 // EnvSource defines a method of reading environment variables from a source.
 type EnvSource interface {
@@ -420,4 +532,32 @@ func parseYML(r io.Reader) ([]envvar, error) {
 		i++
 	}
 	return vars, nil
+}
+
+type plaintextValue struct {
+	value string
+}
+
+func newPlaintextValue(value string) *plaintextValue {
+	return &plaintextValue{value: value}
+}
+
+func (v *plaintextValue) resolve(_ tpl.SecretReader) (string, error) {
+	return v.value, nil
+}
+
+func (v *plaintextValue) containsSecret() bool {
+	return false
+}
+
+type osEnv struct {
+	osEnv map[string]string
+}
+
+func (o *osEnv) Env() (map[string]value, error) {
+	res := map[string]value{}
+	for name, value := range o.osEnv {
+		res[name] = newPlaintextValue(value)
+	}
+	return res, nil
 }

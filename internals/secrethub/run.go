@@ -1,9 +1,7 @@
 package secrethub
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -12,14 +10,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
+
+	"github.com/secrethub/secrethub-cli/internals/secretspec"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-	"github.com/secrethub/secrethub-cli/internals/secretspec"
-
 	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
@@ -52,33 +51,24 @@ const (
 // defined with --envar or --env-file flags and secrets.yml files.
 // The yml files write to .secretsenv/<env-name> when running the set command.
 type RunCommand struct {
-	io                           ui.IO
-	osEnv                        []string
-	readFile                     func(filename string) ([]byte, error)
-	osStat                       func(filename string) (os.FileInfo, error)
-	command                      []string
-	envar                        map[string]string
-	envFile                      string
-	templateVars                 map[string]string
-	templateVersion              string
-	env                          string
-	noMasking                    bool
-	maskingTimeout               time.Duration
-	newClient                    newClientFunc
-	ignoreMissingSecrets         bool
-	dontPromptMissingTemplateVar bool
+	io                   ui.IO
+	osEnv                []string
+	command              []string
+	env                  string
+	environment          *environment
+	noMasking            bool
+	maskingTimeout       time.Duration
+	newClient            newClientFunc
+	ignoreMissingSecrets bool
 }
 
 // NewRunCommand creates a new RunCommand.
 func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 	return &RunCommand{
-		io:           io,
-		osEnv:        os.Environ(),
-		readFile:     ioutil.ReadFile,
-		osStat:       os.Stat,
-		envar:        make(map[string]string),
-		templateVars: make(map[string]string),
-		newClient:    newClient,
+		io:          io,
+		osEnv:       os.Environ(),
+		environment: newEnvironment(io),
+		newClient:   newClient,
 	}
 }
 
@@ -93,17 +83,11 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.HelpLong(helpLong)
 	clause.Alias("exec")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
-	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&cmd.envar)
-	clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&cmd.envFile)
-	clause.Flag("template", "").Hidden().StringVar(&cmd.envFile)
-	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
 	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
-	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
 	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
-	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&cmd.dontPromptMissingTemplateVar)
-
+	cmd.environment.register(clause)
 	command.BindAction(clause, cmd.Run)
 }
 
@@ -205,63 +189,32 @@ func (cmd *RunCommand) Run() error {
 func (cmd *RunCommand) sourceEnvironment() ([]string, []string, error) {
 	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv)
 
-	envSources := []EnvSource{}
-
-	referenceEnv := newReferenceEnv(osEnv)
-	envSources = append(envSources, referenceEnv)
-
-	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
-	flagSource, err := NewEnvFlags(cmd.envar)
-	if err != nil {
-		return nil, nil, err
-	}
-	envSources = append(envSources, flagSource)
-
-	if cmd.envFile == "" {
-		_, err := cmd.osStat(defaultEnvFile)
-		if err == nil {
-			cmd.envFile = defaultEnvFile
-		} else if !os.IsNotExist(err) {
-			return nil, nil, ErrReadDefaultEnvFile(defaultEnvFile, err)
-		}
+	// add os envs
+	newEnv := map[string]string{}
+	for name, value := range osEnv {
+		newEnv[name] = value
 	}
 
-	if cmd.envFile != "" {
-		templateVariableReader, err := newVariableReader(osEnv, cmd.templateVars)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if !cmd.dontPromptMissingTemplateVar {
-			templateVariableReader = newPromptMissingVariableReader(templateVariableReader, cmd.io)
-		}
-
-		raw, err := cmd.readFile(cmd.envFile)
-		if err != nil {
-			return nil, nil, ErrCannotReadFile(cmd.envFile, err)
-		}
-
-		parser, err := getTemplateParser(raw, cmd.templateVersion)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		envFile, err := ReadEnvFile(cmd.envFile, bytes.NewReader(raw), templateVariableReader, parser)
-		if err != nil {
-			return nil, nil, err
-		}
-		envSources = append(envSources, envFile)
-	}
-
+	// add values from .secretsenv and other sources
+	var dirValues map[string]value
 	envDir := filepath.Join(secretspec.SecretEnvPath, cmd.env)
-	_, err = cmd.osStat(envDir)
+	_, err := os.Stat(envDir)
 	if err == nil {
 		dirSource, err := NewEnvDir(envDir)
 		if err != nil {
 			return nil, nil, err
 		}
-		envSources = append(envSources, dirSource)
+		dirValues, err = dirSource.Env()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
+
+	envValues, err := cmd.environment.Env()
+	if err != nil {
+		return nil, nil, err
+	}
+	envValues = mergeEnvs(dirValues, envValues)
 
 	var sr tpl.SecretReader = newSecretReader(cmd.newClient)
 	if cmd.ignoreMissingSecrets {
@@ -269,38 +222,15 @@ func (cmd *RunCommand) sourceEnvironment() ([]string, []string, error) {
 	}
 	secretReader := newBufferedSecretReader(sr)
 
-	// Construct the environment, sourcing variables from the configured sources.
-	environment := make(map[string]string)
-	for _, source := range envSources {
-		pairs, err := source.Env()
+	for name, value := range envValues {
+		newEnv[name], err = value.resolve(secretReader)
 		if err != nil {
 			return nil, nil, err
-		}
-
-		for key, value := range pairs {
-			// Only set a variable if it wasn't set by a previous source.
-			_, found := environment[key]
-			if !found {
-				resolvedValue, err := value.resolve(secretReader)
-				if err != nil {
-					return nil, nil, err
-				}
-				environment[key] = resolvedValue
-			}
-		}
-	}
-
-	// Source the remaining envars from the OS environment.
-	for key, value := range osEnv {
-		// Only set a variable if it wasn't set by a configured source.
-		_, found := environment[key]
-		if !found {
-			environment[key] = value
 		}
 	}
 
 	// Finally add the unparsed variables
-	processedOsEnv := append(passthroughEnv, mapToKeyValueStrings(environment)...)
+	processedOsEnv := append(passthroughEnv, mapToKeyValueStrings(newEnv)...)
 
 	return processedOsEnv, secretReader.Values(), nil
 }

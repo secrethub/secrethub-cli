@@ -929,6 +929,7 @@ func TestRunCommand_environment(t *testing.T) {
 			command: RunCommand{
 				command: []string{"/bin/sh", "./test.sh"},
 				environment: &environment{
+					osEnv:                        []string{"SECRETHUB_VAR_VARIABLE=bar"},
 					osStat:                       osStatFunc("secrethub.env", nil),
 					readFile:                     readFileFunc("secrethub.env", "TEST=$variable"),
 					dontPromptMissingTemplateVar: true,

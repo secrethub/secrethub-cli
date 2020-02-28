@@ -24,7 +24,7 @@ import (
 
 type environment struct {
 	io                           ui.IO
-	osEnv                        func() []string
+	osEnv                        []string
 	readFile                     func(filename string) ([]byte, error)
 	osStat                       func(filename string) (os.FileInfo, error)
 	envar                        map[string]string
@@ -38,7 +38,7 @@ type environment struct {
 func newEnvironment(io ui.IO) *environment {
 	return &environment{
 		io:           io,
-		osEnv:        os.Environ,
+		osEnv:        os.Environ(),
 		readFile:     ioutil.ReadFile,
 		osStat:       os.Stat,
 		templateVars: make(map[string]string),
@@ -57,7 +57,7 @@ func (env *environment) register(clause *cli.CommandClause) {
 }
 
 func (env *environment) env() (map[string]value, error) {
-	osEnvMap, _ := parseKeyValueStringsToMap(env.osEnv())
+	osEnvMap, _ := parseKeyValueStringsToMap(env.osEnv)
 	var sources []EnvSource
 
 	sources = append(sources, &osEnv{

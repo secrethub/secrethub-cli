@@ -34,7 +34,7 @@ func (cmd *EnvReadCommand) Register(r command.Registerer) {
 	command.BindAction(clause, cmd.Run)
 }
 
-// Run handles the command with the options as specified in the command.
+// Run executes the command.
 func (cmd *EnvReadCommand) Run() error {
 	env, err := cmd.environment.env()
 	if err != nil {

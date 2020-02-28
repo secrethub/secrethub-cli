@@ -1,6 +1,8 @@
 package secrethub
 
 import (
+	"fmt"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
@@ -34,5 +36,24 @@ func (cmd *EnvReadCommand) Register(r command.Registerer) {
 
 // Run handles the command with the options as specified in the command.
 func (cmd *EnvReadCommand) Run() error {
+	env, err := cmd.environment.env()
+	if err != nil {
+		return err
+	}
+
+	value, found := env[cmd.key]
+	if !found {
+		return fmt.Errorf("no environment variable with that key is set")
+	}
+
+	secretReader := newSecretReader(cmd.newClient)
+
+	res, err := value.resolve(secretReader)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(cmd.io.Stdout(), res)
+
 	return nil
 }

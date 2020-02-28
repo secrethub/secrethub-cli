@@ -214,15 +214,15 @@ func (cmd *RunCommand) sourceEnvironment() ([]string, []string, error) {
 
 	envSources := []EnvSource{}
 
-	referenceEnv := newReferenceEnv(osEnv)
-	envSources = append(envSources, referenceEnv)
-
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
 	flagSource, err := NewEnvFlags(cmd.envar)
 	if err != nil {
 		return nil, nil, err
 	}
 	envSources = append(envSources, flagSource)
+
+	referenceEnv := newReferenceEnv(osEnv)
+	envSources = append(envSources, referenceEnv)
 
 	if cmd.envFile == "" {
 		_, err := cmd.osStat(defaultEnvFile)

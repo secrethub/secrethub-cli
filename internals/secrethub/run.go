@@ -204,13 +204,13 @@ func (cmd *RunCommand) sourceEnvironment() ([]string, []string, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		dirValues, err = dirSource.Env()
+		dirValues, err = dirSource.env()
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	envValues, err := cmd.environment.Env()
+	envValues, err := cmd.environment.env()
 	if err != nil {
 		return nil, nil, err
 	}

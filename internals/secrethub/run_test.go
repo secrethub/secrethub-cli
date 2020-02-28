@@ -449,7 +449,7 @@ func TestNewEnv(t *testing.T) {
 			if err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {
-				actualValues, err := env.Env()
+				actualValues, err := env.env()
 				assert.Equal(t, err, tc.err)
 
 				// resolve values

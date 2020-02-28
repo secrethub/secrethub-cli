@@ -53,7 +53,7 @@ func (env *environment) register(clause *cli.CommandClause) {
 	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
 }
 
-func (env *environment) Env() (map[string]value, error) {
+func (env *environment) env() (map[string]value, error) {
 	osEnv, _ := parseKeyValueStringsToMap(env.osEnv)
 	var sources []EnvSource
 
@@ -108,7 +108,7 @@ func (env *environment) Env() (map[string]value, error) {
 
 	var envs []map[string]value
 	for _, source := range sources {
-		env, err := source.Env()
+		env, err := source.env()
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +131,7 @@ func mergeEnvs(envs ...map[string]value) map[string]value {
 // EnvSource defines a method of reading environment variables from a source.
 type EnvSource interface {
 	// Env returns a map of key value pairs.
-	Env() (map[string]value, error)
+	env() (map[string]value, error)
 }
 
 type value interface {
@@ -177,7 +177,7 @@ func NewEnvFlags(flags map[string]string) (EnvFlags, error) {
 
 // Env returns a map of environment variables sourced from
 // command-line flags and set to their corresponding value.
-func (ef EnvFlags) Env() (map[string]value, error) {
+func (ef EnvFlags) env() (map[string]value, error) {
 	result := make(map[string]value)
 	for name, path := range ef {
 		result[name] = newSecretValue(path)
@@ -207,7 +207,7 @@ func newReferenceEnv(osEnv map[string]string) *referenceEnv {
 
 // Env returns a map of key value pairs with the secrets configured with the
 // secrethub:// syntax.
-func (env *referenceEnv) Env() (map[string]value, error) {
+func (env *referenceEnv) env() (map[string]value, error) {
 	envVarsWithSecrets := make(map[string]value)
 	for key, path := range env.envVars {
 		envVarsWithSecrets[key] = newSecretValue(path)
@@ -259,7 +259,7 @@ func NewEnvDir(path string) (EnvDir, error) {
 }
 
 // Env returns a map of environment variables sourced from the directory.
-func (dir EnvDir) Env() (map[string]value, error) {
+func (dir EnvDir) env() (map[string]value, error) {
 	return dir, nil
 }
 
@@ -303,7 +303,7 @@ type envvarTpls struct {
 
 // Env injects the given secrets in the environment values and returns
 // a map of the resulting environment.
-func (t envTemplate) Env() (map[string]value, error) {
+func (t envTemplate) env() (map[string]value, error) {
 	result := make(map[string]value)
 	for _, tpls := range t.envVars {
 		key, err := tpls.key.Evaluate(t.templateVarReader, secretReaderNotAllowed{})
@@ -337,20 +337,20 @@ func ReadEnvFile(filepath string, reader io.Reader, varReader tpl.VariableReader
 		return EnvFile{}, ErrParsingTemplate(filepath, err)
 	}
 	return EnvFile{
-		path: filepath,
-		env:  env,
+		path:      filepath,
+		envSource: env,
 	}, nil
 }
 
 // EnvFile contains an environment that is read from a file.
 type EnvFile struct {
-	path string
-	env  EnvSource
+	path      string
+	envSource EnvSource
 }
 
 // Env returns a map of key value pairs read from the environment file.
-func (e EnvFile) Env() (map[string]value, error) {
-	env, err := e.env.Env()
+func (e EnvFile) env() (map[string]value, error) {
+	env, err := e.envSource.env()
 	if err != nil {
 		return nil, ErrParsingTemplate(e.path, err)
 	}
@@ -554,7 +554,7 @@ type osEnv struct {
 	osEnv map[string]string
 }
 
-func (o *osEnv) Env() (map[string]value, error) {
+func (o *osEnv) env() (map[string]value, error) {
 	res := map[string]value{}
 	for name, value := range o.osEnv {
 		res[name] = newPlaintextValue(value)

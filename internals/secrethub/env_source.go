@@ -120,7 +120,7 @@ func (env *environment) env() (map[string]value, error) {
 	}
 	sources = append(sources, flagEnv)
 
-	var envs []map[string]value
+	envs := make([]map[string]value, len(sources))
 	for _, source := range sources {
 		env, err := source.env()
 		if err != nil {

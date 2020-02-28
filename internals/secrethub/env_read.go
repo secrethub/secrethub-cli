@@ -7,21 +7,25 @@ import (
 
 // EnvReadCommand is a command to read the value of a single environment variable.
 type EnvReadCommand struct {
-	io        ui.IO
-	newClient newClientFunc
+	io          ui.IO
+	newClient   newClientFunc
+	environment *environment
 }
 
 // NewEnvReadCommand creates a new EnvReadCommand.
 func NewEnvReadCommand(io ui.IO, newClient newClientFunc) *EnvReadCommand {
 	return &EnvReadCommand{
-		io:        io,
-		newClient: newClient,
+		io:          io,
+		newClient:   newClient,
+		environment: newEnvironment(io),
 	}
 }
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
 func (cmd *EnvReadCommand) Register(r command.Registerer) {
 	clause := r.Command("read", "Read the value of a single environment variable.")
+
+	cmd.environment.register(clause)
 
 	command.BindAction(clause, cmd.Run)
 }

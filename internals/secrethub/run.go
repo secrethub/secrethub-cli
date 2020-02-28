@@ -183,7 +183,6 @@ func (cmd *RunCommand) Run() error {
 // and the secret values that need to be masked.
 func (cmd *RunCommand) sourceEnvironment() ([]string, []string, error) {
 	_, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv)
-
 	newEnv := map[string]string{}
 
 	envValues, err := cmd.environment.env()

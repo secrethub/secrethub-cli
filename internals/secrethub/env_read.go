@@ -10,6 +10,7 @@ type EnvReadCommand struct {
 	io          ui.IO
 	newClient   newClientFunc
 	environment *environment
+	key         string
 }
 
 // NewEnvReadCommand creates a new EnvReadCommand.
@@ -24,6 +25,7 @@ func NewEnvReadCommand(io ui.IO, newClient newClientFunc) *EnvReadCommand {
 // Register adds a CommandClause and it's args and flags to a Registerer.
 func (cmd *EnvReadCommand) Register(r command.Registerer) {
 	clause := r.Command("read", "Read the value of a single environment variable.")
+	clause.Arg("key", "the key of the environment variable to read").StringVar(&cmd.key)
 
 	cmd.environment.register(clause)
 

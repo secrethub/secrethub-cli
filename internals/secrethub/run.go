@@ -182,13 +182,9 @@ func (cmd *RunCommand) Run() error {
 // sourceEnvironment returns the environment of the subcommand, with all the secrets sourced
 // and the secret values that need to be masked.
 func (cmd *RunCommand) sourceEnvironment() ([]string, []string, error) {
-	osEnv, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv)
+	_, passthroughEnv := parseKeyValueStringsToMap(cmd.osEnv)
 
-	// add os envs
 	newEnv := map[string]string{}
-	for name, value := range osEnv {
-		newEnv[name] = value
-	}
 
 	envValues, err := cmd.environment.env()
 	if err != nil {

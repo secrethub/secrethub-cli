@@ -24,7 +24,7 @@ import (
 
 type environment struct {
 	io                           ui.IO
-	osEnv                        []string
+	osEnv                        func() []string
 	readFile                     func(filename string) ([]byte, error)
 	osStat                       func(filename string) (os.FileInfo, error)
 	envar                        map[string]string
@@ -38,7 +38,7 @@ type environment struct {
 func newEnvironment(io ui.IO) *environment {
 	return &environment{
 		io:           io,
-		osEnv:        os.Environ(),
+		osEnv:        os.Environ,
 		readFile:     ioutil.ReadFile,
 		osStat:       os.Stat,
 		templateVars: make(map[string]string),
@@ -57,8 +57,12 @@ func (env *environment) register(clause *cli.CommandClause) {
 }
 
 func (env *environment) env() (map[string]value, error) {
-	osEnv, _ := parseKeyValueStringsToMap(env.osEnv)
+	osEnvMap, _ := parseKeyValueStringsToMap(env.osEnv())
 	var sources []EnvSource
+
+	sources = append(sources, &osEnv{
+		osEnv: osEnvMap,
+	})
 
 	// .secretsenv dir (for backwards compatibility)
 	envDir := filepath.Join(secretspec.SecretEnvPath, env.secretsEnvDir)
@@ -82,7 +86,7 @@ func (env *environment) env() (map[string]value, error) {
 	}
 
 	if env.envFile != "" {
-		templateVariableReader, err := newVariableReader(osEnv, env.templateVars)
+		templateVariableReader, err := newVariableReader(osEnvMap, env.templateVars)
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +113,7 @@ func (env *environment) env() (map[string]value, error) {
 	}
 
 	// secret references (secrethub://)
-	referenceEnv := newReferenceEnv(osEnv)
+	referenceEnv := newReferenceEnv(osEnvMap)
 	sources = append(sources, referenceEnv)
 
 	// --envar flag

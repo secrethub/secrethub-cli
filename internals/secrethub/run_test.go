@@ -589,7 +589,9 @@ func TestRunCommand_Run(t *testing.T) {
 				command: []string{"echo", "test"},
 				io:      ui.NewFakeIO(),
 				environment: &environment{
-					osEnv:  []string{"TEST=secrethub://nonexistent/secret/path"},
+					osEnv: func() []string {
+						return []string{"TEST=secrethub://nonexistent/secret/path"}
+					},
 					osStat: osStatNotExist,
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -612,7 +614,9 @@ func TestRunCommand_Run(t *testing.T) {
 				command:              []string{"echo", "test"},
 				io:                   ui.NewFakeIO(),
 				environment: &environment{
-					osEnv:  []string{"TEST=secrethub://nonexistent/secret/path"},
+					osEnv: func() []string {
+						return []string{"TEST=secrethub://nonexistent/secret/path"}
+					},
 					osStat: osStatNotExist,
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -772,7 +776,9 @@ func TestRunCommand_environment(t *testing.T) {
 					readFile:                     readFileFunc("secrethub.env", "TEST=aaa"),
 					dontPromptMissingTemplateVar: true,
 					templateVersion:              "2",
-					osEnv:                        []string{"TEST=secrethub://test/test/test"},
+					osEnv: func() []string {
+						return []string{"TEST=secrethub://test/test/test"}
+					},
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
@@ -885,7 +891,9 @@ func TestRunCommand_environment(t *testing.T) {
 					readFile:                     readFileFunc("secrethub.env", "TEST = {{ test/$variable/test }}"),
 					dontPromptMissingTemplateVar: true,
 					templateVersion:              "2",
-					osEnv:                        []string{"SECRETHUB_VAR_VARIABLE=test"},
+					osEnv: func() []string {
+						return []string{"SECRETHUB_VAR_VARIABLE=test"}
+					},
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{

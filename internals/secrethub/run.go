@@ -5,14 +5,11 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-
-	"github.com/secrethub/secrethub-cli/internals/secretspec"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
@@ -54,7 +51,6 @@ type RunCommand struct {
 	io                   ui.IO
 	osEnv                []string
 	command              []string
-	env                  string
 	environment          *environment
 	noMasking            bool
 	maskingTimeout       time.Duration
@@ -83,7 +79,6 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.HelpLong(helpLong)
 	clause.Alias("exec")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
-	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&cmd.env)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
 	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
 	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
@@ -195,26 +190,10 @@ func (cmd *RunCommand) sourceEnvironment() ([]string, []string, error) {
 		newEnv[name] = value
 	}
 
-	// add values from .secretsenv and other sources
-	var dirValues map[string]value
-	envDir := filepath.Join(secretspec.SecretEnvPath, cmd.env)
-	_, err := os.Stat(envDir)
-	if err == nil {
-		dirSource, err := NewEnvDir(envDir)
-		if err != nil {
-			return nil, nil, err
-		}
-		dirValues, err = dirSource.env()
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
 	envValues, err := cmd.environment.env()
 	if err != nil {
 		return nil, nil, err
 	}
-	envValues = mergeEnvs(dirValues, envValues)
 
 	var sr tpl.SecretReader = newSecretReader(cmd.newClient)
 	if cmd.ignoreMissingSecrets {

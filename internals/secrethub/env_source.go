@@ -12,6 +12,7 @@ import (
 	"unicode"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
+	"github.com/secrethub/secrethub-cli/internals/secretspec"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
@@ -31,6 +32,7 @@ type environment struct {
 	templateVars                 map[string]string
 	templateVersion              string
 	dontPromptMissingTemplateVar bool
+	secretsEnvDir                string
 }
 
 func newEnvironment(io ui.IO) *environment {
@@ -51,11 +53,23 @@ func (env *environment) register(clause *cli.CommandClause) {
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&env.templateVersion)
 	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
+	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&env.secretsEnvDir)
 }
 
 func (env *environment) env() (map[string]value, error) {
 	osEnv, _ := parseKeyValueStringsToMap(env.osEnv)
 	var sources []EnvSource
+
+	// .secretsenv dir (for backwards compatibility)
+	envDir := filepath.Join(secretspec.SecretEnvPath, env.secretsEnvDir)
+	_, err := os.Stat(envDir)
+	if err == nil {
+		dirSource, err := NewEnvDir(envDir)
+		if err != nil {
+			return nil, err
+		}
+		sources = append(sources, dirSource)
+	}
 
 	//secrethub.env file
 	if env.envFile == "" {

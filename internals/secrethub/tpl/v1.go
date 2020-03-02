@@ -48,3 +48,7 @@ func (t templateV1) Evaluate(_ VariableReader, sr SecretReader) (string, error) 
 
 	return t.template.Inject(secrets)
 }
+
+func (t templateV1) ContainsSecrets() bool {
+	return len(t.template.Keys()) > 0
+}

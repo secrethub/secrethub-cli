@@ -26,7 +26,8 @@ func NewEnvReadCommand(io ui.IO, newClient newClientFunc) *EnvReadCommand {
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
 func (cmd *EnvReadCommand) Register(r command.Registerer) {
-	clause := r.Command("read", "Read the value of a single environment variable.")
+	clause := r.Command("read", "[BETA] Read the value of a single environment variable.")
+	clause.HelpLong("This command is hidden because it is still in beta. Future versions may break.")
 	clause.Arg("key", "the key of the environment variable to read").StringVar(&cmd.key)
 
 	cmd.environment.register(clause)

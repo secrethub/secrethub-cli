@@ -21,6 +21,8 @@ type Template interface {
 	// Evaluate renders a template. It replaces all variable- and secret tags in the template.
 	// The supplied variables should have lowercase keys.
 	Evaluate(varReader VariableReader, sr SecretReader) (string, error)
+
+	ContainsSecrets() bool
 }
 
 // NewParser returns a parser for the latest template syntax.

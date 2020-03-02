@@ -57,6 +57,12 @@ func (sr *bufferedSecretReader) ReadSecret(path string) (string, error) {
 	return secret, err
 }
 
+type secretReaderNotAllowed struct{}
+
+func (sr secretReaderNotAllowed) ReadSecret(path string) (string, error) {
+	return "", ErrSecretsNotAllowedInKey
+}
+
 // Values returns a list of values read with this secret reader.
 func (sr bufferedSecretReader) Values() []string {
 	return sr.secretsRead

@@ -459,3 +459,14 @@ func (t templateV2) Evaluate(varReader VariableReader, sr SecretReader) (string,
 
 	return buffer.String(), nil
 }
+
+func (t templateV2) ContainsSecrets() bool {
+	for _, node := range t.nodes {
+		_, ok := node.(secret)
+		if ok {
+			return true
+		}
+	}
+
+	return false
+}

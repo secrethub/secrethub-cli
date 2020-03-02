@@ -23,7 +23,7 @@ func NewEnvListCommand(io ui.IO) *EnvListCommand {
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
 func (cmd *EnvListCommand) Register(r command.Registerer) {
-	clause := r.Command("ls", "[BETA] List environment variable keys that will be injected with secrets.")
+	clause := r.Command("ls", "[BETA] List environment variable names that will be populated with secrets.")
 	clause.HelpLong("This command is hidden because it is still in beta. Future versions may break.")
 	clause.Alias("list")
 

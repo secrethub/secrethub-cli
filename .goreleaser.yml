@@ -77,7 +77,7 @@ scoop:
   license: Apache-2.0
 
 nfpms:
-  - name_template: "secrethub-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  - file_name_template: "secrethub-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     builds:
       - without-bin-dir
     vendor: SecretHub
@@ -96,4 +96,3 @@ nfpms:
     scripts:
       postinstall: "scripts/post-install.sh"
       postremove: "scripts/post-remove.sh"
-

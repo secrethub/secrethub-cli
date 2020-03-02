@@ -23,7 +23,7 @@ func NewEnvListCommand(io ui.IO) *EnvListCommand {
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
 func (cmd *EnvListCommand) Register(r command.Registerer) {
-	clause := r.Command("ls", "Read the value of a single environment variable.")
+	clause := r.Command("ls", "List environment variable keys that will be injected with secrets.")
 	clause.Alias("list")
 
 	cmd.environment.register(clause)

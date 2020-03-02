@@ -52,6 +52,9 @@ archives:
 checksum:
   name_template: "secrethub-{{ .Tag }}-checksums.txt"
 
+release:
+  draft: true
+
 brews:
   - name: secrethub-cli
     ids:

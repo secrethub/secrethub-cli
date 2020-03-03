@@ -163,6 +163,7 @@ func (app *App) registerCommands() {
 	NewAccountCommand(app.io, app.clientFactory.NewClient, app.credentialStore).Register(app.cli)
 	NewCredentialCommand(app.io, app.clientFactory, app.credentialStore).Register(app.cli)
 	NewConfigCommand(app.io, app.credentialStore).Register(app.cli)
+	NewEnvCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 
 	// Commands
 	NewInitCommand(app.io, app.clientFactory.NewUnauthenticatedClient, app.clientFactory.NewClientWithCredentials, app.credentialStore).Register(app.cli)
@@ -177,7 +178,7 @@ func (app *App) registerCommands() {
 	NewInspectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewAuditCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewInjectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
-	NewRunCommand(app.clientFactory.NewClient).Register(app.cli)
+	NewRunCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewPrintEnvCommand(app.cli, app.io).Register(app.cli)
 
 	// Hidden commands

@@ -2,7 +2,7 @@ version: 2
 jobs:
   test:
     docker:
-      - image: circleci/golang:1.12
+      - image: circleci/golang:1.13
     steps:
       - checkout
       - restore_cache:
@@ -16,7 +16,7 @@ jobs:
       - run: make test
   verify-goreleaser:
     docker:
-      - image: goreleaser/goreleaser:v0.117
+      - image: goreleaser/goreleaser:v0.127
     steps:
       - checkout
       - run: goreleaser check

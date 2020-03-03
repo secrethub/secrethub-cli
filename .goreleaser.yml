@@ -52,6 +52,9 @@ archives:
 checksum:
   name_template: "secrethub-{{ .Tag }}-checksums.txt"
 
+release:
+  draft: true
+
 brews:
   - name: secrethub-cli
     ids:
@@ -65,19 +68,6 @@ brews:
     homepage: https://secrethub.io
     description: Command-line interface for SecretHub
 
-snapcrafts:
-  - name: secrethub-cli
-    builds:
-      - default
-    publish: true
-    summary: Command-line interface for SecretHub
-    description: SecretHub is a developer tool to help you keep database passwords, API tokens, and other secrets out of IT automation scripts. It enables you to securely share passwords and other secrets with your team and infrastructure.
-    apps:
-      secrethub:
-        plugs:
-          - home
-          - network
-
 scoop:
   name: secrethub-cli
   bucket:
@@ -90,7 +80,7 @@ scoop:
   license: Apache-2.0
 
 nfpms:
-  - name_template: "secrethub-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  - file_name_template: "secrethub-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     builds:
       - without-bin-dir
     vendor: SecretHub
@@ -109,4 +99,3 @@ nfpms:
     scripts:
       postinstall: "scripts/post-install.sh"
       postremove: "scripts/post-remove.sh"
-

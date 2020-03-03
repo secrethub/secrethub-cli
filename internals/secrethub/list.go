@@ -83,9 +83,9 @@ func (cmd *LsCommand) Run() error {
 	dirPath, err := cmd.path.ToDirPath()
 	if err == nil {
 		dirFS, err := client.Dirs().GetTree(dirPath.Value(), 1, false)
-		if err == api.ErrDirNotFound && dirPath.IsRepoPath() {
+		if api.IsErrNotFound(err) && dirPath.IsRepoPath() {
 			return err
-		} else if err != nil && err != api.ErrDirNotFound {
+		} else if err != nil && !api.IsErrNotFound(err) {
 			return err
 		} else if err == nil {
 			err = printDir(cmd.io.Stdout(), cmd.quiet, dirFS.RootDir, timeFormatter)
@@ -100,7 +100,7 @@ func (cmd *LsCommand) Run() error {
 	secretPath, err := cmd.path.ToSecretPath()
 	if err == nil {
 		versions, err := client.Secrets().Versions().ListWithoutData(secretPath.Value())
-		if err == api.ErrSecretNotFound {
+		if api.IsErrNotFound(err) {
 			return ErrResourceNotFound(cmd.path)
 		} else if err != nil {
 			return err

@@ -41,7 +41,7 @@ type GenerateSecretCommand struct {
 	secondArg           string
 	lengthArg           intValue
 	charsetFlag         charsetValue
-	mins                optionsValue
+	mins                minRuleValue
 	copyToClipboard     bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
@@ -195,15 +195,15 @@ func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {
 	return false, nil
 }
 
-type optionsValue struct {
+type minRuleValue struct {
 	v []randchar.Option
 }
 
-func (ov *optionsValue) String() string {
+func (ov *minRuleValue) String() string {
 	return ""
 }
 
-func (ov *optionsValue) Set(flagValue string) error {
+func (ov *minRuleValue) Set(flagValue string) error {
 	elements := strings.Split(flagValue, ":")
 	if len(elements) != 2 {
 		return ErrInvalidMinFlag(flagValue)
@@ -223,7 +223,7 @@ func (ov *optionsValue) Set(flagValue string) error {
 	return nil
 }
 
-func (ov *optionsValue) IsCumulative() bool {
+func (ov *minRuleValue) IsCumulative() bool {
 	return true
 }
 

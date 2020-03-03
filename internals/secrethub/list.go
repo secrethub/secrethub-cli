@@ -85,7 +85,7 @@ func (cmd *LsCommand) Run() error {
 		dirFS, err := client.Dirs().GetTree(dirPath.Value(), 1, false)
 		if api.IsErrNotFound(err) && dirPath.IsRepoPath() {
 			return err
-		} else if err != nil && !isErrNotFound(err) {
+		} else if err != nil && !api.IsErrNotFound(err) {
 			return err
 		} else if err == nil {
 			err = printDir(cmd.io.Stdout(), cmd.quiet, dirFS.RootDir, timeFormatter)

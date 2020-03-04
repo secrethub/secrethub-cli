@@ -61,12 +61,11 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause := r.Command("generate", "Generate a random secret.")
-	clause.HelpLong("By default, it uses numbers (0-9), lowercase letters (a-z) and uppercase letters (A-Z) and a length of 22.")
 	clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
-	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set.").SetValue(&cmd.mins)
+	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constrains reduces the strength of the secret. When possible, avoid any constraints.").SetValue(&cmd.mins)
 	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
-	clause.Flag("charset", "Define the set of characters to randomly choose a password from. Defaults to alphanumeric.").Default("alphanumeric").SetValue(&cmd.charsetFlag)
+	clause.Flag("charset", "Define the sets of characters to randomly generate a password from (e.g. all, numeric, letters, symbols, human-readable...). Multiple character sets can be provided in a comma separated list. Defaults to alphanumeric.").Default("alphanumeric").HintOptions("all", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable").SetValue(&cmd.charsetFlag)
 	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)

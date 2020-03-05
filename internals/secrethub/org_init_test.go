@@ -54,9 +54,9 @@ func TestOrgInitCommand_Run(t *testing.T) {
 				force:       true,
 			},
 			service: fakeclient.OrgService{
-					CreateFunc: func(name string, description string) (*api.Org, error) {
-						return nil, testErr
-					},
+				CreateFunc: func(name string, description string) (*api.Org, error) {
+					return nil, testErr
+				},
 			},
 			out: "Creating organization...\n",
 			err: testErr,

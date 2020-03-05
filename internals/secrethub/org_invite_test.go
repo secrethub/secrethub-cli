@@ -32,13 +32,13 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 				role:     api.OrgRoleMember,
 			},
 			service: fakeclient.OrgMemberService{
-				Inviter: fakeclient.OrgInviter{
-					ReturnsOrgMember: &api.OrgMember{
+				InviteFunc: func(org string, username string, role string) (*api.OrgMember, error) {
+					return &api.OrgMember{
 						User: &api.User{
 							Username: "dev1",
 						},
 						Role: api.OrgRoleMember,
-					},
+					}, nil
 				},
 			},
 			in:        "y",
@@ -54,13 +54,13 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 				force:    true,
 			},
 			service: fakeclient.OrgMemberService{
-				Inviter: fakeclient.OrgInviter{
-					ReturnsOrgMember: &api.OrgMember{
+				InviteFunc: func(org string, username string, role string) (*api.OrgMember, error) {
+					return &api.OrgMember{
 						User: &api.User{
 							Username: "dev1",
 						},
 						Role: api.OrgRoleMember,
-					},
+					}, nil
 				},
 			},
 			out: "Inviting user...\n" +
@@ -91,8 +91,8 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 				force: true,
 			},
 			service: fakeclient.OrgMemberService{
-				Inviter: fakeclient.OrgInviter{
-					Err: testErr,
+				InviteFunc: func(org string, username string, role string) (*api.OrgMember, error) {
+					return nil, testErr
 				},
 			},
 			out: "Inviting user...\n",
@@ -106,7 +106,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					OrgService: &fakeclient.OrgService{
-						MemberService: &tc.service,
+						MembersService: &tc.service,
 					},
 				}, tc.newClientErr
 			}

@@ -17,8 +17,8 @@ func TestOrgSetRoleCommand_Run(t *testing.T) {
 
 	cases := map[string]struct {
 		cmd          OrgSetRoleCommand
-		service      fakeclient.OrgMemberService
 		newClientErr error
+		updateFunc   func(org string, username string, role string) (*api.OrgMember, error)
 		ArgOrgName   api.OrgName
 		ArgUsername  string
 		ArgRole      string
@@ -31,15 +31,13 @@ func TestOrgSetRoleCommand_Run(t *testing.T) {
 				orgName:  "company",
 				role:     api.OrgRoleMember,
 			},
-			service: fakeclient.OrgMemberService{
-				Updater: fakeclient.OrgMemberUpdater{
-					ReturnsOrgMember: &api.OrgMember{
-						User: &api.User{
-							Username: "dev1",
-						},
-						Role: api.OrgRoleMember,
+			updateFunc: func(org string, username string, role string) (*api.OrgMember, error) {
+				return &api.OrgMember{
+					User: &api.User{
+						Username: "dev1",
 					},
-				},
+					Role: api.OrgRoleMember,
+				}, nil
 			},
 			ArgOrgName:  "company",
 			ArgUsername: "dev1",
@@ -52,10 +50,8 @@ func TestOrgSetRoleCommand_Run(t *testing.T) {
 			err:          testErr,
 		},
 		"update org member error": {
-			service: fakeclient.OrgMemberService{
-				Updater: fakeclient.OrgMemberUpdater{
-					Err: testErr,
-				},
+			updateFunc: func(org string, username string, role string) (*api.OrgMember, error) {
+				return nil, testErr
 			},
 			out: "Setting role...\n",
 			err: testErr,
@@ -68,7 +64,14 @@ func TestOrgSetRoleCommand_Run(t *testing.T) {
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					OrgService: &fakeclient.OrgService{
-						MemberService: &tc.service,
+						MembersService: &fakeclient.OrgMemberService{
+							UpdateFunc: func(org string, username string, role string) (*api.OrgMember, error) {
+								assert.Equal(t, org, tc.ArgOrgName)
+								assert.Equal(t, username, tc.ArgUsername)
+								assert.Equal(t, role, tc.ArgRole)
+								return tc.updateFunc(org, username, role)
+							},
+						},
 					},
 				}, tc.newClientErr
 			}
@@ -82,9 +85,6 @@ func TestOrgSetRoleCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
-			assert.Equal(t, tc.service.Updater.ArgOrgName, tc.ArgOrgName)
-			assert.Equal(t, tc.service.Updater.ArgUsername, tc.ArgUsername)
-			assert.Equal(t, tc.service.Updater.ArgRole, tc.ArgRole)
 		})
 	}
 }

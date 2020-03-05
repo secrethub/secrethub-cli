@@ -32,8 +32,8 @@ func TestOrgLsCommand_run(t *testing.T) {
 				},
 			},
 			service: fakeclient.OrgService{
-				MineLister: fakeclient.OrgMineLister{
-					ReturnsOrgs: []*api.Org{
+				ListMineFunc: func() ([]*api.Org, error) {
+					return []*api.Org{
 						{
 							Name:      "company1",
 							CreatedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
@@ -42,24 +42,24 @@ func TestOrgLsCommand_run(t *testing.T) {
 							Name:      "company2",
 							CreatedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 						},
-					},
+					}, nil
 				},
-				MemberService: &fakeclient.OrgMemberService{
-					Lister: fakeclient.OrgMemberLister{
-						ReturnsMembers: []*api.OrgMember{
+				MembersService: &fakeclient.OrgMemberService{
+					ListFunc: func(org string) ([]*api.OrgMember, error) {
+						return []*api.OrgMember{
 							{},
 							{},
 							{},
-						},
+						}, nil
 					},
 				},
 			},
 			repoService: fakeclient.RepoService{
-				Lister: fakeclient.RepoLister{
-					ReturnsRepos: []*api.Repo{
+				ListFunc: func(namespace string) ([]*api.Repo, error) {
+					return []*api.Repo{
 						{},
 						{},
-					},
+					}, nil
 				},
 			},
 			out: "NAME      REPOS  USERS  CREATED\n" +
@@ -71,14 +71,19 @@ func TestOrgLsCommand_run(t *testing.T) {
 				quiet: true,
 			},
 			service: fakeclient.OrgService{
-				MineLister: fakeclient.OrgMineLister{
-					ReturnsOrgs: []*api.Org{
+				ListMineFunc: func() ([]*api.Org, error) {
+					return []*api.Org{
 						{
 							Name: "company1",
 						},
 						{
 							Name: "company2",
 						},
+					}, nil
+				},
+				MembersService: &fakeclient.OrgMemberService{
+					ListFunc: func(org string) ([]*api.OrgMember, error) {
+						return nil, testErr
 					},
 				},
 			},
@@ -91,22 +96,27 @@ func TestOrgLsCommand_run(t *testing.T) {
 		},
 		"orgs mine error": {
 			service: fakeclient.OrgService{
-				MineLister: fakeclient.OrgMineLister{
-					Err: testErr,
+				ListMineFunc: func() ([]*api.Org, error) {
+					return nil, testErr
+				},
+				MembersService: &fakeclient.OrgMemberService{
+					ListFunc: func(org string) ([]*api.OrgMember, error) {
+						return nil, testErr
+					},
 				},
 			},
 			err: testErr,
 		},
 		"list org member error": {
 			service: fakeclient.OrgService{
-				MineLister: fakeclient.OrgMineLister{
-					ReturnsOrgs: []*api.Org{
+				ListMineFunc: func() ([]*api.Org, error) {
+					return []*api.Org{
 						{},
-					},
+					}, nil
 				},
-				MemberService: &fakeclient.OrgMemberService{
-					Lister: fakeclient.OrgMemberLister{
-						Err: testErr,
+				MembersService: &fakeclient.OrgMemberService{
+					ListFunc: func(org string) ([]*api.OrgMember, error) {
+						return nil, testErr
 					},
 				},
 			},
@@ -114,16 +124,20 @@ func TestOrgLsCommand_run(t *testing.T) {
 		},
 		"list repos error": {
 			service: fakeclient.OrgService{
-				MineLister: fakeclient.OrgMineLister{
-					ReturnsOrgs: []*api.Org{
+				ListMineFunc: func() ([]*api.Org, error) {
+					return []*api.Org{
 						{},
+					}, nil
+				},
+				MembersService: &fakeclient.OrgMemberService{
+					ListFunc: func(org string) ([]*api.OrgMember, error) {
+						return nil, testErr
 					},
 				},
-				MemberService: &fakeclient.OrgMemberService{},
 			},
 			repoService: fakeclient.RepoService{
-				Lister: fakeclient.RepoLister{
-					Err: testErr,
+				ListFunc: func(namespace string) ([]*api.Repo, error) {
+					return nil, testErr
 				},
 			},
 			err: testErr,

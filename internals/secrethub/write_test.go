@@ -20,7 +20,7 @@ func TestWriteCommand_Run(t *testing.T) {
 
 	cases := map[string]struct {
 		cmd       WriteCommand
-		service   fakeclient.SecretService
+		writeFunc func(path string, data []byte) (*api.SecretVersion, error)
 		in        string
 		piped     bool
 		promptIn  string
@@ -52,13 +52,10 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			in:    "secret value",
 			piped: true,
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: &api.SecretVersion{
-						Version: 1,
-					},
-					Err: nil,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{
+					Version: 1,
+				}, nil
 			},
 			err:  nil,
 			path: "namespace/repo/secret",
@@ -71,10 +68,8 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			in:    "secret value",
 			piped: true,
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					Err: secrethub.ErrEmptySecret,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return nil, secrethub.ErrEmptySecret
 			},
 			err:  secrethub.ErrEmptySecret,
 			path: "namespace/repo/secret",
@@ -97,13 +92,10 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			in:    " secret value",
 			piped: true,
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: &api.SecretVersion{
-						Version: 1,
-					},
-					Err: nil,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{
+					Version: 1,
+				}, nil
 			},
 			err:  nil,
 			path: "namespace/repo/secret",
@@ -117,13 +109,10 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			in:    " secret value",
 			piped: true,
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: &api.SecretVersion{
-						Version: 1,
-					},
-					Err: nil,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{
+					Version: 1,
+				}, nil
 			},
 			err:  nil,
 			path: "namespace/repo/secret",
@@ -136,13 +125,10 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			promptIn:  "asked secret value",
 			promptOut: "Please type in the value of the secret, followed by an [ENTER]:\n",
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: &api.SecretVersion{
-						Version: 1,
-					},
-					Err: nil,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{
+					Version: 1,
+				}, nil
 			},
 			err:  nil,
 			path: "namespace/repo/secret",
@@ -170,13 +156,10 @@ func TestWriteCommand_Run(t *testing.T) {
 				useClipboard: true,
 				clipper:      fakeclip.NewWithValue([]byte("clipped secret value")),
 			},
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: &api.SecretVersion{
-						Version: 1,
-					},
-					Err: nil,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{
+					Version: 1,
+				}, nil
 			},
 			err:  nil,
 			path: "namespace/repo/secret",
@@ -205,7 +188,13 @@ func TestWriteCommand_Run(t *testing.T) {
 			// Setup
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
-					SecretService: &tc.service,
+					SecretService: &fakeclient.SecretService{
+						WriteFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+							assert.Equal(t, path, tc.path)
+							assert.Equal(t, data, tc.data)
+							return tc.writeFunc(path, data)
+						},
+					},
 				}, nil
 			}
 
@@ -223,8 +212,6 @@ func TestWriteCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, tc.service.Writer.ArgPath, tc.path)
-			assert.Equal(t, tc.service.Writer.ArgData, tc.data)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
 			assert.Equal(t, io.StdOut.String(), tc.out)
 		})

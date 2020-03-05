@@ -40,8 +40,13 @@ func TestACLListCommand_run(t *testing.T) {
 		"client error": {
 			cmd: ACLListCommand{},
 			accessrules: fakeclient.AccessRuleService{
-				Lister: &fakeclient.AccessRuleLister{
-					Err: testError,
+				ListFunc: func(path string, depth int, ancestors bool) ([]*api.AccessRule, error) {
+					return nil, testError
+				},
+			},
+			dirs: fakeclient.DirService{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return nil, nil
 				},
 			},
 			err: testError,
@@ -49,8 +54,13 @@ func TestACLListCommand_run(t *testing.T) {
 		"0 access rules": {
 			cmd: ACLListCommand{},
 			accessrules: fakeclient.AccessRuleService{
-				Lister: &fakeclient.AccessRuleLister{
-					ReturnsAccessRules: []*api.AccessRule{},
+				ListFunc: func(path string, depth int, ancestors bool) ([]*api.AccessRule, error) {
+					return []*api.AccessRule{}, nil
+				},
+			},
+			dirs: fakeclient.DirService{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return nil, nil
 				},
 			},
 			out: "PATH    PERMISSIONS    LAST EDITED    ACCOUNT\n",
@@ -62,8 +72,13 @@ func TestACLListCommand_run(t *testing.T) {
 				ancestors: true,
 			},
 			accessrules: fakeclient.AccessRuleService{
-				Lister: &fakeclient.AccessRuleLister{
-					ReturnsAccessRules: []*api.AccessRule{},
+				ListFunc: func(path string, depth int, ancestors bool) ([]*api.AccessRule, error) {
+					return []*api.AccessRule{}, nil
+				},
+			},
+			dirs: fakeclient.DirService{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return nil, nil
 				},
 			},
 			argPath:      api.DirPath("namespace/repo/dir"),
@@ -78,8 +93,8 @@ func TestACLListCommand_run(t *testing.T) {
 				},
 			},
 			accessrules: fakeclient.AccessRuleService{
-				Lister: &fakeclient.AccessRuleLister{
-					ReturnsAccessRules: []*api.AccessRule{
+				ListFunc: func(path string, depth int, ancestors bool) ([]*api.AccessRule, error) {
+					return []*api.AccessRule{
 						{
 							Account: &api.Account{
 								Name: "another dev",
@@ -104,12 +119,12 @@ func TestACLListCommand_run(t *testing.T) {
 							Permission:    api.PermissionAdmin,
 							LastChangedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 						},
-					},
+					}, nil
 				},
 			},
 			dirs: fakeclient.DirService{
-				TreeGetter: fakeclient.TreeGetter{
-					ReturnsTree: &api.Tree{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return &api.Tree{
 						ParentPath: "namespace",
 						Dirs: map[uuid.UUID]*api.Dir{
 							dir1ID: {
@@ -126,7 +141,7 @@ func TestACLListCommand_run(t *testing.T) {
 							Name:  "repo",
 							DirID: dir1ID,
 						},
-					},
+					}, nil
 				},
 			},
 			out: "PATH                  PERMISSIONS    LAST EDITED    ACCOUNT\n" +

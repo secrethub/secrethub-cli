@@ -23,7 +23,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 
 	cases := map[string]struct {
 		cmd               GenerateSecretCommand
-		service           fakeclient.SecretService
+		writeFunc         func(path string, data []byte) (*api.SecretVersion, error)
 		clientCreationErr error
 		path              api.SecretPath
 		data              []byte
@@ -38,13 +38,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				},
 				firstArg: "namespace/repo/secret",
 			},
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: &api.SecretVersion{
-						Version: 1,
-					},
-					Err: nil,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{Version: 1}, nil
 			},
 			path: "namespace/repo/secret",
 			data: []byte("random generated secret"),
@@ -60,13 +55,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				firstArg:   "namespace/repo/secret",
 				lengthFlag: newIntValue(24),
 			},
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: &api.SecretVersion{
-						Version: 1,
-					},
-					Err: nil,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{Version: 1}, nil
 			},
 			path: "namespace/repo/secret",
 			data: []byte("random generated secret"),
@@ -96,13 +86,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				secondArg: "namespace/repo/secret",
 				lengthArg: newIntValue(23),
 			},
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: &api.SecretVersion{
-						Version: 1,
-					},
-					Err: nil,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{Version: 1}, nil
 			},
 			path: "namespace/repo/secret",
 			data: []byte("random generated secret"),
@@ -172,11 +157,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				},
 				firstArg: "namespace/repo/secret",
 			},
-			service: fakeclient.SecretService{
-				Writer: fakeclient.Writer{
-					ReturnsVersion: nil,
-					Err:            testErr,
-				},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return nil, testErr
 			},
 			path: "namespace/repo/secret",
 			data: []byte("random generated secret"),
@@ -189,7 +171,13 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			// Setup
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
-					SecretService: &tc.service,
+					SecretService: &fakeclient.SecretService{
+						WriteFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+							assert.Equal(t, path, tc.path)
+							assert.Equal(t, data, tc.data)
+							return tc.writeFunc(path, data)
+						},
+					},
 				}, tc.clientCreationErr
 			}
 
@@ -201,8 +189,6 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, tc.service.Writer.ArgPath, tc.path)
-			assert.Equal(t, tc.service.Writer.ArgData, tc.data)
 			assert.Equal(t, io.StdOut.String(), tc.out)
 		})
 	}

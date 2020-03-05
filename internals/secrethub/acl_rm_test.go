@@ -18,7 +18,6 @@ func TestACLRmCommand_Run(t *testing.T) {
 
 	cases := map[string]struct {
 		cmd            ACLRmCommand
-		deleter        fakeclient.AccessRuleDeleter
 		newClientErr   error
 		promptErr      error
 		in             string
@@ -26,6 +25,7 @@ func TestACLRmCommand_Run(t *testing.T) {
 		argAccountName api.AccountName
 		promptOut      string
 		out            string
+		deleteErr      error
 		err            error
 	}{
 		"success force": {
@@ -77,11 +77,9 @@ func TestACLRmCommand_Run(t *testing.T) {
 			cmd: ACLRmCommand{
 				force: true,
 			},
-			deleter: fakeclient.AccessRuleDeleter{
-				Err: testError,
-			},
-			out: "Removing access rule...\n",
-			err: testError,
+			deleteErr: testError,
+			out:       "Removing access rule...\n",
+			err:       testError,
 		},
 	}
 
@@ -93,12 +91,14 @@ func TestACLRmCommand_Run(t *testing.T) {
 			io.PromptErr = tc.promptErr
 			tc.cmd.io = io
 
-			deleter := &tc.deleter
-
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					AccessRuleService: &fakeclient.AccessRuleService{
-						Deleter: deleter,
+						DeleteFunc: func(path string, accountName string) error {
+							assert.Equal(t, path, tc.argPath)
+							assert.Equal(t, accountName, tc.argAccountName)
+							return tc.deleteErr
+						},
 					},
 				}, tc.newClientErr
 			}
@@ -110,8 +110,6 @@ func TestACLRmCommand_Run(t *testing.T) {
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
-			assert.Equal(t, deleter.ArgPath, tc.argPath)
-			assert.Equal(t, deleter.ArgAccountName, tc.argAccountName)
 		})
 	}
 }

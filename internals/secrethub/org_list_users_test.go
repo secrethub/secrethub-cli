@@ -19,7 +19,7 @@ func TestOrgListUsersCommand_run(t *testing.T) {
 
 	cases := map[string]struct {
 		cmd              OrgListUsersCommand
-		service          fakeclient.OrgMemberService
+		listFunc         func(org string) ([]*api.OrgMember, error)
 		ArgListOrgMember api.OrgName
 		newClientErr     error
 		out              string
@@ -32,18 +32,16 @@ func TestOrgListUsersCommand_run(t *testing.T) {
 				},
 				orgName: "company",
 			},
-			service: fakeclient.OrgMemberService{
-				Lister: fakeclient.OrgMemberLister{
-					ReturnsMembers: []*api.OrgMember{
-						{
-							User: &api.User{
-								Username: "dev1",
-							},
-							Role:          api.OrgRoleMember,
-							LastChangedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
+			listFunc: func(org string) ([]*api.OrgMember, error) {
+				return []*api.OrgMember{
+					{
+						User: &api.User{
+							Username: "dev1",
 						},
+						Role:          api.OrgRoleMember,
+						LastChangedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 					},
-				},
+				}, nil
 			},
 			ArgListOrgMember: "company",
 			out: "USER  ROLE    LAST CHANGED\n" +
@@ -60,10 +58,8 @@ func TestOrgListUsersCommand_run(t *testing.T) {
 				},
 				orgName: "company",
 			},
-			service: fakeclient.OrgMemberService{
-				Lister: fakeclient.OrgMemberLister{
-					Err: testErr,
-				},
+			listFunc: func(org string) ([]*api.OrgMember, error) {
+				return nil, testErr
 			},
 			ArgListOrgMember: "company",
 			err:              testErr,
@@ -76,7 +72,12 @@ func TestOrgListUsersCommand_run(t *testing.T) {
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					OrgService: &fakeclient.OrgService{
-						MemberService: &tc.service,
+						MembersService: &fakeclient.OrgMemberService{
+							ListFunc: func(org string) ([]*api.OrgMember, error) {
+								assert.Equal(t, org, tc.ArgListOrgMember)
+								return tc.listFunc(org)
+							},
+						},
 					},
 				}, tc.newClientErr
 			}
@@ -90,7 +91,6 @@ func TestOrgListUsersCommand_run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
-			assert.Equal(t, tc.service.Lister.ArgName, tc.ArgListOrgMember)
 		})
 	}
 }

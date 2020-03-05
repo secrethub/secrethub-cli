@@ -32,9 +32,8 @@ func TestInspectSecret_Run(t *testing.T) {
 				},
 			},
 			secretVersionService: fakeclient.SecretVersionService{
-				WithoutDataGetter: fakeclient.WithoutDataGetter{
-					ArgPath: "foo/bar/secret",
-					ReturnsVersion: &api.SecretVersion{
+				GetWithoutDataFunc: func(path string) (*api.SecretVersion, error) {
+					return &api.SecretVersion{
 						Secret: &api.Secret{
 							Name:         "secret",
 							CreatedAt:    time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
@@ -43,11 +42,10 @@ func TestInspectSecret_Run(t *testing.T) {
 						Version:   1,
 						CreatedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 						Status:    api.StatusOK,
-					},
+					}, nil
 				},
-				WithoutDataLister: fakeclient.WithoutDataLister{
-					ArgPath: "foo/bar/secret:1",
-					ReturnsVersions: []*api.SecretVersion{
+				ListWithoutDataFunc: func(path string) ([]*api.SecretVersion, error) {
+					return []*api.SecretVersion{
 						{
 							Secret: &api.Secret{
 								Name:         "secret",
@@ -58,7 +56,7 @@ func TestInspectSecret_Run(t *testing.T) {
 							CreatedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 							Status:    api.StatusOK,
 						},
-					},
+					}, nil
 				},
 			},
 			out: "" +
@@ -83,10 +81,8 @@ func TestInspectSecret_Run(t *testing.T) {
 				},
 			},
 			secretVersionService: fakeclient.SecretVersionService{
-				WithoutDataGetter: fakeclient.WithoutDataGetter{
-					ArgPath:        "foo/bar/secret",
-					ReturnsVersion: nil,
-					Err:            api.ErrSecretNotFound,
+				GetWithoutDataFunc: func(path string) (*api.SecretVersion, error) {
+					return nil, api.ErrSecretNotFound
 				},
 			},
 			out: "",

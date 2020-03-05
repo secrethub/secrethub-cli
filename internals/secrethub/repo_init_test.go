@@ -18,18 +18,15 @@ func TestRepoInitCommand_Run(t *testing.T) {
 	cases := map[string]struct {
 		path         api.RepoPath
 		newClientErr error
-		service      fakeclient.RepoService
+		createFunc   func(path string) (*api.Repo, error)
 		argPath      api.RepoPath
 		out          string
 		err          error
 	}{
 		"success": {
 			path: api.RepoPath("namespace/repo"),
-			service: fakeclient.RepoService{
-				Creater: fakeclient.RepoCreater{
-					ReturnsRepo: &api.Repo{},
-					Err:         nil,
-				},
+			createFunc: func(path string) (*api.Repo, error) {
+				return &api.Repo{}, nil
 			},
 			argPath: api.RepoPath("namespace/repo"),
 			out: "Creating repository...\n" +
@@ -41,10 +38,8 @@ func TestRepoInitCommand_Run(t *testing.T) {
 			err:          testErr,
 		},
 		"client error": {
-			service: fakeclient.RepoService{
-				Creater: fakeclient.RepoCreater{
-					Err: testErr,
-				},
+			createFunc: func(path string) (*api.Repo, error) {
+				return nil, testErr
 			},
 			out: "Creating repository...\n",
 			err: testErr,
@@ -65,7 +60,12 @@ func TestRepoInitCommand_Run(t *testing.T) {
 			} else {
 				cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
-						RepoService: &tc.service,
+						RepoService: &fakeclient.RepoService{
+							CreateFunc: func(path string) (*api.Repo, error) {
+								assert.Equal(t, path, tc.argPath)
+								return tc.createFunc(path)
+							},
+						},
 					}, nil
 				}
 			}
@@ -79,7 +79,6 @@ func TestRepoInitCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
-			assert.Equal(t, tc.service.Creater.Argpath, tc.argPath)
 		})
 	}
 }

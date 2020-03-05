@@ -31,10 +31,10 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 			},
 			promptIn: "dev1",
 			service: fakeclient.OrgMemberService{
-				Revoker: fakeclient.OrgMemberRevoker{
-					ReturnsRevokeOrgResponse: &api.RevokeOrgResponse{
+				RevokeFunc: func(org string, username string, opts *api.RevokeOpts) (*api.RevokeOrgResponse, error) {
+					return &api.RevokeOrgResponse{
 						Repos: []*api.RevokeRepoResponse{},
-					},
+					}, nil
 				},
 			},
 			out: "The user dev1 has no memberships to any of company's repos and can be safely removed.\n" +
@@ -50,8 +50,8 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 			},
 			promptIn: "dev1",
 			service: fakeclient.OrgMemberService{
-				Revoker: fakeclient.OrgMemberRevoker{
-					ReturnsRevokeOrgResponse: &api.RevokeOrgResponse{
+				RevokeFunc: func(org string, username string, opts *api.RevokeOpts) (*api.RevokeOrgResponse, error) {
+					return &api.RevokeOrgResponse{
 						Repos: []*api.RevokeRepoResponse{
 							{
 								Namespace: "company",
@@ -74,7 +74,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 							api.StatusFlagged: 1,
 							api.StatusFailed:  1,
 						},
-					},
+					}, nil
 				},
 			},
 			out: "[WARNING] Revoking dev1 from the company organization will revoke the user from 3 repositories, automatically flagging secrets for rotation.\n" +
@@ -103,10 +103,10 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 			},
 			promptIn: "typo",
 			service: fakeclient.OrgMemberService{
-				Revoker: fakeclient.OrgMemberRevoker{
-					ReturnsRevokeOrgResponse: &api.RevokeOrgResponse{
+				RevokeFunc: func(org string, username string, opts *api.RevokeOpts) (*api.RevokeOrgResponse, error) {
+					return &api.RevokeOrgResponse{
 						Repos: []*api.RevokeRepoResponse{},
-					},
+					}, nil
 				},
 			},
 			out: "The user dev1 has no memberships to any of company's repos and can be safely removed.\n" +
@@ -125,7 +125,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					OrgService: &fakeclient.OrgService{
-						MemberService: &tc.service,
+						MembersService: &tc.service,
 					},
 				}, tc.newClientErr
 			}

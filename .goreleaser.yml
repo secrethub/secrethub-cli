@@ -53,7 +53,7 @@ checksum:
   name_template: "secrethub-{{ .Tag }}-checksums.txt"
 
 release:
-  draft: true
+  prerelease: true
 
 brews:
   - name: secrethub-cli
@@ -67,6 +67,7 @@ brews:
       bin.install "bin/secrethub"
     homepage: https://secrethub.io
     description: Command-line interface for SecretHub
+    skip_upload: false
 
 scoop:
   name: secrethub-cli
@@ -78,6 +79,8 @@ scoop:
   description: Command-line interface for SecretHub
 
   license: Apache-2.0
+
+  skip_upload: false
 
 nfpms:
   - file_name_template: "secrethub-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"

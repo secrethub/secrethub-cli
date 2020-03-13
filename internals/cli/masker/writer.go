@@ -70,57 +70,89 @@ func (m *sequenceMatcher) Reset() {
 	m.currentIndex = 0
 }
 
+type input struct {
+	bytes  []byte
+	target io.Writer
+}
+
 // maskByte represents a byte and whether the byte should be masked or not.
 type maskByte struct {
 	byte
 	masked bool
 }
 
-// MaskedWriter wraps an io.Writer which masks all occurrences of masks by maskString.
+type output struct {
+	byte   maskByte
+	target io.Writer
+}
+
+// Masker masks all occurrences of masks by maskString.
 // If no write is made for timeout on the io.Writer, any matches in progress are reset
 // and the buffer is flushed. This is to ensure that the writer does not hang on partial matches.
-type MaskedWriter struct {
-	w          io.Writer
+type Masker struct {
 	maskString string
-	matchers   []matcher
+	masks      [][]byte
 	timeout    time.Duration
 
-	buf             []maskByte
-	incomingBytesCh chan []byte
+	matchers        map[io.Writer][]matcher
+	buf             []output
+	incomingBytesCh chan input
 	outputTimeoutCh chan struct{}
-	outputCh        chan []maskByte
+	outputCh        chan []output
 	errCh           chan error
 	wg              sync.WaitGroup
 }
 
-// NewMaskedWriter returns a new MaskedWriter that masks all occurrences of sequences in masks with maskString.
-func NewMaskedWriter(w io.Writer, masks [][]byte, maskString string, timeout time.Duration) *MaskedWriter {
-	matchers := make([]matcher, len(masks))
-	for i, mask := range masks {
-		matchers[i] = &sequenceMatcher{
-			sequence: mask,
-		}
-	}
-	return &MaskedWriter{
-		w:               w,
+// New returns a new masker on which you can create a writer that masks all occurrences of sequences in masks with maskString.
+func New(masks [][]byte, maskString string, timeout time.Duration) *Masker {
+	return &Masker{
 		maskString:      maskString,
-		matchers:        matchers,
+		masks:           masks,
 		timeout:         timeout,
+		matchers:        make(map[io.Writer][]matcher),
 		errCh:           make(chan error, 1),
 		outputTimeoutCh: make(chan struct{}, 1),
-		incomingBytesCh: make(chan []byte, 256),
-		outputCh:        make(chan []maskByte),
+		incomingBytesCh: make(chan input),
+		outputCh:        make(chan []output),
 	}
 }
 
-// Write implements Write from io.Writer
+// MaskedWriter implements io.Writer and masks all occurrences of masks with the mask string.
+type MaskedWriter struct {
+	w io.Writer
+	m *Masker
+}
+
+func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
+	return mw.m.Write(mw.w, p)
+}
+
+// NewWriter returns a new io.Writer that masks all occurrences of masks with the mask string.
+func (mw *Masker) NewWriter(w io.Writer) io.Writer {
+	mw.matchers[w] = make([]matcher, len(mw.masks))
+	for i, mask := range mw.masks {
+		mw.matchers[w][i] = &sequenceMatcher{
+			sequence: mask,
+		}
+	}
+
+	return &MaskedWriter{
+		w: w,
+		m: mw,
+	}
+}
+
+// Write performs one Write operations for an io.Writer.
 // It is responsible for finding any matches to mask and mark the appropriate bytes as masked.
 // This function never returns an error. These can instead be caught with Flush().
-func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
+func (mw *Masker) Write(w io.Writer, p []byte) (n int, err error) {
 	mw.wg.Add(len(p))
 	tmp := make([]byte, len(p))
 	copy(tmp, p)
-	mw.incomingBytesCh <- tmp
+	mw.incomingBytesCh <- input{
+		bytes:  tmp,
+		target: w,
+	}
 	return len(p), nil
 }
 
@@ -133,26 +165,28 @@ func (mw *MaskedWriter) Write(p []byte) (n int, err error) {
 //     - New bytes come in that finish the secret, in which case the bytes are passed to the output channel and marked as masked.
 //     - New bytes come in that do not finish the secret, in which case the bytes are passed to the output channel and not marked as masked.
 //     - The output timeout channel receives a signal, in which case the bytes are passed to the output channel and not marked as masked.
-func (mw *MaskedWriter) process() {
+func (mw *Masker) process() {
 	for {
 		select {
 		case <-mw.outputTimeoutCh:
 			// Only flush if there is still nothing send to the output channel.
 			if len(mw.outputCh) == 0 {
-				for _, matcher := range mw.matchers {
-					matcher.Reset()
+				for _, matchers := range mw.matchers {
+					for _, matcher := range matchers {
+						matcher.Reset()
+					}
 				}
 				mw.flushBuffer()
 			}
 		case p := <-mw.incomingBytesCh:
-			for _, b := range p {
+			for _, b := range p.bytes {
 				matchInProgress := false
-				mw.buf = append(mw.buf, maskByte{byte: b})
+				mw.buf = append(mw.buf, output{byte: maskByte{byte: b}, target: p.target})
 
-				for _, matcher := range mw.matchers {
+				for _, matcher := range mw.matchers[p.target] {
 					maskLen := matcher.Read(b)
 					for i := 0; i < maskLen; i++ {
-						mw.buf[len(mw.buf)-1-i].masked = true
+						mw.buf[len(mw.buf)-1-i].byte.masked = true
 					}
 					matchInProgress = matchInProgress || matcher.InProgress()
 				}
@@ -165,8 +199,8 @@ func (mw *MaskedWriter) process() {
 	}
 }
 
-func (mw *MaskedWriter) flushBuffer() {
-	tmp := make([]maskByte, len(mw.buf))
+func (mw *Masker) flushBuffer() {
+	tmp := make([]output, len(mw.buf))
 	copy(tmp, mw.buf)
 	mw.outputCh <- tmp
 	mw.buf = mw.buf[:0]
@@ -177,7 +211,7 @@ func (mw *MaskedWriter) flushBuffer() {
 // and all ongoing matches are reset.
 //
 // This should be run in a separate goroutine.
-func (mw *MaskedWriter) Run() {
+func (mw *Masker) Run() {
 	go mw.process()
 	masking := false
 	for {
@@ -185,9 +219,9 @@ func (mw *MaskedWriter) Run() {
 		case output := <-mw.outputCh:
 			for _, b := range output {
 				var err error
-				if b.masked {
+				if b.byte.masked {
 					if !masking {
-						_, err = mw.w.Write([]byte(mw.maskString))
+						_, err = b.target.Write([]byte(mw.maskString))
 						if err != nil {
 							mw.errCh <- err
 							return
@@ -195,7 +229,7 @@ func (mw *MaskedWriter) Run() {
 					}
 					masking = true
 				} else {
-					_, err = mw.w.Write([]byte{b.byte})
+					_, err = b.target.Write([]byte{b.byte.byte})
 					if err != nil {
 						mw.errCh <- err
 						return
@@ -216,7 +250,7 @@ func (mw *MaskedWriter) Run() {
 
 // Flush is called to make sure that all output is written to the underlying io.Writer.
 // Returns any errors caused by the writing.
-func (mw *MaskedWriter) Flush() error {
+func (mw *Masker) Flush() error {
 	go func() {
 		mw.wg.Wait()
 		mw.errCh <- nil

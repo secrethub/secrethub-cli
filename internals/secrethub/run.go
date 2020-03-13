@@ -106,21 +106,19 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	maskedStdout := masker.NewMaskedWriter(cmd.io.Stdout(), valuesToMask, maskString, cmd.maskingTimeout)
-	maskedStderr := masker.NewMaskedWriter(os.Stderr, valuesToMask, maskString, cmd.maskingTimeout)
-
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = environment
 	command.Stdin = os.Stdin
+
+	m := masker.New(valuesToMask, maskString, cmd.maskingTimeout)
 	if cmd.noMasking {
 		command.Stdout = cmd.io.Stdout()
 		command.Stderr = os.Stderr
 	} else {
-		command.Stdout = maskedStdout
-		command.Stderr = maskedStderr
+		command.Stdout = m.NewWriter(cmd.io.Stdout())
+		command.Stderr = m.NewWriter(os.Stderr)
 
-		go maskedStdout.Run()
-		go maskedStderr.Run()
+		go m.Run()
 	}
 
 	err = command.Start()
@@ -151,11 +149,7 @@ func (cmd *RunCommand) Run() error {
 	done <- true
 
 	if !cmd.noMasking {
-		err = maskedStdout.Flush()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-		err = maskedStderr.Flush()
+		err = m.Flush()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}

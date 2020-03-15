@@ -109,12 +109,12 @@ func TestACLCheckCommand_Run(t *testing.T) {
 			tc.cmd.io = io
 
 			lister := tc.lister
-
+			var argPath string
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					AccessRuleService: &fakeclient.AccessRuleService{
 						ListLevelsFunc: func(path string) ([]*api.AccessLevel, error) {
-							assert.Equal(t, path, tc.listerArgPath)
+							argPath = path
 							return lister(path)
 						},
 					},
@@ -127,6 +127,7 @@ func TestACLCheckCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, argPath, tc.listerArgPath)
 		})
 	}
 }

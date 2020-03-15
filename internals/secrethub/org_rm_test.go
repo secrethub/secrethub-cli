@@ -82,12 +82,14 @@ func TestOrgRmCommand_Run(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var argName string
+
 			// Setup
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					OrgService: &fakeclient.OrgService{
 						DeleteFunc: func(name string) error {
-							assert.Equal(t, name, tc.argName)
+							argName = name
 							return tc.deleteFunc(name)
 						}},
 				}, tc.newClientErr
@@ -104,6 +106,7 @@ func TestOrgRmCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
+			assert.Equal(t, argName, tc.argName)
 			assert.Equal(t, io.StdOut.String(), tc.out)
 		})
 	}

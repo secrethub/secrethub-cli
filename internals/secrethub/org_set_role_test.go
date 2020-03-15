@@ -60,15 +60,19 @@ func TestOrgSetRoleCommand_Run(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var argOrgName string
+			var argUsername string
+			var argRole string
+
 			// Setup
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					OrgService: &fakeclient.OrgService{
 						MembersService: &fakeclient.OrgMemberService{
 							UpdateFunc: func(org string, username string, role string) (*api.OrgMember, error) {
-								assert.Equal(t, org, tc.ArgOrgName)
-								assert.Equal(t, username, tc.ArgUsername)
-								assert.Equal(t, role, tc.ArgRole)
+								argOrgName = org
+								argUsername = username
+								argRole = role
 								return tc.updateFunc(org, username, role)
 							},
 						},
@@ -85,6 +89,9 @@ func TestOrgSetRoleCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, argOrgName, tc.ArgOrgName)
+			assert.Equal(t, argUsername, tc.ArgUsername)
+			assert.Equal(t, argRole, tc.ArgRole)
 		})
 	}
 }

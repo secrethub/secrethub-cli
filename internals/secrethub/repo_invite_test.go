@@ -68,6 +68,10 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var argInviteUsername string
+			var argGetUsername string
+			var argPath string
+
 			// Setup
 			if tc.newClientErr != nil {
 				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
@@ -79,15 +83,15 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 						RepoService: &fakeclient.RepoService{
 							UserService: &fakeclient.RepoUserService{
 								InviteFunc: func(path string, username string) (*api.RepoMember, error) {
-									assert.Equal(t, username, tc.inviteArgUsername)
-									assert.Equal(t, path, tc.inviteArgPath)
+									argPath = path
+									argInviteUsername = username
 									return tc.InviteFunc(path, username)
 								},
 							},
 						},
 						UserService: &fakeclient.UserService{
 							GetFunc: func(username string) (*api.User, error) {
-								assert.Equal(t, username, tc.getArgUsername)
+								argGetUsername = username
 								return tc.GetFunc(username)
 							},
 						},
@@ -104,6 +108,9 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, argGetUsername, tc.getArgUsername)
+			assert.Equal(t, argInviteUsername, tc.inviteArgUsername)
+			assert.Equal(t, argPath, tc.inviteArgPath)
 		})
 	}
 }

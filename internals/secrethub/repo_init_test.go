@@ -48,6 +48,8 @@ func TestRepoInitCommand_Run(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var argPath string
+
 			// Setup
 			cmd := RepoInitCommand{
 				path: tc.path,
@@ -62,7 +64,7 @@ func TestRepoInitCommand_Run(t *testing.T) {
 					return fakeclient.Client{
 						RepoService: &fakeclient.RepoService{
 							CreateFunc: func(path string) (*api.Repo, error) {
-								assert.Equal(t, path, tc.argPath)
+								argPath = path
 								return tc.createFunc(path)
 							},
 						},
@@ -79,6 +81,7 @@ func TestRepoInitCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, argPath, tc.argPath)
 		})
 	}
 }

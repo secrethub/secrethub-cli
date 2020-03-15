@@ -185,13 +185,15 @@ func TestWriteCommand_Run(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var argPath string
+			var argData []byte
 			// Setup
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					SecretService: &fakeclient.SecretService{
 						WriteFunc: func(path string, data []byte) (*api.SecretVersion, error) {
-							assert.Equal(t, path, tc.path)
-							assert.Equal(t, data, tc.data)
+							argPath = path
+							argData = data
 							return tc.writeFunc(path, data)
 						},
 					},
@@ -212,6 +214,8 @@ func TestWriteCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
+			assert.Equal(t, argPath, tc.path)
+			assert.Equal(t, argData, tc.data)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
 			assert.Equal(t, io.StdOut.String(), tc.out)
 		})

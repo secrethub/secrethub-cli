@@ -68,13 +68,15 @@ func TestOrgListUsersCommand_run(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var argOrg string
+
 			// Setup
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					OrgService: &fakeclient.OrgService{
 						MembersService: &fakeclient.OrgMemberService{
 							ListFunc: func(org string) ([]*api.OrgMember, error) {
-								assert.Equal(t, org, tc.ArgListOrgMember)
+								argOrg = org
 								return tc.listFunc(org)
 							},
 						},
@@ -91,6 +93,7 @@ func TestOrgListUsersCommand_run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, argOrg, tc.ArgListOrgMember)
 		})
 	}
 }

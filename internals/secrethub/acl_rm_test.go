@@ -91,12 +91,14 @@ func TestACLRmCommand_Run(t *testing.T) {
 			io.PromptErr = tc.promptErr
 			tc.cmd.io = io
 
+			var argPath string
+			var argAccountName string
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					AccessRuleService: &fakeclient.AccessRuleService{
 						DeleteFunc: func(path string, accountName string) error {
-							assert.Equal(t, path, tc.argPath)
-							assert.Equal(t, accountName, tc.argAccountName)
+							argPath = path
+							argAccountName = accountName
 							return tc.deleteErr
 						},
 					},
@@ -110,6 +112,8 @@ func TestACLRmCommand_Run(t *testing.T) {
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
+			assert.Equal(t, argPath, tc.argPath)
+			assert.Equal(t, argAccountName, tc.argAccountName)
 		})
 	}
 }

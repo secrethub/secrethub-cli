@@ -15,5 +15,5 @@ func registerTimestampFlag(r FlagRegisterer) *kingpin.FlagClause {
 }
 
 func registerForceFlag(r FlagRegisterer) *kingpin.FlagClause {
-	return r.Flag("force", "Ignore confirmation and fail instead of prompt for missing arguments.").Short('f')
+	return r.Flag("force", "Disable all confirmation prompts.").Short('f')
 }

@@ -138,9 +138,6 @@ func TestOrgInspectCommand_Run(t *testing.T) {
 				},
 			},
 			repoService: fakeclient.RepoService{
-				GetFunc: func(path string) (*api.Repo, error) {
-					return nil, nil
-				},
 				ListFunc: func(namespace string) ([]*api.Repo, error) {
 					return nil, testErr
 				},

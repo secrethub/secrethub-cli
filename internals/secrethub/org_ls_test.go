@@ -121,8 +121,13 @@ func TestOrgLsCommand_run(t *testing.T) {
 				},
 				MembersService: &fakeclient.OrgMemberService{
 					ListFunc: func(org string) ([]*api.OrgMember, error) {
-						return nil, testErr
+						return nil, nil
 					},
+				},
+			},
+			repoService: fakeclient.RepoService{
+				ListFunc: func(namespace string) ([]*api.Repo, error) {
+					return nil, testErr
 				},
 			},
 			err: testErr,

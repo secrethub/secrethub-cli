@@ -81,11 +81,6 @@ func TestOrgLsCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				MembersService: &fakeclient.OrgMemberService{
-					ListFunc: func(org string) ([]*api.OrgMember, error) {
-						return nil, testErr
-					},
-				},
 			},
 			out: "company1\n" +
 				"company2\n",
@@ -98,11 +93,6 @@ func TestOrgLsCommand_run(t *testing.T) {
 			service: fakeclient.OrgService{
 				ListMineFunc: func() ([]*api.Org, error) {
 					return nil, testErr
-				},
-				MembersService: &fakeclient.OrgMemberService{
-					ListFunc: func(org string) ([]*api.OrgMember, error) {
-						return nil, testErr
-					},
 				},
 			},
 			err: testErr,
@@ -133,11 +123,6 @@ func TestOrgLsCommand_run(t *testing.T) {
 					ListFunc: func(org string) ([]*api.OrgMember, error) {
 						return nil, testErr
 					},
-				},
-			},
-			repoService: fakeclient.RepoService{
-				ListFunc: func(namespace string) ([]*api.Repo, error) {
-					return nil, testErr
 				},
 			},
 			err: testErr,

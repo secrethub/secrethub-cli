@@ -44,11 +44,6 @@ func TestACLListCommand_run(t *testing.T) {
 					return nil, testError
 				},
 			},
-			dirs: fakeclient.DirService{
-				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
-					return nil, nil
-				},
-			},
 			err: testError,
 		},
 		"0 access rules": {

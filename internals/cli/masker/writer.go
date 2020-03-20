@@ -189,19 +189,23 @@ func (mw *Masker) process() {
 					}
 				}
 
-				matchInProgress := false
-				for _, matchers := range mw.matchers {
-					for _, matcher := range matchers {
-						matchInProgress = matchInProgress || matcher.InProgress()
-					}
-				}
-
-				if !matchInProgress {
+				if !mw.isMatchInProgress() {
 					mw.flushBuffer()
 				}
 			}
 		}
 	}
+}
+
+func (mw *Masker) isMatchInProgress() bool {
+	for _, matchers := range mw.matchers {
+		for _, matcher := range matchers {
+			if matcher.InProgress() {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (mw *Masker) flushBuffer() {

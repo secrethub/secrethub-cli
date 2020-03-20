@@ -188,10 +188,10 @@ func (mw *Masker) process() {
 						mw.buf[len(mw.buf)-1-i].byte.masked = true
 					}
 				}
+			}
 
-				if !mw.isMatchInProgress() {
-					mw.flushBuffer()
-				}
+			if !mw.isMatchInProgress() {
+				mw.flushBuffer()
 			}
 		}
 	}

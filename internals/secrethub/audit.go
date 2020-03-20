@@ -66,16 +66,16 @@ func (cmd *AuditCommand) run() error {
 		return err
 	}
 
-	paginatedWriter, done, err := paginateWriter(os.Stdout)
+	paginatedWriter, err := newPaginatedWriter(os.Stdout)
 	if err != nil {
 		return err
 	}
+	defer paginatedWriter.Close()
 
 	header := strings.Join(auditTable.header(), "\t") + "\n"
 	fmt.Fprint(paginatedWriter, header)
 
 	i := 0
-	paginatorClosed := false
 	for {
 		i++
 		event, err := iter.Next()
@@ -90,13 +90,8 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		select {
-		case <-done:
-			paginatorClosed = true
-		default:
-			fmt.Fprint(paginatedWriter, strings.Join(row, "\t")+"\n")
-		}
-		if paginatorClosed {
+		fmt.Fprint(paginatedWriter, strings.Join(row, "\t")+"\n")
+		if paginatedWriter.IsClosed() {
 			break
 		}
 	}
@@ -145,17 +140,17 @@ func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, audi
 	return nil, nil, ErrNoValidRepoOrSecretPath
 }
 
-func paginateWriter(outputWriter io.Writer) (io.WriteCloser, <-chan struct{}, error) {
+func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
 	pager, err := pagerCommand()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	cmd := exec.Command(pager)
 
 	writer, err := cmd.StdinPipe()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	cmd.Stdout = outputWriter
@@ -163,14 +158,49 @@ func paginateWriter(outputWriter io.Writer) (io.WriteCloser, <-chan struct{}, er
 
 	err = cmd.Start()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	done := make(chan struct{}, 1)
 	go func() {
 		cmd.Wait()
 		done <- struct{}{}
 	}()
-	return writer, done, nil
+	return &paginatedWriter{writer: writer, cmd: cmd, done: done}, nil
+}
+
+type paginatedWriter struct {
+	writer io.WriteCloser
+	cmd    *exec.Cmd
+	done   <-chan struct{}
+	closed bool
+}
+
+func (p *paginatedWriter) Write(data []byte) (n int, err error) {
+	return p.writer.Write(data)
+}
+
+func (p *paginatedWriter) Close() error {
+	err := p.writer.Close()
+	if err != nil {
+		return err
+	}
+	if !p.closed {
+		<-p.done
+	}
+	return nil
+}
+
+func (p *paginatedWriter) IsClosed() bool {
+	if p.closed {
+		return true
+	}
+	select {
+	case <-p.done:
+		p.closed = true
+		return true
+	default:
+		return false
+	}
 }
 
 func pagerCommand() (string, error) {

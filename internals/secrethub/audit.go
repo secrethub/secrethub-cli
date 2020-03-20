@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
@@ -101,8 +100,6 @@ func (cmd *AuditCommand) run() error {
 			break
 		}
 	}
-
-	fmt.Fprint(os.Stdout, strconv.Itoa(i)+" rows fetched")
 	return nil
 }
 

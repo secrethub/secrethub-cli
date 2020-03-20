@@ -2,13 +2,17 @@ package secrethub
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"strconv"
 	"strings"
-	"text/tabwriter"
+
+	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
-	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -63,11 +67,16 @@ func (cmd *AuditCommand) run() error {
 		return err
 	}
 
-	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
+	paginatedWriter, done, err := paginateWriter(os.Stdout)
+	if err != nil {
+		return err
+	}
+
 	header := strings.Join(auditTable.header(), "\t") + "\n"
-	fmt.Fprint(tabWriter, header)
+	fmt.Fprint(paginatedWriter, header)
 
 	i := 0
+	paginatorClosed := false
 	for {
 		i++
 		event, err := iter.Next()
@@ -82,29 +91,18 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		fmt.Fprint(tabWriter, strings.Join(row, "\t")+"\n")
-
-		if i == cmd.perPage {
-			err = tabWriter.Flush()
-			if err != nil {
-				return err
-			}
-			i = 0
-
-			// wait for <ENTER> to continue.
-			_, err := ui.Ask(cmd.io, "Press <ENTER> to show more results. Press <CTRL+C> to exit.")
-			if err != nil {
-				return err
-			}
-			fmt.Fprint(tabWriter, header)
+		select {
+		case <-done:
+			paginatorClosed = true
+		default:
+			fmt.Fprint(paginatedWriter, strings.Join(row, "\t")+"\n")
+		}
+		if paginatorClosed {
+			break
 		}
 	}
 
-	err = tabWriter.Flush()
-	if err != nil {
-		return err
-	}
-
+	fmt.Fprint(os.Stdout, strconv.Itoa(i)+" rows fetched")
 	return nil
 }
 
@@ -148,6 +146,55 @@ func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, audi
 	}
 
 	return nil, nil, ErrNoValidRepoOrSecretPath
+}
+
+func paginateWriter(outputWriter io.Writer) (io.WriteCloser, <-chan struct{}, error) {
+	pager, err := pagerCommand()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cmd := exec.Command(pager)
+
+	writer, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cmd.Stdout = outputWriter
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Start()
+	if err != nil {
+		return nil, nil, err
+	}
+	done := make(chan struct{}, 1)
+	go func() {
+		cmd.Wait()
+		done <- struct{}{}
+	}()
+	return writer, done, nil
+}
+
+func pagerCommand() (string, error) {
+	var pager string
+	var err error
+
+	pager = os.ExpandEnv("$PAGER")
+	if pager != "" {
+		return pager, nil
+	}
+
+	pager, err = exec.LookPath("less")
+	if err == nil {
+		return pager, nil
+	}
+
+	pager, err = exec.LookPath("more")
+	if err != nil {
+		return "", err
+	}
+	return pager, nil
 }
 
 type auditTable interface {

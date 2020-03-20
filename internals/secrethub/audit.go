@@ -16,6 +16,10 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
+const (
+	pagerEnvvar = "$PAGER"
+)
+
 // AuditCommand is a command to audit a repo or a secret.
 type AuditCommand struct {
 	io            ui.IO
@@ -211,7 +215,7 @@ func pagerCommand() (string, error) {
 	var pager string
 	var err error
 
-	pager = os.ExpandEnv("$PAGER")
+	pager = os.ExpandEnv(pagerEnvvar)
 	if pager != "" {
 		return pager, nil
 	}

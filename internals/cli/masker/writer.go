@@ -180,7 +180,6 @@ func (mw *Masker) process() {
 			}
 		case p := <-mw.incomingBytesCh:
 			for _, b := range p.bytes {
-				matchInProgress := false
 				mw.buf = append(mw.buf, output{byte: maskByte{byte: b}, target: p.target})
 
 				for _, matcher := range mw.matchers[p.target] {
@@ -188,7 +187,13 @@ func (mw *Masker) process() {
 					for i := 0; i < maskLen; i++ {
 						mw.buf[len(mw.buf)-1-i].byte.masked = true
 					}
-					matchInProgress = matchInProgress || matcher.InProgress()
+				}
+
+				matchInProgress := false
+				for _, matchers := range mw.matchers {
+					for _, matcher := range matchers {
+						matchInProgress = matchInProgress || matcher.InProgress()
+					}
 				}
 
 				if !matchInProgress {

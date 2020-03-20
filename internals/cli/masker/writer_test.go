@@ -258,12 +258,13 @@ func TestNewMaskedWriter(t *testing.T) {
 				maskStrings = append(maskStrings, []byte(s))
 			}
 
-			w := NewMaskedWriter(&buf, maskStrings, maskString, timeout)
+			m := New(maskStrings, maskString, timeout)
+			w := m.NewWriter(&buf)
 
-			go w.Run()
+			go m.Run()
 			tc.inputFunc(w)
 
-			err := w.Flush()
+			err := m.Flush()
 
 			assert.OK(t, err)
 			assert.Equal(t, buf.String(), tc.expected)
@@ -280,15 +281,16 @@ func TestNewMaskedWriter_FlushBeforeTimeout(t *testing.T) {
 
 	maskStrings := [][]byte{[]byte("foo")}
 
-	w := NewMaskedWriter(&buf, maskStrings, maskString, time.Second*10)
+	m := New(maskStrings, maskString, time.Second*10)
+	w := m.NewWriter(&buf)
 
-	go w.Run()
+	go m.Run()
 	_, err := w.Write([]byte("teststring foo more text"))
 	assert.OK(t, err)
 
 	done := make(chan struct{})
 	go func() {
-		err := w.Flush()
+		err := m.Flush()
 		assert.OK(t, err)
 		done <- struct{}{}
 	}()
@@ -311,12 +313,13 @@ func (w errWriter) Write(p []byte) (n int, err error) {
 func TestNewMaskedWriter_WriteError(t *testing.T) {
 	expectedErr := fmt.Errorf("test")
 
-	w := NewMaskedWriter(&errWriter{err: expectedErr}, [][]byte{[]byte("a")}, "aa", time.Millisecond)
+	m := New([][]byte{[]byte("a")}, "aa", time.Millisecond)
+	w := m.NewWriter(&errWriter{err: expectedErr})
 
-	go w.Run()
+	go m.Run()
 	_, err := w.Write([]byte{0x01})
 	assert.OK(t, err)
 
-	err = w.Flush()
+	err = m.Flush()
 	assert.Equal(t, err, expectedErr)
 }

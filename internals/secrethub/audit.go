@@ -140,6 +140,14 @@ func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, audi
 	return nil, nil, ErrNoValidRepoOrSecretPath
 }
 
+type paginatedWriter struct {
+	writer io.WriteCloser
+	cmd    *exec.Cmd
+	done   <-chan struct{}
+	closed bool
+}
+
+// newPaginatedWriter runs the default terminal pager and returns a writer to its standard input.
 func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
 	pager, err := pagerCommand()
 	if err != nil {
@@ -168,17 +176,11 @@ func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
 	return &paginatedWriter{writer: writer, cmd: cmd, done: done}, nil
 }
 
-type paginatedWriter struct {
-	writer io.WriteCloser
-	cmd    *exec.Cmd
-	done   <-chan struct{}
-	closed bool
-}
-
 func (p *paginatedWriter) Write(data []byte) (n int, err error) {
 	return p.writer.Write(data)
 }
 
+// Close closes the writer to the terminal pager and waits for the terminal pager to close.
 func (p *paginatedWriter) Close() error {
 	err := p.writer.Close()
 	if err != nil {
@@ -190,6 +192,7 @@ func (p *paginatedWriter) Close() error {
 	return nil
 }
 
+// IsClosed checks if the terminal pager process has been stopped.
 func (p *paginatedWriter) IsClosed() bool {
 	if p.closed {
 		return true
@@ -203,6 +206,7 @@ func (p *paginatedWriter) IsClosed() bool {
 	}
 }
 
+// pagerCommand returns the name of an available paging program.
 func pagerCommand() (string, error) {
 	var pager string
 	var err error

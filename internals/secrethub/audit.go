@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +15,10 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+)
+
+var (
+	errPaginatorNotFound = errors.New("no paginator available")
 )
 
 const (
@@ -226,10 +231,11 @@ func pagerCommand() (string, error) {
 	}
 
 	pager, err = exec.LookPath("more")
-	if err != nil {
-		return "", err
+	if err == nil {
+		return pager, nil
 	}
-	return pager, nil
+
+	return "", errPaginatorNotFound
 }
 
 type auditTable interface {

@@ -1,22 +1,25 @@
 package secrethub
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/masker"
+	"github.com/secrethub/secrethub-go/internals/errio"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // Errors
@@ -99,15 +102,17 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
-	valuesToMask := make([][]byte, 0, len(secrets))
+	sequences := make([]*regexp.Regexp, 0, len(secrets))
 	for _, val := range secrets {
 		if val != "" {
-			valuesToMask = append(valuesToMask, []byte(val))
+			sequences = append(sequences, regexp.MustCompile(regexp.QuoteMeta(val)))
 		}
 	}
 
-	maskedStdout := masker.NewMaskedWriter(cmd.io.Stdout(), valuesToMask, maskString, cmd.maskingTimeout)
-	maskedStderr := masker.NewMaskedWriter(os.Stderr, valuesToMask, maskString, cmd.maskingTimeout)
+	m := masker.Masker{
+		BufferDelay:    time.Millisecond * 100,
+		MatchSequences: sequences,
+	}
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = environment
@@ -116,11 +121,11 @@ func (cmd *RunCommand) Run() error {
 		command.Stdout = cmd.io.Stdout()
 		command.Stderr = os.Stderr
 	} else {
-		command.Stdout = maskedStdout
-		command.Stderr = maskedStderr
 
-		go maskedStdout.Run()
-		go maskedStderr.Run()
+		command.Stdout = m.AddStream(os.Stdout)
+		command.Stderr = m.AddStream(os.Stderr)
+
+		go m.Run(context.Background())
 	}
 
 	err = command.Start()
@@ -151,14 +156,7 @@ func (cmd *RunCommand) Run() error {
 	done <- true
 
 	if !cmd.noMasking {
-		err = maskedStdout.Flush()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-		err = maskedStderr.Flush()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
+		m.Wait()
 	}
 
 	if commandErr != nil {

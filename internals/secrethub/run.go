@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -102,10 +101,10 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
-	sequences := make([]*regexp.Regexp, 0, len(secrets))
+	sequences := make([][]byte, 0, len(secrets))
 	for _, val := range secrets {
 		if val != "" {
-			sequences = append(sequences, regexp.MustCompile(regexp.QuoteMeta(val)))
+			sequences = append(sequences, []byte(val))
 		}
 	}
 

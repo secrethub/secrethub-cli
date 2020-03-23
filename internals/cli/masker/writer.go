@@ -6,22 +6,22 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"regexp"
 	"sync"
 	"time"
 )
 
 type stream struct {
-	dest        io.Writer
-	buf         bytes.Buffer
-	masker      *Masker
-	matches     map[int64]struct{}
-	index       int64
-	matchLock   sync.Mutex
-	maxLookback int
+	dest    io.Writer
+	buf     bytes.Buffer
+	masker  *Masker
+	matcher *multipleMatcher
+	matches Matches
+	index   int64
 }
 
 func (s *stream) Write(p []byte) (int, error) {
+	s.matches = s.matches.Join(s.matcher.Write(p))
+
 	n, err := s.buf.Write(p)
 	if n > 0 {
 		s.masker.addTrigger(s, n)
@@ -30,14 +30,8 @@ func (s *stream) Write(p []byte) (int, error) {
 }
 
 func (s *stream) flushN(n int) error {
-	s.matchLock.Lock()
-	s.lookForMatches(n)
-
 	transportBuf := make([]byte, n)
 	nRead, err := s.buf.Read(transportBuf)
-	oldIndex := s.index
-	s.index += int64(nRead)
-	s.matchLock.Unlock()
 
 	if nRead != n {
 		return errors.New("number of bytes in buffer lower than expected")
@@ -47,32 +41,26 @@ func (s *stream) flushN(n int) error {
 	}
 
 	for i := 0; i < n; i++ {
-		if _, exists := s.matches[oldIndex+int64(i)]; exists {
-			transportBuf[i] = '*'
-			delete(s.matches, oldIndex+int64(i))
+		if length, exists := s.matches[s.index+int64(i)]; exists {
+			maskLowerIndex := i
+			maskUpperIndex := i + length
+
+			// If the match exceeds, add a new match at the beginning of the next flush.
+			if maskUpperIndex > n {
+				s.matches = s.matches.Add(s.index+int64(n), maskUpperIndex-n)
+				maskUpperIndex = n
+			}
+			for maskIndex := maskLowerIndex; maskIndex < maskUpperIndex; maskIndex++ {
+				transportBuf[maskIndex] = '*'
+			}
+			delete(s.matches, s.index+int64(i))
 		}
 	}
+
+	s.index += int64(n)
 
 	_, err = bytes.NewReader(transportBuf).WriteTo(s.dest)
 	return err
-}
-
-func (s *stream) lookForMatches(n int) {
-	searchBuf := s.buf.Bytes()
-	bufLen := n + s.maxLookback
-	if bufLen > len(searchBuf) {
-		bufLen = len(searchBuf)
-	}
-	searchBuf = searchBuf[:bufLen]
-	for _, seq := range s.masker.MatchSequences {
-
-		// finding matches with a regexp is really easy but it is far from efficient.
-		for _, match := range seq.FindAllIndex(searchBuf, -1) {
-			for i := match[0]; i < match[1]; i++ {
-				s.matches[s.index+int64(i)] = struct{}{}
-			}
-		}
-	}
 }
 
 type trigger struct {
@@ -83,7 +71,7 @@ type trigger struct {
 
 type Masker struct {
 	BufferDelay    time.Duration
-	MatchSequences []*regexp.Regexp
+	MatchSequences [][]byte
 
 	lock         sync.Mutex
 	triggers     []trigger
@@ -92,10 +80,10 @@ type Masker struct {
 
 func (m *Masker) AddStream(w io.Writer) io.Writer {
 	s := stream{
-		dest:        w,
-		masker:      m,
-		matches:     map[int64]struct{}{},
-		maxLookback: 1024,
+		dest:    w,
+		masker:  m,
+		matches: Matches{},
+		matcher: newMultipleMatcher(m.MatchSequences),
 	}
 	return &s
 }

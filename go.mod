@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	bitbucket.org/zombiezen/cardcpx v0.0.0-20150417151802-902f68ff43ef
-	github.com/alecthomas/kingpin v0.0.0-20191009151950-9e366cbf24ad
+	github.com/alecthomas/kingpin v1.3.8-0.20200323085623-b6657d9477a6
 	github.com/atotto/clipboard v0.1.2
 	github.com/aws/aws-sdk-go v1.25.49
 	github.com/docker/go-units v0.3.3

@@ -24,7 +24,8 @@ var (
 )
 
 const (
-	pagerEnvvar = "$PAGER"
+	pagerEnvvar          = "$PAGER"
+	defaultTerminalWidth = 80
 )
 
 // AuditCommand is a command to audit a repo or a secret.
@@ -74,7 +75,7 @@ func (cmd *AuditCommand) run() error {
 
 	terminalWidth, _, err := terminal.GetSize(int(os.Stdout.Fd()))
 	if err != nil {
-		terminalWidth = 80
+		terminalWidth = defaultTerminalWidth
 	}
 
 	iter, auditTable, err := cmd.iterAndAuditTable()

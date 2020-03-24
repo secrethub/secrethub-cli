@@ -258,7 +258,7 @@ func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
 	}
 	done := make(chan struct{}, 1)
 	go func() {
-		cmd.Wait()
+		_ = cmd.Wait()
 		done <- struct{}{}
 	}()
 	return &paginatedWriter{writer: writer, cmd: cmd, done: done}, nil

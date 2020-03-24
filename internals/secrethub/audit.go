@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"golang.org/x/crypto/ssh/terminal"
+
 	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -70,6 +72,11 @@ func (cmd *AuditCommand) run() error {
 		return fmt.Errorf("per-page should be positive, got %d", cmd.perPage)
 	}
 
+	terminalWidth, _, err := terminal.GetSize(int(os.Stdout.Fd()))
+	if err != nil {
+		terminalWidth = 80
+	}
+
 	iter, auditTable, err := cmd.iterAndAuditTable()
 	if err != nil {
 		return err
@@ -81,7 +88,7 @@ func (cmd *AuditCommand) run() error {
 	}
 	defer paginatedWriter.Close()
 
-	header := strings.Join(auditTable.header(), "\t") + "\n"
+	header := formatTableRow(auditTable.header(), terminalWidth)
 	fmt.Fprint(paginatedWriter, header)
 
 	i := 0
@@ -99,12 +106,52 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		fmt.Fprint(paginatedWriter, strings.Join(row, "\t")+"\n")
+		fmt.Fprint(paginatedWriter, formatTableRow(row, terminalWidth))
 		if paginatedWriter.IsClosed() {
 			break
 		}
 	}
 	return nil
+}
+
+// formatTableRow formats the given table row to fit the specified width
+// by giving each cell an equal width and wrapping the text in cells that exceed it
+func formatTableRow(row []string, tableWidth int) string {
+	maxLinesPerCell := 1
+	colWidth := (tableWidth - 2*len(row)) / len(row)
+	for _, cell := range row {
+		lines := len(cell) / colWidth
+		if len(cell)%colWidth != 0 {
+			lines++
+		}
+		if lines > maxLinesPerCell {
+			maxLinesPerCell = lines
+		}
+	}
+
+	splitCells := make([][]string, maxLinesPerCell)
+	for i := 0; i < maxLinesPerCell; i++ {
+		splitCells[i] = make([]string, len(row))
+	}
+
+	for i, cell := range row {
+		j := 0
+		for ; len(cell) > colWidth; j++ {
+			splitCells[j][i] = cell[:colWidth]
+			cell = cell[colWidth:]
+		}
+		splitCells[j][i] = cell + strings.Repeat(" ", colWidth-len(cell))
+		j++
+		for ; j < maxLinesPerCell; j++ {
+			splitCells[j][i] = strings.Repeat(" ", colWidth)
+		}
+	}
+
+	strRes := strings.Builder{}
+	for j := 0; j < maxLinesPerCell; j++ {
+		strRes.WriteString(strings.Join(splitCells[j], "  ") + "\n")
+	}
+	return strRes.String()
 }
 
 func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, auditTable, error) {

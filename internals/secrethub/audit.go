@@ -50,7 +50,7 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flag("per-page", "number of audit events shown per page").Default("20").IntVar(&cmd.perPage)
+	clause.Flag("per-page", "number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)

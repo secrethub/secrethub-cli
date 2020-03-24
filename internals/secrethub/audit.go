@@ -92,9 +92,7 @@ func (cmd *AuditCommand) run() error {
 	header := formatTableRow(auditTable.header(), terminalWidth)
 	fmt.Fprint(paginatedWriter, header)
 
-	i := 0
 	for {
-		i++
 		event, err := iter.Next()
 		if err == iterator.Done {
 			break

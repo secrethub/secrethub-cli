@@ -203,35 +203,6 @@ type paginatedWriter struct {
 	closed bool
 }
 
-// newPaginatedWriter runs the default terminal pager and returns a writer to its standard input.
-func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
-	pager, err := paginatorCommand()
-	if err != nil {
-		return nil, err
-	}
-
-	cmd := exec.Command(pager)
-
-	writer, err := cmd.StdinPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	cmd.Stdout = outputWriter
-	cmd.Stderr = os.Stderr
-
-	err = cmd.Start()
-	if err != nil {
-		return nil, err
-	}
-	done := make(chan struct{}, 1)
-	go func() {
-		cmd.Wait()
-		done <- struct{}{}
-	}()
-	return &paginatedWriter{writer: writer, cmd: cmd, done: done}, nil
-}
-
 func (p *paginatedWriter) Write(data []byte) (n int, err error) {
 	return p.writer.Write(data)
 }
@@ -260,6 +231,35 @@ func (p *paginatedWriter) IsClosed() bool {
 	default:
 		return false
 	}
+}
+
+// newPaginatedWriter runs the default terminal pager and returns a writer to its standard input.
+func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
+	pager, err := paginatorCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := exec.Command(pager)
+
+	writer, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	cmd.Stdout = outputWriter
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+	done := make(chan struct{}, 1)
+	go func() {
+		cmd.Wait()
+		done <- struct{}{}
+	}()
+	return &paginatedWriter{writer: writer, cmd: cmd, done: done}, nil
 }
 
 // paginatorCommand returns the name of an available paging program.

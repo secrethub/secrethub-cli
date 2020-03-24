@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	errPaginatorNotFound = errors.New("no paginator available")
+	errPagerNotFound = errors.New("no terminal pager available")
 )
 
 const (
@@ -234,9 +234,10 @@ func (p *paginatedWriter) IsClosed() bool {
 	}
 }
 
-// newPaginatedWriter runs the default terminal pager and returns a writer to its standard input.
+// newPaginatedWriter runs the terminal pager configured in the OS environment
+// and returns a writer to its standard input.
 func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
-	pager, err := paginatorCommand()
+	pager, err := pagerCommand()
 	if err != nil {
 		return nil, err
 	}
@@ -263,8 +264,9 @@ func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
 	return &paginatedWriter{writer: writer, cmd: cmd, done: done}, nil
 }
 
-// paginatorCommand returns the name of an available paging program.
-func paginatorCommand() (string, error) {
+// pagerCommand returns the name of the terminal pager configured in the OS environment ($PAGER).
+// If no pager is configured less or more is returned depending on which is available.
+func pagerCommand() (string, error) {
 	var pager string
 	var err error
 
@@ -283,7 +285,7 @@ func paginatorCommand() (string, error) {
 		return pager, nil
 	}
 
-	return "", errPaginatorNotFound
+	return "", errPagerNotFound
 }
 
 type auditTable interface {

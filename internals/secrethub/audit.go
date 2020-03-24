@@ -205,7 +205,7 @@ type paginatedWriter struct {
 
 // newPaginatedWriter runs the default terminal pager and returns a writer to its standard input.
 func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
-	pager, err := pagerCommand()
+	pager, err := paginatorCommand()
 	if err != nil {
 		return nil, err
 	}
@@ -262,13 +262,13 @@ func (p *paginatedWriter) IsClosed() bool {
 	}
 }
 
-// pagerCommand returns the name of an available paging program.
-func pagerCommand() (string, error) {
+// paginatorCommand returns the name of an available paging program.
+func paginatorCommand() (string, error) {
 	var pager string
 	var err error
 
-	pager = os.ExpandEnv(pagerEnvvar)
-	if pager != "" {
+	pager, err = exec.LookPath(os.ExpandEnv(pagerEnvvar))
+	if err == nil {
 		return pager, nil
 	}
 

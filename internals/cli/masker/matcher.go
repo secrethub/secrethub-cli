@@ -1,7 +1,10 @@
 package masker
 
+// Matches represents a set of sequence matches. The key is the index at which the match is found and the value is the
+// length of the match.
 type Matches map[int64]int
 
+// Add a new match to the map if it does not yet exist or the existing match has a shorter length.
 func (m Matches) Add(index int64, length int) Matches {
 	existing, exists := m[index]
 	if !exists || existing < length {
@@ -10,19 +13,13 @@ func (m Matches) Add(index int64, length int) Matches {
 	return m
 }
 
-func (m Matches) Join(other Matches) Matches {
-	res := m
-	for key, val := range other {
-		res = res.Add(key, val)
-	}
-	return res
-}
-
+// multipleMatcher combines multiple sequenceMatchers to check for matches of secrets against any of them.
 type multipleMatcher struct {
 	matchers     []*sequenceMatcher
 	currentIndex int64
 }
 
+// newMultipleMatcher returns a new multipleMatcher that contains a sequenceMatcher for all given sequences.
 func newMultipleMatcher(sequences [][]byte) *multipleMatcher {
 	res := &multipleMatcher{
 		matchers: make([]*sequenceMatcher, len(sequences)),
@@ -33,6 +30,7 @@ func newMultipleMatcher(sequences [][]byte) *multipleMatcher {
 	return res
 }
 
+// Write takes in a slice of bytes and returns all matches found by any of its sequenceMatchers.
 func (mb *multipleMatcher) Write(in []byte) Matches {
 	res := Matches{}
 	for i, b := range in {
@@ -47,13 +45,14 @@ func (mb *multipleMatcher) Write(in []byte) Matches {
 	return res
 }
 
+// sequenceMatcher takes in bytes to check whether there is any match with the given sequence.
 type sequenceMatcher struct {
 	sequence     []byte
 	currentIndex int
 }
 
-// WriteByte takes in a new byte to Match against.
-// Returns true if the given byte results in a Match with sequence
+// WriteByte takes in a new byte to match against.
+// Returns true if the given byte results in a match with sequence
 func (m *sequenceMatcher) WriteByte(in byte) bool {
 	if m.sequence[m.currentIndex] == in {
 		m.currentIndex++

@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -108,10 +107,7 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	m := masker.Masker{
-		BufferDelay:    time.Millisecond * 100,
-		MatchSequences: sequences,
-	}
+	m := masker.New(sequences)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = environment
@@ -124,7 +120,7 @@ func (cmd *RunCommand) Run() error {
 		command.Stdout = m.AddStream(os.Stdout)
 		command.Stderr = m.AddStream(os.Stderr)
 
-		go m.Run(context.Background())
+		go m.Run()
 	}
 
 	err = command.Start()
@@ -155,7 +151,7 @@ func (cmd *RunCommand) Run() error {
 	done <- true
 
 	if !cmd.noMasking {
-		m.Wait()
+		m.Flush()
 	}
 
 	if commandErr != nil {

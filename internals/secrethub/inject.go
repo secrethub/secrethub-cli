@@ -71,7 +71,7 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
 	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&cmd.dontPromptMissingTemplateVars)
-	clause.Flag("force", "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --output-file is supplied.").Short('f').BoolVar(&cmd.force)
+	clause.Flag("force", "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.").Short('f').BoolVar(&cmd.force)
 
 	command.BindAction(clause, cmd.Run)
 }

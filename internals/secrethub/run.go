@@ -117,7 +117,7 @@ func (cmd *RunCommand) Run() error {
 		command.Stderr = os.Stderr
 	} else {
 
-		command.Stdout = m.AddStream(os.Stdout)
+		command.Stdout = m.AddStream(cmd.io.Stdout())
 		command.Stderr = m.AddStream(os.Stderr)
 
 		go m.Run()

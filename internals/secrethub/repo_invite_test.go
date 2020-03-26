@@ -18,8 +18,8 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 	cases := map[string]struct {
 		cmd               RepoInviteCommand
 		newClientErr      error
-		userService       fakeclient.UserService
-		repoUserService   fakeclient.RepoUserService
+		GetFunc           func(username string) (*api.User, error)
+		InviteFunc        func(path string, username string) (*api.RepoMember, error)
 		getArgUsername    string
 		inviteArgUsername string
 		inviteArgPath     api.RepoPath
@@ -31,10 +31,8 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 			err:          testErr,
 		},
 		"get user error": {
-			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					Err: testErr,
-				},
+			GetFunc: func(username string) (*api.User, error) {
+				return nil, testErr
 			},
 			err: testErr,
 		},
@@ -44,10 +42,8 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 				username: "dev1",
 				force:    true,
 			},
-			repoUserService: fakeclient.RepoUserService{
-				RepoInviter: fakeclient.RepoInviter{
-					ReturnsRepoMember: &api.RepoMember{},
-				},
+			InviteFunc: func(path string, username string) (*api.RepoMember, error) {
+				return &api.RepoMember{}, nil
 			},
 			inviteArgUsername: "dev1",
 			inviteArgPath:     "dev2/repo",
@@ -59,10 +55,8 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 				username: "dev1",
 				force:    true,
 			},
-			repoUserService: fakeclient.RepoUserService{
-				RepoInviter: fakeclient.RepoInviter{
-					Err: testErr,
-				},
+			InviteFunc: func(path string, username string) (*api.RepoMember, error) {
+				return nil, testErr
 			},
 			inviteArgUsername: "dev1",
 			inviteArgPath:     "dev2/repo",
@@ -74,6 +68,10 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var argInviteUsername string
+			var argGetUsername string
+			var argPath string
+
 			// Setup
 			if tc.newClientErr != nil {
 				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
@@ -83,9 +81,20 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						RepoService: &fakeclient.RepoService{
-							UserService: &tc.repoUserService,
+							UserService: &fakeclient.RepoUserService{
+								InviteFunc: func(path string, username string) (*api.RepoMember, error) {
+									argPath = path
+									argInviteUsername = username
+									return tc.InviteFunc(path, username)
+								},
+							},
 						},
-						UserService: &tc.userService,
+						UserService: &fakeclient.UserService{
+							GetFunc: func(username string) (*api.User, error) {
+								argGetUsername = username
+								return tc.GetFunc(username)
+							},
+						},
 					}, nil
 				}
 			}
@@ -99,9 +108,9 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
-			assert.Equal(t, tc.userService.Getter.ArgUsername, tc.getArgUsername)
-			assert.Equal(t, tc.repoUserService.RepoInviter.ArgUsername, tc.inviteArgUsername)
-			assert.Equal(t, tc.repoUserService.RepoInviter.ArgPath, tc.inviteArgPath)
+			assert.Equal(t, argGetUsername, tc.getArgUsername)
+			assert.Equal(t, argInviteUsername, tc.inviteArgUsername)
+			assert.Equal(t, argPath, tc.inviteArgPath)
 		})
 	}
 }

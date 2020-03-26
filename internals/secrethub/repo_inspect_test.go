@@ -26,7 +26,7 @@ func TestInspectRepo_Run(t *testing.T) {
 		out          string
 		err          error
 	}{
-		"succes one version": {
+		"success one version": {
 			cmd: RepoInspectCommand{
 				path: "foo/bar/secret",
 				timeFormatter: &fakes.TimeFormatter{
@@ -34,18 +34,17 @@ func TestInspectRepo_Run(t *testing.T) {
 				},
 			},
 			repoService: fakeclient.RepoService{
-				Getter: fakeclient.RepoGetter{
-					ArgPath: "foo/bar",
-					ReturnsRepo: &api.Repo{
+				GetFunc: func(path string) (repo *api.Repo, err error) {
+					return &api.Repo{
 						Name:        "bar",
 						Owner:       "Repo Owner",
 						CreatedAt:   testTime,
 						SecretCount: 1,
-					},
+					}, nil
 				},
 				UserService: &fakeclient.RepoUserService{
-					Lister: fakeclient.RepoUserLister{
-						ReturnsUsers: []*api.User{
+					ListFunc: func(path string) ([]*api.User, error) {
+						return []*api.User{
 							{
 								Username: "dev 1",
 								FullName: "uno",
@@ -54,12 +53,12 @@ func TestInspectRepo_Run(t *testing.T) {
 								Username: "dev 2",
 								FullName: "dos",
 							},
-						},
+						}, nil
 					},
 				},
-				ServiceService: &fakeclient.RepoServiceService{
-					Lister: fakeclient.RepoServiceLister{
-						ReturnsServices: []*api.Service{
+				RepoServiceService: &fakeclient.RepoServiceService{
+					ListFunc: func(path string) ([]*api.Service, error) {
+						return []*api.Service{
 							{
 								ServiceID:   "ser1-1",
 								Description: "This is service 1",
@@ -68,7 +67,7 @@ func TestInspectRepo_Run(t *testing.T) {
 								ServiceID:   "ser1-2",
 								Description: "This is service 2",
 							},
-						},
+						}, nil
 					},
 				},
 			},

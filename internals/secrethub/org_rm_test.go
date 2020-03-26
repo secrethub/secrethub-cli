@@ -17,7 +17,7 @@ func TestOrgRmCommand_Run(t *testing.T) {
 
 	cases := map[string]struct {
 		cmd          OrgRmCommand
-		service      fakeclient.OrgService
+		deleteFunc   func(name string) error
 		newClientErr error
 		promptIn     string
 		promptOut    string
@@ -40,10 +40,8 @@ func TestOrgRmCommand_Run(t *testing.T) {
 			cmd: OrgRmCommand{
 				name: "organization",
 			},
-			service: fakeclient.OrgService{
-				Deleter: fakeclient.OrgDeleter{
-					Err: testErr,
-				},
+			deleteFunc: func(name string) error {
+				return testErr
 			},
 			promptIn:  "organization",
 			argName:   "organization",
@@ -63,8 +61,8 @@ func TestOrgRmCommand_Run(t *testing.T) {
 			cmd: OrgRmCommand{
 				name: "organization",
 			},
-			service: fakeclient.OrgService{
-				Deleter: fakeclient.OrgDeleter{},
+			deleteFunc: func(name string) error {
+				return nil
 			},
 			promptIn:  "organization",
 			argName:   "organization",
@@ -84,10 +82,16 @@ func TestOrgRmCommand_Run(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			var argName string
+
 			// Setup
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
-					OrgService: &tc.service,
+					OrgService: &fakeclient.OrgService{
+						DeleteFunc: func(name string) error {
+							argName = name
+							return tc.deleteFunc(name)
+						}},
 				}, tc.newClientErr
 			}
 
@@ -102,7 +106,7 @@ func TestOrgRmCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
-			assert.Equal(t, tc.service.Deleter.ArgName, tc.argName)
+			assert.Equal(t, argName, tc.argName)
 			assert.Equal(t, io.StdOut.String(), tc.out)
 		})
 	}

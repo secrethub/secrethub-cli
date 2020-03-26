@@ -120,7 +120,7 @@ func (cmd *RunCommand) Run() error {
 		command.Stdout = m.AddStream(cmd.io.Stdout())
 		command.Stderr = m.AddStream(os.Stderr)
 
-		go m.Run()
+		go m.Start()
 	}
 
 	err = command.Start()
@@ -151,7 +151,7 @@ func (cmd *RunCommand) Run() error {
 	done <- true
 
 	if !cmd.noMasking {
-		err := m.Flush()
+		err := m.Stop()
 		if err != nil {
 			return err
 		}

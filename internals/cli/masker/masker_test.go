@@ -152,10 +152,10 @@ func TestMasker(t *testing.T) {
 			}
 
 			writer := m.AddStream(&buf)
-			go m.Run()
+			go m.Start()
 			tc.inputFunc(writer)
 
-			err = m.Flush()
+			err = m.Stop()
 
 			assert.OK(t, err)
 			assert.Equal(t, buf.String(), tc.expected)
@@ -177,10 +177,10 @@ func TestMasker_WriteError(t *testing.T) {
 	m := New([][]byte{[]byte("test")})
 	writer := m.AddStream(&errWriter{err: expectedErr})
 
-	go m.Run()
+	go m.Start()
 	_, err := writer.Write([]byte{0x01})
 	assert.OK(t, err)
 
-	err = m.Flush()
+	err = m.Stop()
 	assert.Equal(t, err, expectedErr)
 }

@@ -185,7 +185,7 @@ func (f *columnFormatter) printHeader() bool {
 }
 
 // formatRow formats the given table row to fit the configured width by
-// giving each cell an equal width and wrapping the text in cells that exceed it
+// giving each cell an equal width and wrapping the text in cells that exceed it.
 func (f *columnFormatter) formatRow(row []string) (string, error) {
 	maxLinesPerCell := 1
 	columnWidths := f.columnWidths()

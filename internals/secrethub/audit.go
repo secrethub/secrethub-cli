@@ -81,7 +81,7 @@ func (cmd *AuditCommand) run() error {
 		return err
 	}
 
-	var formatter rowFormatter
+	var formatter tableFormatter
 	if cmd.json {
 		formatter = newJSONFormatter(auditTable.header())
 	} else {
@@ -89,7 +89,7 @@ func (cmd *AuditCommand) run() error {
 		if err != nil {
 			terminalWidth = defaultTerminalWidth
 		}
-		formatter = newColumnFormatter(terminalWidth)
+		formatter = newColumnFormatter(terminalWidth, auditTable.columns())
 	}
 
 	paginatedWriter, err := newPaginatedWriter(os.Stdout)
@@ -132,11 +132,12 @@ func (cmd *AuditCommand) run() error {
 	return nil
 }
 
-type rowFormatter interface {
+type tableFormatter interface {
 	printHeader() bool
 	formatRow(row []string) (string, error)
 }
 
+// newJSONFormatter returns a table formatter that formats the given table rows as json.
 func newJSONFormatter(fieldNames []string) *jsonFormatter {
 	return &jsonFormatter{fields: fieldNames}
 }
@@ -168,12 +169,15 @@ func (f *jsonFormatter) formatRow(row []string) (string, error) {
 	return string(jsonData) + "\n", nil
 }
 
-func newColumnFormatter(tableWidth int) *columnFormatter {
-	return &columnFormatter{tableWidth: tableWidth}
+// newColumnFormatter returns a table formatter that aligns the columns of the table.
+func newColumnFormatter(tableWidth int, columns []auditTableColumn) *columnFormatter {
+	return &columnFormatter{tableWidth: tableWidth, columns: columns}
 }
 
 type columnFormatter struct {
-	tableWidth int
+	tableWidth           int
+	computedColumnWidths []int
+	columns              []auditTableColumn
 }
 
 func (f *columnFormatter) printHeader() bool {
@@ -184,10 +188,10 @@ func (f *columnFormatter) printHeader() bool {
 // giving each cell an equal width and wrapping the text in cells that exceed it
 func (f *columnFormatter) formatRow(row []string) (string, error) {
 	maxLinesPerCell := 1
-	colWidth := (f.tableWidth - 2*len(row)) / len(row)
-	for _, cell := range row {
-		lines := len(cell) / colWidth
-		if len(cell)%colWidth != 0 {
+	columnWidths := f.columnWidths()
+	for i, cell := range row {
+		lines := len(cell) / columnWidths[i]
+		if len(cell)%columnWidths[i] != 0 {
 			lines++
 		}
 		if lines > maxLinesPerCell {
@@ -202,14 +206,14 @@ func (f *columnFormatter) formatRow(row []string) (string, error) {
 
 	for i, cell := range row {
 		j := 0
-		for ; len(cell) > colWidth; j++ {
-			splitCells[j][i] = cell[:colWidth]
-			cell = cell[colWidth:]
+		for ; len(cell) > columnWidths[i]; j++ {
+			splitCells[j][i] = cell[:columnWidths[i]]
+			cell = cell[columnWidths[i]:]
 		}
-		splitCells[j][i] = cell + strings.Repeat(" ", colWidth-len(cell))
+		splitCells[j][i] = cell + strings.Repeat(" ", columnWidths[i]-len(cell))
 		j++
 		for ; j < maxLinesPerCell; j++ {
-			splitCells[j][i] = strings.Repeat(" ", colWidth)
+			splitCells[j][i] = strings.Repeat(" ", columnWidths[i])
 		}
 	}
 
@@ -218,6 +222,48 @@ func (f *columnFormatter) formatRow(row []string) (string, error) {
 		strRes.WriteString(strings.Join(splitCells[j], "  ") + "\n")
 	}
 	return strRes.String(), nil
+}
+
+// columnWidths returns the width of each column based on their maximum widths
+// and the table width.
+func (f *columnFormatter) columnWidths() []int {
+	if f.computedColumnWidths != nil {
+		return f.computedColumnWidths
+	}
+
+	res := make([]int, len(f.columns))
+	widthPerColumn := (f.tableWidth - 2*(len(f.columns)-1)) / len(f.columns)
+
+	adjusted := true
+	for adjusted {
+		adjusted = false
+		for i, col := range f.columns {
+			if res[i] == 0 && col.maxWidth != 0 && col.maxWidth < widthPerColumn {
+				res[i] = col.maxWidth
+				adjusted = true
+			}
+		}
+		if !adjusted {
+			break
+		}
+		count := len(f.columns)
+		widthLeft := f.tableWidth - 2*(len(f.columns)-1)
+		for _, width := range res {
+			if width != 0 {
+				count--
+				widthLeft -= width
+			}
+		}
+		widthPerColumn = widthLeft / count
+	}
+
+	for i := range res {
+		if res[i] == 0 {
+			res[i] = widthPerColumn
+		}
+	}
+	f.computedColumnWidths = res
+	return res
 }
 
 func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, auditTable, error) {
@@ -353,24 +399,44 @@ func pagerCommand() (string, error) {
 	return "", errPagerNotFound
 }
 
+type auditTableColumn struct {
+	name     string
+	maxWidth int
+}
+
 type auditTable interface {
 	header() []string
 	row(event api.Audit) ([]string, error)
+	columns() []auditTableColumn
 }
 
-func newBaseAuditTable(timeFormatter TimeFormatter) baseAuditTable {
+func newBaseAuditTable(timeFormatter TimeFormatter, midColumns ...auditTableColumn) baseAuditTable {
+	columns := append([]auditTableColumn{
+		{name: "AUTHOR", maxWidth: 32},
+		{name: "EVENT", maxWidth: 22},
+	}, midColumns...)
+	columns = append(columns, []auditTableColumn{
+		{name: "IP ADDRESS", maxWidth: 45},
+		{name: "DATE", maxWidth: 22},
+	}...)
+
 	return baseAuditTable{
+		tableColumns:  columns,
 		timeFormatter: timeFormatter,
 	}
 }
 
 type baseAuditTable struct {
+	tableColumns  []auditTableColumn
 	timeFormatter TimeFormatter
 }
 
-func (table baseAuditTable) header(content ...string) []string {
-	res := append([]string{"AUTHOR", "EVENT"}, content...)
-	return append(res, "IP ADDRESS", "DATE")
+func (table baseAuditTable) header() []string {
+	res := make([]string, len(table.tableColumns))
+	for i, col := range table.tableColumns {
+		res[i] = col.name
+	}
+	return res
 }
 
 func (table baseAuditTable) row(event api.Audit, content ...string) ([]string, error) {
@@ -381,6 +447,10 @@ func (table baseAuditTable) row(event api.Audit, content ...string) ([]string, e
 
 	res := append([]string{actor, getEventAction(event)}, content...)
 	return append(res, event.IPAddress, table.timeFormatter.Format(event.LoggedAt)), nil
+}
+
+func (table baseAuditTable) columns() []auditTableColumn {
+	return table.tableColumns
 }
 
 func newSecretAuditTable(timeFormatter TimeFormatter) secretAuditTable {
@@ -403,7 +473,7 @@ func (table secretAuditTable) row(event api.Audit) ([]string, error) {
 
 func newRepoAuditTable(tree *api.Tree, timeFormatter TimeFormatter) repoAuditTable {
 	return repoAuditTable{
-		baseAuditTable: newBaseAuditTable(timeFormatter),
+		baseAuditTable: newBaseAuditTable(timeFormatter, auditTableColumn{name: "EVENT SUBJECT"}),
 		tree:           tree,
 	}
 }
@@ -411,10 +481,6 @@ func newRepoAuditTable(tree *api.Tree, timeFormatter TimeFormatter) repoAuditTab
 type repoAuditTable struct {
 	baseAuditTable
 	tree *api.Tree
-}
-
-func (table repoAuditTable) header() []string {
-	return table.baseAuditTable.header("EVENT SUBJECT")
 }
 
 func (table repoAuditTable) row(event api.Audit) ([]string, error) {

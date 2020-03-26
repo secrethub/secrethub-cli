@@ -103,7 +103,7 @@ func (cmd *AuditCommand) run() error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprint(paginatedWriter, header)
+		fmt.Fprintln(paginatedWriter, header)
 	}
 
 	for {
@@ -124,7 +124,7 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		fmt.Fprint(paginatedWriter, formattedRow)
+		fmt.Fprintln(paginatedWriter, formattedRow)
 		if paginatedWriter.IsClosed() {
 			break
 		}
@@ -166,7 +166,7 @@ func (f *jsonFormatter) formatRow(row []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(jsonData) + "\n", nil
+	return string(jsonData), nil
 }
 
 // newColumnFormatter returns a table formatter that aligns the columns of the table.
@@ -221,7 +221,7 @@ func (f *columnFormatter) formatRow(row []string) (string, error) {
 	for j := 0; j < maxLinesPerCell; j++ {
 		strRes.WriteString(strings.Join(splitCells[j], "  ") + "\n")
 	}
-	return strRes.String(), nil
+	return strings.TrimSuffix(strRes.String(), "\n"), nil
 }
 
 // columnWidths returns the width of each column based on their maximum widths
@@ -230,37 +230,29 @@ func (f *columnFormatter) columnWidths() []int {
 	if f.computedColumnWidths != nil {
 		return f.computedColumnWidths
 	}
-
 	res := make([]int, len(f.columns))
-	widthPerColumn := (f.tableWidth - 2*(len(f.columns)-1)) / len(f.columns)
 
 	adjusted := true
+	columnsLeft := len(f.columns)
+	widthLeft := f.tableWidth - 2*(len(f.columns)-1)
+	widthPerColumn := widthLeft / columnsLeft
 	for adjusted {
 		adjusted = false
 		for i, col := range f.columns {
 			if res[i] == 0 && col.maxWidth != 0 && col.maxWidth < widthPerColumn {
 				res[i] = col.maxWidth
+				widthLeft -= col.maxWidth
+				columnsLeft--
 				adjusted = true
 			}
 		}
-		if !adjusted {
-			break
-		}
-		count := len(f.columns)
-		widthLeft := f.tableWidth - 2*(len(f.columns)-1)
-		for _, width := range res {
-			if width != 0 {
-				count--
-				widthLeft -= width
-			}
-		}
-		if count == 0 {
+		if columnsLeft == 0 {
 			for i := range res {
 				res[i] += widthLeft / len(res)
 			}
 			break
 		}
-		widthPerColumn = widthLeft / count
+		widthPerColumn = widthLeft / columnsLeft
 	}
 
 	for i := range res {

@@ -548,7 +548,7 @@ func TestRunCommand_Run(t *testing.T) {
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
 								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
-									return nil, api.ErrRepoNotFound
+									return nil, api.ErrRepoNotFound("unexisting/repo")
 								},
 							},
 						},

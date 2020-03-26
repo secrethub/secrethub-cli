@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -36,6 +37,7 @@ type AuditCommand struct {
 	timeFormatter TimeFormatter
 	newClient     newClientFunc
 	perPage       int
+	json          bool
 }
 
 // NewAuditCommand creates a new audit command.
@@ -51,6 +53,7 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
+	clause.Flag("json", "output the audit log in json format").BoolVar(&cmd.json)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -73,14 +76,20 @@ func (cmd *AuditCommand) run() error {
 		return fmt.Errorf("per-page should be positive, got %d", cmd.perPage)
 	}
 
-	terminalWidth, _, err := terminal.GetSize(int(os.Stdout.Fd()))
-	if err != nil {
-		terminalWidth = defaultTerminalWidth
-	}
-
 	iter, auditTable, err := cmd.iterAndAuditTable()
 	if err != nil {
 		return err
+	}
+
+	var formatter rowFormatter
+	if cmd.json {
+		formatter = newJSONFormatter(auditTable.header())
+	} else {
+		terminalWidth, _, err := terminal.GetSize(int(os.Stdout.Fd()))
+		if err != nil {
+			terminalWidth = defaultTerminalWidth
+		}
+		formatter = newColumnFormatter(terminalWidth)
 	}
 
 	paginatedWriter, err := newPaginatedWriter(os.Stdout)
@@ -89,8 +98,13 @@ func (cmd *AuditCommand) run() error {
 	}
 	defer paginatedWriter.Close()
 
-	header := formatTableRow(auditTable.header(), terminalWidth)
-	fmt.Fprint(paginatedWriter, header)
+	if formatter.printHeader() {
+		header, err := formatter.formatRow(auditTable.header())
+		if err != nil {
+			return err
+		}
+		fmt.Fprint(paginatedWriter, header)
+	}
 
 	for {
 		event, err := iter.Next()
@@ -105,7 +119,12 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		fmt.Fprint(paginatedWriter, formatTableRow(row, terminalWidth))
+		formattedRow, err := formatter.formatRow(row)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprint(paginatedWriter, formattedRow)
 		if paginatedWriter.IsClosed() {
 			break
 		}
@@ -113,11 +132,59 @@ func (cmd *AuditCommand) run() error {
 	return nil
 }
 
-// formatTableRow formats the given table row to fit the specified width
-// by giving each cell an equal width and wrapping the text in cells that exceed it
-func formatTableRow(row []string, tableWidth int) string {
+type rowFormatter interface {
+	printHeader() bool
+	formatRow(row []string) (string, error)
+}
+
+func newJSONFormatter(fieldNames []string) *jsonFormatter {
+	return &jsonFormatter{fields: fieldNames}
+}
+
+type jsonFormatter struct {
+	fields []string
+}
+
+func (f *jsonFormatter) printHeader() bool {
+	return false
+}
+
+// formatRow returns the json representation of the given row
+// with the configured field names as keys and the provided values
+func (f *jsonFormatter) formatRow(row []string) (string, error) {
+	if len(f.fields) != len(row) {
+		return "", fmt.Errorf("unexpected number of json fields")
+	}
+
+	jsonMap := make(map[string]string)
+	for i, element := range row {
+		jsonMap[f.fields[i]] = element
+	}
+
+	jsonData, err := json.Marshal(jsonMap)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData) + "\n", nil
+}
+
+func newColumnFormatter(tableWidth int) *columnFormatter {
+	return &columnFormatter{tableWidth: tableWidth}
+}
+
+type columnFormatter struct {
+	tableWidth int
+}
+
+func (f *columnFormatter) printHeader() bool {
+	return true
+}
+
+// formatRow formats the given table row to fit the configured width by
+// giving each cell an equal width and wrapping the text in cells that exceed it
+func (f *columnFormatter) formatRow(row []string) (string, error) {
 	maxLinesPerCell := 1
-	colWidth := (tableWidth - 2*len(row)) / len(row)
+	colWidth := (f.tableWidth - 2*len(row)) / len(row)
 	for _, cell := range row {
 		lines := len(cell) / colWidth
 		if len(cell)%colWidth != 0 {
@@ -150,7 +217,7 @@ func formatTableRow(row []string, tableWidth int) string {
 	for j := 0; j < maxLinesPerCell; j++ {
 		strRes.WriteString(strings.Join(splitCells[j], "  ") + "\n")
 	}
-	return strRes.String()
+	return strRes.String(), nil
 }
 
 func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, auditTable, error) {

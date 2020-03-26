@@ -16,7 +16,6 @@ var maskString = "<redacted by SecretHub>"
 func TestMasker(t *testing.T) {
 	delay10s := time.Second * 10
 	delay1us := time.Microsecond * 1
-	delay0s := time.Second * 0
 
 	randomIn, err := randchar.NewGenerator(true).Generate(10000)
 	assert.OK(t, err)
@@ -24,7 +23,7 @@ func TestMasker(t *testing.T) {
 	tests := map[string]struct {
 		maskStrings []string
 		inputFunc   func(io.Writer)
-		delay       *time.Duration
+		options     *Options
 		expected    string
 	}{
 		"no_masking": {
@@ -88,7 +87,7 @@ func TestMasker(t *testing.T) {
 				_, err = w.Write([]byte("o test"))
 				assert.OK(t, err)
 			},
-			delay:    &delay10s,
+			options:  &Options{BufferDelay: delay10s},
 			expected: maskString + " test",
 		},
 		"outside buffer delay": {
@@ -100,16 +99,16 @@ func TestMasker(t *testing.T) {
 				_, err = w.Write([]byte("o bar test"))
 				assert.OK(t, err)
 			},
-			delay:    &delay1us,
+			options:  &Options{BufferDelay: delay1us},
 			expected: "foo " + maskString + " test",
 		},
-		"no timeout": {
+		"no buffering": {
 			maskStrings: []string{"foo", "bar"},
 			inputFunc: func(w io.Writer) {
 				_, err := w.Write([]byte("test foo test"))
 				assert.OK(t, err)
 			},
-			delay:    &delay0s,
+			options:  &Options{DisableBuffer: true},
 			expected: "test " + maskString + " test",
 		},
 		"long input": {
@@ -145,11 +144,7 @@ func TestMasker(t *testing.T) {
 				maskStrings = append(maskStrings, []byte(s))
 			}
 
-			m := New(maskStrings)
-			m.BufferDelay = time.Millisecond * 10
-			if tc.delay != nil {
-				m.BufferDelay = *tc.delay
-			}
+			m := New(maskStrings, tc.options)
 
 			writer := m.AddStream(&buf)
 			go m.Start()
@@ -174,7 +169,7 @@ func (w errWriter) Write(p []byte) (n int, err error) {
 func TestMasker_WriteError(t *testing.T) {
 	expectedErr := fmt.Errorf("test")
 
-	m := New([][]byte{[]byte("test")})
+	m := New([][]byte{[]byte("test")}, nil)
 	writer := m.AddStream(&errWriter{err: expectedErr})
 
 	go m.Start()

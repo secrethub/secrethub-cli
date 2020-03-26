@@ -15,22 +15,44 @@ import (
 // 3. Run the Start() method in a separate goroutine
 // 4. After everything has been written to the io.Writers, flush all buffers using Stop()
 type Masker struct {
-	BufferDelay time.Duration
+	bufferDelay time.Duration
+	sequences   [][]byte
+	frames      chan frame
+	stopChan    chan struct{}
+	err         error
+}
 
-	sequences [][]byte
-	frames    chan frame
-	stopChan  chan struct{}
-	err       error
+type Options struct {
+	DisableBuffer     bool
+	BufferDelay       time.Duration
+	FrameBufferLength int
 }
 
 // New creates a new Masker that scans all streams for the given sequences and masks them.
-func New(sequences [][]byte) *Masker {
-	return &Masker{
-		BufferDelay: time.Millisecond * 100,
+func New(sequences [][]byte, opts *Options) *Masker {
+	masker := &Masker{
+		bufferDelay: time.Millisecond * 50,
 		sequences:   sequences,
-		frames:      make(chan frame, 1024),
 		stopChan:    make(chan struct{}),
 	}
+	frameChanlength := 1024
+	if opts != nil {
+		if opts.DisableBuffer {
+			masker.bufferDelay = 0
+			frameChanlength = 0
+		} else {
+			if opts.BufferDelay > 0 {
+				masker.bufferDelay = opts.BufferDelay
+			}
+			if opts.FrameBufferLength > 0 {
+				frameChanlength = opts.FrameBufferLength
+			}
+		}
+
+	}
+	masker.frames = make(chan frame, frameChanlength)
+
+	return masker
 }
 
 // AddStream takes in an io.Writer to mask secrets on and returns an io.Writer that has secrets on its output masked.

@@ -29,16 +29,15 @@ func TestAccountInspect(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return &fakeclient.Client{
 						UserService: &fakeclient.UserService{
-							MeGetter: fakeclient.MeGetter{
-								ReturnsUser: &api.User{
+							MeFunc: func() (*api.User, error) {
+								return &api.User{
 									Username:      "dev1",
 									FullName:      "Developer Uno",
 									Email:         "dev1@keylocker.eu",
 									EmailVerified: true,
 									CreatedAt:     &date,
 									PublicKey:     []byte("abcde"),
-								},
-								Err: nil,
+								}, nil
 							},
 						},
 					}, nil
@@ -63,9 +62,8 @@ func TestAccountInspect(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						UserService: &fakeclient.UserService{
-							MeGetter: fakeclient.MeGetter{
-								ReturnsUser: nil,
-								Err:         api.ErrSignatureNotVerified,
+							MeFunc: func() (*api.User, error) {
+								return nil, api.ErrSignatureNotVerified
 							},
 						},
 					}, nil

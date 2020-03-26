@@ -26,16 +26,15 @@ func TestMkDirCommand(t *testing.T) {
 			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
-						Creater: fakeclient.DirCreater{
-							ReturnsDir: &api.Dir{
+						CreateFunc: func(path string) (*api.Dir, error) {
+							return &api.Dir{
 								DirID:          uuid.New(),
 								BlindName:      "blindname",
 								Name:           "dir",
 								Status:         api.StatusOK,
 								CreatedAt:      time.Now().UTC(),
 								LastModifiedAt: time.Now().UTC(),
-							},
-							Err: nil,
+							}, nil
 						},
 					},
 				}, nil
@@ -61,8 +60,8 @@ func TestMkDirCommand(t *testing.T) {
 			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
-						Creater: fakeclient.DirCreater{
-							Err: api.ErrDirAlreadyExists,
+						CreateFunc: func(path string) (*api.Dir, error) {
+							return nil, api.ErrDirAlreadyExists
 						},
 					},
 				}, nil

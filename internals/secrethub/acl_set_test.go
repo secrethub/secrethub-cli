@@ -31,7 +31,11 @@ func TestACLSetCommand_Run(t *testing.T) {
 				path:        "namespace/repo/dir",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
-						AccessRuleService: &fakeclient.AccessRuleService{},
+						AccessRuleService: &fakeclient.AccessRuleService{
+							SetFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
+								return nil, nil
+							},
+						},
 					}, nil
 				},
 			},
@@ -60,8 +64,8 @@ func TestACLSetCommand_Run(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return &fakeclient.Client{
 						AccessRuleService: &fakeclient.AccessRuleService{
-							Setter: fakeclient.AccessRuleSetter{
-								Err: api.ErrAccessRuleNotFound,
+							SetFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
+								return nil, api.ErrAccessRuleNotFound
 							},
 						},
 					}, nil

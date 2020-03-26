@@ -33,10 +33,12 @@ func TestRepoRmCommand_Run(t *testing.T) {
 			},
 			promptIn: "namespace/repo",
 			repoService: fakeclient.RepoService{
-				Getter: fakeclient.RepoGetter{
-					ReturnsRepo: &api.Repo{},
+				GetFunc: func(path string) (*api.Repo, error) {
+					return &api.Repo{}, nil
 				},
-				Deleter: fakeclient.RepoDeleter{},
+				DeleteFunc: func(path string) error {
+					return nil
+				},
 			},
 			promptOut: "[DANGER ZONE] This action cannot be undone. " +
 				"This will permanently remove the namespace/repo repository, all its secrets and all associated service accounts. " +
@@ -50,8 +52,8 @@ func TestRepoRmCommand_Run(t *testing.T) {
 			},
 			promptIn: "namespace/typo",
 			repoService: fakeclient.RepoService{
-				Getter: fakeclient.RepoGetter{
-					ReturnsRepo: &api.Repo{},
+				GetFunc: func(path string) (*api.Repo, error) {
+					return &api.Repo{}, nil
 				},
 			},
 			promptOut: "[DANGER ZONE] This action cannot be undone. " +
@@ -65,8 +67,8 @@ func TestRepoRmCommand_Run(t *testing.T) {
 		},
 		"get repo error": {
 			repoService: fakeclient.RepoService{
-				Getter: fakeclient.RepoGetter{
-					Err: testErr,
+				GetFunc: func(path string) (*api.Repo, error) {
+					return nil, testErr
 				},
 			},
 			err: testErr,
@@ -77,11 +79,11 @@ func TestRepoRmCommand_Run(t *testing.T) {
 			},
 			promptIn: "namespace/repo",
 			repoService: fakeclient.RepoService{
-				Getter: fakeclient.RepoGetter{
-					ReturnsRepo: &api.Repo{},
+				GetFunc: func(path string) (*api.Repo, error) {
+					return &api.Repo{}, nil
 				},
-				Deleter: fakeclient.RepoDeleter{
-					Err: testErr,
+				DeleteFunc: func(path string) error {
+					return testErr
 				},
 			},
 			promptOut: "[DANGER ZONE] This action cannot be undone. " +
@@ -92,8 +94,8 @@ func TestRepoRmCommand_Run(t *testing.T) {
 		},
 		"prompt error": {
 			repoService: fakeclient.RepoService{
-				Getter: fakeclient.RepoGetter{
-					ReturnsRepo: &api.Repo{},
+				GetFunc: func(path string) (*api.Repo, error) {
+					return &api.Repo{}, nil
 				},
 			},
 			promptErr: ui.ErrCannotAsk,
@@ -102,6 +104,11 @@ func TestRepoRmCommand_Run(t *testing.T) {
 		"prompt read error": {
 			cmd: RepoRmCommand{
 				path: "namespace/repo",
+			},
+			repoService: fakeclient.RepoService{
+				GetFunc: func(path string) (*api.Repo, error) {
+					return &api.Repo{}, nil
+				},
 			},
 			promptReadErr: testErr,
 			err:           ui.ErrReadInput(testErr),

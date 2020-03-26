@@ -33,16 +33,16 @@ func TestOrgInspectCommand_Run(t *testing.T) {
 				},
 			},
 			orgService: fakeclient.OrgService{
-				Getter: fakeclient.OrgGetter{
-					ReturnsOrg: &api.Org{
+				GetFunc: func(name string) (*api.Org, error) {
+					return &api.Org{
 						Name:        "company",
 						CreatedAt:   time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 						Description: "description of the company.",
-					},
+					}, nil
 				},
-				MemberService: &fakeclient.OrgMemberService{
-					Lister: fakeclient.OrgMemberLister{
-						ReturnsMembers: []*api.OrgMember{
+				MembersService: &fakeclient.OrgMemberService{
+					ListFunc: func(org string) ([]*api.OrgMember, error) {
+						return []*api.OrgMember{
 							{
 								Role: api.OrgRoleAdmin,
 								User: &api.User{
@@ -59,20 +59,20 @@ func TestOrgInspectCommand_Run(t *testing.T) {
 								CreatedAt:     time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 								LastChangedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
 							},
-						},
+						}, nil
 					},
 				},
 			},
 			repoService: fakeclient.RepoService{
-				Lister: fakeclient.RepoLister{
-					ReturnsRepos: []*api.Repo{
+				ListFunc: func(namespace string) ([]*api.Repo, error) {
+					return []*api.Repo{
 						{
 							Name: "application1",
 						},
 						{
 							Name: "application2",
 						},
-					},
+					}, nil
 				},
 			},
 			out: "{\n" +
@@ -107,29 +107,39 @@ func TestOrgInspectCommand_Run(t *testing.T) {
 		},
 		"get org error": {
 			orgService: fakeclient.OrgService{
-				Getter: fakeclient.OrgGetter{
-					Err: testErr,
+				GetFunc: func(name string) (*api.Org, error) {
+					return nil, testErr
 				},
 			},
 			err: testErr,
 		},
 		"list org members error": {
 			orgService: fakeclient.OrgService{
-				MemberService: &fakeclient.OrgMemberService{
-					Lister: fakeclient.OrgMemberLister{
-						Err: testErr,
+				MembersService: &fakeclient.OrgMemberService{
+					ListFunc: func(org string) ([]*api.OrgMember, error) {
+						return nil, testErr
 					},
+				},
+				GetFunc: func(name string) (*api.Org, error) {
+					return &api.Org{}, nil
 				},
 			},
 			err: testErr,
 		},
 		"list repos error": {
 			orgService: fakeclient.OrgService{
-				MemberService: &fakeclient.OrgMemberService{},
+				MembersService: &fakeclient.OrgMemberService{
+					ListFunc: func(org string) ([]*api.OrgMember, error) {
+						return nil, nil
+					},
+				},
+				GetFunc: func(name string) (*api.Org, error) {
+					return &api.Org{}, nil
+				},
 			},
 			repoService: fakeclient.RepoService{
-				Lister: fakeclient.RepoLister{
-					Err: testErr,
+				ListFunc: func(namespace string) ([]*api.Repo, error) {
+					return nil, testErr
 				},
 			},
 			err: testErr,

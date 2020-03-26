@@ -22,9 +22,20 @@ type Masker struct {
 	err         error
 }
 
+// Options for configuring masking behavior.
 type Options struct {
-	DisableBuffer     bool
-	BufferDelay       time.Duration
+	// DisableBuffer completely disables the buffering of the masker. This increases output responsiveness
+	// but also increases the chance of a secret not being masked.
+	DisableBuffer bool
+
+	// BufferDelay is the constant duration for which input to a stream is buffered. A higher value increases
+	// the chance of secrets being detected for masking. Especially when writes have a variable delay between them,
+	// for example in the case data arrives over an unstable network connection.
+	// Defaults to 50ms if not set.
+	BufferDelay time.Duration
+
+	// FrameBufferLength is the number of frames that can be in the buffer simultaneously.
+	// If the frame buffer is full, writing to a stream blocks until there is space.
 	FrameBufferLength int
 }
 

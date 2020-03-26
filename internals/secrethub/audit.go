@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,12 +22,13 @@ import (
 )
 
 var (
-	errPagerNotFound = errors.New("no terminal pager available")
+	errPagerNotFound = errors.New("no terminal pager available. Please configure a terminal pager by setting the $PAGER environment variable or install less or more")
 )
 
 const (
-	pagerEnvvar          = "$PAGER"
-	defaultTerminalWidth = 80
+	pagerEnvvar            = "$PAGER"
+	defaultTerminalWidth   = 80
+	fallbackPagerLineCount = 100
 )
 
 // AuditCommand is a command to audit a repo or a secret.
@@ -100,7 +102,9 @@ func (cmd *AuditCommand) run() error {
 	}
 
 	paginatedWriter, err := cmd.newPaginatedWriter(os.Stdout)
-	if err != nil {
+	if err == errPagerNotFound {
+		paginatedWriter = newFallbackPager(os.Stdout)
+	} else if err != nil {
 		return err
 	}
 	defer paginatedWriter.Close()
@@ -131,9 +135,12 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		fmt.Fprintln(paginatedWriter, formattedRow)
 		if paginatedWriter.IsClosed() {
 			break
+		}
+		_, err = fmt.Fprintln(paginatedWriter, formattedRow)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -416,6 +423,45 @@ func pagerCommand() (string, error) {
 	}
 
 	return "", errPagerNotFound
+}
+
+// newFallbackPager returns a pager that outputs a fixed number of lines without pagination
+// and returns errPagerNotFound on the last (or any subsequent) write.
+func newFallbackPager(w io.WriteCloser) pager {
+	return &fallbackPager{
+		linesLeft: fallbackPagerLineCount,
+		writer:    w,
+	}
+}
+
+type fallbackPager struct {
+	writer    io.WriteCloser
+	linesLeft int
+}
+
+func (p *fallbackPager) Write(data []byte) (int, error) {
+	if p.linesLeft == 0 {
+		return 0, errPagerNotFound
+	}
+
+	lines := bytes.Count(data, []byte{'\n'})
+	if lines > p.linesLeft {
+		data = bytes.Join(bytes.Split(data, []byte{'\n'})[:p.linesLeft], []byte{'\n'})
+	}
+	p.linesLeft -= bytes.Count(data, []byte{'\n'})
+	n, err := p.writer.Write(data)
+	if p.linesLeft == 0 {
+		err = errPagerNotFound
+	}
+	return n, err
+}
+
+func (p *fallbackPager) Close() error {
+	return p.writer.Close()
+}
+
+func (p *fallbackPager) IsClosed() bool {
+	return p.linesLeft == 0
 }
 
 type auditTableColumn struct {

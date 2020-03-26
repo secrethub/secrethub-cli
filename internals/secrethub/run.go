@@ -107,7 +107,7 @@ func (cmd *RunCommand) Run() error {
 		}
 	}
 
-	m := masker.New(sequences)
+	m := masker.New(sequences, &masker.Options{})
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = environment

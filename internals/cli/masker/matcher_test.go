@@ -19,14 +19,14 @@ func TestMultipleMatcher(t *testing.T) {
 	cases := map[string]struct {
 		sequences   [][]byte
 		inputs      [][]byte
-		wantMatches []Matches
+		wantMatches []matches
 	}{
 		"no matches": {
 			sequences: testSequences,
 			inputs: [][]byte{
 				[]byte("12345678"),
 			},
-			wantMatches: []Matches{
+			wantMatches: []matches{
 				nil,
 			},
 		},
@@ -35,7 +35,7 @@ func TestMultipleMatcher(t *testing.T) {
 			inputs: [][]byte{
 				[]byte("123test"),
 			},
-			wantMatches: []Matches{
+			wantMatches: []matches{
 				map[int64]int{
 					3: 4,
 				},
@@ -46,7 +46,7 @@ func TestMultipleMatcher(t *testing.T) {
 			inputs: [][]byte{
 				[]byte("123test89test"),
 			},
-			wantMatches: []Matches{
+			wantMatches: []matches{
 				map[int64]int{
 					3: 4,
 					9: 4,
@@ -58,7 +58,7 @@ func TestMultipleMatcher(t *testing.T) {
 			inputs: [][]byte{
 				[]byte("12test but longer"),
 			},
-			wantMatches: []Matches{
+			wantMatches: []matches{
 				map[int64]int{
 					2: 15,
 				},
@@ -69,7 +69,7 @@ func TestMultipleMatcher(t *testing.T) {
 			inputs: [][]byte{
 				[]byte("12another first sequence"),
 			},
-			wantMatches: []Matches{
+			wantMatches: []matches{
 				map[int64]int{
 					2:  13,
 					10: 14,
@@ -82,7 +82,7 @@ func TestMultipleMatcher(t *testing.T) {
 				[]byte("123"),
 				[]byte("4test"),
 			},
-			wantMatches: []Matches{
+			wantMatches: []matches{
 				nil,
 				map[int64]int{
 					4: 4,
@@ -95,7 +95,7 @@ func TestMultipleMatcher(t *testing.T) {
 				[]byte("123te"),
 				[]byte("st"),
 			},
-			wantMatches: []Matches{
+			wantMatches: []matches{
 				nil,
 				map[int64]int{
 					3: 4,
@@ -106,11 +106,11 @@ func TestMultipleMatcher(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			matcher := newMultipleMatcher(tc.sequences)
+			matcher := newMatcher(tc.sequences)
 
 			for i, input := range tc.inputs {
 				t.Run(strconv.Itoa(i), func(t *testing.T) {
-					gotMatches := matcher.Write(input)
+					gotMatches := matcher.write(input)
 					assert.Equal(t, gotMatches, tc.wantMatches[i])
 				})
 			}
@@ -185,10 +185,10 @@ func TestSequenceMatcher(t *testing.T) {
 		name := fmt.Sprintf("%s in %s", tc.matchString, tc.input)
 
 		t.Run(name, func(t *testing.T) {
-			matcher := sequenceMatcher{sequence: []byte(tc.matchString)}
+			matcher := sequenceDetector{sequence: []byte(tc.matchString)}
 			var matches []int
 			for i, b := range []byte(tc.input) {
-				match := matcher.WriteByte(b)
+				match := matcher.writeByte(b)
 				if match {
 					matches = append(matches, i-len(tc.matchString)+1)
 				}

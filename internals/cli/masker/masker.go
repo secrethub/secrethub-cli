@@ -38,8 +38,8 @@ func (m *Masker) AddStream(w io.Writer) io.Writer {
 	s := stream{
 		dest:          w,
 		registerFrame: m.registerFrame,
-		matches:       Matches{},
-		matcher:       newMultipleMatcher(m.sequences),
+		matches:       matches{},
+		matcher:       newMatcher(m.sequences),
 	}
 	return &s
 }
@@ -71,6 +71,7 @@ func (m *Masker) Start() {
 
 // Stop all pending frames and wait for this to complete.
 // This should be run after all input has been written to the io.Writers of the streams.
+// Calling Write() on a stream after calling Stop() will lead to a panic.
 func (m *Masker) Stop() error {
 	m.stopChan <- struct{}{}
 	close(m.frames)
@@ -95,6 +96,8 @@ func (m *Masker) handleErr(err error) {
 	}
 }
 
+// frame represent a set of bytes in the buffer of a stream that were written in a single call of Write().
+// The bytes are written to the destination after the timer has expired.
 type frame struct {
 	length int
 	stream *stream

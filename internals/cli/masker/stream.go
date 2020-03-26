@@ -6,14 +6,14 @@ import (
 	"sync"
 )
 
-// stream is a buffered io.Writer that masks all secrets written on it using a multipleMatcher.
+// stream is a buffered io.Writer that masks all secrets written on it using a matcher.
 type stream struct {
 	dest          io.Writer
-	buf           IndexedBuffer
+	buf           indexedBuffer
 	registerFrame func(*stream, int)
 
-	matcher     *multipleMatcher
-	matches     Matches
+	matcher     *matcher
+	matches     matches
 	matchesLock sync.Mutex
 }
 
@@ -22,12 +22,12 @@ type stream struct {
 // the buffer after the buffer delay has passed.
 // The bytes are also passed to the secret matcher to check for any matches with secrets.
 func (s *stream) Write(p []byte) (int, error) {
-	n, err := s.buf.Write(p)
+	n, err := s.buf.write(p)
 	if n > 0 {
 		s.registerFrame(s, n)
 	}
 
-	for index, length := range s.matcher.Write(p[:n]) {
+	for index, length := range s.matcher.write(p[:n]) {
 		s.addMatch(index, length)
 	}
 
@@ -40,14 +40,14 @@ func (s *stream) addMatch(index int64, length int) {
 	s.matchesLock.Lock()
 	defer s.matchesLock.Unlock()
 
-	if index >= s.buf.CurrentIndex() {
-		s.matches = s.matches.Add(index, length)
+	if index >= s.buf.currentIndex {
+		s.matches = s.matches.add(index, length)
 	}
 }
 
 // flush n bytes from the buffer and mask any secrets that have been matched.
 func (s *stream) flush(n int) error {
-	startIndex := s.buf.CurrentIndex()
+	startIndex := s.buf.currentIndex
 	endIndex := startIndex + int64(n)
 
 	// Increment the frameIndex before processing matches to avoid adding new matches in the processed frame.
@@ -58,7 +58,7 @@ func (s *stream) flush(n int) error {
 
 		if exists {
 			// Get any unprocessed bytes before this match to the destination.
-			beforeMatch := s.buf.UpToIndex(i)
+			beforeMatch := s.buf.upToIndex(i)
 
 			_, err := s.dest.Write(beforeMatch)
 			if err != nil {
@@ -67,7 +67,7 @@ func (s *stream) flush(n int) error {
 
 			// Only write the redaction text if there were bytes between this match and the previous match
 			// or this is the first flush for the buffer.
-			if len(beforeMatch) > 0 || s.buf.CurrentIndex() == 0 {
+			if len(beforeMatch) > 0 || s.buf.currentIndex == 0 {
 				_, err = s.dest.Write([]byte("<redacted by SecretHub>"))
 				if err != nil {
 					return err
@@ -75,14 +75,14 @@ func (s *stream) flush(n int) error {
 			}
 
 			// Drop all bytes until the end of the mask.
-			_ = s.buf.UpToIndex(i + int64(length))
+			_ = s.buf.upToIndex(i + int64(length))
 
 			delete(s.matches, i)
 		}
 	}
 
 	// Write all bytes after the last match.
-	_, err := s.dest.Write(s.buf.UpToIndex(endIndex))
+	_, err := s.dest.Write(s.buf.upToIndex(endIndex))
 	if err != nil {
 		return err
 	}
@@ -90,26 +90,22 @@ func (s *stream) flush(n int) error {
 	return nil
 }
 
-// IndexedBuffer is a goroutine safe buffer that assigns every byte that is written to it with an incrementing index.
-type IndexedBuffer struct {
+// indexedBuffer is a goroutine safe buffer that assigns every byte that is written to it with an incrementing index.
+type indexedBuffer struct {
 	buffer       bytes.Buffer
 	mutex        sync.Mutex
 	currentIndex int64
 }
 
-func (b *IndexedBuffer) CurrentIndex() int64 {
-	return b.currentIndex
-}
-
-func (b *IndexedBuffer) Write(p []byte) (n int, err error) {
+func (b *indexedBuffer) write(p []byte) (n int, err error) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 	return b.buffer.Write(p)
 }
 
-// UpToIndex pops and returns all bytes in the buffer up to the given index.
+// upToIndex pops and returns all bytes in the buffer up to the given index.
 // If all bytes up to this given index have already been returned previously, an empty slice is returned.
-func (b *IndexedBuffer) UpToIndex(index int64) []byte {
+func (b *indexedBuffer) upToIndex(index int64) []byte {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 

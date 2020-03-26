@@ -1,11 +1,11 @@
 package masker
 
-// Matches represents a set of sequence matches. The key is the index at which the match is found and the value is the
+// matches represents a set of sequence matches. The key is the index at which the match is found and the value is the
 // length of the match. The index corresponds to the index of the byte in the BufferedIndex of the stream.
-type Matches map[int64]int
+type matches map[int64]int
 
-// Add a new match to the map if it does not yet exist or the existing match has a shorter length.
-func (m Matches) Add(index int64, length int) Matches {
+// add a new match to the map if it does not yet exist or the existing match has a shorter length.
+func (m matches) add(index int64, length int) matches {
 	existing, exists := m[index]
 	if !exists || existing < length {
 		m[index] = length
@@ -13,31 +13,31 @@ func (m Matches) Add(index int64, length int) Matches {
 	return m
 }
 
-// multipleMatcher combines multiple sequenceMatchers to check for matches of secrets against any of them.
-type multipleMatcher struct {
-	matchers     []*sequenceMatcher
+// matcher combines multiple sequenceMatchers to check for matches of secrets against any of them.
+type matcher struct {
+	matchers     []*sequenceDetector
 	currentIndex int64
 }
 
-// newMultipleMatcher returns a new multipleMatcher that contains a sequenceMatcher for all given sequences.
-func newMultipleMatcher(sequences [][]byte) *multipleMatcher {
-	res := &multipleMatcher{
-		matchers: make([]*sequenceMatcher, len(sequences)),
+// newMatcher returns a new matcher that contains a sequenceDetector for all given sequences.
+func newMatcher(sequences [][]byte) *matcher {
+	res := &matcher{
+		matchers: make([]*sequenceDetector, len(sequences)),
 	}
 	for i, seq := range sequences {
-		res.matchers[i] = &sequenceMatcher{sequence: seq}
+		res.matchers[i] = &sequenceDetector{sequence: seq}
 	}
 	return res
 }
 
-// Write takes in a slice of bytes and returns all matches found by any of its sequenceMatchers.
-func (mb *multipleMatcher) Write(in []byte) Matches {
-	res := Matches{}
+// write takes in a slice of bytes and returns all matches found by any of its sequenceDetectors.
+func (mb *matcher) write(in []byte) matches {
+	res := matches{}
 	for i, b := range in {
 		for _, matcher := range mb.matchers {
-			match := matcher.WriteByte(b)
+			match := matcher.writeByte(b)
 			if match {
-				res = res.Add(mb.currentIndex+int64(i-len(matcher.sequence)+1), len(matcher.sequence))
+				res = res.add(mb.currentIndex+int64(i-len(matcher.sequence)+1), len(matcher.sequence))
 			}
 		}
 	}
@@ -45,15 +45,15 @@ func (mb *multipleMatcher) Write(in []byte) Matches {
 	return res
 }
 
-// sequenceMatcher takes in bytes to check whether there is any match with the given sequence.
-type sequenceMatcher struct {
+// sequenceDetector detects if a sequence is present in the bytes it receives.
+type sequenceDetector struct {
 	sequence     []byte
 	currentIndex int
 }
 
-// WriteByte takes in a new byte to match against.
+// writeByte takes in a new byte to match against.
 // Returns true if the given byte results in a match with sequence
-func (m *sequenceMatcher) WriteByte(in byte) bool {
+func (m *sequenceDetector) writeByte(in byte) bool {
 	if m.sequence[m.currentIndex] == in {
 		m.currentIndex++
 
@@ -66,7 +66,7 @@ func (m *sequenceMatcher) WriteByte(in byte) bool {
 
 	m.currentIndex -= m.findShift()
 	if m.sequence[m.currentIndex] == in {
-		return m.WriteByte(in)
+		return m.writeByte(in)
 	}
 	return false
 }
@@ -74,7 +74,7 @@ func (m *sequenceMatcher) WriteByte(in byte) bool {
 // findShift checks whether we can also make a partial Match by decreasing the currentIndex .
 // For example, if the sequence is foofoobar, if someone inserts foofoofoobar, we still want to Match.
 // So after the third f is inserted, the currentIndex is decreased by 3 with the following code.
-func (m *sequenceMatcher) findShift() int {
+func (m *sequenceDetector) findShift() int {
 	for offset := 1; offset <= m.currentIndex; offset++ {
 		ok := true
 		for i := 0; i < m.currentIndex-offset; i++ {

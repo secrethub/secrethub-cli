@@ -447,6 +447,7 @@ func (p *fallbackPager) Write(data []byte) (int, error) {
 	lines := bytes.Count(data, []byte{'\n'})
 	if lines > p.linesLeft {
 		data = bytes.Join(bytes.Split(data, []byte{'\n'})[:p.linesLeft], []byte{'\n'})
+		data = append(data, '\n')
 	}
 	p.linesLeft -= bytes.Count(data, []byte{'\n'})
 	n, err := p.writer.Write(data)

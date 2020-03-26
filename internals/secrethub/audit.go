@@ -254,6 +254,12 @@ func (f *columnFormatter) columnWidths() []int {
 				widthLeft -= width
 			}
 		}
+		if count == 0 {
+			for i := range res {
+				res[i] += widthLeft / len(res)
+			}
+			break
+		}
 		widthPerColumn = widthLeft / count
 	}
 

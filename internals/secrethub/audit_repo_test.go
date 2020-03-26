@@ -1,11 +1,12 @@
 package secrethub
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"testing"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -34,9 +35,12 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				terminalWidth: func(int) (int, error) {
+					return 83, nil
+				},
 				perPage: 20,
 			},
-			out: "AUTHOR    EVENT    EVENT SUBJECT    IP ADDRESS    DATE\n",
+			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
 		},
 		"create repo event": {
 			cmd: AuditCommand{
@@ -70,12 +74,16 @@ func TestAuditRepoCommand_run(t *testing.T) {
 					}, nil
 				},
 				perPage: 20,
+				terminalWidth: func(_ int) (int, error) {
+					return 83, nil
+				},
 				timeFormatter: &fakes.TimeFormatter{
 					Response: "2018-01-01T01:01:01+01:00",
 				},
 			},
-			out: "AUTHOR       EVENT          EVENT SUBJECT    IP ADDRESS    DATE\n" +
-				"developer    create.repo    repo             127.0.0.1     2018-01-01T01:01:01+01:00\n",
+			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n" +
+				"developer        create.repo      repo             127.0.0.1        2018-01-01T01:0\n" +
+				"                                                                    1:01+01:00     \n",
 		},
 		"client creation error": {
 			cmd: AuditCommand{
@@ -103,8 +111,12 @@ func TestAuditRepoCommand_run(t *testing.T) {
 					}, nil
 				},
 				perPage: 20,
+				terminalWidth: func(int) (int, error) {
+					return 83, nil
+				},
 			},
 			err: testError,
+			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
 		},
 		"get dir error": {
 			cmd: AuditCommand{
@@ -148,9 +160,12 @@ func TestAuditRepoCommand_run(t *testing.T) {
 					}, nil
 				},
 				perPage: 20,
+				terminalWidth: func(int) (int, error) {
+					return 83, nil
+				},
 			},
 			err: ErrInvalidAuditActor,
-			out: "",
+			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
 		},
 		"invalid audit subject": {
 			cmd: AuditCommand{
@@ -175,24 +190,29 @@ func TestAuditRepoCommand_run(t *testing.T) {
 					}, nil
 				},
 				perPage: 20,
+				terminalWidth: func(int) (int, error) {
+					return 83, nil
+				},
 			},
 			err: ErrInvalidAuditSubject,
-			out: "",
+			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := ui.NewFakeIO()
-			tc.cmd.io = io
+			buffer := bytes.Buffer{}
+			tc.cmd.newPaginatedWriter = func(_ io.Writer) (pager, error) {
+				return &fakes.Pager{Buffer: &buffer}, nil
+			}
 
 			// Act
 			err := tc.cmd.run()
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, buffer.String(), tc.out)
 		})
 	}
 }

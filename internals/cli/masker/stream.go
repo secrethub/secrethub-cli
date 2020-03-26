@@ -33,7 +33,7 @@ func (s *stream) Write(p []byte) (int, error) {
 	}
 
 	if n > 0 {
-		s.registerFrame(s, referenceTime.Sub(time.Now()), n)
+		s.registerFrame(s, time.Until(referenceTime), n)
 	}
 
 	return n, err

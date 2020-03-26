@@ -47,37 +47,36 @@ func (mb *matcher) write(in []byte) matches {
 
 // sequenceDetector detects if a sequence is present in the bytes it receives.
 type sequenceDetector struct {
-	sequence     []byte
-	currentIndex int
+	sequence []byte
+	index    int
 }
 
 // writeByte takes in a new byte to match against.
 // Returns true if the given byte results in a match with sequence
 func (m *sequenceDetector) writeByte(in byte) bool {
-	if m.sequence[m.currentIndex] == in {
-		m.currentIndex++
+	if m.sequence[m.index] == in {
+		m.index++
 
-		if m.currentIndex == len(m.sequence) {
-			m.currentIndex = 0
+		if m.index == len(m.sequence) {
+			m.index = 0
 			return true
 		}
 		return false
 	}
 
-	m.currentIndex -= m.findShift()
-	if m.sequence[m.currentIndex] == in {
+	m.index -= m.findShift()
+	if m.sequence[m.index] == in {
 		return m.writeByte(in)
 	}
 	return false
 }
 
-// findShift checks whether we can also make a partial Match by decreasing the currentIndex .
-// For example, if the sequence is foofoobar, if someone inserts foofoofoobar, we still want to Match.
-// So after the third f is inserted, the currentIndex is decreased by 3 with the following code.
+// findShift finds a shift > 0 for which the sequenceDetector has the longest match with its sequence.
+// If no partial match can be made by shifting the sequence, the current index is returned.
 func (m *sequenceDetector) findShift() int {
-	for offset := 1; offset <= m.currentIndex; offset++ {
+	for offset := 1; offset <= m.index; offset++ {
 		ok := true
-		for i := 0; i < m.currentIndex-offset; i++ {
+		for i := 0; i < m.index-offset; i++ {
 			if m.sequence[i] != m.sequence[i+offset] {
 				ok = false
 				break
@@ -87,5 +86,5 @@ func (m *sequenceDetector) findShift() int {
 			return offset
 		}
 	}
-	return m.currentIndex
+	return m.index
 }

@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"io"
 	"sync"
+	"time"
 )
 
 // stream is a buffered io.Writer that masks all secrets written on it.
 type stream struct {
 	dest          io.Writer
 	buf           indexedBuffer
-	registerFrame func(*stream, int)
+	registerFrame func(*stream, time.Duration, int)
 
 	matcher     *matcher
 	matches     matches
@@ -22,13 +23,17 @@ type stream struct {
 // the buffer after the constant buffer delay has passed.
 // The bytes are also passed to the secret matcher to check for any matches with secrets.
 func (s *stream) Write(p []byte) (int, error) {
+	// Save the current time to compensate for the time taken to match for secrets.
+	referenceTime := time.Now()
+
 	n, err := s.buf.write(p)
-	if n > 0 {
-		s.registerFrame(s, n)
-	}
 
 	for index, length := range s.matcher.write(p[:n]) {
 		s.addMatch(index, length)
+	}
+
+	if n > 0 {
+		s.registerFrame(s, referenceTime.Sub(time.Now()), n)
 	}
 
 	return n, err

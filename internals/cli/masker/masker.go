@@ -102,13 +102,13 @@ func (m *Masker) Stop() error {
 	return m.err
 }
 
-// registerFrame adds a new frame to the frames channel with a timeout of BufferDelay.
+// registerFrame adds a new frame to the frames channel with a timeout of bufferDelay plus the given offset.
 // After this timer has passed, the frame will be flushed to the output.
-func (m *Masker) registerFrame(s *stream, l int) {
+func (m *Masker) registerFrame(s *stream, offset time.Duration, l int) {
 	m.frames <- frame{
 		length: l,
 		stream: s,
-		timer:  time.NewTimer(m.BufferDelay),
+		timer:  time.NewTimer(offset + m.bufferDelay),
 	}
 }
 

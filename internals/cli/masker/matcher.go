@@ -1,7 +1,7 @@
 package masker
 
 // Matches represents a set of sequence matches. The key is the index at which the match is found and the value is the
-// length of the match.
+// length of the match. The index corresponds to the index of the byte in the BufferedIndex of the stream.
 type Matches map[int64]int
 
 // Add a new match to the map if it does not yet exist or the existing match has a shorter length.

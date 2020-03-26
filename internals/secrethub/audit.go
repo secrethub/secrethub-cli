@@ -31,20 +31,27 @@ const (
 
 // AuditCommand is a command to audit a repo or a secret.
 type AuditCommand struct {
-	io            ui.IO
-	path          api.Path
-	useTimestamps bool
-	timeFormatter TimeFormatter
-	newClient     newClientFunc
-	perPage       int
-	json          bool
+	io                 ui.IO
+	newPaginatedWriter func(io.Writer) (pager, error)
+	path               api.Path
+	useTimestamps      bool
+	timeFormatter      TimeFormatter
+	newClient          newClientFunc
+	terminalWidth      func(int) (int, error)
+	perPage            int
+	json               bool
 }
 
 // NewAuditCommand creates a new audit command.
 func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 	return &AuditCommand{
-		io:        io,
-		newClient: newClient,
+		io:                 io,
+		newPaginatedWriter: newPaginatedWriter,
+		newClient:          newClient,
+		terminalWidth: func(fd int) (int, error) {
+			w, _, err := terminal.GetSize(fd)
+			return w, err
+		},
 	}
 }
 
@@ -85,14 +92,14 @@ func (cmd *AuditCommand) run() error {
 	if cmd.json {
 		formatter = newJSONFormatter(auditTable.header())
 	} else {
-		terminalWidth, _, err := terminal.GetSize(int(os.Stdout.Fd()))
+		terminalWidth, err := cmd.terminalWidth(int(os.Stdout.Fd()))
 		if err != nil {
 			terminalWidth = defaultTerminalWidth
 		}
 		formatter = newColumnFormatter(terminalWidth, auditTable.columns())
 	}
 
-	paginatedWriter, err := newPaginatedWriter(os.Stdout)
+	paginatedWriter, err := cmd.newPaginatedWriter(os.Stdout)
 	if err != nil {
 		return err
 	}
@@ -315,6 +322,11 @@ func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, audi
 	return nil, nil, ErrNoValidRepoOrSecretPath
 }
 
+type pager interface {
+	io.WriteCloser
+	IsClosed() bool
+}
+
 type paginatedWriter struct {
 	writer io.WriteCloser
 	cmd    *exec.Cmd
@@ -354,7 +366,7 @@ func (p *paginatedWriter) IsClosed() bool {
 
 // newPaginatedWriter runs the terminal pager configured in the OS environment
 // and returns a writer to its standard input.
-func newPaginatedWriter(outputWriter io.Writer) (*paginatedWriter, error) {
+func newPaginatedWriter(outputWriter io.Writer) (pager, error) {
 	pager, err := pagerCommand()
 	if err != nil {
 		return nil, err

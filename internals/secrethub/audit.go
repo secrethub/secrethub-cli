@@ -187,8 +187,9 @@ func (f *columnFormatter) printHeader() bool {
 // formatRow formats the given table row to fit the configured width by
 // giving each cell an equal width and wrapping the text in cells that exceed it.
 func (f *columnFormatter) formatRow(row []string) (string, error) {
-	maxLinesPerCell := 1
 	columnWidths := f.columnWidths()
+
+	maxLinesPerCell := 1
 	for i, cell := range row {
 		lines := len(cell) / columnWidths[i]
 		if len(cell)%columnWidths[i] != 0 {
@@ -205,15 +206,23 @@ func (f *columnFormatter) formatRow(row []string) (string, error) {
 	}
 
 	for i, cell := range row {
-		j := 0
-		for ; len(cell) > columnWidths[i]; j++ {
-			splitCells[j][i] = cell[:columnWidths[i]]
-			cell = cell[columnWidths[i]:]
+		columnWidth := columnWidths[i]
+		lineCount := len(cell) / columnWidth
+		for j := 0; j < lineCount; j++ {
+			begin := j * columnWidth
+			end := (j + 1) * columnWidth
+			splitCells[j][i] = cell[begin:end]
 		}
-		splitCells[j][i] = cell + strings.Repeat(" ", columnWidths[i]-len(cell))
-		j++
-		for ; j < maxLinesPerCell; j++ {
-			splitCells[j][i] = strings.Repeat(" ", columnWidths[i])
+
+		charactersLeft := len(cell) % columnWidth
+		if charactersLeft != 0 {
+			splitCells[lineCount][i] = cell[len(cell)-charactersLeft:] + strings.Repeat(" ", columnWidth-charactersLeft)
+		} else if lineCount < maxLinesPerCell {
+			splitCells[lineCount][i] = strings.Repeat(" ", columnWidth)
+		}
+
+		for j := lineCount + 1; j < maxLinesPerCell; j++ {
+			splitCells[j][i] = strings.Repeat(" ", columnWidth)
 		}
 	}
 

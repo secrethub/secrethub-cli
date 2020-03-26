@@ -151,7 +151,10 @@ func (cmd *RunCommand) Run() error {
 	done <- true
 
 	if !cmd.noMasking {
-		m.Flush()
+		err := m.Flush()
+		if err != nil {
+			return err
+		}
 	}
 
 	if commandErr != nil {

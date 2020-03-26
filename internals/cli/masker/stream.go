@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// stream is a buffered io.Writer that masks all secrets written on it using a matcher.
+// stream is a buffered io.Writer that masks all secrets written on it.
 type stream struct {
 	dest          io.Writer
 	buf           indexedBuffer
@@ -19,7 +19,7 @@ type stream struct {
 
 // Write implements the io.Writer interface for the stream.
 // The written frame is stored in the buffer and it is registered in the Masker to make sure it is flushed from
-// the buffer after the buffer delay has passed.
+// the buffer after the constant buffer delay has passed.
 // The bytes are also passed to the secret matcher to check for any matches with secrets.
 func (s *stream) Write(p []byte) (int, error) {
 	n, err := s.buf.write(p)

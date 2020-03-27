@@ -31,17 +31,17 @@ func newMatcher(sequences [][]byte) *matcher {
 }
 
 // write takes in a slice of bytes and returns all matches found by any of its sequenceDetectors.
-func (mb *matcher) write(in []byte) matches {
+func (m *matcher) write(in []byte) matches {
 	res := matches{}
 	for i, b := range in {
-		for _, matcher := range mb.matchers {
+		for _, matcher := range m.matchers {
 			match := matcher.writeByte(b)
 			if match {
-				res = res.add(mb.currentIndex+int64(i-len(matcher.sequence)+1), len(matcher.sequence))
+				res = res.add(m.currentIndex+int64(i-len(matcher.sequence)+1), len(matcher.sequence))
 			}
 		}
 	}
-	mb.currentIndex += int64(len(in))
+	m.currentIndex += int64(len(in))
 	return res
 }
 
@@ -53,38 +53,41 @@ type sequenceDetector struct {
 
 // writeByte takes in a new byte to match against.
 // Returns true if the given byte results in a match with sequence
-func (m *sequenceDetector) writeByte(in byte) bool {
-	if m.sequence[m.index] == in {
-		m.index++
+func (d *sequenceDetector) writeByte(in byte) bool {
+	if d.sequence[d.index] == in {
+		d.index++
 
-		if m.index == len(m.sequence) {
-			m.index = 0
+		if d.index == len(d.sequence) {
+			d.index = 0
 			return true
 		}
 		return false
 	}
 
-	m.index -= m.findShift()
-	if m.sequence[m.index] == in {
-		return m.writeByte(in)
+	d.index -= d.findShift()
+	if d.sequence[d.index] == in {
+		return d.writeByte(in)
 	}
 	return false
 }
 
-// findShift finds a shift > 0 for which the sequenceDetector has the longest match with its sequence.
-// If no partial match can be made by shifting the sequence, the current index is returned.
-func (m *sequenceDetector) findShift() int {
-	for offset := 1; offset <= m.index; offset++ {
-		ok := true
-		for i := 0; i < m.index-offset; i++ {
-			if m.sequence[i] != m.sequence[i+offset] {
-				ok = false
+// findShift checks whether we can also make a partial match by shifting the detector's index, returning the number
+// of positions the index should be shifted. If no partial match can be made by shifting, the current index is returned.
+// For example, if the sequence to match is "foobar" and "foofoobar" is encountered in the stream we still want to
+// trigger a positive match. So after the second "f" character is encountered, findShift returns 3 to indicate the
+// index should be decreased by 3.
+func (d *sequenceDetector) findShift() int {
+	for offset := 1; offset <= d.index; offset++ {
+		found := true
+		for i := 0; i < d.index-offset; i++ {
+			if d.sequence[i] != d.sequence[i+offset] {
+				found = false
 				break
 			}
 		}
-		if ok {
+		if found {
 			return offset
 		}
 	}
-	return m.index
+	return d.index
 }

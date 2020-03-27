@@ -6,8 +6,9 @@ import (
 )
 
 // Masker handles the creation and synchronization of streams that have all their writes scanned for secrets and
-// have them redacted if any matches are found. Output on all streams is buffered to increase the chance of finding
-// secrets if they are spread across multiple writes.
+// have them redacted if any matches are found. Masking of secrets is a best effort attempt. Output on all streams is
+// buffered to increase the chance of finding secrets if they are spread across multiple writes, but it cannot be
+// guaranteed that these secrets are masked. The duration bytes spend in the buffer is constant.
 //
 // Usage:
 // 1. Create a new Masker using New()

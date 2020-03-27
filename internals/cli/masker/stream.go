@@ -39,8 +39,9 @@ func (s *stream) Write(p []byte) (int, error) {
 	return n, err
 }
 
-// addMatch adds the match of a secret at the given index and with the given length to the map of matches if the
-// associated bytes have not yet been written to the destination.
+// addMatch adds the match of a secret at the given index and with the given length to the map of matches.
+// If the associated bytes have already been written to the destination, the match is ignored to avoid storing matches
+// that are never being processed by flush().
 func (s *stream) addMatch(index int64, length int) {
 	s.matchesLock.Lock()
 	defer s.matchesLock.Unlock()

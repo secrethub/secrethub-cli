@@ -59,7 +59,7 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *AuditCommand) Register(r command.Registerer) {
-	clause := r.Command("audit", "Show the audit log.")
+	clause := r.Command("audit", "Show the audit log.\nIf the output of the command is parsed by a script the --json flag must be used.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
 	clause.Flag("json", "output the audit log in json format").BoolVar(&cmd.json)

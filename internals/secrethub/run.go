@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
@@ -54,7 +53,7 @@ type RunCommand struct {
 	command              []string
 	environment          *environment
 	noMasking            bool
-	maskingTimeout       time.Duration
+	maskerOptions        masker.Options
 	newClient            newClientFunc
 	ignoreMissingSecrets bool
 }
@@ -81,7 +80,8 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.Alias("exec")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
-	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
+	clause.Flag("no-output-buffering", "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.").BoolVar(&cmd.maskerOptions.DisableBuffer)
+	clause.Flag("masking-buffer-period", "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.").Default("50ms").DurationVar(&cmd.maskerOptions.BufferDelay)
 	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
 	cmd.environment.register(clause)
 	command.BindAction(clause, cmd.Run)
@@ -106,8 +106,7 @@ func (cmd *RunCommand) Run() error {
 			sequences = append(sequences, []byte(val))
 		}
 	}
-
-	m := masker.New(sequences, &masker.Options{})
+	m := masker.New(sequences, &cmd.maskerOptions)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = environment
@@ -116,7 +115,6 @@ func (cmd *RunCommand) Run() error {
 		command.Stdout = cmd.io.Stdout()
 		command.Stderr = os.Stderr
 	} else {
-
 		command.Stdout = m.AddStream(cmd.io.Stdout())
 		command.Stderr = m.AddStream(os.Stderr)
 

@@ -68,7 +68,6 @@ func (m *matcher) write(in []byte) matches {
 }
 
 // sequenceDetector detects if a sequence is present in the bytes it receives.
-//
 type sequenceDetector struct {
 	sequence []byte
 	offset   int
@@ -80,6 +79,10 @@ func (d *sequenceDetector) length() int {
 	return len(d.sequence) - d.offset
 }
 
+// writeByte takes in a new byte to match against.
+// Returns true if the given byte results in a match with sequence
+// The implementation tries to reduce the effect of the input on the execution duration as much as possible
+// to limit the information that can be derived from measuring the execution time of the masking functionality.
 func (d *sequenceDetector) writeByte(in byte) bool {
 	// Implementation of the following code that limits data-dependency as much as possible.
 	//

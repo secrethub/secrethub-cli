@@ -12,7 +12,7 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/randchar"
 )
 
-func TestMultipleMatcher(t *testing.T) {
+func TestMatcher(t *testing.T) {
 	testSequences := [][]byte{
 		[]byte("first sequence"),
 		[]byte("test"),
@@ -20,6 +20,7 @@ func TestMultipleMatcher(t *testing.T) {
 		[]byte("another first"),
 		[]byte("112"),
 		[]byte("22222222223"),
+		[]byte("334334334334"),
 	}
 
 	cases := map[string]struct {
@@ -70,7 +71,7 @@ func TestMultipleMatcher(t *testing.T) {
 				},
 			},
 		},
-		"overlappig matches": {
+		"overlapping matches": {
 			sequences: testSequences,
 			inputs: [][]byte{
 				[]byte("12another first sequence"),
@@ -131,6 +132,18 @@ func TestMultipleMatcher(t *testing.T) {
 				},
 			},
 		},
+		"repeat sequence": {
+			sequences: testSequences,
+			inputs: [][]byte{
+				[]byte("334334334334334"),
+			},
+			wantMatches: []matches{
+				map[int64]int{
+					0: 12,
+					3: 12,
+				},
+			},
+		},
 	}
 
 	for name, tc := range cases {
@@ -181,7 +194,7 @@ func TestMatcher_Repeats(t *testing.T) {
 
 }
 
-func TestSequenceMatcher(t *testing.T) {
+func TestSequenceDetector(t *testing.T) {
 	tests := []struct {
 		matchString     string
 		input           string

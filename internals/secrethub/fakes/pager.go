@@ -15,7 +15,3 @@ func (f *Pager) Write(p []byte) (n int, err error) {
 func (f *Pager) Close() error {
 	return nil
 }
-
-func (f *Pager) IsClosed() bool {
-	return false
-}

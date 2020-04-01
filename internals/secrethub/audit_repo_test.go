@@ -41,7 +41,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				format:  formatTable,
 				perPage: 20,
 			},
-			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
+			out: "",
 		},
 		"create repo event": {
 			cmd: AuditCommand{
@@ -120,7 +120,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				},
 			},
 			err: testError,
-			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
+			out: "",
 		},
 		"get dir error": {
 			cmd: AuditCommand{
@@ -171,7 +171,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				},
 			},
 			err: ErrInvalidAuditActor,
-			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
+			out: "",
 		},
 		"invalid audit subject": {
 			cmd: AuditCommand{
@@ -202,7 +202,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				},
 			},
 			err: ErrInvalidAuditSubject,
-			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
+			out: "",
 		},
 	}
 

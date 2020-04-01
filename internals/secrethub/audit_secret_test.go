@@ -92,7 +92,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 					return 46, nil
 				},
 			},
-			out: "AUTHOR      EVENT       IP ADDRESS  DATE      \n",
+			out: "",
 		},
 		"error secret version": {
 			cmd: AuditCommand{
@@ -159,7 +159,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				},
 			},
 			err: testError,
-			out: "AUTHOR      EVENT       IP ADDRESS  DATE      \n",
+			out: "",
 		},
 		"invalid audit actor": {
 			cmd: AuditCommand{
@@ -187,7 +187,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				},
 			},
 			err: ErrInvalidAuditActor,
-			out: "AUTHOR               EVENT                IP ADDRESS           DATE               \n",
+			out: "",
 		},
 	}
 

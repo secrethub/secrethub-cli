@@ -18,7 +18,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 		"all columns fit": {
 			formatter: columnFormatter{
 				tableWidth: 102,
-				columns: []auditTableColumn{
+				columns: []tableColumn{
 					{maxWidth: 10},
 					{maxWidth: 10},
 				},
@@ -28,7 +28,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 		"no columns fit": {
 			formatter: columnFormatter{
 				tableWidth: 12,
-				columns: []auditTableColumn{
+				columns: []tableColumn{
 					{maxWidth: 10},
 					{maxWidth: 10},
 				},
@@ -38,7 +38,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 		"one column fits": {
 			formatter: columnFormatter{
 				tableWidth: 27,
-				columns: []auditTableColumn{
+				columns: []tableColumn{
 					{maxWidth: 10},
 					{maxWidth: 20},
 				},
@@ -48,7 +48,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 		"multiple adjustments": {
 			formatter: columnFormatter{
 				tableWidth: 106,
-				columns: []auditTableColumn{
+				columns: []tableColumn{
 					{maxWidth: 27},
 					{maxWidth: 26},
 					{maxWidth: 25},
@@ -60,7 +60,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 		"no max width for some all fit": {
 			formatter: columnFormatter{
 				tableWidth: 64,
-				columns: []auditTableColumn{
+				columns: []tableColumn{
 					{maxWidth: 15},
 					{},
 					{maxWidth: 15},
@@ -71,7 +71,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 		"no max width for some not all fit": {
 			formatter: columnFormatter{
 				tableWidth: 64,
-				columns: []auditTableColumn{
+				columns: []tableColumn{
 					{maxWidth: 50},
 					{},
 					{maxWidth: 10},
@@ -100,30 +100,30 @@ func Test_columnFormatter_formatRow(t *testing.T) {
 			formatter: columnFormatter{
 				tableWidth:           102,
 				computedColumnWidths: []int{50, 50},
-				columns:              []auditTableColumn{{}, {}},
+				columns:              []tableColumn{{}, {}},
 			},
 			row:         []string{"foo", "bar"},
-			expected:    "foo" + strings.Repeat(" ", 47) + "  " + "bar" + strings.Repeat(" ", 47),
+			expected:    "foo" + strings.Repeat(" ", 47) + "  " + "bar" + strings.Repeat(" ", 47) + "\n",
 			expectedErr: nil,
 		},
 		"wrapping": {
 			formatter: columnFormatter{
 				tableWidth:           6,
 				computedColumnWidths: []int{2, 2},
-				columns:              []auditTableColumn{{}, {}},
+				columns:              []tableColumn{{}, {}},
 			},
 			row:         []string{"foo", "bar"},
-			expected:    "fo  ba\no   r ",
+			expected:    "fo  ba\no   r \n",
 			expectedErr: nil,
 		},
 		"fits exactly": {
 			formatter: columnFormatter{
 				tableWidth:           8,
 				computedColumnWidths: []int{3, 3},
-				columns:              []auditTableColumn{{}, {}},
+				columns:              []tableColumn{{}, {}},
 			},
 			row:         []string{"foo", "bar"},
-			expected:    "foo  bar",
+			expected:    "foo  bar\n",
 			expectedErr: nil,
 		},
 	}
@@ -133,7 +133,7 @@ func Test_columnFormatter_formatRow(t *testing.T) {
 			result, err := tc.formatter.formatRow(tc.row)
 			assert.Equal(t, err, tc.expectedErr)
 			if err == nil {
-				assert.Equal(t, result, tc.expected)
+				assert.Equal(t, string(result), tc.expected)
 			}
 		})
 	}

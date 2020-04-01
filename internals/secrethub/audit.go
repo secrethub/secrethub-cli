@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
 
@@ -23,6 +24,7 @@ import (
 
 var (
 	errPagerNotFound = errors.New("no terminal pager available. Please configure a terminal pager by setting the $PAGER environment variable or install \"less\" or \"more\"")
+	errPagerClosed   = errors.New("cannot write to closed terminal pager")
 	errNoSuchFormat  = func(format string) error { return errors.New("invalid format: " + format) }
 )
 
@@ -93,19 +95,6 @@ func (cmd *AuditCommand) run() error {
 		return err
 	}
 
-	var formatter tableFormatter
-	if cmd.format == formatJSON {
-		formatter = newJSONFormatter(auditTable.header())
-	} else if cmd.format == formatTable {
-		terminalWidth, err := cmd.terminalWidth(int(os.Stdout.Fd()))
-		if err != nil {
-			terminalWidth = defaultTerminalWidth
-		}
-		formatter = newColumnFormatter(terminalWidth, auditTable.columns())
-	} else {
-		return errNoSuchFormat(cmd.format)
-	}
-
 	paginatedWriter, err := cmd.newPaginatedWriter(os.Stdout)
 	if err == errPagerNotFound {
 		paginatedWriter = newFallbackPaginatedWriter(os.Stdout)
@@ -114,12 +103,17 @@ func (cmd *AuditCommand) run() error {
 	}
 	defer paginatedWriter.Close()
 
-	if formatter.shouldPrintHeader() {
-		header, err := formatter.formatRow(auditTable.header())
+	var formatter tableFormatter
+	if cmd.format == formatJSON {
+		formatter = newJSONFormatter(paginatedWriter, auditTable.header())
+	} else if cmd.format == formatTable {
+		terminalWidth, err := cmd.terminalWidth(int(os.Stdout.Fd()))
 		if err != nil {
-			return err
+			terminalWidth = defaultTerminalWidth
 		}
-		fmt.Fprintln(paginatedWriter, header)
+		formatter = newColumnFormatter(paginatedWriter, terminalWidth, auditTable.columns())
+	} else {
+		return errNoSuchFormat(cmd.format)
 	}
 
 	for {
@@ -135,16 +129,10 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		formattedRow, err := formatter.formatRow(row)
-		if err != nil {
-			return err
-		}
-
-		if paginatedWriter.IsClosed() {
+		err = formatter.WriteRow(row)
+		if err == errPagerClosed {
 			break
-		}
-		_, err = fmt.Fprintln(paginatedWriter, formattedRow)
-		if err != nil {
+		} else if err != nil {
 			return err
 		}
 	}
@@ -152,28 +140,24 @@ func (cmd *AuditCommand) run() error {
 }
 
 type tableFormatter interface {
-	shouldPrintHeader() bool
-	formatRow(row []string) (string, error)
+	WriteRow([]string) error
 }
 
 // newJSONFormatter returns a table formatter that formats the given table rows as json.
-func newJSONFormatter(fieldNames []string) *jsonFormatter {
-	return &jsonFormatter{fields: fieldNames}
+func newJSONFormatter(writer io.Writer, fieldNames []string) *jsonFormatter {
+	return &jsonFormatter{encoder: json.NewEncoder(writer), fields: fieldNames}
 }
 
 type jsonFormatter struct {
-	fields []string
-}
-
-func (f *jsonFormatter) shouldPrintHeader() bool {
-	return false
+	encoder *json.Encoder
+	fields  []string
 }
 
 // formatRow returns the json representation of the given row
 // with the configured field names as keys and the provided values
-func (f *jsonFormatter) formatRow(row []string) (string, error) {
+func (f *jsonFormatter) WriteRow(row []string) error {
 	if len(f.fields) != len(row) {
-		return "", fmt.Errorf("unexpected number of json fields")
+		return fmt.Errorf("unexpected number of json fields")
 	}
 
 	jsonMap := make(map[string]string)
@@ -181,31 +165,53 @@ func (f *jsonFormatter) formatRow(row []string) (string, error) {
 		jsonMap[f.fields[i]] = element
 	}
 
-	jsonData, err := json.Marshal(jsonMap)
-	if err != nil {
-		return "", err
-	}
-	return string(jsonData), nil
+	return f.encoder.Encode(jsonMap)
 }
 
 // newColumnFormatter returns a table formatter that aligns the columns of the table.
-func newColumnFormatter(tableWidth int, columns []auditTableColumn) *columnFormatter {
-	return &columnFormatter{tableWidth: tableWidth, columns: columns}
+func newColumnFormatter(writer io.Writer, tableWidth int, columns []tableColumn) *columnFormatter {
+	return &columnFormatter{writer: writer, tableWidth: tableWidth, columns: columns}
 }
 
 type columnFormatter struct {
 	tableWidth           int
+	writer               io.Writer
 	computedColumnWidths []int
-	columns              []auditTableColumn
+	columns              []tableColumn
+	didPrintHeader       bool
 }
 
 func (f *columnFormatter) shouldPrintHeader() bool {
 	return true
 }
 
+func (f *columnFormatter) WriteRow(row []string) error {
+	if !f.didPrintHeader {
+		header := make([]string, len(f.columns))
+		for i, col := range f.columns {
+			header[i] = col.name
+		}
+		formattedHeader, err := f.formatRow(header)
+		if err != nil {
+			return err
+		}
+		_, err = f.writer.Write(formattedHeader)
+		if err != nil {
+			return err
+		}
+		f.didPrintHeader = true
+	}
+	formattedRow, err := f.formatRow(row)
+	if err != nil {
+		return err
+	}
+	_, err = f.writer.Write(formattedRow)
+	return err
+}
+
 // formatRow formats the given table row to fit the configured width by
 // giving each cell an equal width and wrapping the text in cells that exceed it.
-func (f *columnFormatter) formatRow(row []string) (string, error) {
+func (f *columnFormatter) formatRow(row []string) ([]byte, error) {
 	columnWidths := f.columnWidths()
 
 	// calculate the maximum number of lines a cell value will be broken into
@@ -252,7 +258,7 @@ func (f *columnFormatter) formatRow(row []string) (string, error) {
 	for j := 0; j < maxLinesPerCell; j++ {
 		strRes.WriteString(strings.Join(splitCells[j], "  ") + "\n")
 	}
-	return strings.TrimSuffix(strRes.String(), "\n"), nil
+	return []byte(strRes.String()), nil
 }
 
 // columnWidths returns the width of each column based on their maximum widths
@@ -341,10 +347,8 @@ func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, audi
 	return nil, nil, ErrNoValidRepoOrSecretPath
 }
 
-type pager interface {
-	io.WriteCloser
-	IsClosed() bool
-}
+// pager is an io.WriteCloser that returns errPagerClosed if it has been closed.
+type pager io.WriteCloser
 
 // newPaginatedWriter runs the terminal pager configured in the OS environment
 // and returns a writer that is piped to the standard input of the pager command.
@@ -384,7 +388,12 @@ type paginatedWriter struct {
 	closed bool
 }
 
+// Write pipes the data to the terminal pager.
+// It returns errPagerClosed if the terminal pager has been closed.
 func (p *paginatedWriter) Write(data []byte) (n int, err error) {
+	if p.isClosed() {
+		return 0, errPagerClosed
+	}
 	return p.writer.Write(data)
 }
 
@@ -395,13 +404,17 @@ func (p *paginatedWriter) Close() error {
 		return err
 	}
 	if !p.closed {
+		err = p.cmd.Process.Signal(syscall.SIGINT)
+		if err != nil {
+			p.cmd.Process.Kill()
+		}
 		<-p.done
 	}
 	return nil
 }
 
-// IsClosed checks if the terminal pager process has been stopped.
-func (p *paginatedWriter) IsClosed() bool {
+// isClosed checks if the terminal pager process has been stopped.
+func (p *paginatedWriter) isClosed() bool {
 	if p.closed {
 		return true
 	}
@@ -478,7 +491,7 @@ func (p *fallbackPager) IsClosed() bool {
 	return p.linesLeft == 0
 }
 
-type auditTableColumn struct {
+type tableColumn struct {
 	name     string
 	maxWidth int
 }
@@ -486,15 +499,15 @@ type auditTableColumn struct {
 type auditTable interface {
 	header() []string
 	row(event api.Audit) ([]string, error)
-	columns() []auditTableColumn
+	columns() []tableColumn
 }
 
-func newBaseAuditTable(timeFormatter TimeFormatter, midColumns ...auditTableColumn) baseAuditTable {
-	columns := append([]auditTableColumn{
+func newBaseAuditTable(timeFormatter TimeFormatter, midColumns ...tableColumn) baseAuditTable {
+	columns := append([]tableColumn{
 		{name: "AUTHOR", maxWidth: 32},
 		{name: "EVENT", maxWidth: 22},
 	}, midColumns...)
-	columns = append(columns, []auditTableColumn{
+	columns = append(columns, []tableColumn{
 		{name: "IP ADDRESS", maxWidth: 45},
 		{name: "DATE", maxWidth: 22},
 	}...)
@@ -506,7 +519,7 @@ func newBaseAuditTable(timeFormatter TimeFormatter, midColumns ...auditTableColu
 }
 
 type baseAuditTable struct {
-	tableColumns  []auditTableColumn
+	tableColumns  []tableColumn
 	timeFormatter TimeFormatter
 }
 
@@ -528,7 +541,7 @@ func (table baseAuditTable) row(event api.Audit, content ...string) ([]string, e
 	return append(res, event.IPAddress, table.timeFormatter.Format(event.LoggedAt)), nil
 }
 
-func (table baseAuditTable) columns() []auditTableColumn {
+func (table baseAuditTable) columns() []tableColumn {
 	return table.tableColumns
 }
 
@@ -552,7 +565,7 @@ func (table secretAuditTable) row(event api.Audit) ([]string, error) {
 
 func newRepoAuditTable(tree *api.Tree, timeFormatter TimeFormatter) repoAuditTable {
 	return repoAuditTable{
-		baseAuditTable: newBaseAuditTable(timeFormatter, auditTableColumn{name: "EVENT SUBJECT"}),
+		baseAuditTable: newBaseAuditTable(timeFormatter, tableColumn{name: "EVENT SUBJECT"}),
 		tree:           tree,
 	}
 }

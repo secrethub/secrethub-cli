@@ -481,10 +481,6 @@ func (p *fallbackPager) Close() error {
 	return p.writer.Close()
 }
 
-func (p *fallbackPager) IsClosed() bool {
-	return p.linesLeft == 0
-}
-
 type tableColumn struct {
 	name     string
 	maxWidth int

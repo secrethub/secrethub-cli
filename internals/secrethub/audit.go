@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	errPagerNotFound = errors.New("no terminal pager available. Please configure a terminal pager by setting the $PAGER environment variable or install less or more")
+	errPagerNotFound = errors.New("no terminal pager available. Please configure a terminal pager by setting the $PAGER environment variable or install \"less\" or \"more\"")
 )
 
 const (
@@ -59,7 +59,7 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *AuditCommand) Register(r command.Registerer) {
-	clause := r.Command("audit", "Show the audit log.\nIf the output of the command is parsed by a script the --json flag must be used.")
+	clause := r.Command("audit", "Show the audit log.\n\nIf the output of the command is parsed by a script an alternative of the default table format must be used.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
 	clause.Flag("json", "output the audit log in json format").BoolVar(&cmd.json)
@@ -203,6 +203,7 @@ func (f *columnFormatter) printHeader() bool {
 func (f *columnFormatter) formatRow(row []string) (string, error) {
 	columnWidths := f.columnWidths()
 
+	// calculate the maximum number of lines a cell value will be broken into
 	maxLinesPerCell := 1
 	for i, cell := range row {
 		lines := len(cell) / columnWidths[i]
@@ -214,6 +215,7 @@ func (f *columnFormatter) formatRow(row []string) (string, error) {
 		}
 	}
 
+	// split the cell values into a grid according to how they will be printed
 	splitCells := make([][]string, maxLinesPerCell)
 	for i := 0; i < maxLinesPerCell; i++ {
 		splitCells[i] = make([]string, len(row))
@@ -240,6 +242,7 @@ func (f *columnFormatter) formatRow(row []string) (string, error) {
 		}
 	}
 
+	// convert the grid to a string
 	strRes := strings.Builder{}
 	for j := 0; j < maxLinesPerCell; j++ {
 		strRes.WriteString(strings.Join(splitCells[j], "  ") + "\n")
@@ -255,6 +258,9 @@ func (f *columnFormatter) columnWidths() []int {
 	}
 	res := make([]int, len(f.columns))
 
+	// Distribute the maximum width equally between all columns and repeatedly
+	// check if any of them have a smaller maximum width and can be shrunk.
+	// Stop when no columns can be further adjusted.
 	adjusted := true
 	columnsLeft := len(f.columns)
 	widthLeft := f.tableWidth - 2*(len(f.columns)-1)
@@ -278,6 +284,7 @@ func (f *columnFormatter) columnWidths() []int {
 		widthPerColumn = widthLeft / columnsLeft
 	}
 
+	// distribute the remaining width equally between columns with no maximum width.
 	for i := range res {
 		if res[i] == 0 {
 			res[i] = widthPerColumn
@@ -335,7 +342,7 @@ type pager interface {
 }
 
 // newPaginatedWriter runs the terminal pager configured in the OS environment
-// and returns a writer to its standard input.
+// and returns a writer that is piped to the standard input of the pager command.
 func newPaginatedWriter(outputWriter io.Writer) (pager, error) {
 	pager, err := pagerCommand()
 	if err != nil {
@@ -364,6 +371,7 @@ func newPaginatedWriter(outputWriter io.Writer) (pager, error) {
 	return &paginatedWriter{writer: writer, cmd: cmd, done: done}, nil
 }
 
+// paginatedWriter is a writer that is piped to a terminal pager command.
 type paginatedWriter struct {
 	writer io.WriteCloser
 	cmd    *exec.Cmd
@@ -402,7 +410,7 @@ func (p *paginatedWriter) IsClosed() bool {
 }
 
 // pagerCommand returns the name of the terminal pager configured in the OS environment ($PAGER).
-// If no pager is configured less or more is returned depending on which is available.
+// If no pager is configured it falls back to "less" than "more", returning an error if neither are available.
 func pagerCommand() (string, error) {
 	var pager string
 	var err error

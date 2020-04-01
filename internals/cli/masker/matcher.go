@@ -95,7 +95,7 @@ func (d *sequenceDetector) writeByte(in byte) bool {
 	//		}
 	//		return false
 	//	} else if d.sequence[0] == in{
-	//		d.index = d.offset
+	//		d.index = d.offset + 1
 	//	} else {
 	//      d.index = 0
 	//  }

@@ -108,13 +108,13 @@ func (cmd *AuditCommand) run() error {
 
 	paginatedWriter, err := cmd.newPaginatedWriter(os.Stdout)
 	if err == errPagerNotFound {
-		paginatedWriter = newFallbackPager(os.Stdout)
+		paginatedWriter = newFallbackPaginatedWriter(os.Stdout)
 	} else if err != nil {
 		return err
 	}
 	defer paginatedWriter.Close()
 
-	if formatter.printHeader() {
+	if formatter.shouldPrintHeader() {
 		header, err := formatter.formatRow(auditTable.header())
 		if err != nil {
 			return err
@@ -152,7 +152,7 @@ func (cmd *AuditCommand) run() error {
 }
 
 type tableFormatter interface {
-	printHeader() bool
+	shouldPrintHeader() bool
 	formatRow(row []string) (string, error)
 }
 
@@ -165,7 +165,7 @@ type jsonFormatter struct {
 	fields []string
 }
 
-func (f *jsonFormatter) printHeader() bool {
+func (f *jsonFormatter) shouldPrintHeader() bool {
 	return false
 }
 
@@ -199,7 +199,7 @@ type columnFormatter struct {
 	columns              []auditTableColumn
 }
 
-func (f *columnFormatter) printHeader() bool {
+func (f *columnFormatter) shouldPrintHeader() bool {
 	return true
 }
 
@@ -438,9 +438,9 @@ func pagerCommand() (string, error) {
 	return "", errPagerNotFound
 }
 
-// newFallbackPager returns a pager that outputs a fixed number of lines without pagination
+// newFallbackPaginatedWriter returns a pager that closes after outputting a fixed number of lines without pagination
 // and returns errPagerNotFound on the last (or any subsequent) write.
-func newFallbackPager(w io.WriteCloser) pager {
+func newFallbackPaginatedWriter(w io.WriteCloser) pager {
 	return &fallbackPager{
 		linesLeft: fallbackPagerLineCount,
 		writer:    w,

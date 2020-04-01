@@ -38,6 +38,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				terminalWidth: func(int) (int, error) {
 					return 83, nil
 				},
+				format:  formatTable,
 				perPage: 20,
 			},
 			out: "AUTHOR           EVENT            EVENT SUBJECT    IP ADDRESS       DATE           \n",
@@ -73,6 +74,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				format:  formatTable,
 				perPage: 20,
 				terminalWidth: func(_ int) (int, error) {
 					return 83, nil
@@ -91,6 +93,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return nil, ErrCannotFindHomeDir()
 				},
+				format:  formatTable,
 				perPage: 20,
 			},
 			err: ErrCannotFindHomeDir(),
@@ -110,6 +113,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				format:  formatTable,
 				perPage: 20,
 				terminalWidth: func(int) (int, error) {
 					return 83, nil
@@ -133,6 +137,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				format:  formatTable,
 				perPage: 20,
 			},
 			err: testError,
@@ -159,6 +164,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				format:  formatTable,
 				perPage: 20,
 				terminalWidth: func(int) (int, error) {
 					return 83, nil
@@ -189,6 +195,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				format:  formatTable,
 				perPage: 20,
 				terminalWidth: func(int) (int, error) {
 					return 83, nil

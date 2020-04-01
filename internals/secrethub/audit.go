@@ -23,12 +23,15 @@ import (
 
 var (
 	errPagerNotFound = errors.New("no terminal pager available. Please configure a terminal pager by setting the $PAGER environment variable or install \"less\" or \"more\"")
+	errNoSuchFormat  = func(format string) error { return errors.New("invalid format: " + format) }
 )
 
 const (
 	pagerEnvvar            = "$PAGER"
 	defaultTerminalWidth   = 80
 	fallbackPagerLineCount = 100
+	formatTable            = "table"
+	formatJSON             = "json"
 )
 
 // AuditCommand is a command to audit a repo or a secret.
@@ -41,7 +44,7 @@ type AuditCommand struct {
 	newClient          newClientFunc
 	terminalWidth      func(int) (int, error)
 	perPage            int
-	json               bool
+	format             string
 }
 
 // NewAuditCommand creates a new audit command.
@@ -61,8 +64,8 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.\n\nIf the output of the command is parsed by a script an alternative of the default table format must be used.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flag("per-page", "number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
-	clause.Flag("json", "output the audit log in json format").BoolVar(&cmd.json)
+	clause.Flag("per-page", "Number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
+	clause.Flag("output-format", "Specify the format in which to output the log. Options are: table and json. Defaults to table").HintOptions("json").Default("table").StringVar(&cmd.format)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -91,14 +94,16 @@ func (cmd *AuditCommand) run() error {
 	}
 
 	var formatter tableFormatter
-	if cmd.json {
+	if cmd.format == formatJSON {
 		formatter = newJSONFormatter(auditTable.header())
-	} else {
+	} else if cmd.format == formatTable {
 		terminalWidth, err := cmd.terminalWidth(int(os.Stdout.Fd()))
 		if err != nil {
 			terminalWidth = defaultTerminalWidth
 		}
 		formatter = newColumnFormatter(terminalWidth, auditTable.columns())
+	} else {
+		return errNoSuchFormat(cmd.format)
 	}
 
 	paginatedWriter, err := cmd.newPaginatedWriter(os.Stdout)

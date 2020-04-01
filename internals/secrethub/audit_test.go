@@ -91,10 +91,9 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 
 func Test_columnFormatter_formatRow(t *testing.T) {
 	cases := map[string]struct {
-		formatter   columnFormatter
-		row         []string
-		expected    string
-		expectedErr error
+		formatter columnFormatter
+		row       []string
+		expected  string
 	}{
 		"all cells fit": {
 			formatter: columnFormatter{
@@ -102,9 +101,8 @@ func Test_columnFormatter_formatRow(t *testing.T) {
 				computedColumnWidths: []int{50, 50},
 				columns:              []tableColumn{{}, {}},
 			},
-			row:         []string{"foo", "bar"},
-			expected:    "foo" + strings.Repeat(" ", 47) + "  " + "bar" + strings.Repeat(" ", 47) + "\n",
-			expectedErr: nil,
+			row:      []string{"foo", "bar"},
+			expected: "foo" + strings.Repeat(" ", 47) + "  " + "bar" + strings.Repeat(" ", 47) + "\n",
 		},
 		"wrapping": {
 			formatter: columnFormatter{
@@ -112,9 +110,8 @@ func Test_columnFormatter_formatRow(t *testing.T) {
 				computedColumnWidths: []int{2, 2},
 				columns:              []tableColumn{{}, {}},
 			},
-			row:         []string{"foo", "bar"},
-			expected:    "fo  ba\no   r \n",
-			expectedErr: nil,
+			row:      []string{"foo", "bar"},
+			expected: "fo  ba\no   r \n",
 		},
 		"fits exactly": {
 			formatter: columnFormatter{
@@ -122,19 +119,15 @@ func Test_columnFormatter_formatRow(t *testing.T) {
 				computedColumnWidths: []int{3, 3},
 				columns:              []tableColumn{{}, {}},
 			},
-			row:         []string{"foo", "bar"},
-			expected:    "foo  bar\n",
-			expectedErr: nil,
+			row:      []string{"foo", "bar"},
+			expected: "foo  bar\n",
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			result, err := tc.formatter.formatRow(tc.row)
-			assert.Equal(t, err, tc.expectedErr)
-			if err == nil {
-				assert.Equal(t, string(result), tc.expected)
-			}
+			result := tc.formatter.formatRow(tc.row)
+			assert.Equal(t, string(result), tc.expected)
 		})
 	}
 }

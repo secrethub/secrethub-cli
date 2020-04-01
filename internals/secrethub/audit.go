@@ -181,37 +181,27 @@ type columnFormatter struct {
 	didPrintHeader       bool
 }
 
-func (f *columnFormatter) shouldPrintHeader() bool {
-	return true
-}
-
 func (f *columnFormatter) WriteRow(row []string) error {
 	if !f.didPrintHeader {
 		header := make([]string, len(f.columns))
 		for i, col := range f.columns {
 			header[i] = col.name
 		}
-		formattedHeader, err := f.formatRow(header)
-		if err != nil {
-			return err
-		}
-		_, err = f.writer.Write(formattedHeader)
+		formattedHeader := f.formatRow(header)
+		_, err := f.writer.Write(formattedHeader)
 		if err != nil {
 			return err
 		}
 		f.didPrintHeader = true
 	}
-	formattedRow, err := f.formatRow(row)
-	if err != nil {
-		return err
-	}
-	_, err = f.writer.Write(formattedRow)
+	formattedRow := f.formatRow(row)
+	_, err := f.writer.Write(formattedRow)
 	return err
 }
 
 // formatRow formats the given table row to fit the configured width by
 // giving each cell an equal width and wrapping the text in cells that exceed it.
-func (f *columnFormatter) formatRow(row []string) ([]byte, error) {
+func (f *columnFormatter) formatRow(row []string) []byte {
 	columnWidths := f.columnWidths()
 
 	// calculate the maximum number of lines a cell value will be broken into
@@ -258,7 +248,7 @@ func (f *columnFormatter) formatRow(row []string) ([]byte, error) {
 	for j := 0; j < maxLinesPerCell; j++ {
 		strRes.WriteString(strings.Join(splitCells[j], "  ") + "\n")
 	}
-	return []byte(strRes.String()), nil
+	return []byte(strRes.String())
 }
 
 // columnWidths returns the width of each column based on their maximum widths
@@ -406,7 +396,10 @@ func (p *paginatedWriter) Close() error {
 	if !p.closed {
 		err = p.cmd.Process.Signal(syscall.SIGINT)
 		if err != nil {
-			p.cmd.Process.Kill()
+			err = p.cmd.Process.Kill()
+			if err != nil {
+				return err
+			}
 		}
 		<-p.done
 	}

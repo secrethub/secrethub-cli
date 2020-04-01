@@ -65,7 +65,7 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.\n\nIf the output of the command is parsed by a script an alternative of the default table format must be used.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "Number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
-	clause.Flag("output-format", "Specify the format in which to output the log. Options are: table and json. Defaults to table").HintOptions("json").Default("table").StringVar(&cmd.format)
+	clause.Flag("output-format", "Specify the format in which to output the log. Options are: table and json. Defaults to table.").HintOptions("json").Default("table").StringVar(&cmd.format)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)

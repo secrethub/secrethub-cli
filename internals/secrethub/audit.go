@@ -393,16 +393,17 @@ func (p *paginatedWriter) Close() error {
 	if err != nil {
 		return err
 	}
-	if !p.closed {
-		err = p.cmd.Process.Signal(syscall.SIGINT)
-		if err != nil {
-			err = p.cmd.Process.Kill()
-			if err != nil {
-				return err
-			}
-		}
-		<-p.done
+	if p.closed {
+		return nil
 	}
+	err = p.cmd.Process.Signal(syscall.SIGINT)
+	if err != nil {
+		err = p.cmd.Process.Kill()
+		if err != nil {
+			return err
+		}
+	}
+	<-p.done
 	return nil
 }
 

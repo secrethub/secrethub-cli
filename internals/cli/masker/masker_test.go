@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -178,4 +179,58 @@ func TestMasker_WriteError(t *testing.T) {
 
 	err = m.Stop()
 	assert.Equal(t, err, expectedErr)
+}
+
+func TestMasker_MultipleStreams(t *testing.T) {
+	sequences := [][]byte{
+		[]byte("Gandalf"),
+		[]byte("uruk-hai army"),
+		[]byte("Aragorn, son of Arathorn"),
+		[]byte("hobbit"),
+	}
+
+	input := [][]byte{
+		[]byte("line 1 "),
+		[]byte("line 2 "),
+		[]byte("line 3 "),
+		[]byte("message from Gandalf the Grey "),
+		[]byte("line 5 "),
+		[]byte("an uruk-hai army appears "),
+		[]byte("say hobbit hobbit hobbit "),
+	}
+
+	bufferDelay := 10 * time.Millisecond
+
+	m := New(sequences, &Options{
+		BufferDelay: bufferDelay,
+	})
+
+	var outputBuffer bytes.Buffer
+	var streams [3]io.Writer
+
+	for i := range streams {
+		streams[i] = m.AddStream(&outputBuffer)
+	}
+
+	go m.Start()
+
+	expected := ""
+
+	for i, b := range input {
+		n, err := streams[i%3].Write(b)
+		assert.OK(t, err)
+		assert.Equal(t, n, len(b))
+
+		expected += string(b)
+	}
+
+	assert.Equal(t, outputBuffer.String(), "")
+
+	err := m.Stop()
+	assert.OK(t, err)
+
+	for _, sequence := range sequences {
+		expected = strings.ReplaceAll(expected, string(sequence), maskString)
+	}
+	assert.Equal(t, outputBuffer.String(), expected)
 }

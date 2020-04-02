@@ -134,6 +134,16 @@ func TestMasker(t *testing.T) {
 			},
 			expected: string(randomIn),
 		},
+		"masking unicode": {
+			maskStrings: []string{
+				"ⓗⓔⓛⓛⓞ",
+			},
+			inputFunc: func(w io.Writer) {
+				_, err := w.Write([]byte("ⓗⓔⓛⓛⓞ world"))
+				assert.OK(t, err)
+			},
+			expected: maskString + " world",
+		},
 	}
 
 	for name, tc := range tests {

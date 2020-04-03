@@ -145,7 +145,10 @@ type tableFormatter interface {
 
 // newJSONFormatter returns a table formatter that formats the given table rows as json.
 func newJSONFormatter(writer io.Writer, fieldNames []string) *jsonFormatter {
-	return &jsonFormatter{encoder: json.NewEncoder(writer), fields: fieldNames}
+	return &jsonFormatter{
+		encoder: json.NewEncoder(writer), 
+		fields: fieldNames,
+	}
 }
 
 type jsonFormatter struct {

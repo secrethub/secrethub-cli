@@ -188,8 +188,8 @@ type tableFormatter struct {
 	headerPrinted        bool
 }
 
-// Write writes the given values formatted in a table with the columns of
-//
+// Write writes the given values formatted in a table with the configured column widths and names.
+// The header of the table is printed on the first call, before any other value.
 func (f *tableFormatter) Write(values []string) error {
 	if !f.headerPrinted {
 		header := make([]string, len(f.columns))
@@ -213,23 +213,23 @@ func (f *tableFormatter) Write(values []string) error {
 // giving each cell an equal width and wrapping the text in cells that exceed it.
 func (f *tableFormatter) formatRow(row []string) []byte {
 	columnWidths := f.columnWidths()
+	grid := f.rowToGrid(row, columnWidths)
 
-	// calculate the maximum number of lines a cell value will be broken into
-	maxLinesPerCell := 1
-	for i, cell := range row {
-		lines := len(cell) / columnWidths[i]
-		if len(cell)%columnWidths[i] != 0 {
-			lines++
-		}
-		if lines > maxLinesPerCell {
-			maxLinesPerCell = lines
-		}
+	strRes := strings.Builder{}
+	for _, row := range grid {
+		strRes.WriteString(strings.Join(row, "  ") + "\n")
 	}
+	return []byte(strRes.String())
+}
 
-	// split the cell values into a grid according to how they will be printed
-	splitCells := make([][]string, maxLinesPerCell)
+// rowToGrid returns a the given row split over a matrix in which all columns have equal length.
+// Longer values are split over multiple cells and shorter (or empty) ones are padded with " ".
+func (f *tableFormatter) rowToGrid(row []string, columnWidths []int) [][]string {
+	maxLinesPerCell := f.lineCount(row, columnWidths)
+
+	grid := make([][]string, maxLinesPerCell)
 	for i := 0; i < maxLinesPerCell; i++ {
-		splitCells[i] = make([]string, len(row))
+		grid[i] = make([]string, len(row))
 	}
 
 	for i, cell := range row {
@@ -238,27 +238,38 @@ func (f *tableFormatter) formatRow(row []string) []byte {
 		for j := 0; j < lineCount; j++ {
 			begin := j * columnWidth
 			end := (j + 1) * columnWidth
-			splitCells[j][i] = cell[begin:end]
+			grid[j][i] = cell[begin:end]
 		}
 
 		charactersLeft := len(cell) % columnWidth
 		if charactersLeft != 0 {
-			splitCells[lineCount][i] = cell[len(cell)-charactersLeft:] + strings.Repeat(" ", columnWidth-charactersLeft)
+			grid[lineCount][i] = cell[len(cell)-charactersLeft:] + strings.Repeat(" ", columnWidth-charactersLeft)
 		} else if lineCount < maxLinesPerCell {
-			splitCells[lineCount][i] = strings.Repeat(" ", columnWidth)
+			grid[lineCount][i] = strings.Repeat(" ", columnWidth)
 		}
 
 		for j := lineCount + 1; j < maxLinesPerCell; j++ {
-			splitCells[j][i] = strings.Repeat(" ", columnWidth)
+			grid[j][i] = strings.Repeat(" ", columnWidth)
 		}
 	}
 
-	// convert the grid to a string
-	strRes := strings.Builder{}
-	for j := 0; j < maxLinesPerCell; j++ {
-		strRes.WriteString(strings.Join(splitCells[j], "  ") + "\n")
+	return grid
+}
+
+// lineCount returns the number of lines the given table row will occupy after splitting the
+// cell values that exceed their column width.
+func (f *tableFormatter) lineCount(row []string, widths []int) int {
+	maxLinesPerCell := 1
+	for i, value := range row {
+		lines := len(value) / widths[i]
+		if len(value)%widths[i] != 0 {
+			lines++
+		}
+		if lines > maxLinesPerCell {
+			maxLinesPerCell = lines
+		}
 	}
-	return []byte(strRes.String())
+	return maxLinesPerCell
 }
 
 // columnWidths returns the width of each column based on their maximum widths

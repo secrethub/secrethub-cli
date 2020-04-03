@@ -145,7 +145,10 @@ type listFormatter interface {
 
 // newJSONFormatter returns a table formatter that formats the given table rows as json.
 func newJSONFormatter(writer io.Writer, fieldNames []string) *jsonFormatter {
-	return &jsonFormatter{encoder: json.NewEncoder(writer), fields: fieldNames}
+	return &jsonFormatter{
+		encoder: json.NewEncoder(writer),
+		fields:  fieldNames,
+	}
 }
 
 type jsonFormatter struct {
@@ -170,7 +173,11 @@ func (f *jsonFormatter) Write(values []string) error {
 
 // newTableFormatter returns a list formatter that formats entries in a table.
 func newTableFormatter(writer io.Writer, tableWidth int, columns []tableColumn) *tableFormatter {
-	return &tableFormatter{writer: writer, tableWidth: tableWidth, columns: columns}
+	return &tableFormatter{
+		writer:     writer,
+		tableWidth: tableWidth,
+		columns:    columns,
+	}
 }
 
 type tableFormatter struct {

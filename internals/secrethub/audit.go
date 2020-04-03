@@ -103,7 +103,7 @@ func (cmd *AuditCommand) run() error {
 	}
 	defer paginatedWriter.Close()
 
-	var formatter tableFormatter
+	var formatter listFormatter
 	if cmd.format == formatJSON {
 		formatter = newJSONFormatter(paginatedWriter, auditTable.header())
 	} else if cmd.format == formatTable {
@@ -111,7 +111,7 @@ func (cmd *AuditCommand) run() error {
 		if err != nil {
 			terminalWidth = defaultTerminalWidth
 		}
-		formatter = newColumnFormatter(paginatedWriter, terminalWidth, auditTable.columns())
+		formatter = newTableFormatter(paginatedWriter, terminalWidth, auditTable.columns())
 	} else {
 		return errNoSuchFormat(cmd.format)
 	}
@@ -129,7 +129,7 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		err = formatter.WriteRow(row)
+		err = formatter.Write(row)
 		if err == errPagerClosed {
 			break
 		} else if err != nil {
@@ -139,8 +139,8 @@ func (cmd *AuditCommand) run() error {
 	return nil
 }
 
-type tableFormatter interface {
-	WriteRow([]string) error
+type listFormatter interface {
+	Write([]string) error
 }
 
 // newJSONFormatter returns a table formatter that formats the given table rows as json.
@@ -155,25 +155,25 @@ type jsonFormatter struct {
 
 // formatRow returns the json representation of the given row
 // with the configured field names as keys and the provided values
-func (f *jsonFormatter) WriteRow(row []string) error {
-	if len(f.fields) != len(row) {
+func (f *jsonFormatter) Write(values []string) error {
+	if len(f.fields) != len(values) {
 		return fmt.Errorf("unexpected number of json fields")
 	}
 
 	jsonMap := make(map[string]string)
-	for i, element := range row {
+	for i, element := range values {
 		jsonMap[f.fields[i]] = element
 	}
 
 	return f.encoder.Encode(jsonMap)
 }
 
-// newColumnFormatter returns a table formatter that aligns the columns of the table.
-func newColumnFormatter(writer io.Writer, tableWidth int, columns []tableColumn) *columnFormatter {
-	return &columnFormatter{writer: writer, tableWidth: tableWidth, columns: columns}
+// newTableFormatter returns a list formatter that formats entries in a table.
+func newTableFormatter(writer io.Writer, tableWidth int, columns []tableColumn) *tableFormatter {
+	return &tableFormatter{writer: writer, tableWidth: tableWidth, columns: columns}
 }
 
-type columnFormatter struct {
+type tableFormatter struct {
 	tableWidth           int
 	writer               io.Writer
 	computedColumnWidths []int
@@ -181,7 +181,9 @@ type columnFormatter struct {
 	didPrintHeader       bool
 }
 
-func (f *columnFormatter) WriteRow(row []string) error {
+// Write writes the given values formatted in a table with the columns of
+//
+func (f *tableFormatter) Write(values []string) error {
 	if !f.didPrintHeader {
 		header := make([]string, len(f.columns))
 		for i, col := range f.columns {
@@ -194,14 +196,15 @@ func (f *columnFormatter) WriteRow(row []string) error {
 		}
 		f.didPrintHeader = true
 	}
-	formattedRow := f.formatRow(row)
+
+	formattedRow := f.formatRow(values)
 	_, err := f.writer.Write(formattedRow)
 	return err
 }
 
 // formatRow formats the given table row to fit the configured width by
 // giving each cell an equal width and wrapping the text in cells that exceed it.
-func (f *columnFormatter) formatRow(row []string) []byte {
+func (f *tableFormatter) formatRow(row []string) []byte {
 	columnWidths := f.columnWidths()
 
 	// calculate the maximum number of lines a cell value will be broken into
@@ -253,7 +256,7 @@ func (f *columnFormatter) formatRow(row []string) []byte {
 
 // columnWidths returns the width of each column based on their maximum widths
 // and the table width.
-func (f *columnFormatter) columnWidths() []int {
+func (f *tableFormatter) columnWidths() []int {
 	if f.computedColumnWidths != nil {
 		return f.computedColumnWidths
 	}

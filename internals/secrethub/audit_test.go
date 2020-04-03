@@ -12,11 +12,11 @@ import (
 
 func Test_columnFormatter_columnWidths(t *testing.T) {
 	cases := map[string]struct {
-		formatter columnFormatter
+		formatter tableFormatter
 		expected  []int
 	}{
 		"all columns fit": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth: 102,
 				columns: []tableColumn{
 					{maxWidth: 10},
@@ -26,7 +26,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 			expected: []int{50, 50},
 		},
 		"no columns fit": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth: 12,
 				columns: []tableColumn{
 					{maxWidth: 10},
@@ -36,7 +36,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 			expected: []int{5, 5},
 		},
 		"one column fits": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth: 27,
 				columns: []tableColumn{
 					{maxWidth: 10},
@@ -46,7 +46,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 			expected: []int{10, 15},
 		},
 		"multiple adjustments": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth: 106,
 				columns: []tableColumn{
 					{maxWidth: 27},
@@ -58,7 +58,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 			expected: []int{27, 26, 25, 20},
 		},
 		"no max width for some all fit": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth: 64,
 				columns: []tableColumn{
 					{maxWidth: 15},
@@ -69,7 +69,7 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 			expected: []int{15, 30, 15},
 		},
 		"no max width for some not all fit": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth: 64,
 				columns: []tableColumn{
 					{maxWidth: 50},
@@ -91,12 +91,12 @@ func Test_columnFormatter_columnWidths(t *testing.T) {
 
 func Test_columnFormatter_formatRow(t *testing.T) {
 	cases := map[string]struct {
-		formatter columnFormatter
+		formatter tableFormatter
 		row       []string
 		expected  string
 	}{
 		"all cells fit": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth:           102,
 				computedColumnWidths: []int{50, 50},
 				columns:              []tableColumn{{}, {}},
@@ -105,7 +105,7 @@ func Test_columnFormatter_formatRow(t *testing.T) {
 			expected: "foo" + strings.Repeat(" ", 47) + "  " + "bar" + strings.Repeat(" ", 47) + "\n",
 		},
 		"wrapping": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth:           6,
 				computedColumnWidths: []int{2, 2},
 				columns:              []tableColumn{{}, {}},
@@ -114,7 +114,7 @@ func Test_columnFormatter_formatRow(t *testing.T) {
 			expected: "fo  ba\no   r \n",
 		},
 		"fits exactly": {
-			formatter: columnFormatter{
+			formatter: tableFormatter{
 				tableWidth:           8,
 				computedColumnWidths: []int{3, 3},
 				columns:              []tableColumn{{}, {}},

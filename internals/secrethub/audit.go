@@ -173,7 +173,11 @@ func (f *jsonFormatter) WriteRow(row []string) error {
 
 // newColumnFormatter returns a table formatter that aligns the columns of the table.
 func newColumnFormatter(writer io.Writer, tableWidth int, columns []tableColumn) *columnFormatter {
-	return &columnFormatter{writer: writer, tableWidth: tableWidth, columns: columns}
+	return &columnFormatter{
+		writer: writer, 
+		tableWidth: tableWidth, 
+		columns: columns,
+	}
 }
 
 type columnFormatter struct {

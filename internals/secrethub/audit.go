@@ -178,13 +178,13 @@ type tableFormatter struct {
 	writer               io.Writer
 	computedColumnWidths []int
 	columns              []tableColumn
-	didPrintHeader       bool
+	headerPrinted        bool
 }
 
 // Write writes the given values formatted in a table with the columns of
 //
 func (f *tableFormatter) Write(values []string) error {
-	if !f.didPrintHeader {
+	if !f.headerPrinted {
 		header := make([]string, len(f.columns))
 		for i, col := range f.columns {
 			header[i] = col.name
@@ -194,7 +194,7 @@ func (f *tableFormatter) Write(values []string) error {
 		if err != nil {
 			return err
 		}
-		f.didPrintHeader = true
+		f.headerPrinted = true
 	}
 
 	formattedRow := f.formatRow(values)

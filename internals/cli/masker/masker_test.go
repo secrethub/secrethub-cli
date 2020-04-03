@@ -234,8 +234,6 @@ func TestMasker_MultipleStreams(t *testing.T) {
 		expected += string(b)
 	}
 
-	assert.Equal(t, outputBuffer.String(), "")
-
 	err := m.Stop()
 	assert.OK(t, err)
 

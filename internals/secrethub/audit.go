@@ -145,10 +145,17 @@ type listFormatter interface {
 
 // newJSONFormatter returns a table formatter that formats the given table rows as json.
 func newJSONFormatter(writer io.Writer, fieldNames []string) *jsonFormatter {
+	for i := range fieldNames {
+		fieldNames[i] = toPascalCase(fieldNames[i])
+	}
 	return &jsonFormatter{
 		encoder: json.NewEncoder(writer),
 		fields:  fieldNames,
 	}
+}
+
+func toPascalCase(s string) string {
+	return strings.ReplaceAll(strings.Title(s), " ", "")
 }
 
 type jsonFormatter struct {
@@ -194,7 +201,7 @@ func (f *tableFormatter) Write(values []string) error {
 	if !f.headerPrinted {
 		header := make([]string, len(f.columns))
 		for i, col := range f.columns {
-			header[i] = col.name
+			header[i] = strings.ToUpper(col.name)
 		}
 		formattedHeader := f.formatRow(header)
 		_, err := f.writer.Write(formattedHeader)
@@ -515,12 +522,12 @@ type auditTable interface {
 
 func newBaseAuditTable(timeFormatter TimeFormatter, midColumns ...tableColumn) baseAuditTable {
 	columns := append([]tableColumn{
-		{name: "AUTHOR", maxWidth: 32},
-		{name: "EVENT", maxWidth: 22},
+		{name: "author", maxWidth: 32},
+		{name: "event", maxWidth: 22},
 	}, midColumns...)
 	columns = append(columns, []tableColumn{
-		{name: "IP ADDRESS", maxWidth: 45},
-		{name: "DATE", maxWidth: 22},
+		{name: "IP address", maxWidth: 45},
+		{name: "date", maxWidth: 22},
 	}...)
 
 	return baseAuditTable{

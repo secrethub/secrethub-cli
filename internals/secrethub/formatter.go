@@ -153,7 +153,7 @@ func (f *tableFormatter) columnWidths() []int {
 	if f.computedColumnWidths != nil {
 		return f.computedColumnWidths
 	}
-	fixedWidths := make([]int, len(f.columns))
+	adjustedWidths := make([]int, len(f.columns))
 
 	// Distribute the table width equally between all columns and leave a margin of 2 characters between them.
 	columnsLeft := len(f.columns)
@@ -164,8 +164,8 @@ func (f *tableFormatter) columnWidths() []int {
 		adjusted = false
 		for i, col := range f.columns {
 			// fix columns that have a smaller maximum width than the current width/column and have not been fixed yet.
-			if fixedWidths[i] == 0 && col.maxWidth != 0 && col.maxWidth < widthPerColumn {
-				fixedWidths[i] = col.maxWidth
+			if adjustedWidths[i] == 0 && col.maxWidth != 0 && col.maxWidth < widthPerColumn {
+				adjustedWidths[i] = col.maxWidth
 				widthLeft -= col.maxWidth
 				columnsLeft--
 				adjusted = true
@@ -173,8 +173,8 @@ func (f *tableFormatter) columnWidths() []int {
 		}
 		// If all columns are fixed to their max width, distribute the remaining width equally between all of them.
 		if columnsLeft == 0 {
-			for i := range fixedWidths {
-				fixedWidths[i] += widthLeft / len(fixedWidths)
+			for i := range adjustedWidths {
+				adjustedWidths[i] += widthLeft / len(adjustedWidths)
 			}
 			break
 		}
@@ -183,11 +183,11 @@ func (f *tableFormatter) columnWidths() []int {
 	}
 
 	// distribute the remaining width equally between columns with no maximum width.
-	for i := range fixedWidths {
-		if fixedWidths[i] == 0 {
-			fixedWidths[i] = widthPerColumn
+	for i := range adjustedWidths {
+		if adjustedWidths[i] == 0 {
+			adjustedWidths[i] = widthPerColumn
 		}
 	}
-	f.computedColumnWidths = fixedWidths
-	return fixedWidths
+	f.computedColumnWidths = adjustedWidths
+	return adjustedWidths
 }

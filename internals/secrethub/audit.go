@@ -1,10 +1,11 @@
 package secrethub
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/secrethub/secrethub-go/internals/errio"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/pager"
 
@@ -20,7 +21,8 @@ import (
 )
 
 var (
-	errNoSuchFormat = func(format string) error { return errors.New("invalid format: " + format + " (audit.invalid_format)") }
+	errAudit        = errio.Namespace("audit")
+	errNoSuchFormat = errAudit.Code("invalid_format").ErrorPref("invalid format: %s")
 )
 
 const (

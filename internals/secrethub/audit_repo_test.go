@@ -210,7 +210,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			buffer := bytes.Buffer{}
-			tc.cmd.newPaginatedWriter = func(_ io.Writer) (pager, error) {
+			tc.cmd.newPaginatedWriter = func(_ io.Writer) (io.WriteCloser, error) {
 				return &fakes.Pager{Buffer: &buffer}, nil
 			}
 

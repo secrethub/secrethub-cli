@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	errNoSuchFormat = func(format string) error { return errors.New("invalid format: " + format) }
+	errNoSuchFormat = func(format string) error { return errors.New("invalid format: " + format + " (audit.invalid_format)") }
 )
 
 const (

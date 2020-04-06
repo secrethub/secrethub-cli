@@ -101,18 +101,15 @@ func (p *pager) isClosed() bool {
 // pagerCommand returns the name of the terminal pager configured in the OS environment ($PAGER).
 // If no pager is configured it falls back to "less" than "more", returning an error if neither are available.
 func pagerCommand() (string, error) {
-	var pager string
-	var err error
-
-	if pager, err = exec.LookPath(os.ExpandEnv(pagerEnvvar)); err == nil {
+	if pager, err := exec.LookPath(os.ExpandEnv(pagerEnvvar)); err == nil {
 		return pager, nil
 	}
 
-	if pager, err = exec.LookPath("less"); err == nil {
+	if pager, err := exec.LookPath("less"); err == nil {
 		return pager, nil
 	}
 
-	if pager, err = exec.LookPath("more"); err == nil {
+	if pager, err := exec.LookPath("more"); err == nil {
 		return pager, nil
 	}
 

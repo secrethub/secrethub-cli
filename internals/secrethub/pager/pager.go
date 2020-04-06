@@ -104,18 +104,15 @@ func pagerCommand() (string, error) {
 	var pager string
 	var err error
 
-	pager, err = exec.LookPath(os.ExpandEnv(pagerEnvvar))
-	if err == nil {
+	if pager, err = exec.LookPath(os.ExpandEnv(pagerEnvvar)); err == nil {
 		return pager, nil
 	}
 
-	pager, err = exec.LookPath("less")
-	if err == nil {
+	if pager, err = exec.LookPath("less"); err == nil {
 		return pager, nil
 	}
 
-	pager, err = exec.LookPath("more")
-	if err == nil {
+	if pager, err = exec.LookPath("more"); err == nil {
 		return pager, nil
 	}
 

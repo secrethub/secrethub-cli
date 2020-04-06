@@ -88,7 +88,7 @@ func (f *tableFormatter) Write(values []string) error {
 // giving each cell an equal width and wrapping the text in cells that exceed it.
 func (f *tableFormatter) formatRow(row []string) []byte {
 	columnWidths := f.columnWidths()
-	grid := f.rowToGrid(row, columnWidths)
+	grid := f.fitToColumns(row, columnWidths)
 
 	strRes := strings.Builder{}
 	for _, row := range grid {
@@ -97,17 +97,17 @@ func (f *tableFormatter) formatRow(row []string) []byte {
 	return []byte(strRes.String())
 }
 
-// rowToGrid returns a the given row split over a matrix in which all columns have equal length.
+// fitToColumns returns a the given row split over a matrix in which all columns have equal length.
 // Longer values are split over multiple cells and shorter (or empty) ones are padded with " ".
-func (f *tableFormatter) rowToGrid(row []string, columnWidths []int) [][]string {
-	maxLinesPerCell := f.lineCount(row, columnWidths)
+func (f *tableFormatter) fitToColumns(cells []string, columnWidths []int) [][]string {
+	maxLinesPerCell := f.lineCount(cells, columnWidths)
 
 	grid := make([][]string, maxLinesPerCell)
 	for i := 0; i < maxLinesPerCell; i++ {
-		grid[i] = make([]string, len(row))
+		grid[i] = make([]string, len(cells))
 	}
 
-	for i, cell := range row {
+	for i, cell := range cells {
 		columnWidth := columnWidths[i]
 		lineCount := len(cell) / columnWidth
 		for j := 0; j < lineCount; j++ {

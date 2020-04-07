@@ -14,7 +14,7 @@ tools: format-tools lint-tools
 format-tools:
 	@go get -u golang.org/x/tools/cmd/goimports
 
-GOLANGCI_VERSION=v1.23.0
+GOLANGCI_VERSION=v1.23.8
 
 lint-tools:
 	@curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin ${GOLANGCI_VERSION}

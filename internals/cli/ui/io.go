@@ -82,7 +82,7 @@ type PasswordReader interface {
 type passwordReader struct{}
 
 // NewPasswordReader returns a reader that reads a string from the terminal without echoing the user input.
-func NewPasswordReader() *passwordReader {
+func NewPasswordReader() PasswordReader {
 	return &passwordReader{}
 }
 

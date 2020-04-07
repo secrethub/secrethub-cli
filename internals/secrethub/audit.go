@@ -248,7 +248,7 @@ func (table secretAuditTable) row(event api.Audit) ([]string, error) {
 
 func newRepoAuditTable(tree *api.Tree, timeFormatter TimeFormatter) repoAuditTable {
 	return repoAuditTable{
-		baseAuditTable: newBaseAuditTable(timeFormatter, tableColumn{name: "EVENT SUBJECT"}),
+		baseAuditTable: newBaseAuditTable(timeFormatter, tableColumn{name: "event subject"}),
 		tree:           tree,
 	}
 }

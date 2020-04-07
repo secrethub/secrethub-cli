@@ -19,6 +19,7 @@ type InitCommand struct {
 	backupCode                  string
 	force                       bool
 	io                          ui.IO
+	passwordReader              ui.PasswordReader
 	newClient                   newClientFunc
 	newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error)
 	credentialStore             CredentialConfig
@@ -29,6 +30,7 @@ type InitCommand struct {
 func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
 	return &InitCommand{
 		io:                          io,
+		passwordReader:              ui.NewPasswordReader(),
 		newClient:                   newClient,
 		newClientWithoutCredentials: newClientWithoutCredentials,
 		credentialStore:             credentialStore,
@@ -167,7 +169,7 @@ func (cmd *InitCommand) Run() error {
 		var passphrase string
 		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 			var err error
-			passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+			passphrase, err = ui.AskPassphrase(cmd.io, cmd.passwordReader, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 			if err != nil {
 				return err
 			}

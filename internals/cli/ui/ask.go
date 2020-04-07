@@ -51,7 +51,7 @@ func AskWithDefault(io IO, question, defaultValue string) (string, error) {
 
 // AskSecret prints out the question and reads back the input,
 // without echoing it back. Useful for passwords and other sensitive inputs.
-func AskSecret(io IO, question string) (string, error) {
+func AskSecret(io IO, passwordReader PasswordReader, question string) (string, error) {
 	promptIn, promptOut, err := io.Prompts()
 	if err != nil {
 		return "", err
@@ -62,14 +62,14 @@ func AskSecret(io IO, question string) (string, error) {
 		return "", err
 	}
 
-	raw, err := promptIn.ReadPassword()
+	raw, err := passwordReader.Read(promptIn)
 	if err != nil {
 		return "", ErrReadInput(err)
 	}
 
 	fmt.Fprintln(promptOut, "")
 
-	return string(raw), nil
+	return raw, nil
 }
 
 // AskMultiline prints out the question and reads back the input until an EOF is reached.
@@ -145,14 +145,14 @@ func ConfirmCaseInsensitive(io IO, question string, expected ...string) (bool, e
 // the answers still haven't matched after trying n times, the error
 // ErrPassphrasesDoNotMatch is returned. For the empty answer ("") no
 // confirmation is asked.
-func AskPassphrase(io IO, question string, repeatPhrase string, n int) (string, error) {
+func AskPassphrase(io IO, passwordReader PasswordReader, question string, repeatPhrase string, n int) (string, error) {
 	_, promptOut, err := io.Prompts()
 	if err != nil {
 		return "", err
 	}
 
 	for i := 0; i < n; i++ {
-		answer, err := AskSecret(io, question)
+		answer, err := AskSecret(io, passwordReader, question)
 		if err != nil {
 			return "", err
 		}
@@ -161,7 +161,7 @@ func AskPassphrase(io IO, question string, repeatPhrase string, n int) (string, 
 			return answer, nil
 		}
 
-		confirmed, err := AskSecret(io, repeatPhrase)
+		confirmed, err := AskSecret(io, passwordReader, repeatPhrase)
 		if err != nil {
 			return "", err
 		}

@@ -27,6 +27,7 @@ type SignUpCommand struct {
 	orgDescription  string
 	force           bool
 	io              ui.IO
+	passwordReader  ui.PasswordReader
 	newClient       newClientFunc
 	credentialStore CredentialConfig
 	progressPrinter progress.Printer
@@ -36,6 +37,7 @@ type SignUpCommand struct {
 func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *SignUpCommand {
 	return &SignUpCommand{
 		io:              io,
+		passwordReader:  ui.NewPasswordReader(),
 		newClient:       newClient,
 		credentialStore: credentialStore,
 		progressPrinter: progress.NewPrinter(io.Stdout(), 500*time.Millisecond),
@@ -130,7 +132,7 @@ func (cmd *SignUpCommand) Run() error {
 	var passphrase string
 	if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 		var err error
-		passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+		passphrase, err = ui.AskPassphrase(cmd.io, cmd.passwordReader, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 		if err != nil {
 			return err
 		}

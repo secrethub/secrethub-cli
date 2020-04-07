@@ -3,8 +3,10 @@
 package ui
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
+	"io"
 )
 
 // FakeIO is a helper type for testing that implements the ui.IO interface
@@ -35,18 +37,31 @@ func NewFakeIO() *FakeIO {
 }
 
 // Stdin returns the mocked StdIn.
-func (f *FakeIO) Stdin() Reader {
+func (f *FakeIO) Stdin() io.Reader {
 	return f.StdIn
 }
 
 // Stdout returns the mocked StdOut.
-func (f *FakeIO) Stdout() Writer {
+func (f *FakeIO) Stdout() io.Writer {
 	return f.StdOut
 }
 
 // Prompts returns the mocked prompts and error.
-func (f *FakeIO) Prompts() (Reader, Writer, error) {
+func (f *FakeIO) Prompts() (io.Reader, io.Writer, error) {
 	return f.PromptIn, f.PromptOut, f.PromptErr
+}
+
+func (f *FakeIO) IsStdinPiped() bool {
+	return f.StdIn.Piped
+}
+
+func (f *FakeIO) IsStdoutPiped() bool {
+	return f.StdOut.Piped
+}
+
+func (f *FakeIO) ReadPassword() ([]byte, error) {
+	line, _, err := bufio.NewReader(f.PromptIn).ReadLine()
+	return line, err
 }
 
 // FakeReader implements the Reader interface.
@@ -96,4 +111,10 @@ type FakeWriter struct {
 // IsPiped returns the mocked Piped.
 func (f *FakeWriter) IsPiped() bool {
 	return f.Piped
+}
+
+type FakePasswordReader struct{}
+
+func (f FakePasswordReader) Read(reader io.Reader) (string, error) {
+	return Readln(reader)
 }

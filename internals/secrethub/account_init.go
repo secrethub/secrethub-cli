@@ -36,6 +36,7 @@ var (
 // AccountInitCommand creates, stores and outputs a credential.
 type AccountInitCommand struct {
 	io              ui.IO
+	passwordReader  ui.PasswordReader
 	useClipboard    bool
 	noWait          bool
 	isContinue      bool
@@ -50,6 +51,7 @@ type AccountInitCommand struct {
 func NewAccountInitCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *AccountInitCommand {
 	return &AccountInitCommand{
 		io:              io,
+		passwordReader:  ui.NewPasswordReader(),
 		credentialStore: credentialStore,
 		clipper:         clip.NewClipboard(),
 		progressPrinter: progress.NewPrinter(io.Stdout(), 500*time.Millisecond),
@@ -160,7 +162,7 @@ func (cmd *AccountInitCommand) Run() error {
 		var passphrase string
 		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 			var err error
-			passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+			passphrase, err = ui.AskPassphrase(cmd.io, cmd.passwordReader, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 			if err != nil {
 				return err
 			}

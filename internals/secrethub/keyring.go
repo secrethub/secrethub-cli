@@ -44,11 +44,12 @@ type PassphraseReader interface {
 
 // passphraseReader provides passphrase reading capability to the CLI.
 type passphraseReader struct {
-	tries     int
-	hasAsked  bool
-	io        ui.IO
-	FlagValue string
-	Cache     *PassphraseCache
+	tries          int
+	hasAsked       bool
+	io             ui.IO
+	passwordReader ui.PasswordReader
+	FlagValue      string
+	Cache          *PassphraseCache
 }
 
 func (pr *passphraseReader) Read() ([]byte, error) {
@@ -73,9 +74,10 @@ func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassph
 	keyring := NewKeyring()
 
 	return &passphraseReader{
-		io:        io,
-		FlagValue: credentialPassphrase,
-		Cache:     NewPassphraseCache(ttl, cleaner, keyring),
+		io:             io,
+		passwordReader: ui.NewPasswordReader(),
+		FlagValue:      credentialPassphrase,
+		Cache:          NewPassphraseCache(ttl, cleaner, keyring),
 	}
 }
 
@@ -104,9 +106,9 @@ func (pr *passphraseReader) get() (string, error) {
 	var err error
 	var passphrase string
 	if pr.hasAsked {
-		passphrase, err = ui.AskSecret(pr.io, "Incorrect passphrase, try again:")
+		passphrase, err = ui.AskSecret(pr.io, pr.passwordReader, "Incorrect passphrase, try again:")
 	} else {
-		passphrase, err = ui.AskSecret(pr.io, "Please put in the passphrase to unlock your credential:")
+		passphrase, err = ui.AskSecret(pr.io, pr.passwordReader, "Please put in the passphrase to unlock your credential:")
 	}
 	if err == ui.ErrCannotAsk {
 		return "", ErrPassphraseFlagNotSet // if we cannot ask, users should use the --passphrase flag

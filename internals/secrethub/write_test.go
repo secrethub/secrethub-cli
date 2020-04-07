@@ -121,7 +121,8 @@ func TestWriteCommand_Run(t *testing.T) {
 		},
 		"ask secret success": {
 			cmd: WriteCommand{
-				path: "namespace/repo/secret",
+				path:           "namespace/repo/secret",
+				passwordReader: ui.FakePasswordReader{},
 			},
 			promptIn:  "asked secret value",
 			promptOut: "Please type in the value of the secret, followed by an [ENTER]:\n",
@@ -137,7 +138,8 @@ func TestWriteCommand_Run(t *testing.T) {
 		},
 		"ask secret error": {
 			cmd: WriteCommand{
-				path: "namespace/repo/secret",
+				path:           "namespace/repo/secret",
+				passwordReader: ui.FakePasswordReader{},
 			},
 			promptErr: testErr,
 			err:       testErr,

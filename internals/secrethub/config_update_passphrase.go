@@ -11,6 +11,7 @@ import (
 
 type ConfigUpdatePassphraseCommand struct {
 	io              ui.IO
+	passwordReader  ui.PasswordReader
 	credentialStore CredentialConfig
 }
 
@@ -18,6 +19,7 @@ type ConfigUpdatePassphraseCommand struct {
 func NewConfigUpdatePassphraseCommand(io ui.IO, credentialStore CredentialConfig) *ConfigUpdatePassphraseCommand {
 	return &ConfigUpdatePassphraseCommand{
 		io:              io,
+		passwordReader:  ui.NewPasswordReader(),
 		credentialStore: credentialStore,
 	}
 }
@@ -58,7 +60,7 @@ func (cmd *ConfigUpdatePassphraseCommand) Run() error {
 		return err
 	}
 
-	passphrase, err := ui.AskPassphrase(cmd.io, "Please enter a passphrase to (re)encrypt your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+	passphrase, err := ui.AskPassphrase(cmd.io, cmd.passwordReader, "Please enter a passphrase to (re)encrypt your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 	if err != nil {
 		return err
 	}

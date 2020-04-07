@@ -21,22 +21,24 @@ var (
 
 // WriteCommand is a command to write content to a secret.
 type WriteCommand struct {
-	io           ui.IO
-	path         api.SecretPath
-	inFile       string
-	multiline    bool
-	useClipboard bool
-	noTrim       bool
-	clipper      clip.Clipper
-	newClient    newClientFunc
+	io             ui.IO
+	passwordReader ui.PasswordReader
+	path           api.SecretPath
+	inFile         string
+	multiline      bool
+	useClipboard   bool
+	noTrim         bool
+	clipper        clip.Clipper
+	newClient      newClientFunc
 }
 
 // NewWriteCommand creates a new WriteCommand.
 func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 	return &WriteCommand{
-		clipper:   clip.NewClipboard(),
-		io:        io,
-		newClient: newClient,
+		clipper:        clip.NewClipboard(),
+		io:             io,
+		passwordReader: ui.NewPasswordReader(),
+		newClient:      newClient,
 	}
 }
 
@@ -82,7 +84,7 @@ func (cmd *WriteCommand) Run() error {
 		if err != nil {
 			return ErrReadFile(cmd.inFile, err)
 		}
-	} else if cmd.io.Stdin().IsPiped() {
+	} else if cmd.io.IsStdinPiped() {
 		data, err = ioutil.ReadAll(cmd.io.Stdin())
 		if err != nil {
 			return ui.ErrReadInput(err)
@@ -94,7 +96,7 @@ func (cmd *WriteCommand) Run() error {
 			return err
 		}
 	} else {
-		str, err := ui.AskSecret(cmd.io, "Please type in the value of the secret, followed by an [ENTER]:")
+		str, err := ui.AskSecret(cmd.io, cmd.passwordReader, "Please type in the value of the secret, followed by an [ENTER]:")
 		if err != nil {
 			return err
 		}

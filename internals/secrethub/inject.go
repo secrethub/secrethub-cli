@@ -91,7 +91,7 @@ func (cmd *InjectCommand) Run() error {
 			return ErrReadFile(cmd.inFile, err)
 		}
 	} else {
-		if !cmd.io.Stdin().IsPiped() {
+		if !cmd.io.IsStdinPiped() {
 			return ErrNoDataOnStdin
 		}
 
@@ -139,7 +139,7 @@ func (cmd *InjectCommand) Run() error {
 	} else if cmd.outFile != "" {
 		_, err := os.Stat(cmd.outFile)
 		if err == nil && !cmd.force {
-			if cmd.io.Stdout().IsPiped() {
+			if cmd.io.IsStdoutPiped() {
 				return ErrFileAlreadyExists
 			}
 

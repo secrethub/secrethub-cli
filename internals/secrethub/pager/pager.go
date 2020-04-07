@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	secrethubPagerEnvvar   = "$SECRETHUB_PAGER"
 	pagerEnvvar            = "$PAGER"
 	fallbackPagerLineCount = 100
 )
@@ -108,9 +109,14 @@ func (p *pager) isClosed() bool {
 	}
 }
 
-// pagerCommand returns the name of the terminal pager configured in the OS environment ($PAGER).
+// pagerCommand returns the name of the terminal pager configured in OS environment.
+// It first checks the $SECRETHUB_PAGER environment variable and if it is not set to a valid pager it checks $PAGER.
 // If no pager is configured it falls back to "less" than "more", returning an error if neither are available.
 func pagerCommand() (string, error) {
+	if pager, err := exec.LookPath(os.ExpandEnv(secrethubPagerEnvvar)); err == nil {
+		return pager, nil
+	}
+
 	if pager, err := exec.LookPath(os.ExpandEnv(pagerEnvvar)); err == nil {
 		return pager, nil
 	}

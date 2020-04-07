@@ -3,10 +3,10 @@ jobs:
   lint:
     docker:
       - image: circleci/golang:1.13
-      steps:
-        - checkout
-        - run: make lint-tools
-        - run: make lint
+    steps:
+      - checkout
+      - run: make lint-tools
+      - run: make lint
   test:
     docker:
       - image: circleci/golang:1.13

@@ -48,7 +48,7 @@ type AuditCommand struct {
 func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 	return &AuditCommand{
 		io:                 io,
-		newPaginatedWriter: pager.New,
+		newPaginatedWriter: pager.NewWithFallback,
 		newClient:          newClient,
 		terminalWidth: func(fd int) (int, error) {
 			w, _, err := terminal.GetSize(fd)
@@ -91,9 +91,7 @@ func (cmd *AuditCommand) run() error {
 	}
 
 	paginatedWriter, err := cmd.newPaginatedWriter(os.Stdout)
-	if err == pager.ErrPagerNotFound {
-		paginatedWriter = pager.NewFallbackPager(os.Stdout)
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 	defer paginatedWriter.Close()

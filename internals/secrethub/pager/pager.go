@@ -25,6 +25,16 @@ type pager struct {
 	closed bool
 }
 
+func NewWithFallback(outputWriter io.Writer) (io.WriteCloser, error) {
+	pager, err := New(outputWriter)
+	if err == ErrPagerNotFound {
+		return NewFallbackPager(outputWriter), nil
+	} else if err != nil {
+		return nil, err
+	}
+	return pager, nil
+}
+
 // New runs the terminal pager configured in the OS environment
 // and returns a writer that is piped to the standard input of the pager command.
 func New(outputWriter io.Writer) (io.WriteCloser, error) {
@@ -118,7 +128,7 @@ func pagerCommand() (string, error) {
 
 // newFallbackPaginatedWriter returns a pager that closes after outputting a fixed number of lines without pagination
 // and returns errPagerNotFound on the last (or any subsequent) write.
-func NewFallbackPager(w io.WriteCloser) io.WriteCloser {
+func NewFallbackPager(w io.Writer) io.WriteCloser {
 	return &fallbackPager{
 		linesLeft: fallbackPagerLineCount,
 		writer:    w,
@@ -126,7 +136,7 @@ func NewFallbackPager(w io.WriteCloser) io.WriteCloser {
 }
 
 type fallbackPager struct {
-	writer    io.WriteCloser
+	writer    io.Writer
 	linesLeft int
 }
 
@@ -149,5 +159,5 @@ func (p *fallbackPager) Write(data []byte) (int, error) {
 }
 
 func (p *fallbackPager) Close() error {
-	return p.writer.Close()
+	return nil
 }

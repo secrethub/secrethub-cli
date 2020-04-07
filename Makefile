@@ -14,8 +14,16 @@ tools: format-tools lint-tools
 format-tools:
 	@go get -u golang.org/x/tools/cmd/goimports
 
+GOLANGCI_VERSION=v1.23.0
+
 lint-tools:
-	@curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.15.0
+	@curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin ${GOLANGCI_VERSION}
+
+lint-ci:
+	@echo "==> Installing linter"
+	@wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s ${GOLANGCI_VERSION}
+	@echo "==> Linting"
+	@./bin/golangci-lint run ./...
 
 COMMIT=`git rev-parse --short HEAD`
 VERSION=`git describe --always`

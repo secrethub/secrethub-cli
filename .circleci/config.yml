@@ -2,10 +2,10 @@ version: 2
 jobs:
   lint:
     docker:
-      - image: circleci/golang:1.13
+      - image: golangci/golangci-lint:v1.23.8-alpine
     steps:
       - checkout
-      - run: make lint-ci
+      - run: make lint
   test:
     docker:
       - image: circleci/golang:1.13

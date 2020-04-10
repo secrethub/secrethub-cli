@@ -3,7 +3,6 @@
 package ui
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"io"
@@ -59,11 +58,6 @@ func (f *FakeIO) IsStdoutPiped() bool {
 	return f.StdOut.Piped
 }
 
-func (f *FakeIO) ReadPassword() ([]byte, error) {
-	line, _, err := bufio.NewReader(f.PromptIn).ReadLine()
-	return line, err
-}
-
 // FakeReader implements the Reader interface.
 type FakeReader struct {
 	*bytes.Buffer
@@ -71,20 +65,6 @@ type FakeReader struct {
 	i       int
 	Reads   []string
 	ReadErr error
-}
-
-// ReadPassword reads a line from the mocked buffer.
-func (f *FakeReader) ReadPassword() ([]byte, error) {
-	pass, err := Readln(f)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(pass), nil
-}
-
-// IsPiped returns the mocked Piped.
-func (f *FakeReader) IsPiped() bool {
-	return f.Piped
 }
 
 // Read returns the mocked ReadErr or reads from the mocked buffer.
@@ -106,11 +86,6 @@ func (f *FakeReader) Read(p []byte) (n int, err error) {
 type FakeWriter struct {
 	*bytes.Buffer
 	Piped bool
-}
-
-// IsPiped returns the mocked Piped.
-func (f *FakeWriter) IsPiped() bool {
-	return f.Piped
 }
 
 type FakePasswordReader struct{}

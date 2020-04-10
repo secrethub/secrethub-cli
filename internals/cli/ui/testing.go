@@ -5,6 +5,7 @@ package ui
 import (
 	"bytes"
 	"errors"
+	"io"
 )
 
 // FakeIO is a helper type for testing that implements the ui.IO interface
@@ -35,18 +36,26 @@ func NewFakeIO() *FakeIO {
 }
 
 // Stdin returns the mocked StdIn.
-func (f *FakeIO) Stdin() Reader {
+func (f *FakeIO) Stdin() io.Reader {
 	return f.StdIn
 }
 
 // Stdout returns the mocked StdOut.
-func (f *FakeIO) Stdout() Writer {
+func (f *FakeIO) Stdout() io.Writer {
 	return f.StdOut
 }
 
 // Prompts returns the mocked prompts and error.
-func (f *FakeIO) Prompts() (Reader, Writer, error) {
+func (f *FakeIO) Prompts() (io.Reader, io.Writer, error) {
 	return f.PromptIn, f.PromptOut, f.PromptErr
+}
+
+func (f *FakeIO) IsStdinPiped() bool {
+	return f.StdIn.Piped
+}
+
+func (f *FakeIO) IsStdoutPiped() bool {
+	return f.StdOut.Piped
 }
 
 // FakeReader implements the Reader interface.
@@ -56,20 +65,6 @@ type FakeReader struct {
 	i       int
 	Reads   []string
 	ReadErr error
-}
-
-// ReadPassword reads a line from the mocked buffer.
-func (f *FakeReader) ReadPassword() ([]byte, error) {
-	pass, err := Readln(f)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(pass), nil
-}
-
-// IsPiped returns the mocked Piped.
-func (f *FakeReader) IsPiped() bool {
-	return f.Piped
 }
 
 // Read returns the mocked ReadErr or reads from the mocked buffer.
@@ -91,9 +86,4 @@ func (f *FakeReader) Read(p []byte) (n int, err error) {
 type FakeWriter struct {
 	*bytes.Buffer
 	Piped bool
-}
-
-// IsPiped returns the mocked Piped.
-func (f *FakeWriter) IsPiped() bool {
-	return f.Piped
 }

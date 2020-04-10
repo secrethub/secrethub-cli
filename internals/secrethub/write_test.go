@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"bufio"
 	"bytes"
 	"testing"
 
@@ -17,6 +18,19 @@ import (
 
 func TestWriteCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
+
+	fakeAskSecretFunc := func(io ui.IO, question string) (s string, err error) {
+		reader, writer, err := io.Prompts()
+		if err != nil {
+			return "", err
+		}
+		_, err = writer.Write([]byte(question + "\n"))
+		if err != nil {
+			return "", err
+		}
+		line, _, err := bufio.NewReader(reader).ReadLine()
+		return string(line), err
+	}
 
 	cases := map[string]struct {
 		cmd       WriteCommand
@@ -121,8 +135,8 @@ func TestWriteCommand_Run(t *testing.T) {
 		},
 		"ask secret success": {
 			cmd: WriteCommand{
-				path:           "namespace/repo/secret",
-				passwordReader: ui.FakePasswordReader{},
+				path:      "namespace/repo/secret",
+				askSecret: fakeAskSecretFunc,
 			},
 			promptIn:  "asked secret value",
 			promptOut: "Please type in the value of the secret, followed by an [ENTER]:\n",
@@ -138,8 +152,8 @@ func TestWriteCommand_Run(t *testing.T) {
 		},
 		"ask secret error": {
 			cmd: WriteCommand{
-				path:           "namespace/repo/secret",
-				passwordReader: ui.FakePasswordReader{},
+				path:      "namespace/repo/secret",
+				askSecret: fakeAskSecretFunc,
 			},
 			promptErr: testErr,
 			err:       testErr,

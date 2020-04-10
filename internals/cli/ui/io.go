@@ -75,19 +75,8 @@ func (o UserIO) IsStdoutPiped() bool {
 	return isPiped(o.Output)
 }
 
-type PasswordReader interface {
-	read(reader io.Reader) (string, error)
-}
-
-type passwordReader struct{}
-
-// NewPasswordReader returns a reader that reads a string from the terminal without echoing the user input.
-func NewPasswordReader() PasswordReader {
-	return &passwordReader{}
-}
-
-// Read reads one line of input from the terminal without echoing the user input.
-func (pr *passwordReader) read(r io.Reader) (string, error) {
+// readPassword reads one line of input from the terminal without echoing the user input.
+func readPassword(r io.Reader) (string, error) {
 	file, ok := r.(*os.File)
 	if !ok {
 		return "", ErrCannotAsk

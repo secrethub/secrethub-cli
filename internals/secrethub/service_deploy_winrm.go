@@ -38,23 +38,21 @@ var (
 
 // ServiceDeployWinRmCommand creates a service and installs the configuration using WinRM.
 type ServiceDeployWinRmCommand struct {
-	resourceURI    *url.URL
-	authType       string
-	username       string
-	password       string
-	clientCert     string
-	clientKey      string
-	caCert         string
-	noVerify       bool
-	io             ui.IO
-	passwordReader ui.PasswordReader
+	resourceURI *url.URL
+	authType    string
+	username    string
+	password    string
+	clientCert  string
+	clientKey   string
+	caCert      string
+	noVerify    bool
+	io          ui.IO
 }
 
 // NewServiceDeployWinRmCommand creates a new ServiceDeployWinRmCommand.
 func NewServiceDeployWinRmCommand(io ui.IO) *ServiceDeployWinRmCommand {
 	return &ServiceDeployWinRmCommand{
-		io:             io,
-		passwordReader: ui.NewPasswordReader(),
+		io: io,
 	}
 }
 
@@ -133,7 +131,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 		}
 
 		if cmd.password == "" {
-			cmd.password, err = ui.AskSecret(cmd.io, cmd.passwordReader, fmt.Sprintf("What is the password for user %s?\n", cmd.username))
+			cmd.password, err = ui.AskSecret(cmd.io, fmt.Sprintf("What is the password for user %s?\n", cmd.username))
 			if err != nil {
 				return err
 			}

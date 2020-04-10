@@ -87,9 +87,3 @@ type FakeWriter struct {
 	*bytes.Buffer
 	Piped bool
 }
-
-type FakePasswordReader struct{}
-
-func (f FakePasswordReader) read(reader io.Reader) (string, error) {
-	return Readln(reader)
-}

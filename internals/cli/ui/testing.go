@@ -115,6 +115,6 @@ func (f *FakeWriter) IsPiped() bool {
 
 type FakePasswordReader struct{}
 
-func (f FakePasswordReader) Read(reader io.Reader) (string, error) {
+func (f FakePasswordReader) read(reader io.Reader) (string, error) {
 	return Readln(reader)
 }

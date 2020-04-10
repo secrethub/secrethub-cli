@@ -62,7 +62,7 @@ func AskSecret(io IO, passwordReader PasswordReader, question string) (string, e
 		return "", err
 	}
 
-	secret, err := passwordReader.Read(promptIn)
+	secret, err := passwordReader.read(promptIn)
 	if err != nil {
 		return "", ErrReadInput(err)
 	}

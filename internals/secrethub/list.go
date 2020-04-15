@@ -100,9 +100,7 @@ func (cmd *LsCommand) Run() error {
 	secretPath, err := cmd.path.ToSecretPath()
 	if err == nil {
 		versions, err := client.Secrets().Versions().ListWithoutData(secretPath.Value())
-		if api.IsErrNotFound(err) {
-			return ErrResourceNotFound(cmd.path)
-		} else if err != nil {
+		if err != nil {
 			return err
 		}
 

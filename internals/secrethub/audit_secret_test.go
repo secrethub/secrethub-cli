@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
 	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -198,6 +200,8 @@ func TestAuditSecretCommand_run(t *testing.T) {
 			tc.cmd.newPaginatedWriter = func(_ io.Writer) (io.WriteCloser, error) {
 				return &fakes.Pager{Buffer: &buffer}, nil
 			}
+			tc.cmd.io = ui.NewFakeIO()
+
 			// Act
 			err := tc.cmd.run()
 

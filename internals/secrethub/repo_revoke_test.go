@@ -36,26 +36,26 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 				force:       true,
 			},
 			accountService: fakeclient.AccountService{
-				Getter: fakeclient.AccountGetter{
-					ReturnsAccount: &api.Account{
+				GetFunc: func(name string) (*api.Account, error) {
+					return &api.Account{
 						AccountID: testUUID,
-					},
+					}, nil
 				},
 			},
 			dirService: fakeclient.DirService{
-				TreeGetter: fakeclient.TreeGetter{
-					ReturnsTree: &api.Tree{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return &api.Tree{
 						RootDir: &api.Dir{
 							Name: "repo",
 						},
-					},
+					}, nil
 				},
 			},
 			serviceService: fakeclient.ServiceService{
-				Deleter: fakeclient.ServiceDeleter{
-					ReturnsRevokeResponse: &api.RevokeRepoResponse{
+				DeleteFunc: func(id string) (*api.RevokeRepoResponse, error) {
+					return &api.RevokeRepoResponse{
 						Status: api.StatusOK,
-					},
+					}, nil
 				},
 			},
 			out: "Revoking account...\n\n" +
@@ -68,29 +68,29 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 				force:       true,
 			},
 			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					ReturnsUser: &api.User{
+				GetFunc: func(username string) (*api.User, error) {
+					return &api.User{
 						AccountID: testUUID,
 						Username:  "dev1",
 						FullName:  "Developer Uno",
-					},
+					}, nil
 				},
 			},
 			dirService: fakeclient.DirService{
-				TreeGetter: fakeclient.TreeGetter{
-					ReturnsTree: &api.Tree{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return &api.Tree{
 						RootDir: &api.Dir{
 							Name: "repo",
 						},
-					},
+					}, nil
 				},
 			},
 			repoService: fakeclient.RepoService{
 				UserService: &fakeclient.RepoUserService{
-					Revoker: fakeclient.RepoRevoker{
-						ReturnsRevokeResponse: &api.RevokeRepoResponse{
+					RevokeFunc: func(path string, username string) (*api.RevokeRepoResponse, error) {
+						return &api.RevokeRepoResponse{
 							Status: api.StatusOK,
-						},
+						}, nil
 					},
 				},
 			},
@@ -104,17 +104,17 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 				force:       true,
 			},
 			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					ReturnsUser: &api.User{
+				GetFunc: func(username string) (*api.User, error) {
+					return &api.User{
 						AccountID: testUUID,
 						Username:  "dev1",
 						FullName:  "Developer Uno",
-					},
+					}, nil
 				},
 			},
 			dirService: fakeclient.DirService{
-				TreeGetter: fakeclient.TreeGetter{
-					ReturnsTree: &api.Tree{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return &api.Tree{
 						RootDir: &api.Dir{
 							Name:   "repo",
 							Status: api.StatusFlagged,
@@ -162,15 +162,15 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 							},
 						},
 						Dirs: map[uuid.UUID]*api.Dir{},
-					},
+					}, nil
 				},
 			},
 			repoService: fakeclient.RepoService{
 				UserService: &fakeclient.RepoUserService{
-					Revoker: fakeclient.RepoRevoker{
-						ReturnsRevokeResponse: &api.RevokeRepoResponse{
+					RevokeFunc: func(path string, username string) (*api.RevokeRepoResponse, error) {
+						return &api.RevokeRepoResponse{
 							Status: api.StatusOK,
-						},
+						}, nil
 					},
 				},
 			},
@@ -190,8 +190,8 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 				accountName: api.AccountName("dev1"),
 			},
 			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					Err: testErr,
+				GetFunc: func(username string) (*api.User, error) {
+					return nil, testErr
 				},
 			},
 			err: testErr,
@@ -203,15 +203,15 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 				force:       true,
 			},
 			accountService: fakeclient.AccountService{
-				Getter: fakeclient.AccountGetter{
-					ReturnsAccount: &api.Account{
+				GetFunc: func(name string) (*api.Account, error) {
+					return &api.Account{
 						AccountID: testUUID,
-					},
+					}, nil
 				},
 			},
 			serviceService: fakeclient.ServiceService{
-				Deleter: fakeclient.ServiceDeleter{
-					Err: testErr,
+				DeleteFunc: func(id string) (*api.RevokeRepoResponse, error) {
+					return nil, testErr
 				},
 			},
 			out: "Revoking account...\n\n",
@@ -224,19 +224,19 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 				force:       true,
 			},
 			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					ReturnsUser: &api.User{
+				GetFunc: func(username string) (*api.User, error) {
+					return &api.User{
 						AccountID: testUUID,
 						Username:  "dev1",
 
 						FullName: "Developer Uno",
-					},
+					}, nil
 				},
 			},
 			repoService: fakeclient.RepoService{
 				UserService: &fakeclient.RepoUserService{
-					Revoker: fakeclient.RepoRevoker{
-						Err: testErr,
+					RevokeFunc: func(path string, username string) (*api.RevokeRepoResponse, error) {
+						return nil, testErr
 					},
 				},
 			},
@@ -250,26 +250,26 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 				force:       true,
 			},
 			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					ReturnsUser: &api.User{
+				GetFunc: func(username string) (*api.User, error) {
+					return &api.User{
 						AccountID: testUUID,
 						Username:  "dev1",
 
 						FullName: "Developer Uno",
-					},
+					}, nil
 				},
 			},
 			dirService: fakeclient.DirService{
-				TreeGetter: fakeclient.TreeGetter{
-					Err: testErr,
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return nil, testErr
 				},
 			},
 			repoService: fakeclient.RepoService{
 				UserService: &fakeclient.RepoUserService{
-					Revoker: fakeclient.RepoRevoker{
-						ReturnsRevokeResponse: &api.RevokeRepoResponse{
+					RevokeFunc: func(path string, username string) (*api.RevokeRepoResponse, error) {
+						return &api.RevokeRepoResponse{
 							Status: api.StatusOK,
-						},
+						}, nil
 					},
 				},
 			},
@@ -283,29 +283,30 @@ func TestRepoRevokeCommand_Run(t *testing.T) {
 				force:       true,
 			},
 			userService: fakeclient.UserService{
-				Getter: fakeclient.UserGetter{
-					ReturnsUser: &api.User{
+				GetFunc: func(username string) (*api.User, error) {
+
+					return &api.User{
 						AccountID: testUUID,
 						Username:  "dev1",
 						FullName:  "Developer Uno",
-					},
+					}, nil
 				},
 			},
 			dirService: fakeclient.DirService{
-				TreeGetter: fakeclient.TreeGetter{
-					ReturnsTree: &api.Tree{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return &api.Tree{
 						RootDir: &api.Dir{
 							Name: "repo",
 						},
-					},
+					}, nil
 				},
 			},
 			repoService: fakeclient.RepoService{
 				UserService: &fakeclient.RepoUserService{
-					Revoker: fakeclient.RepoRevoker{
-						ReturnsRevokeResponse: &api.RevokeRepoResponse{
+					RevokeFunc: func(path string, username string) (*api.RevokeRepoResponse, error) {
+						return &api.RevokeRepoResponse{
 							Status: api.StatusFailed,
-						},
+						}, nil
 					},
 				},
 			},

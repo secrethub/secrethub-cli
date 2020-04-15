@@ -18,7 +18,7 @@ func TestACLCheckCommand_Run(t *testing.T) {
 	cases := map[string]struct {
 		cmd           ACLCheckCommand
 		newClientErr  error
-		lister        fakeclient.AccessLevelLister
+		lister        func(path string) ([]*api.AccessLevel, error)
 		listerArgPath api.Path
 		out           string
 		err           error
@@ -32,8 +32,8 @@ func TestACLCheckCommand_Run(t *testing.T) {
 				accountName: "dev1",
 				path:        "namespace/repo",
 			},
-			lister: fakeclient.AccessLevelLister{
-				ReturnsAccessLevels: []*api.AccessLevel{
+			lister: func(path string) ([]*api.AccessLevel, error) {
+				return []*api.AccessLevel{
 					{
 						Account: &api.Account{
 							Name: "dev1",
@@ -46,7 +46,7 @@ func TestACLCheckCommand_Run(t *testing.T) {
 						},
 						Permission: api.PermissionWrite,
 					},
-				},
+				}, nil
 			},
 			listerArgPath: "namespace/repo",
 			out:           "read\n",
@@ -56,15 +56,15 @@ func TestACLCheckCommand_Run(t *testing.T) {
 				accountName: "dev1",
 				path:        "namespace/repo",
 			},
-			lister: fakeclient.AccessLevelLister{
-				ReturnsAccessLevels: []*api.AccessLevel{
+			lister: func(path string) ([]*api.AccessLevel, error) {
+				return []*api.AccessLevel{
 					{
 						Account: &api.Account{
 							Name: "dev2",
 						},
 						Permission: api.PermissionWrite,
 					},
-				},
+				}, nil
 			},
 			listerArgPath: "namespace/repo",
 			out:           "none\n",
@@ -73,8 +73,8 @@ func TestACLCheckCommand_Run(t *testing.T) {
 			cmd: ACLCheckCommand{
 				path: "namespace/repo",
 			},
-			lister: fakeclient.AccessLevelLister{
-				ReturnsAccessLevels: []*api.AccessLevel{
+			lister: func(path string) ([]*api.AccessLevel, error) {
+				return []*api.AccessLevel{
 					{
 						Account: &api.Account{
 							Name: "dev1",
@@ -87,7 +87,7 @@ func TestACLCheckCommand_Run(t *testing.T) {
 						},
 						Permission: api.PermissionWrite,
 					},
-				},
+				}, nil
 			},
 			listerArgPath: "namespace/repo",
 			out: "PERMISSIONS    ACCOUNT\n" +
@@ -95,8 +95,8 @@ func TestACLCheckCommand_Run(t *testing.T) {
 				"read           dev1\n",
 		},
 		"list error": {
-			lister: fakeclient.AccessLevelLister{
-				Err: testError,
+			lister: func(path string) ([]*api.AccessLevel, error) {
+				return nil, testError
 			},
 			err: testError,
 		},
@@ -108,12 +108,15 @@ func TestACLCheckCommand_Run(t *testing.T) {
 			io := ui.NewFakeIO()
 			tc.cmd.io = io
 
-			lister := &tc.lister
-
+			lister := tc.lister
+			var argPath string
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					AccessRuleService: &fakeclient.AccessRuleService{
-						LevelLister: lister,
+						ListLevelsFunc: func(path string) ([]*api.AccessLevel, error) {
+							argPath = path
+							return lister(path)
+						},
 					},
 				}, tc.newClientErr
 			}
@@ -124,7 +127,7 @@ func TestACLCheckCommand_Run(t *testing.T) {
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.StdOut.String(), tc.out)
-			assert.Equal(t, lister.ArgPath, tc.listerArgPath)
+			assert.Equal(t, argPath, tc.listerArgPath)
 		})
 	}
 }

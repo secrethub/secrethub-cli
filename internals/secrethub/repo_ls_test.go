@@ -32,8 +32,8 @@ func TestRepoLSCommand_run(t *testing.T) {
 				},
 			},
 			repoService: fakeclient.RepoService{
-				MineLister: fakeclient.RepoMineLister{
-					ReturnsRepos: []*api.Repo{
+				ListMineFunc: func() ([]*api.Repo, error) {
+					return []*api.Repo{
 						{
 							Owner:     "dev1",
 							Name:      "repository",
@@ -46,7 +46,7 @@ func TestRepoLSCommand_run(t *testing.T) {
 							Status:    api.StatusOK,
 							CreatedAt: testTime,
 						},
-					},
+					}, nil
 				},
 			},
 			out: "NAME                  STATUS  CREATED\n" +
@@ -61,8 +61,8 @@ func TestRepoLSCommand_run(t *testing.T) {
 				quiet: true,
 			},
 			repoService: fakeclient.RepoService{
-				MineLister: fakeclient.RepoMineLister{
-					ReturnsRepos: []*api.Repo{
+				ListMineFunc: func() ([]*api.Repo, error) {
+					return []*api.Repo{
 						{
 							Owner:     "dev1",
 							Name:      "repository",
@@ -75,7 +75,7 @@ func TestRepoLSCommand_run(t *testing.T) {
 							Status:    api.StatusOK,
 							CreatedAt: testTime,
 						},
-					},
+					}, nil
 				},
 			},
 			out: "dev1/repository\n" +
@@ -89,15 +89,15 @@ func TestRepoLSCommand_run(t *testing.T) {
 				workspace: "dev1",
 			},
 			repoService: fakeclient.RepoService{
-				Lister: fakeclient.RepoLister{
-					ReturnsRepos: []*api.Repo{
+				ListFunc: func(namespace string) ([]*api.Repo, error) {
+					return []*api.Repo{
 						{
 							Owner:     "dev1",
 							Name:      "repository",
 							Status:    api.StatusOK,
 							CreatedAt: testTime,
 						},
-					},
+					}, nil
 				},
 			},
 			out: "NAME             STATUS  CREATED\n" +
@@ -109,8 +109,8 @@ func TestRepoLSCommand_run(t *testing.T) {
 		},
 		"repo mine error": {
 			repoService: fakeclient.RepoService{
-				MineLister: fakeclient.RepoMineLister{
-					Err: testErr,
+				ListMineFunc: func() ([]*api.Repo, error) {
+					return nil, testErr
 				},
 			},
 			err: testErr,

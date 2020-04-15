@@ -90,7 +90,7 @@ func (cmd *AuditCommand) run() error {
 		return err
 	}
 
-	paginatedWriter, err := cmd.newPaginatedWriter(os.Stdout)
+	paginatedWriter, err := cmd.newPaginatedWriter(cmd.io.Stdout())
 	if err != nil {
 		return err
 	}

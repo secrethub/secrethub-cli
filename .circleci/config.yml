@@ -47,9 +47,8 @@ workflows:
             parameters:
               os: ["darwin", "linux", "windows"]
               arch: ["amd64", "386"]
-              os: ["darwin", "linux", "windows"]
             exclude:
-              - arch: 386
-                os: darwin
+              - os: darwin
+                arch: 386
       - test
       - verify-goreleaser

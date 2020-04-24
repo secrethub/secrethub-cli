@@ -43,6 +43,7 @@ workflows:
     jobs:
       - lint
       - verify-build:
+          name: verify-build-<< matrix.os >>-<< matrix.arch >>
           matrix:
             parameters:
               os: ["darwin", "linux", "windows"]

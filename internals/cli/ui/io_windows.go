@@ -14,7 +14,7 @@ func NewUserIO() UserIO {
 	// Ensure colors are printed correctly on Windows.
 	if !color.NoColor {
 		return UserIO{
-			Input:  file{os.Stdin},
+			Input:  os.Stdin,
 			Output: colorStdout{colorable.NewColorableStdout()},
 		}
 	}

@@ -49,7 +49,7 @@ func (cmd *ConfigUpdatePassphraseCommand) Run() error {
 	}
 
 	if !confirmed {
-		fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+		fmt.Fprintln(cmd.io.Output(), "Aborting.")
 		return nil
 	}
 
@@ -75,7 +75,7 @@ func (cmd *ConfigUpdatePassphraseCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Successfully updated passphrase!")
+	fmt.Fprintln(cmd.io.Output(), "Successfully updated passphrase!")
 
 	return nil
 }

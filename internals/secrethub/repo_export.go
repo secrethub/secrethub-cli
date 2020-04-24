@@ -71,7 +71,7 @@ func (cmd *RepoExportCommand) Run() error {
 	}
 
 	if !confirmed {
-		fmt.Fprintln(cmd.io.Stdout(), "Name does not match. Aborting.")
+		fmt.Fprintln(cmd.io.Output(), "Name does not match. Aborting.")
 		return nil
 	}
 

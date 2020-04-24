@@ -70,12 +70,12 @@ func (cmd *RepoRevokeCommand) Run() error {
 		}
 
 		if !confirmed {
-			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			fmt.Fprintln(cmd.io.Output(), "Aborting.")
 			return nil
 		}
 	}
 
-	fmt.Fprint(cmd.io.Stdout(), "Revoking account...\n\n")
+	fmt.Fprint(cmd.io.Output(), "Revoking account...\n\n")
 
 	var revoked *api.RevokeRepoResponse
 	if cmd.accountName.IsService() {
@@ -88,7 +88,7 @@ func (cmd *RepoRevokeCommand) Run() error {
 	}
 
 	if revoked.Status == api.StatusFailed {
-		fmt.Fprintf(cmd.io.Stdout(),
+		fmt.Fprintf(cmd.io.Output(),
 			"\nRevoke failed! The account %s is the only admin on the repo %s."+
 				"You need to make sure another account has admin rights on the repository or you can remove the repo.",
 			prettyName,
@@ -101,7 +101,7 @@ func (cmd *RepoRevokeCommand) Run() error {
 		return err
 	}
 
-	w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
+	w := tabwriter.NewWriter(cmd.io.Output(), 0, 2, 2, ' ', 0)
 
 	countUnaffected, countFlagged := printFlaggedSecrets(w, rootDir.RootDir, cmd.path.GetNamespace())
 
@@ -111,9 +111,9 @@ func (cmd *RepoRevokeCommand) Run() error {
 	}
 
 	if countFlagged > 0 {
-		fmt.Fprintln(cmd.io.Stdout())
+		fmt.Fprintln(cmd.io.Output())
 	}
-	fmt.Fprintf(cmd.io.Stdout(),
+	fmt.Fprintf(cmd.io.Output(),
 		"Revoke complete! The account %s can no longer access the %s repository. "+
 			"Make sure you overwrite or delete all flagged secrets. "+
 			"Secrets: %d unaffected, %d flagged\n",

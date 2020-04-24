@@ -36,12 +36,12 @@ func NewFakeIO() *FakeIO {
 }
 
 // Stdin returns the mocked StdIn.
-func (f *FakeIO) Stdin() io.Reader {
+func (f *FakeIO) Input() io.Reader {
 	return f.StdIn
 }
 
 // Stdout returns the mocked StdOut.
-func (f *FakeIO) Stdout() io.Writer {
+func (f *FakeIO) Output() io.Writer {
 	return f.StdOut
 }
 

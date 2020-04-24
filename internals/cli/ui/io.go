@@ -18,8 +18,8 @@ var (
 
 // IO is an interface to work with input/output.
 type IO interface {
-	Stdin() io.Reader
-	Stdout() io.Writer
+	Input() io.Reader
+	Output() io.Writer
 	Prompts() (io.Reader, io.Writer, error)
 	IsStdinPiped() bool
 	IsStdoutPiped() bool
@@ -41,12 +41,12 @@ func newStdUserIO() standardIO {
 }
 
 // Stdin returns the standardIO's Input.
-func (o standardIO) Stdin() io.Reader {
+func (o standardIO) Input() io.Reader {
 	return o.input
 }
 
 // Stdout returns the standardIO's Output.
-func (o standardIO) Stdout() io.Writer {
+func (o standardIO) Output() io.Writer {
 	return o.output
 }
 

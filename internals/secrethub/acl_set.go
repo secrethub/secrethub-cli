@@ -58,12 +58,12 @@ func (cmd *ACLSetCommand) Run() error {
 		}
 
 		if !confirmed {
-			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			fmt.Fprintln(cmd.io.Output(), "Aborting.")
 			return nil
 		}
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Setting access rule for %s at %s with %s\n", cmd.accountName, cmd.path, cmd.permission)
+	fmt.Fprintf(cmd.io.Output(), "Setting access rule for %s at %s with %s\n", cmd.accountName, cmd.path, cmd.permission)
 
 	client, err := cmd.newClient()
 	if err != nil {
@@ -75,7 +75,7 @@ func (cmd *ACLSetCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Access rule set!")
+	fmt.Fprintln(cmd.io.Output(), "Access rule set!")
 
 	return nil
 

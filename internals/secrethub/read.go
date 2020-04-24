@@ -76,7 +76,7 @@ func (cmd *ReadCommand) Run() error {
 		}
 
 		fmt.Fprintf(
-			cmd.io.Stdout(),
+			cmd.io.Output(),
 			"Copied %s to clipboard. It will be cleared after %s.\n",
 			cmd.path,
 			units.HumanDuration(cmd.clearClipboardAfter),
@@ -96,7 +96,7 @@ func (cmd *ReadCommand) Run() error {
 	}
 
 	if cmd.outFile == "" && !cmd.useClipboard {
-		fmt.Fprintf(cmd.io.Stdout(), "%s", string(secretData))
+		fmt.Fprintf(cmd.io.Output(), "%s", string(secretData))
 	}
 
 	return nil

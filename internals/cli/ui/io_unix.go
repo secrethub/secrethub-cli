@@ -49,12 +49,12 @@ func (o ttyIO) IsStdoutPiped() bool {
 }
 
 // Stdin returns the standardIO's Input.
-func (o ttyIO) Stdin() io.Reader {
+func (o ttyIO) Input() io.Reader {
 	return o.input
 }
 
 // Stdout returns the standardIO's Output.
-func (o ttyIO) Stdout() io.Writer {
+func (o ttyIO) Output() io.Writer {
 	return o.output
 }
 

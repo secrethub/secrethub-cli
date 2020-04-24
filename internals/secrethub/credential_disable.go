@@ -60,7 +60,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(),
+	fmt.Fprintln(cmd.io.Output(),
 		"A disabled credential can no longer be used to access SecretHub. "+
 			"This process can currently not be reversed.")
 
@@ -70,7 +70,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 			return err
 		}
 		if !ok {
-			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			fmt.Fprintln(cmd.io.Output(), "Aborting.")
 			return nil
 		}
 	}
@@ -80,7 +80,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Credential disabled.")
+	fmt.Fprintln(cmd.io.Output(), "Credential disabled.")
 
 	return nil
 }

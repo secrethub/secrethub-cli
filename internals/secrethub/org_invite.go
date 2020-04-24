@@ -51,7 +51,7 @@ func (cmd *OrgInviteCommand) Run() error {
 		}
 
 		if !confirmed {
-			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			fmt.Fprintln(cmd.io.Output(), "Aborting.")
 			return nil
 		}
 	}
@@ -61,14 +61,14 @@ func (cmd *OrgInviteCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Inviting user...")
+	fmt.Fprintln(cmd.io.Output(), "Inviting user...")
 
 	resp, err := client.Orgs().Members().Invite(cmd.orgName.Value(), cmd.username, cmd.role)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Invite complete! The user %s is now %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)
+	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)
 
 	return nil
 }

@@ -112,10 +112,10 @@ func (cmd *RunCommand) Run() error {
 	command.Env = environment
 	command.Stdin = os.Stdin
 	if cmd.noMasking {
-		command.Stdout = cmd.io.Stdout()
+		command.Stdout = cmd.io.Output()
 		command.Stderr = os.Stderr
 	} else {
-		command.Stdout = m.AddStream(cmd.io.Stdout())
+		command.Stdout = m.AddStream(cmd.io.Output())
 		command.Stderr = m.AddStream(os.Stderr)
 
 		go m.Start()

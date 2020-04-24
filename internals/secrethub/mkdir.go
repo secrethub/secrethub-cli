@@ -62,7 +62,7 @@ func (cmd *MkDirCommand) Run() error {
 		}
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Created a new directory at %s\n", cmd.path)
+	fmt.Fprintf(cmd.io.Output(), "Created a new directory at %s\n", cmd.path)
 
 	return nil
 }

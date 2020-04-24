@@ -47,7 +47,7 @@ func (cmd *OrgInitCommand) Run() error {
 		return ErrMissingFlags
 	} else if !cmd.force && incompleteInput {
 		fmt.Fprintf(
-			cmd.io.Stdout(),
+			cmd.io.Output(),
 			"Before initializing a new organization, we need to know a few things about your organization. "+
 				"Please answer the questions below, followed by an [ENTER]\n\n",
 		)
@@ -68,7 +68,7 @@ func (cmd *OrgInitCommand) Run() error {
 		}
 
 		// Print a whitespace line here for readability.
-		fmt.Fprintln(cmd.io.Stdout(), "")
+		fmt.Fprintln(cmd.io.Output(), "")
 	}
 
 	client, err := cmd.newClient()
@@ -76,14 +76,14 @@ func (cmd *OrgInitCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Creating organization...\n")
+	fmt.Fprintf(cmd.io.Output(), "Creating organization...\n")
 
 	resp, err := client.Orgs().Create(cmd.name.Value(), cmd.description)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Creation complete! The organization %s is now ready to use.\n", resp.Name)
+	fmt.Fprintf(cmd.io.Output(), "Creation complete! The organization %s is now ready to use.\n", resp.Name)
 
 	return nil
 }

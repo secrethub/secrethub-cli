@@ -83,10 +83,10 @@ outer:
 
 	if cmd.quiet {
 		for _, service := range included {
-			fmt.Fprintf(cmd.io.Stdout(), "%s\n", service.ServiceID)
+			fmt.Fprintf(cmd.io.Output(), "%s\n", service.ServiceID)
 		}
 	} else {
-		w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
+		w := tabwriter.NewWriter(cmd.io.Output(), 0, 2, 2, ' ', 0)
 		serviceTable := cmd.newServiceTable(NewTimeFormatter(cmd.useTimestamps))
 
 		fmt.Fprintln(w, strings.Join(serviceTable.header(), "\t"))

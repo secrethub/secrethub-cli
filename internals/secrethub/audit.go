@@ -63,7 +63,7 @@ func (cmd *AuditCommand) run() error {
 		return err
 	}
 
-	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
+	tabWriter := tabwriter.NewWriter(cmd.io.Output(), 0, 4, 4, ' ', 0)
 	header := strings.Join(auditTable.header(), "\t") + "\n"
 	fmt.Fprint(tabWriter, header)
 

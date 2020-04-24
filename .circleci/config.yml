@@ -13,7 +13,7 @@ jobs:
       arch:
         type: string
     docker:
-      - image: golangci/golangci-lint:v1.23.8-alpine
+      - image: circleci/golang:1.13
     steps:
       - checkout
       - run: GOOS=<< parameters.os >> GOARCH=<< parameters.arch >> go build ./cmd/secrethub
@@ -45,6 +45,7 @@ workflows:
       - verify-build:
           matrix:
             parameters:
+              os: ["darwin", "linux", "windows"]
               arch: ["amd64", "386"]
               os: ["darwin", "linux", "windows"]
             exclude:

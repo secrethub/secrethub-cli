@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"io"
 	"os"
 
 	"github.com/fatih/color"
@@ -8,17 +9,24 @@ import (
 	isatty "github.com/mattn/go-isatty"
 )
 
-// NewUserIO creates a new UserIO middleware from os.Stdin and os.Stdout and adds tty if it is available.
-func NewUserIO() UserIO {
-	// Ensure colors are printed correctly on Windows.
-	if !color.NoColor {
-		return UserIO{
-			input:  os.Stdin,
-			output: colorable.NewColorable(os.Stdout),
-		}
-	}
+// windowsIO is the Windows-specific implementation of the IO interface.
+type windowsIO struct {
+	standardIO
+}
 
-	return NewStdUserIO()
+// NewUserIO creates a new windowsIO.
+func NewUserIO() IO {
+	return windowsIO{
+		standardIO: newStdUserIO(),
+	}
+}
+
+// Stdout returns the standardIO's Output.
+func (o windowsIO) Stdout() io.Writer {
+	if !color.NoColor {
+		return colorable.NewColorable(os.Stdout)
+	}
+	return o.output
 }
 
 // eofKey returns the key(s) that should be pressed to enter an EOF.
@@ -29,7 +37,7 @@ func eofKey() string {
 // isPiped checks whether the file is a pipe.
 // If the file does not exist, it returns false.
 func isPiped(file *os.File) bool {
-	stat, err := file.Stat()
+	_, err := file.Stat()
 	if err != nil {
 		return false
 	}

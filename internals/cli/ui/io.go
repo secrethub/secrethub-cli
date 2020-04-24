@@ -25,30 +25,28 @@ type IO interface {
 	IsStdoutPiped() bool
 }
 
-// UserIO is a middleware between input and output to the CLI program.
-// It implements userIO.Prompter and can be passed to libraries.
-type UserIO struct {
-	input        *os.File
-	output       *os.File
-	tty          *os.File
-	ttyAvailable bool
+// standardIO is a middleware between input and output to the CLI program.
+// It implements standardIO.Prompter and can be passed to libraries.
+type standardIO struct {
+	input  *os.File
+	output *os.File
 }
 
-// NewStdUserIO creates a new UserIO middleware only from os.Stdin and os.Stdout.
-func NewStdUserIO() UserIO {
-	return UserIO{
+// newStdUserIO creates a new standardIO middleware only from os.Stdin and os.Stdout.
+func newStdUserIO() standardIO {
+	return standardIO{
 		input:  os.Stdin,
 		output: os.Stdout,
 	}
 }
 
-// Stdin returns the UserIO's Input.
-func (o UserIO) Stdin() io.Reader {
+// Stdin returns the standardIO's Input.
+func (o standardIO) Stdin() io.Reader {
 	return o.input
 }
 
-// Stdout returns the UserIO's Output.
-func (o UserIO) Stdout() io.Writer {
+// Stdout returns the standardIO's Output.
+func (o standardIO) Stdout() io.Writer {
 	return o.output
 }
 
@@ -57,21 +55,18 @@ func (o UserIO) Stdout() io.Writer {
 // bypass stdin and stdout by connecting to /dev/tty on Unix systems when
 // available. On systems where tty is not available and when either input
 // or output is piped, prompting is not possible so an error is returned.
-func (o UserIO) Prompts() (io.Reader, io.Writer, error) {
+func (o standardIO) Prompts() (io.Reader, io.Writer, error) {
 	if o.IsStdoutPiped() || o.IsStdinPiped() {
-		if o.ttyAvailable {
-			return o.tty, o.tty, nil
-		}
 		return nil, nil, ErrCannotAsk
 	}
 	return o.input, o.output, nil
 }
 
-func (o UserIO) IsStdinPiped() bool {
+func (o standardIO) IsStdinPiped() bool {
 	return isPiped(o.input)
 }
 
-func (o UserIO) IsStdoutPiped() bool {
+func (o standardIO) IsStdoutPiped() bool {
 	return isPiped(o.output)
 }
 

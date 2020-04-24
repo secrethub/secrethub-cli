@@ -22,7 +22,7 @@ func NewUserIO() IO {
 }
 
 // Stdout returns the standardIO's Output.
-func (o windowsIO) Stdout() io.Writer {
+func (o windowsIO) Output() io.Writer {
 	if !color.NoColor {
 		return colorable.NewColorable(os.Stdout)
 	}

@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   lint:
     docker:
@@ -6,6 +6,17 @@ jobs:
     steps:
       - checkout
       - run: golangci-lint run
+  verify-build:
+    parameters:
+      os:
+        type: string
+      arch:
+        type: string
+    docker:
+      - image: golangci/golangci-lint:v1.23.8-alpine
+    steps:
+      - checkout
+      - run: GOOS=<< parameters.os >> GOARCH=<< parameters.arch >> go build ./cmd/secrethub
   test:
     docker:
       - image: circleci/golang:1.13
@@ -31,5 +42,13 @@ workflows:
   pipeline:
     jobs:
       - lint
+      - verify-build:
+          matrix:
+            parameters:
+              arch: ["amd64", "386"]
+              os: ["darwin", "linux", "windows"]
+            exclude:
+              - arch: 386
+                os: darwin
       - test
       - verify-goreleaser

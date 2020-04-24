@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"io"
 	"os"
 
 	"github.com/fatih/color"
@@ -15,20 +14,11 @@ func NewUserIO() UserIO {
 	if !color.NoColor {
 		return UserIO{
 			Input:  os.Stdin,
-			Output: colorStdout{colorable.NewColorableStdout()},
+			Output: colorable.NewColorable(os.Stdout),
 		}
 	}
 
 	return NewStdUserIO()
-}
-
-type colorStdout struct {
-	io.Writer
-}
-
-func (c colorStdout) IsPiped() bool {
-	return os.Getenv("TERM") == "dumb" ||
-		(!isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()))
 }
 
 func eofKey() string {

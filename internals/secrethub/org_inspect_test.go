@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -156,7 +156,7 @@ func TestOrgInspectCommand_Run(t *testing.T) {
 				}, tc.newClientErr
 			}
 
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO()
 			tc.cmd.io = io
 
 			// Run
@@ -164,7 +164,7 @@ func TestOrgInspectCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.Out.String(), tc.out)
 		})
 	}
 }

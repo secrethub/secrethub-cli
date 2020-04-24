@@ -8,6 +8,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -216,12 +217,12 @@ func TestWriteCommand_Run(t *testing.T) {
 				}, nil
 			}
 
-			io := ui.NewFakeIO()
-			io.StdIn.ReadErr = tc.readErr
+			io := fakeui.NewIO()
+			io.In.ReadErr = tc.readErr
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 			io.PromptErr = tc.promptErr
-			io.StdIn.Piped = tc.piped
-			io.StdIn.Buffer = bytes.NewBufferString(tc.in)
+			io.In.Piped = tc.piped
+			io.In.Buffer = bytes.NewBufferString(tc.in)
 
 			tc.cmd.io = io
 
@@ -233,7 +234,7 @@ func TestWriteCommand_Run(t *testing.T) {
 			assert.Equal(t, argPath, tc.path)
 			assert.Equal(t, argData, tc.data)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.Out.String(), tc.out)
 		})
 	}
 }

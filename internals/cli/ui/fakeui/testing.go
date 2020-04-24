@@ -1,29 +1,32 @@
 // +build !production
 
-package ui
+package fakeui
 
 import (
 	"bytes"
 	"errors"
 	"io"
+	"os"
 )
 
 // FakeIO is a helper type for testing that implements the ui.IO interface
 type FakeIO struct {
-	StdIn     *FakeReader
-	StdOut    *FakeWriter
+	In        *FakeReader
+	Out       *FakeWriter
+	StdIn     *os.File
+	StdOut    *os.File
 	PromptIn  *FakeReader
 	PromptOut *FakeWriter
 	PromptErr error
 }
 
-// NewFakeIO creates a new FakeIO with empty buffers.
-func NewFakeIO() *FakeIO {
+// NewIO creates a new FakeIO with empty buffers.
+func NewIO() *FakeIO {
 	return &FakeIO{
-		StdIn: &FakeReader{
+		In: &FakeReader{
 			Buffer: &bytes.Buffer{},
 		},
-		StdOut: &FakeWriter{
+		Out: &FakeWriter{
 			Buffer: &bytes.Buffer{},
 		},
 		PromptIn: &FakeReader{
@@ -35,13 +38,21 @@ func NewFakeIO() *FakeIO {
 	}
 }
 
-// Stdin returns the mocked StdIn.
+// Stdin returns the mocked In.
 func (f *FakeIO) Input() io.Reader {
+	return f.In
+}
+
+// Stdout returns the mocked Out.
+func (f *FakeIO) Output() io.Writer {
+	return f.Out
+}
+
+func (f *FakeIO) Stdin() *os.File {
 	return f.StdIn
 }
 
-// Stdout returns the mocked StdOut.
-func (f *FakeIO) Output() io.Writer {
+func (f *FakeIO) Stdout() *os.File {
 	return f.StdOut
 }
 
@@ -51,11 +62,11 @@ func (f *FakeIO) Prompts() (io.Reader, io.Writer, error) {
 }
 
 func (f *FakeIO) IsStdinPiped() bool {
-	return f.StdIn.Piped
+	return f.In.Piped
 }
 
 func (f *FakeIO) IsStdoutPiped() bool {
-	return f.StdOut.Piped
+	return f.Out.Piped
 }
 
 // FakeReader implements the Reader interface.

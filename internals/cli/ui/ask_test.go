@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
+
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 )
 
 func TestAskWithDefault(t *testing.T) {
@@ -33,7 +35,7 @@ func TestAskWithDefault(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := NewFakeIO()
+			io := fakeui.NewIO()
 			io.PromptIn.Reads = tc.in
 
 			// Run
@@ -94,7 +96,7 @@ func TestConfirmCaseInsensitive(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := NewFakeIO()
+			io := fakeui.NewIO()
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 
 			// Run
@@ -239,7 +241,7 @@ func TestAskYesNo(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := NewFakeIO()
+			io := fakeui.NewIO()
 			io.PromptIn.Reads = tc.in
 
 			// Run
@@ -319,7 +321,7 @@ func TestChoose(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := NewFakeIO()
+			io := fakeui.NewIO()
 			io.PromptIn.Reads = tc.in
 
 			// Run
@@ -415,7 +417,7 @@ func TestChooseDynamicOptions(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := NewFakeIO()
+			io := fakeui.NewIO()
 			io.PromptIn.Reads = tc.in
 
 			if tc.getOptions == nil {

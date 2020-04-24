@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -133,7 +134,7 @@ func TestRepoRmCommand_Run(t *testing.T) {
 				}
 			}
 
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO()
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 			io.PromptIn.ReadErr = tc.promptReadErr
 			io.PromptErr = tc.promptErr
@@ -144,7 +145,7 @@ func TestRepoRmCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.Out.String(), tc.out)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
 		})
 	}

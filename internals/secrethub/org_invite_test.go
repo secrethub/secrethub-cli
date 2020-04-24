@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -111,7 +111,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 				}, tc.newClientErr
 			}
 
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO()
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.in)
 			tc.cmd.io = io
 
@@ -120,7 +120,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.Out.String(), tc.out)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
 		})
 	}

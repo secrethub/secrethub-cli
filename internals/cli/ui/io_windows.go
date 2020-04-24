@@ -13,8 +13,8 @@ func NewUserIO() UserIO {
 	// Ensure colors are printed correctly on Windows.
 	if !color.NoColor {
 		return UserIO{
-			Input:  os.Stdin,
-			Output: colorable.NewColorable(os.Stdout),
+			input:  os.Stdin,
+			output: colorable.NewColorable(os.Stdout),
 		}
 	}
 

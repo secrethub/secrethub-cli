@@ -9,8 +9,8 @@ func NewUserIO() UserIO {
 	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
 	if err == nil {
 		return UserIO{
-			Input:        os.Stdin,
-			Output:       os.Stdout,
+			input:        os.Stdin,
+			output:       os.Stdout,
 			tty:          tty,
 			ttyAvailable: true,
 		}

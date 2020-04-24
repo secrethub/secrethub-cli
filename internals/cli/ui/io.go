@@ -28,8 +28,8 @@ type IO interface {
 // UserIO is a middleware between input and output to the CLI program.
 // It implements userIO.Prompter and can be passed to libraries.
 type UserIO struct {
-	Input        *os.File
-	Output       *os.File
+	input        *os.File
+	output       *os.File
 	tty          *os.File
 	ttyAvailable bool
 }
@@ -37,19 +37,19 @@ type UserIO struct {
 // NewStdUserIO creates a new UserIO middleware only from os.Stdin and os.Stdout.
 func NewStdUserIO() UserIO {
 	return UserIO{
-		Input:  os.Stdin,
-		Output: os.Stdout,
+		input:  os.Stdin,
+		output: os.Stdout,
 	}
 }
 
 // Stdin returns the UserIO's Input.
 func (o UserIO) Stdin() io.Reader {
-	return o.Input
+	return o.input
 }
 
 // Stdout returns the UserIO's Output.
 func (o UserIO) Stdout() io.Writer {
-	return o.Output
+	return o.output
 }
 
 // Prompts simply returns Stdin and Stdout, when both input and output are
@@ -64,15 +64,15 @@ func (o UserIO) Prompts() (io.Reader, io.Writer, error) {
 		}
 		return nil, nil, ErrCannotAsk
 	}
-	return o.Input, o.Output, nil
+	return o.input, o.output, nil
 }
 
 func (o UserIO) IsStdinPiped() bool {
-	return isPiped(o.Input)
+	return isPiped(o.input)
 }
 
 func (o UserIO) IsStdoutPiped() bool {
-	return isPiped(o.Output)
+	return isPiped(o.output)
 }
 
 // readPassword reads one line of input from the terminal without echoing the user input.

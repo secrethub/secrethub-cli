@@ -21,6 +21,7 @@ func NewUserIO() UserIO {
 	return NewStdUserIO()
 }
 
+// eofKey returns the key(s) that should be pressed to enter an EOF.
 func eofKey() string {
 	return "CTRL-Z + ENTER"
 }

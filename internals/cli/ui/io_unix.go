@@ -30,6 +30,7 @@ func isPiped(file *os.File) bool {
 	return (stat.Mode() & os.ModeCharDevice) == 0
 }
 
+// eofKey returns the key(s) that should be pressed to enter an EOF.
 func eofKey() string {
 	return "CTRL-D"
 }

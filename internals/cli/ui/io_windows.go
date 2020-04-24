@@ -34,3 +34,15 @@ func (c colorStdout) IsPiped() bool {
 func eofKey() string {
 	return "CTRL-Z + ENTER"
 }
+
+// isPiped checks whether the file is a pipe.
+// If the file does not exist, it returns false.
+func isPiped(file *os.File) bool {
+	stat, err := file.Stat()
+	if err != nil {
+		return false
+	}
+
+	return os.Getenv("TERM") == "dumb" ||
+		(!isatty.IsTerminal(file.Fd()) && !isatty.IsCygwinTerminal(file.Fd()))
+}

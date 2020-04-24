@@ -104,17 +104,6 @@ func Readln(r io.Reader) (string, error) {
 	return s.Text(), nil
 }
 
-// isPiped checks whether the file is a pipe.
-// If the file does not exist, it returns false.
-func isPiped(file *os.File) bool {
-	stat, err := file.Stat()
-	if err != nil {
-		return false
-	}
-
-	return (stat.Mode() & os.ModeCharDevice) == 0
-}
-
 // EOFKey returns the key that should be pressed to enter an EOF.
 // This can be used to end multiline input.
 func EOFKey() string {

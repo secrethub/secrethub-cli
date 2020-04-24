@@ -20,6 +20,8 @@ var (
 type IO interface {
 	Input() io.Reader
 	Output() io.Writer
+	Stdin() *os.File
+	Stdout() *os.File
 	Prompts() (io.Reader, io.Writer, error)
 	IsStdinPiped() bool
 	IsStdoutPiped() bool
@@ -38,6 +40,14 @@ func newStdUserIO() standardIO {
 		input:  os.Stdin,
 		output: os.Stdout,
 	}
+}
+
+func (o standardIO) Stdin() *os.File {
+	return o.input
+}
+
+func (o standardIO) Stdout() *os.File {
+	return o.output
 }
 
 // Stdin returns the standardIO's Input.

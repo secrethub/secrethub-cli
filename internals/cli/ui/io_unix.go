@@ -48,6 +48,14 @@ func (o ttyIO) IsStdoutPiped() bool {
 	return isPiped(o.output)
 }
 
+func (o ttyIO) Stdin() *os.File {
+	return o.input
+}
+
+func (o ttyIO) Stdout() *os.File {
+	return o.output
+}
+
 // Stdin returns the standardIO's Input.
 func (o ttyIO) Input() io.Reader {
 	return o.input

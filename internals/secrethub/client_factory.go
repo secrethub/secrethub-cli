@@ -7,6 +7,8 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+
+	"github.com/secrethub/secrethub-cli/internals/agent/credential"
 )
 
 // Errors
@@ -49,6 +51,12 @@ func (f *clientFactory) NewClient() (secrethub.ClientInterface, error) {
 	if f.client == nil {
 		var credentialProvider credentials.Provider
 		switch strings.ToLower(f.identityProvider) {
+		case "agent":
+			configDir, err := configdir.Default()
+			if err != nil {
+				return nil, err
+			}
+			credentialProvider = credential.New(configDir.Path())
 		case "aws":
 			credentialProvider = credentials.UseAWS()
 		case "key":

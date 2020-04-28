@@ -187,5 +187,7 @@ func (app *App) registerCommands() {
 	NewClearClipboardCommand().Register(app.cli)
 	NewKeyringClearCommand().Register(app.cli)
 
+	NewAgentCommand(app.io, app.clientFactory.NewUnauthenticatedClient, app.credentialStore).Register(app.cli)
+
 	demo.NewCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 }

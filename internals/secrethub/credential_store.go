@@ -6,6 +6,7 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
+	"github.com/secrethub/secrethub-cli/internals/agent"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
 
@@ -38,6 +39,7 @@ type credentialConfig struct {
 	credentialPassphrase         string
 	CredentialPassphraseCacheTTL time.Duration
 	io                           ui.IO
+	useAgent                     bool
 }
 
 func (store *credentialConfig) ConfigDir() configdir.Dir {
@@ -55,12 +57,19 @@ func (store *credentialConfig) Register(r FlagRegisterer) {
 	r.Flag("p", "").Short('p').Hidden().NoEnvar().StringVar(&store.credentialPassphrase) // Shorthand -p is deprecated. Use --credential-passphrase instead.
 	r.Flag("credential-passphrase", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.").StringVar(&store.credentialPassphrase)
 	r.Flag("credential-passphrase-cache-ttl", "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.").Default("5m").DurationVar(&store.CredentialPassphraseCacheTTL)
+	r.Flag("use-agent", "Use SecretHub agent to maintain session").Hidden().BoolVar(&store.useAgent)
 }
 
 // Provider retrieves a credential from the store.
 // When a credential is set, that credential is returned,
 // otherwise the credential is read from the configured file.
 func (store *credentialConfig) Provider() credentials.Provider {
+	if store.useAgent {
+		prompter := func(question string) (string, error) {
+			return ui.AskSecret(store.io, question)
+		}
+		return agent.CredentialProvider(store.ConfigDir().Path(), Version, prompter)
+	}
 	return credentials.UseKey(store.getCredentialReader()).Passphrase(store.PassphraseReader())
 }
 

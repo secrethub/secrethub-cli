@@ -16,32 +16,38 @@ import (
 	"time"
 
 	"github.com/mitchellh/go-ps"
+
+	"github.com/secrethub/secrethub-cli/internals/agent/protocol"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 )
 
 type contextKey int
 
 const (
-	SocketName  = "agent.sock"
-	PIDFileName = "agent.pid"
-	ppidKey     = contextKey(1)
+	ppidKey = contextKey(1)
 )
 
 type Server struct {
 	dirPath string
+	version string
+	logger  cli.Logger
 }
 
-func New(configDir string) *Server {
+func New(configDir string, version string, logger cli.Logger) *Server {
 	return &Server{
 		dirPath: configDir,
+		version: version,
+		logger:  logger,
 	}
 }
 
 func (s *Server) Start() error {
-	isRunning, _, err := s.IsRunning()
+	isRunning, pid, err := s.IsRunning()
 	if err != nil {
 		return err
 	}
 	if isRunning {
+		s.logger.Debugf("agent already running with pid %d", pid)
 		return errors.New("already running")
 	}
 
@@ -54,7 +60,7 @@ func (s *Server) Start() error {
 	}
 
 	server := http.Server{
-		Handler: newController().handler(),
+		Handler: newController(s.version).handler(),
 		ConnContext: func(ctx context.Context, conn net.Conn) context.Context {
 			ppid, err := getConnPpid(conn)
 			if err != nil {
@@ -65,10 +71,11 @@ func (s *Server) Start() error {
 	}
 
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sig
 
+		s.logger.Debugf("stopping listener")
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		err := server.Shutdown(ctx)
 		cancel()
@@ -76,10 +83,14 @@ func (s *Server) Start() error {
 			fmt.Printf("Could not close server: %s\n", err)
 		}
 
+		s.logger.Debugf("deleting pid file")
+
 		err = s.deletePIDFile()
 		if err != nil {
 			fmt.Printf("Could not delete pid file: %s\n", err)
 		}
+
+		s.logger.Debugf("agent stopped")
 	}()
 
 	err = s.writePIDFile()
@@ -130,6 +141,10 @@ func (s *Server) Kill() error {
 		return err
 	}
 	if !running {
+		err := os.Remove(s.socketPath())
+		if err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("cannot remove socket file: %v", err)
+		}
 		err = s.deletePIDFile()
 		if err != nil {
 			return fmt.Errorf("cannot delete pid file: %v", err)
@@ -153,8 +168,9 @@ func (s *Server) Kill() error {
 }
 
 func (s *Server) waitForKilled() error {
+	s.logger.Debugf("waiting for agent to be stopped")
 	backoffTime := time.Millisecond
-	for backoffTime < 10*time.Second {
+	for {
 		isRunning, _, err := s.IsRunning()
 		if err != nil {
 			return err
@@ -163,6 +179,11 @@ func (s *Server) waitForKilled() error {
 			return nil
 		}
 
+		if backoffTime > 10*time.Second {
+			break
+		}
+		s.logger.Debugf("could not find agent, retrying in %s", backoffTime)
+
 		<-time.After(backoffTime)
 		backoffTime *= 2
 	}
@@ -170,11 +191,11 @@ func (s *Server) waitForKilled() error {
 }
 
 func (s *Server) socketPath() string {
-	return filepath.Join(s.dirPath, SocketName)
+	return filepath.Join(s.dirPath, protocol.SocketName)
 }
 
 func (s *Server) pidFilePath() string {
-	return filepath.Join(s.dirPath, PIDFileName)
+	return filepath.Join(s.dirPath, protocol.PIDFileName)
 }
 
 func (s *Server) writePIDFile() error {

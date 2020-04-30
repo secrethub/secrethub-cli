@@ -20,7 +20,7 @@ lint-tools:
 	@curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin ${GOLANGCI_VERSION}
 
 COMMIT=`git rev-parse --short HEAD`
-VERSION=`git describe --always`
+#VERSION=`git describe --always`
 BUILD_FLAGS=-ldflags "-s -w -X "github.com/secrethub/secrethub-cli/internals/secrethub.Commit=${COMMIT}" -X "github.com/secrethub/secrethub-cli/internals/secrethub.Version=${VERSION}"" -tags=production
 
 build:

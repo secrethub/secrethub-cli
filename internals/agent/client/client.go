@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -14,11 +13,16 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/agent"
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/secrethub/secrethub-cli/internals/agent/protocol"
+)
+
+var (
+	errAgentLocked     = errors.New("agent is locked")
+	errWrongPassphrase = errors.New("wrong passphrase")
 )
 
 type Client interface {
@@ -28,73 +32,86 @@ type Client interface {
 	Fingerprint(ctx context.Context) (string, error)
 }
 
+type Prompter func(string) (string, error)
+
 type client struct {
-	http *http.Client
+	prompter   func(string) (string, error)
+	http       *http.Client
+	cliVersion string
 }
 
-func New(configDir string) Client {
-	socketPath := filepath.Join(configDir, agent.SocketName)
+func New(configDir, version string, prompter Prompter) Client {
+	socketPath := filepath.Join(configDir, protocol.SocketName)
 	return &client{
 		http: &http.Client{
+
 			Transport: &http.Transport{
-				DialContext: func(context.Context, string, string) (net.Conn, error) {
-					return net.Dial("unix", socketPath)
+				DisableKeepAlives: true,
+				DialContext: func(ctx context.Context, _ string, _ string) (net.Conn, error) {
+					dialer := net.Dialer{}
+					return dialer.DialContext(ctx, "unix", socketPath)
 				},
 			},
-			Timeout: 1 * time.Minute,
+			Timeout: 10 * time.Second,
 		},
+		cliVersion: version,
+		prompter:   prompter,
 	}
 }
 
 func (c *client) checkForAgent(ctx context.Context) error {
-	if err := c.ping(ctx); err == nil {
+	if version, err := c.version(ctx); err == nil && version == c.cliVersion {
 		return nil
 	}
+	if err := c.stopAgent(); err != nil {
+		return fmt.Errorf("could not stop: %v", err)
+	}
 
-	if err := c.spawnAgent(); err != nil {
-		return fmt.Errorf("could not start agent: %v", err)
+	if err := c.startAgent(); err != nil {
+		return fmt.Errorf("could not start: %v", err)
 	}
 
 	if err := c.waitForAgent(ctx); err != nil {
-		return fmt.Errorf("could not start agent: %v", err)
+		return fmt.Errorf("could not reach agent: %v", err)
 	}
 	return nil
 }
 
-func (c *client) spawnAgent() error {
+func (c *client) stopAgent() error {
 	bin, err := os.Executable()
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(bin, "agent")
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
-	return cmd.Start()
 
+	args := []string{"agent", "--kill"}
+	cmd := exec.Command(bin, args...)
+	return cmd.Run()
 }
 
-func (c *client) ping(ctx context.Context) error {
-	pc := &http.Client{
-		Transport: c.http.Transport,
-		Timeout:   1 * time.Second,
-	}
-	req, err := http.NewRequest("GET", "http://unix/ping", nil)
+func (c *client) startAgent() error {
+	bin, err := os.Executable()
 	if err != nil {
 		return err
 	}
-	resp, err := pc.Do(req.WithContext(ctx))
+
+	args := []string{"agent", "--daemon"}
+	cmd := exec.Command(bin, args...)
+	return cmd.Run()
+}
+
+func (c *client) version(ctx context.Context) (string, error) {
+	var versionResp protocol.VersionResponse
+	err := c.do(ctx, "GET", "/version", nil, &versionResp)
 	if err != nil {
-		return err
+		return "", err
 	}
-	_ = resp.Body.Close()
-	return nil
+	return versionResp.Version, nil
 }
 
 func (c *client) waitForAgent(ctx context.Context) error {
 	backoffPeriod := time.Millisecond
 	for backoffPeriod < 10*time.Second {
-		err := c.ping(ctx)
+		_, err := c.version(ctx)
 		if err == nil {
 			return nil
 		}
@@ -108,15 +125,31 @@ func (c *client) waitForAgent(ctx context.Context) error {
 		}
 		backoffPeriod *= 2
 	}
-	return errors.New("could not reach agent")
+	return errors.New("timeout")
+}
+
+func (c *client) doWithCheck(ctx context.Context, method string, path string, in, out interface{}) error {
+	err := c.checkForAgent(ctx)
+	if err != nil {
+		return err
+	}
+	err = c.do(ctx, method, path, in, out)
+	if err == errAgentLocked {
+		err := c.unlock(ctx)
+		if err != nil {
+			return fmt.Errorf("unlock: %v", err)
+		}
+		err = c.do(ctx, method, path, in, out)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *client) do(ctx context.Context, method string, path string, in, out interface{}) error {
-	err := c.checkForAgent(ctx)
-	if err != nil {
-		return fmt.Errorf("cannot find agent: %v", err)
-	}
-
 	bodyJson, err := json.Marshal(in)
 	if err != nil {
 		return fmt.Errorf("encode body: %v", err)
@@ -132,16 +165,6 @@ func (c *client) do(ctx context.Context, method string, path string, in, out int
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode == http.StatusUnauthorized {
-		err = c.unlock(ctx)
-		if err != nil {
-			return err
-		}
-		resp, err = c.http.Do(req.WithContext(ctx))
-		if err != nil {
-			return err
-		}
-	}
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -150,8 +173,12 @@ func (c *client) do(ctx context.Context, method string, path string, in, out int
 
 	switch resp.StatusCode {
 	case http.StatusOK:
+	case http.StatusUnauthorized:
+		return errAgentLocked
+	case http.StatusForbidden:
+		return errWrongPassphrase
 	default:
-		var errResp agent.ErrorResponse
+		var errResp protocol.ErrorResponse
 		err = json.Unmarshal(respBody, &errResp)
 		if err != nil {
 			return fmt.Errorf("unpack response (error %s): %v", resp.Status, err)
@@ -167,25 +194,30 @@ func (c *client) do(ctx context.Context, method string, path string, in, out int
 }
 
 func (c *client) unlock(ctx context.Context) error {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter passphrase: ")
-	passphrase, _ := reader.ReadString('\n')
+	for i := 0; i < 3; i++ {
+		passphrase, err := c.prompter("Enter passphrase: ")
+		if err != nil {
+			return fmt.Errorf("prompt password: %v", err)
+		}
 
-	var resp string
+		var resp string
 
-	err := c.do(ctx, "POST", "/unlock", agent.UnlockRequest{
-		Passphrase: strings.TrimSuffix(passphrase, "\n"),
-	}, &resp)
-
-	if err != nil {
-		return err
+		err = c.do(ctx, "POST", "/unlock", protocol.UnlockRequest{
+			Passphrase: strings.TrimSuffix(passphrase, "\n"),
+		}, &resp)
+		if err == errWrongPassphrase {
+			continue
+		} else if err != nil {
+			return err
+		}
+		return nil
 	}
-	return nil
+	return errWrongPassphrase
 }
 
 func (c *client) Sign(ctx context.Context, payload []byte) ([]byte, error) {
-	var resp agent.SignResponse
-	err := c.do(ctx, "POST", "/sign", agent.SignRequest{
+	var resp protocol.SignResponse
+	err := c.doWithCheck(ctx, "POST", "/sign", protocol.SignRequest{
 		Payload: payload,
 	}, &resp)
 	if err != nil {
@@ -195,8 +227,8 @@ func (c *client) Sign(ctx context.Context, payload []byte) ([]byte, error) {
 }
 
 func (c *client) Decrypt(ctx context.Context, payload api.EncryptedData) ([]byte, error) {
-	var resp agent.DecryptResponse
-	err := c.do(ctx, "POST", "/decrypt", agent.DecryptRequest{
+	var resp protocol.DecryptResponse
+	err := c.doWithCheck(ctx, "POST", "/decrypt", protocol.DecryptRequest{
 		EncryptedData: payload,
 	}, &resp)
 	if err != nil {
@@ -207,7 +239,7 @@ func (c *client) Decrypt(ctx context.Context, payload api.EncryptedData) ([]byte
 
 func (c *client) Lock(ctx context.Context) error {
 	var resp string
-	err := c.do(ctx, "POST", "/lock", nil, &resp)
+	err := c.doWithCheck(ctx, "POST", "/lock", nil, &resp)
 	if err != nil {
 		return err
 	}
@@ -215,8 +247,8 @@ func (c *client) Lock(ctx context.Context) error {
 }
 
 func (c *client) Fingerprint(ctx context.Context) (string, error) {
-	var resp agent.FingerprintResponse
-	err := c.do(ctx, "GET", "/fingerprint", nil, &resp)
+	var resp protocol.FingerprintResponse
+	err := c.doWithCheck(ctx, "GET", "/fingerprint", nil, &resp)
 	if err != nil {
 		return "", err
 	}

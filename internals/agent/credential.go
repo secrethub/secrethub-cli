@@ -1,7 +1,8 @@
-package credential
+package agent
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/auth"
@@ -16,11 +17,19 @@ type credential struct {
 }
 
 func (c credential) ID() (string, error) {
-	return c.agentClient.Fingerprint(context.Background())
+	id, err := c.agentClient.Fingerprint(context.Background())
+	if err != nil {
+		return "", fmt.Errorf("agent: %v", err)
+	}
+	return id, nil
 }
 
 func (c credential) Sign(bytes []byte) ([]byte, error) {
-	return c.agentClient.Sign(context.Background(), bytes)
+	signature, err := c.agentClient.Sign(context.Background(), bytes)
+	if err != nil {
+		return nil, fmt.Errorf("agent: %v", err)
+	}
+	return signature, nil
 }
 
 func (c credential) SignMethod() string {
@@ -28,7 +37,11 @@ func (c credential) SignMethod() string {
 }
 
 func (c credential) Unwrap(ciphertext *api.EncryptedData) ([]byte, error) {
-	return c.agentClient.Decrypt(context.Background(), *ciphertext)
+	decrypted, err := c.agentClient.Decrypt(context.Background(), *ciphertext)
+	if err != nil {
+		return nil, fmt.Errorf("agent: %v", err)
+	}
+	return decrypted, nil
 }
 
 type Provider credential
@@ -37,8 +50,8 @@ func (p Provider) Provide(_ *http.Client) (auth.Authenticator, credentials.Decry
 	return auth.NewHTTPSigner(credential(p)), credential(p), nil
 }
 
-func New(configDir string) Provider {
+func CredentialProvider(configDir, version string, prompter client.Prompter) Provider {
 	return Provider(credential{
-		agentClient: client.New(configDir),
+		agentClient: client.New(configDir, version, prompter),
 	})
 }

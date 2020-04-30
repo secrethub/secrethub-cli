@@ -7,15 +7,19 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
+
+	"github.com/secrethub/secrethub-cli/internals/agent/protocol"
 )
 
 type controller struct {
-	sm *sessionManager
+	sm      *sessionManager
+	version string
 }
 
-func newController() *controller {
+func newController(version string) *controller {
 	return &controller{
-		sm: newSessionManager(),
+		sm:      newSessionManager(),
+		version: version,
 	}
 }
 
@@ -23,6 +27,7 @@ func (c *controller) handler() http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/ping", c.Ping)
+	r.Get("/version", c.Version)
 	r.Post("/unlock", c.Unlock)
 
 	r.Group(func(r chi.Router) {
@@ -38,7 +43,7 @@ func (c *controller) handler() http.Handler {
 }
 
 func (c *controller) Unlock(w http.ResponseWriter, r *http.Request) {
-	var unlockReq UnlockRequest
+	var unlockReq protocol.UnlockRequest
 	err := json.NewDecoder(r.Body).Decode(&unlockReq)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err)
@@ -69,6 +74,13 @@ func (c *controller) Ping(_ http.ResponseWriter, _ *http.Request) {
 	return
 }
 
+func (c *controller) Version(w http.ResponseWriter, _ *http.Request) {
+	respondJSON(w, http.StatusOK, protocol.VersionResponse{
+		Version: c.version,
+	})
+	return
+}
+
 func (c *controller) Lock(w http.ResponseWriter, r *http.Request) {
 	c.withSession(w, r, func(w http.ResponseWriter, r *http.Request, sess *session) {
 		sess.credential = nil
@@ -83,7 +95,7 @@ func (c *controller) Fingerprint(w http.ResponseWriter, r *http.Request) {
 			respondError(w, http.StatusInternalServerError, err)
 			return
 		}
-		respondJSON(w, http.StatusOK, FingerprintResponse{
+		respondJSON(w, http.StatusOK, protocol.FingerprintResponse{
 			Fingerprint: fingerprint,
 		})
 	})
@@ -91,7 +103,7 @@ func (c *controller) Fingerprint(w http.ResponseWriter, r *http.Request) {
 
 func (c *controller) Sign(w http.ResponseWriter, r *http.Request) {
 	c.withSession(w, r, func(w http.ResponseWriter, r *http.Request, sess *session) {
-		var signReq SignRequest
+		var signReq protocol.SignRequest
 		err := json.NewDecoder(r.Body).Decode(&signReq)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, err)
@@ -102,7 +114,7 @@ func (c *controller) Sign(w http.ResponseWriter, r *http.Request) {
 			respondError(w, http.StatusInternalServerError, err)
 			return
 		}
-		respondJSON(w, http.StatusOK, SignResponse{
+		respondJSON(w, http.StatusOK, protocol.SignResponse{
 			Signature: signature,
 		})
 	})
@@ -110,7 +122,7 @@ func (c *controller) Sign(w http.ResponseWriter, r *http.Request) {
 
 func (c *controller) Decrypt(w http.ResponseWriter, r *http.Request) {
 	c.withSession(w, r, func(w http.ResponseWriter, r *http.Request, sess *session) {
-		var signReq DecryptRequest
+		var signReq protocol.DecryptRequest
 		err := json.NewDecoder(r.Body).Decode(&signReq)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, err)
@@ -121,7 +133,7 @@ func (c *controller) Decrypt(w http.ResponseWriter, r *http.Request) {
 			respondError(w, http.StatusInternalServerError, err)
 			return
 		}
-		respondJSON(w, http.StatusOK, DecryptResponse{
+		respondJSON(w, http.StatusOK, protocol.DecryptResponse{
 			Decrypted: decrypted,
 		})
 	})
@@ -148,7 +160,7 @@ func respondJSON(w http.ResponseWriter, code int, data interface{}) {
 	w.Header().Set("Content-Type", "text/javascript")
 	js, err := json.Marshal(data)
 	if err != nil {
-		//BadRequestError(w, fmt.Sprintf("JSON serialization error: %v", err))
+		respondError(w, http.StatusInternalServerError, err)
 		return
 	}
 	w.Header().Set("Content-Length", strconv.Itoa(len(js)+1))
@@ -158,7 +170,7 @@ func respondJSON(w http.ResponseWriter, code int, data interface{}) {
 }
 
 func respondError(w http.ResponseWriter, code int, err error) {
-	respondJSON(w, code, ErrorResponse{
+	respondJSON(w, code, protocol.ErrorResponse{
 		Error: err.Error(),
 	})
 }

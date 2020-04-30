@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/secrethub/secrethub-cli/internals/agent"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
@@ -14,8 +15,8 @@ import (
 // AccountCommand handles operations on SecretHub accounts.
 type AgentCommand struct {
 	io              ui.IO
-	newClient       newClientFunc
 	credentialStore CredentialConfig
+	logger          cli.Logger
 
 	kill    bool
 	restart bool
@@ -23,17 +24,17 @@ type AgentCommand struct {
 }
 
 // NewAccountCommand creates a new AccountCommand.
-func NewAgentCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *AgentCommand {
+func NewAgentCommand(io ui.IO, credentialStore CredentialConfig, logger cli.Logger) *AgentCommand {
 	return &AgentCommand{
 		io:              io,
-		newClient:       newClient,
 		credentialStore: credentialStore,
+		logger:          logger,
 	}
 }
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *AgentCommand) Register(r command.Registerer) {
-	clause := r.Command("agent", "Manage your personal account.")
+	clause := r.Command("agent", "Manage your personal account.").Hidden()
 
 	clause.Flag("kill", "Kill a running agent").BoolVar(&cmd.kill)
 	clause.Flag("restart", "Restart currently running agent").BoolVar(&cmd.restart)
@@ -74,5 +75,5 @@ func (cmd *AgentCommand) Run() error {
 }
 
 func (cmd *AgentCommand) agent() *agent.Server {
-	return agent.New(cmd.credentialStore.ConfigDir().Path())
+	return agent.New(cmd.credentialStore.ConfigDir().Path(), Version, cmd.logger)
 }

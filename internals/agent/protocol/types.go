@@ -1,6 +1,15 @@
-package agent
+package protocol
 
 import "github.com/secrethub/secrethub-go/internals/api"
+
+const (
+	SocketName  = "agent.sock"
+	PIDFileName = "agent.pid"
+)
+
+type VersionResponse struct {
+	Version string `json:"version"`
+}
 
 type ErrorResponse struct {
 	Error string `json:"error"`
@@ -8,7 +17,6 @@ type ErrorResponse struct {
 
 type UnlockRequest struct {
 	Passphrase string `json:"passphrase"`
-	//TTL        time.Duration `json:"ttl,omitempty"`
 }
 
 type SignRequest struct {

@@ -62,14 +62,14 @@ func AskSecret(io IO, question string) (string, error) {
 		return "", err
 	}
 
-	secret, err := readPassword(promptIn)
+	raw, err := promptIn.ReadPassword()
 	if err != nil {
 		return "", ErrReadInput(err)
 	}
 
 	fmt.Fprintln(promptOut, "")
 
-	return secret, nil
+	return string(raw), nil
 }
 
 // AskMultiline prints out the question and reads back the input until an EOF is reached.

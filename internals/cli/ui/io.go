@@ -61,10 +61,8 @@ func (o standardIO) Output() io.Writer {
 }
 
 // Prompts simply returns Stdin and Stdout, when both input and output are
-// not piped. When either input or output is piped, Prompts attempts to
-// bypass stdin and stdout by connecting to /dev/tty on Unix systems when
-// available. On systems where tty is not available and when either input
-// or output is piped, prompting is not possible so an error is returned.
+// not piped. When either input or output is piped, it returns an error because standardIO does not have
+// access to a tty for prompting.
 func (o standardIO) Prompts() (io.Reader, io.Writer, error) {
 	if o.IsOutputPiped() || o.IsInputPiped() {
 		return nil, nil, ErrCannotAsk

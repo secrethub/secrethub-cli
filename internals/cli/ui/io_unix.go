@@ -34,17 +34,17 @@ func NewUserIO() IO {
 // available. On systems where tty is not available and when either input
 // or output is piped, prompting is not possible so an error is returned.
 func (o ttyIO) Prompts() (io.Reader, io.Writer, error) {
-	if o.IsStdoutPiped() || o.IsStdinPiped() {
+	if o.IsOutputPiped() || o.IsInputPiped() {
 		return o.tty, o.tty, nil
 	}
 	return o.input, o.output, nil
 }
 
-func (o ttyIO) IsStdinPiped() bool {
+func (o ttyIO) IsInputPiped() bool {
 	return isPiped(o.input)
 }
 
-func (o ttyIO) IsStdoutPiped() bool {
+func (o ttyIO) IsOutputPiped() bool {
 	return isPiped(o.output)
 }
 

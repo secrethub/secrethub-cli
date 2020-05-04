@@ -23,8 +23,8 @@ type IO interface {
 	Stdin() *os.File
 	Stdout() *os.File
 	Prompts() (io.Reader, io.Writer, error)
-	IsStdinPiped() bool
-	IsStdoutPiped() bool
+	IsInputPiped() bool
+	IsOutputPiped() bool
 }
 
 // standardIO is a middleware between input and output to the CLI program.
@@ -66,17 +66,17 @@ func (o standardIO) Output() io.Writer {
 // available. On systems where tty is not available and when either input
 // or output is piped, prompting is not possible so an error is returned.
 func (o standardIO) Prompts() (io.Reader, io.Writer, error) {
-	if o.IsStdoutPiped() || o.IsStdinPiped() {
+	if o.IsOutputPiped() || o.IsInputPiped() {
 		return nil, nil, ErrCannotAsk
 	}
 	return o.input, o.output, nil
 }
 
-func (o standardIO) IsStdinPiped() bool {
+func (o standardIO) IsInputPiped() bool {
 	return isPiped(o.input)
 }
 
-func (o standardIO) IsStdoutPiped() bool {
+func (o standardIO) IsOutputPiped() bool {
 	return isPiped(o.output)
 }
 

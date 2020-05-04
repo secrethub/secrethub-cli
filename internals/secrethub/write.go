@@ -84,7 +84,7 @@ func (cmd *WriteCommand) Run() error {
 		if err != nil {
 			return ErrReadFile(cmd.inFile, err)
 		}
-	} else if cmd.io.IsStdinPiped() {
+	} else if cmd.io.IsInputPiped() {
 		data, err = ioutil.ReadAll(cmd.io.Input())
 		if err != nil {
 			return ui.ErrReadInput(err)

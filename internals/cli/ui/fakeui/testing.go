@@ -61,11 +61,11 @@ func (f *FakeIO) Prompts() (io.Reader, io.Writer, error) {
 	return f.PromptIn, f.PromptOut, f.PromptErr
 }
 
-func (f *FakeIO) IsStdinPiped() bool {
+func (f *FakeIO) IsInputPiped() bool {
 	return f.In.Piped
 }
 
-func (f *FakeIO) IsStdoutPiped() bool {
+func (f *FakeIO) IsOutputPiped() bool {
 	return f.Out.Piped
 }
 

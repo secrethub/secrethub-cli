@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -27,10 +27,11 @@ type FakeIO struct {
 
 // NewIO creates a new FakeIO with empty buffers.
 func NewIO(t *testing.T) *FakeIO {
-	tempDir := os.TempDir()
-	stdIn, err := os.Create(filepath.Join(tempDir, "in"))
+	tempDir, err := ioutil.TempDir("", "")
 	assert.OK(t, err)
-	stdOut, err := os.Create(filepath.Join(tempDir, "out"))
+	stdIn, err := ioutil.TempFile(tempDir, "in")
+	assert.OK(t, err)
+	stdOut, err := ioutil.TempFile(tempDir, "out")
 	assert.OK(t, err)
 
 	t.Cleanup(func() {

@@ -144,7 +144,7 @@ func TestOrgLsCommand_run(t *testing.T) {
 				}, tc.newClientErr
 			}
 
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			tc.cmd.io = io
 
 			// Run

@@ -5,8 +5,13 @@ package fakeui
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 // FakeIO is a helper type for testing that implements the ui.IO interface
@@ -21,7 +26,20 @@ type FakeIO struct {
 }
 
 // NewIO creates a new FakeIO with empty buffers.
-func NewIO() *FakeIO {
+func NewIO(t *testing.T) *FakeIO {
+	tempDir := os.TempDir()
+	stdIn, err := os.Create(filepath.Join(tempDir, "in"))
+	assert.OK(t, err)
+	stdOut, err := os.Create(filepath.Join(tempDir, "out"))
+	assert.OK(t, err)
+
+	t.Cleanup(func() {
+		err := os.RemoveAll(tempDir)
+		if err != nil {
+			fmt.Printf("could not remove temp dir: %s", err)
+		}
+	})
+
 	return &FakeIO{
 		In: &FakeReader{
 			Buffer: &bytes.Buffer{},
@@ -29,6 +47,8 @@ func NewIO() *FakeIO {
 		Out: &FakeWriter{
 			Buffer: &bytes.Buffer{},
 		},
+		StdIn:  stdIn,
+		StdOut: stdOut,
 		PromptIn: &FakeReader{
 			Buffer: &bytes.Buffer{},
 		},

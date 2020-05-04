@@ -217,7 +217,7 @@ func TestWriteCommand_Run(t *testing.T) {
 				}, nil
 			}
 
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.In.ReadErr = tc.readErr
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 			io.PromptErr = tc.promptErr

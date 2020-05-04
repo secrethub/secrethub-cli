@@ -99,7 +99,7 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 				}
 			}
 
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			tc.cmd.io = io
 
 			// Run

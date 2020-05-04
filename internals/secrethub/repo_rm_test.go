@@ -134,7 +134,7 @@ func TestRepoRmCommand_Run(t *testing.T) {
 				}
 			}
 
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 			io.PromptIn.ReadErr = tc.promptReadErr
 			io.PromptErr = tc.promptErr

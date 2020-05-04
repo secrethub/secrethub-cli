@@ -111,7 +111,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 				}, tc.newClientErr
 			}
 
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.in)
 			tc.cmd.io = io
 

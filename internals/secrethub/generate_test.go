@@ -184,7 +184,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				}, tc.clientCreationErr
 			}
 
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			tc.cmd.io = io
 
 			// Act

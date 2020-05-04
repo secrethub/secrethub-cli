@@ -35,7 +35,7 @@ func TestAskWithDefault(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Reads = tc.in
 
 			// Run
@@ -96,7 +96,7 @@ func TestConfirmCaseInsensitive(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 
 			// Run
@@ -241,7 +241,7 @@ func TestAskYesNo(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Reads = tc.in
 
 			// Run
@@ -321,7 +321,7 @@ func TestChoose(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Reads = tc.in
 
 			// Run
@@ -417,7 +417,7 @@ func TestChooseDynamicOptions(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Reads = tc.in
 
 			if tc.getOptions == nil {

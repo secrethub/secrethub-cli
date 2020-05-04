@@ -72,7 +72,7 @@ func TestRepoInitCommand_Run(t *testing.T) {
 				}
 			}
 
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			cmd.io = io
 
 			// Run

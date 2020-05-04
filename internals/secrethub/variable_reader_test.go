@@ -156,7 +156,7 @@ func TestPromptVariableReader(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Reads = tc.promptIn
 
 			reader := newPromptMissingVariableReader(reader, io)

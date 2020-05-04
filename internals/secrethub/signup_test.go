@@ -26,7 +26,7 @@ func TestSignUpCommand_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			tc.cmd.io = io
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 

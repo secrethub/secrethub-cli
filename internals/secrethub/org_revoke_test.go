@@ -130,7 +130,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 				}, tc.newClientErr
 			}
 
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 			tc.cmd.io = io
 

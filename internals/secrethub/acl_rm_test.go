@@ -86,7 +86,7 @@ func TestACLRmCommand_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.in)
 			io.PromptErr = tc.promptErr
 			tc.cmd.io = io

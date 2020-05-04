@@ -1,6 +1,6 @@
 module github.com/secrethub/secrethub-cli
 
-go 1.13
+go 1.14
 
 require (
 	bitbucket.org/zombiezen/cardcpx v0.0.0-20150417151802-902f68ff43ef

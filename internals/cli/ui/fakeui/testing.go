@@ -77,6 +77,10 @@ func (f *FakeIO) Stdout() *os.File {
 	return f.StdOut
 }
 
+func (f *FakeIO) ReadStdout() ([]byte, error) {
+	return ioutil.ReadFile(f.StdOut.Name())
+}
+
 // Prompts returns the mocked prompts and error.
 func (f *FakeIO) Prompts() (io.Reader, io.Writer, error) {
 	return f.PromptIn, f.PromptOut, f.PromptErr

@@ -1086,7 +1086,10 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 
 			err := tc.command.Run()
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, fakeIO.Out.String(), tc.expectedStdOut)
+
+			stdout, err := fakeIO.ReadStdout()
+			assert.OK(t, err)
+			assert.Equal(t, string(stdout), tc.expectedStdOut)
 		})
 	}
 }

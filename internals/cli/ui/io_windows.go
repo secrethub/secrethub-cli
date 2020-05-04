@@ -12,19 +12,21 @@ import (
 // windowsIO is the Windows-specific implementation of the IO interface.
 type windowsIO struct {
 	standardIO
+	coloredOutput io.Writer
 }
 
 // NewUserIO creates a new windowsIO.
 func NewUserIO() IO {
 	return windowsIO{
-		standardIO: newStdUserIO(),
+		standardIO:    newStdUserIO(),
+		coloredOutput: colorable.NewColorable(os.Stdout),
 	}
 }
 
 // Stdout returns the standardIO's Output.
 func (o windowsIO) Output() io.Writer {
 	if !color.NoColor {
-		return colorable.NewColorable(os.Stdout)
+		return o.coloredOutput
 	}
 	return o.output
 }

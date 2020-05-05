@@ -87,8 +87,8 @@ func (cmd *RmCommand) Run() error {
 
 	// Check if the secret exists first so we can return a generic error here instead of ErrSecretNotFound.
 	_, err = client.Secrets().Get(secretPath.Value())
-	if err != nil {
-		return err
+	if api.IsErrNotFound(err) {
+		return ErrResourceNotFound(cmd.path)
 	}
 
 	return rmSecret(client, secretPath, cmd.force, cmd.io)

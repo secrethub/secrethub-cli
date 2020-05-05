@@ -29,7 +29,7 @@ type pager struct {
 func NewWithFallback(outputWriter io.Writer) (io.WriteCloser, error) {
 	pager, err := New(outputWriter)
 	if err == ErrPagerNotFound {
-		return NewFallbackPager(outputWriter), nil
+		return newFallbackPager(outputWriter), nil
 	} else if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func pagerCommand() (string, error) {
 
 // newFallbackPaginatedWriter returns a pager that closes after outputting a fixed number of lines without pagination
 // and returns errPagerNotFound on the last (or any subsequent) write.
-func NewFallbackPager(w io.Writer) io.WriteCloser {
+func newFallbackPager(w io.Writer) io.WriteCloser {
 	return &fallbackPager{
 		linesLeft: fallbackPagerLineCount,
 		writer:    w,

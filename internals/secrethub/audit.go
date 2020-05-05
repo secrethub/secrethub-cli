@@ -76,7 +76,11 @@ func (cmd *AuditCommand) Run() error {
 
 // beforeRun configures the command using the flag values.
 func (cmd *AuditCommand) beforeRun() {
-	cmd.timeFormatter = NewTimeFormatter(cmd.useTimestamps)
+	if cmd.format == formatJSON {
+		cmd.timeFormatter = NewTimeFormatter(true)
+	} else {
+		cmd.timeFormatter = NewTimeFormatter(cmd.useTimestamps)
+	}
 }
 
 // Run prints all audit events for the given repository or secret.

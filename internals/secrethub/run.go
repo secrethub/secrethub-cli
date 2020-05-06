@@ -72,8 +72,8 @@ func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 func (cmd *RunCommand) Register(r command.Registerer) {
 	const helpShort = "Pass secrets as environment variables to a process."
 	const helpLong = "To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are automatically masked by replacing them with \"" + maskString + "\". " +
-		"The output is buffered to detect secrets, but to avoid blocking the buffering is limited to a maximum duration as defined by the --masking-timeout flag. " +
-		"Therefore, you should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
+		"The output is buffered to scan for secrets and can be adjusted using the masking-buffer-period flag. " +
+		"You should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
 
 	clause := r.Command("run", helpShort)
 	clause.HelpLong(helpLong)

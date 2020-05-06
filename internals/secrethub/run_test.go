@@ -497,8 +497,8 @@ func TestRunCommand_Run(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -522,8 +522,8 @@ func TestRunCommand_Run(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -547,8 +547,8 @@ func TestRunCommand_Run(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrRepoNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrRepoNotFound("unexisting/repo")
 								},
 							},
 						},
@@ -596,8 +596,8 @@ func TestRunCommand_Run(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -619,8 +619,8 @@ func TestRunCommand_Run(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -728,8 +728,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -753,8 +753,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return &api.SecretVersion{Data: []byte("bbb")}, nil
 								},
 							},
 						},
@@ -778,8 +778,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return &api.SecretVersion{Data: []byte("bbb")}, nil
 								},
 							},
 						},
@@ -815,8 +815,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									ReturnsVersion: &api.SecretVersion{Data: []byte("aaa")},
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return &api.SecretVersion{Data: []byte("aaa")}, nil
 								},
 							},
 						},
@@ -842,8 +842,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -867,8 +867,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -891,8 +891,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -915,8 +915,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -941,8 +941,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									Err: api.ErrSecretNotFound,
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return nil, api.ErrSecretNotFound
 								},
 							},
 						},
@@ -963,8 +963,8 @@ func TestRunCommand_environment(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return &api.SecretVersion{Data: []byte("bbb")}, nil
 								},
 							},
 						},
@@ -1030,8 +1030,8 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return &api.SecretVersion{Data: []byte("bbb")}, nil
 								},
 							},
 						},
@@ -1057,8 +1057,8 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
-								WithDataGetter: fakeclient.WithDataGetter{
-									ReturnsVersion: &api.SecretVersion{Data: []byte("bbb")},
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return &api.SecretVersion{Data: []byte("bbb")}, nil
 								},
 							},
 						},

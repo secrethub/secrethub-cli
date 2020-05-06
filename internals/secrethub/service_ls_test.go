@@ -26,8 +26,8 @@ func TestServiceLsCommand_Run(t *testing.T) {
 				newServiceTable: newKeyServiceTable,
 			},
 			serviceService: fakeclient.ServiceService{
-				Lister: fakeclient.RepoServiceLister{
-					ReturnsServices: []*api.Service{
+				ListFunc: func(path string) ([]*api.Service, error) {
+					return []*api.Service{
 						{
 							ServiceID:   "test",
 							Description: "foobar",
@@ -44,7 +44,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							},
 							CreatedAt: time.Now().Add(-2 * time.Hour),
 						},
-					},
+					}, nil
 				},
 			},
 			out: "ID      DESCRIPTION  TYPE  CREATED\ntest    foobar       key   About an hour ago\nsecond  foobarbaz    key   2 hours ago\n",
@@ -54,8 +54,8 @@ func TestServiceLsCommand_Run(t *testing.T) {
 				quiet: true,
 			},
 			serviceService: fakeclient.ServiceService{
-				Lister: fakeclient.RepoServiceLister{
-					ReturnsServices: []*api.Service{
+				ListFunc: func(path string) ([]*api.Service, error) {
+					return []*api.Service{
 						{
 							ServiceID:   "test",
 							Description: "foobar",
@@ -64,7 +64,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							ServiceID:   "second",
 							Description: "foobarbaz",
 						},
-					},
+					}, nil
 				},
 			},
 			out: "test\nsecond\n",
@@ -74,8 +74,8 @@ func TestServiceLsCommand_Run(t *testing.T) {
 				newServiceTable: newAWSServiceTable,
 			},
 			serviceService: fakeclient.ServiceService{
-				Lister: fakeclient.RepoServiceLister{
-					ReturnsServices: []*api.Service{
+				ListFunc: func(path string) ([]*api.Service, error) {
+					return []*api.Service{
 						{
 							ServiceID:   "test",
 							Description: "foobar",
@@ -88,7 +88,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							},
 							CreatedAt: time.Now().Add(-1 * time.Hour),
 						},
-					},
+					}, nil
 				},
 			},
 			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY                               CREATED\ntest  foobar       arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012  About an hour ago\n",
@@ -101,8 +101,8 @@ func TestServiceLsCommand_Run(t *testing.T) {
 				},
 			},
 			serviceService: fakeclient.ServiceService{
-				Lister: fakeclient.RepoServiceLister{
-					ReturnsServices: []*api.Service{
+				ListFunc: func(path string) ([]*api.Service, error) {
+					return []*api.Service{
 						{
 							ServiceID:   "test",
 							Description: "foobar",
@@ -123,7 +123,7 @@ func TestServiceLsCommand_Run(t *testing.T) {
 							},
 							CreatedAt: time.Now().Add(-1 * time.Hour),
 						},
-					},
+					}, nil
 				},
 			},
 			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY                                                                CREATED\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012  About an hour ago\n",
@@ -134,8 +134,8 @@ func TestServiceLsCommand_Run(t *testing.T) {
 		},
 		"client list error": {
 			serviceService: fakeclient.ServiceService{
-				Lister: fakeclient.RepoServiceLister{
-					Err: errors.New("error"),
+				ListFunc: func(path string) ([]*api.Service, error) {
+					return nil, errors.New("error")
 				},
 			},
 			err: errors.New("error"),

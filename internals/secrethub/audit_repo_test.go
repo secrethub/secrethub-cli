@@ -26,7 +26,11 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return &fakeclient.Client{
-						DirService: &fakeclient.DirService{},
+						DirService: &fakeclient.DirService{
+							GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+								return nil, nil
+							},
+						},
 						RepoService: &fakeclient.RepoService{
 							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Events: []api.Audit{},
@@ -43,7 +47,11 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
-						DirService: &fakeclient.DirService{},
+						DirService: &fakeclient.DirService{
+							GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+								return nil, nil
+							},
+						},
 						RepoService: &fakeclient.RepoService{
 							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Events: []api.Audit{
@@ -98,7 +106,9 @@ func TestAuditRepoCommand_run(t *testing.T) {
 							},
 						},
 						DirService: &fakeclient.DirService{
-							TreeGetter: fakeclient.TreeGetter{},
+							GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+								return nil, nil
+							},
 						},
 					}, nil
 				},
@@ -112,12 +122,14 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						DirService: &fakeclient.DirService{
-							TreeGetter: fakeclient.TreeGetter{
-								Err: testError,
+							GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+								return nil, testError
 							},
 						},
 						RepoService: &fakeclient.RepoService{
-							EventLister: fakeclient.RepoEventLister{},
+							ListEventsFunc: func(path string, subjectTypes api.AuditSubjectTypeList) ([]*api.Audit, error) {
+								return nil, nil
+							},
 						},
 					}, nil
 				},
@@ -130,7 +142,11 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
-						DirService: &fakeclient.DirService{},
+						DirService: &fakeclient.DirService{
+							GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+								return nil, nil
+							},
+						},
 						RepoService: &fakeclient.RepoService{
 							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Events: []api.Audit{
@@ -157,7 +173,11 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				path: "namespace/repo",
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
-						DirService: &fakeclient.DirService{},
+						DirService: &fakeclient.DirService{
+							GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+								return nil, nil
+							},
+						},
 						RepoService: &fakeclient.RepoService{
 							AuditEventIterator: &fakeclient.AuditEventIterator{
 								Events: []api.Audit{

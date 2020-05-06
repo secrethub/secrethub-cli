@@ -7,16 +7,16 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/masker"
+	"github.com/secrethub/secrethub-go/internals/errio"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-	"github.com/secrethub/secrethub-go/internals/errio"
 )
 
 // Errors
@@ -53,7 +53,7 @@ type RunCommand struct {
 	command              []string
 	environment          *environment
 	noMasking            bool
-	maskingTimeout       time.Duration
+	maskerOptions        masker.Options
 	newClient            newClientFunc
 	ignoreMissingSecrets bool
 }
@@ -72,15 +72,16 @@ func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 func (cmd *RunCommand) Register(r command.Registerer) {
 	const helpShort = "Pass secrets as environment variables to a process."
 	const helpLong = "To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are automatically masked by replacing them with \"" + maskString + "\". " +
-		"The output is buffered to detect secrets, but to avoid blocking the buffering is limited to a maximum duration as defined by the --masking-timeout flag. " +
-		"Therefore, you should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
+		"The output is buffered to scan for secrets and can be adjusted using the masking-buffer-period flag. " +
+		"You should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
 
 	clause := r.Command("run", helpShort)
 	clause.HelpLong(helpLong)
 	clause.Alias("exec")
 	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
-	clause.Flag("masking-timeout", "The maximum time output is buffered. Warning: lowering this value increases the chance of secrets not being masked.").Default("1s").DurationVar(&cmd.maskingTimeout)
+	clause.Flag("no-output-buffering", "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.").BoolVar(&cmd.maskerOptions.DisableBuffer)
+	clause.Flag("masking-buffer-period", "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.").Default("50ms").DurationVar(&cmd.maskerOptions.BufferDelay)
 	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
 	cmd.environment.register(clause)
 	command.BindAction(clause, cmd.Run)
@@ -99,15 +100,13 @@ func (cmd *RunCommand) Run() error {
 		cmd.command = strings.Split(cmd.command[0], " ")
 	}
 
-	valuesToMask := make([][]byte, 0, len(secrets))
+	sequences := make([][]byte, 0, len(secrets))
 	for _, val := range secrets {
 		if val != "" {
-			valuesToMask = append(valuesToMask, []byte(val))
+			sequences = append(sequences, []byte(val))
 		}
 	}
-
-	maskedStdout := masker.NewMaskedWriter(cmd.io.Stdout(), valuesToMask, maskString, cmd.maskingTimeout)
-	maskedStderr := masker.NewMaskedWriter(os.Stderr, valuesToMask, maskString, cmd.maskingTimeout)
+	m := masker.New(sequences, &cmd.maskerOptions)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)
 	command.Env = environment
@@ -116,11 +115,10 @@ func (cmd *RunCommand) Run() error {
 		command.Stdout = cmd.io.Stdout()
 		command.Stderr = os.Stderr
 	} else {
-		command.Stdout = maskedStdout
-		command.Stderr = maskedStderr
+		command.Stdout = m.AddStream(cmd.io.Stdout())
+		command.Stderr = m.AddStream(os.Stderr)
 
-		go maskedStdout.Run()
-		go maskedStderr.Run()
+		go m.Start()
 	}
 
 	err = command.Start()
@@ -151,13 +149,9 @@ func (cmd *RunCommand) Run() error {
 	done <- true
 
 	if !cmd.noMasking {
-		err = maskedStdout.Flush()
+		err := m.Stop()
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
-		err = maskedStderr.Flush()
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			return err
 		}
 	}
 

@@ -179,7 +179,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 	deployer := newWindowsDeployer(client, destinationPath)
 
-	if !cmd.io.IsStdinPiped() {
+	if !cmd.io.Stdin().IsPiped() {
 		return ErrNoDataOnStdin
 	}
 

@@ -18,37 +18,35 @@ var (
 
 // IO is an interface to work with input/output.
 type IO interface {
-	Stdin() io.Reader
-	Stdout() io.Writer
-	Prompts() (io.Reader, io.Writer, error)
-	IsStdinPiped() bool
-	IsStdoutPiped() bool
+	Stdin() Reader
+	Stdout() Writer
+	Prompts() (Reader, Writer, error)
 }
 
 // UserIO is a middleware between input and output to the CLI program.
 // It implements userIO.Prompter and can be passed to libraries.
 type UserIO struct {
-	Input        *os.File
-	Output       *os.File
-	tty          *os.File
+	Input        Reader
+	Output       Writer
+	tty          file
 	ttyAvailable bool
 }
 
 // NewStdUserIO creates a new UserIO middleware only from os.Stdin and os.Stdout.
 func NewStdUserIO() UserIO {
 	return UserIO{
-		Input:  os.Stdin,
-		Output: os.Stdout,
+		Input:  file{os.Stdin},
+		Output: file{os.Stdout},
 	}
 }
 
 // Stdin returns the UserIO's Input.
-func (o UserIO) Stdin() io.Reader {
+func (o UserIO) Stdin() Reader {
 	return o.Input
 }
 
 // Stdout returns the UserIO's Output.
-func (o UserIO) Stdout() io.Writer {
+func (o UserIO) Stdout() Writer {
 	return o.Output
 }
 
@@ -57,8 +55,8 @@ func (o UserIO) Stdout() io.Writer {
 // bypass stdin and stdout by connecting to /dev/tty on Unix systems when
 // available. On systems where tty is not available and when either input
 // or output is piped, prompting is not possible so an error is returned.
-func (o UserIO) Prompts() (io.Reader, io.Writer, error) {
-	if o.IsStdoutPiped() || o.IsStdinPiped() {
+func (o UserIO) Prompts() (Reader, Writer, error) {
+	if o.Input.IsPiped() || o.Output.IsPiped() {
 		if o.ttyAvailable {
 			return o.tty, o.tty, nil
 		}
@@ -67,30 +65,12 @@ func (o UserIO) Prompts() (io.Reader, io.Writer, error) {
 	return o.Input, o.Output, nil
 }
 
-func (o UserIO) IsStdinPiped() bool {
-	return isPiped(o.Input)
-}
-
-func (o UserIO) IsStdoutPiped() bool {
-	return isPiped(o.Output)
-}
-
-// readPassword reads one line of input from the terminal without echoing the user input.
-func readPassword(r io.Reader) (string, error) {
-	file, ok := r.(*os.File)
-	if !ok {
-		return "", ErrCannotAsk
-	}
-	// this case happens among other things when input is piped and ReadPassword is called.
-	if !terminal.IsTerminal(int(file.Fd())) {
-		return "", ErrCannotAsk
-	}
-
-	password, err := terminal.ReadPassword(int(file.Fd()))
-	if err != nil {
-		return "", err
-	}
-	return string(password), nil
+// Reader can read input for a CLI program.
+type Reader interface {
+	io.Reader
+	// ReadPassword reads a line of input from a terminal without local echo.
+	ReadPassword() ([]byte, error)
+	IsPiped() bool
 }
 
 // Readln reads 1 line of input from a io.Reader. The newline character is not included in the response.
@@ -104,10 +84,31 @@ func Readln(r io.Reader) (string, error) {
 	return s.Text(), nil
 }
 
-// isPiped checks whether the file is a pipe.
+// Writer can write output for a CLI program.
+type Writer interface {
+	io.Writer
+	IsPiped() bool
+}
+
+// file implements the Reader and Writer interface.
+type file struct {
+	*os.File
+}
+
+// ReadPassword reads from a terminal without echoing back the typed input.
+func (f file) ReadPassword() ([]byte, error) {
+	// this case happens among other things when input is piped and ReadPassword is called.
+	if !terminal.IsTerminal(int(f.Fd())) {
+		return nil, ErrCannotAsk
+	}
+
+	return terminal.ReadPassword(int(f.Fd()))
+}
+
+// IsPiped checks whether the file is a pipe.
 // If the file does not exist, it returns false.
-func isPiped(file *os.File) bool {
-	stat, err := file.Stat()
+func (f file) IsPiped() bool {
+	stat, err := f.Stat()
 	if err != nil {
 		return false
 	}

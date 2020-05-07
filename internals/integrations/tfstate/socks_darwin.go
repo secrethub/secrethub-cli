@@ -25,5 +25,5 @@ func tcpSocks() ([]Connection, error) {
 			},
 		})
 	}
-	return res
+	return res, nil
 }

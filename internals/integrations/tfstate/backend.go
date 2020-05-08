@@ -1,6 +1,7 @@
 package tfstate
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -8,7 +9,6 @@ import (
 	"os"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/pkg/randchar"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
@@ -117,20 +117,17 @@ func (b *backend) Handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case "LOCK":
-		_, err := b.client.Secrets().Get(lockPath)
-		if !api.IsErrNotFound(err) {
+		currentLock, err := b.client.Secrets().Versions().GetWithData(lockPath + ":1")
+		if err == nil {
 			w.WriteHeader(http.StatusLocked)
+			fmt.Fprint(w, string(currentLock.Data))
 			return
-		}
-
-		data, err := randchar.Generate(32)
-		if err != nil {
+		} else if !api.IsErrNotFound(err) {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, err.Error())
 			return
 		}
 
-		res, err := b.client.Secrets().Write(lockPath, data)
+		res, err := b.client.Secrets().Write(lockPath, body)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, err.Error())
@@ -141,7 +138,20 @@ func (b *backend) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "UNLOCK":
-		err := b.client.Secrets().Delete(lockPath)
+		secret, err := b.client.Secrets().Read(lockPath)
+		if api.IsErrNotFound(err) {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, "not locked")
+			return
+		}
+
+		if len(body) > 0 && !bytes.Equal(body, secret.Data) {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, "incorrect lock")
+			return
+		}
+
+		err = b.client.Secrets().Delete(lockPath)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

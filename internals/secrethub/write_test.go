@@ -20,18 +20,20 @@ func TestWriteCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
-		cmd       WriteCommand
-		writeFunc func(path string, data []byte) (*api.SecretVersion, error)
-		in        string
-		piped     bool
-		promptIn  string
-		promptOut string
-		promptErr error
-		readErr   error
-		err       error
-		path      api.SecretPath
-		data      []byte
-		out       string
+		cmd         WriteCommand
+		writeFunc   func(path string, data []byte) (*api.SecretVersion, error)
+		in          string
+		piped       bool
+		promptIn    string
+		promptOut   string
+		promptErr   error
+		passwordIn  string
+		passwordErr error
+		readErr     error
+		err         error
+		path        api.SecretPath
+		data        []byte
+		out         string
 	}{
 		"path with version": {
 			cmd: WriteCommand{
@@ -124,8 +126,8 @@ func TestWriteCommand_Run(t *testing.T) {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret",
 			},
-			promptIn:  "asked secret value",
-			promptOut: "Please type in the value of the secret, followed by an [ENTER]:\n",
+			passwordIn: "asked secret value",
+			promptOut:  "Please type in the value of the secret, followed by an [ENTER]:\n",
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{
 					Version: 1,
@@ -136,12 +138,20 @@ func TestWriteCommand_Run(t *testing.T) {
 			data: []byte("asked secret value"),
 			out:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
 		},
-		"ask secret error": {
+		"ask secret prompt error": {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret",
 			},
 			promptErr: testErr,
 			err:       testErr,
+		},
+		"ask secret read password error": {
+			cmd: WriteCommand{
+				path: "namespace/repo/secret",
+			},
+			promptOut:   "Please type in the value of the secret, followed by an [ENTER]:",
+			passwordErr: testErr,
+			err:         ui.ErrReadInput(testErr),
 		},
 		"piped read error": {
 			cmd: WriteCommand{
@@ -205,6 +215,8 @@ func TestWriteCommand_Run(t *testing.T) {
 			io.In.ReadErr = tc.readErr
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 			io.PromptErr = tc.promptErr
+			io.PasswordReader.Buffer = bytes.NewBufferString(tc.passwordIn)
+			io.PasswordReader.ReadErr = tc.passwordErr
 			io.In.Piped = tc.piped
 			io.In.Buffer = bytes.NewBufferString(tc.in)
 

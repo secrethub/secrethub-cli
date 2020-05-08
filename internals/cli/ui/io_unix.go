@@ -63,6 +63,10 @@ func (o ttyIO) Output() io.Writer {
 	return o.output
 }
 
+func (o ttyIO) ReadPassword() ([]byte, error) {
+	return readPassword(o.tty)
+}
+
 // isPiped checks whether the file is a pipe.
 // If the file does not exist, it returns false.
 func isPiped(file *os.File) bool {

@@ -16,13 +16,14 @@ import (
 
 // FakeIO is a helper type for testing that implements the ui.IO interface
 type FakeIO struct {
-	In        *FakeReader
-	Out       *FakeWriter
-	StdIn     *os.File
-	StdOut    *os.File
-	PromptIn  *FakeReader
-	PromptOut *FakeWriter
-	PromptErr error
+	In             *FakeReader
+	Out            *FakeWriter
+	StdIn          *os.File
+	StdOut         *os.File
+	PromptIn       *FakeReader
+	PromptOut      *FakeWriter
+	PasswordReader *FakeReader
+	PromptErr      error
 }
 
 // NewIO creates a new FakeIO with empty buffers.
@@ -50,6 +51,9 @@ func NewIO(t *testing.T) *FakeIO {
 		},
 		StdIn:  stdIn,
 		StdOut: stdOut,
+		PasswordReader: &FakeReader{
+			Buffer: &bytes.Buffer{},
+		},
 		PromptIn: &FakeReader{
 			Buffer: &bytes.Buffer{},
 		},
@@ -92,6 +96,10 @@ func (f *FakeIO) IsInputPiped() bool {
 
 func (f *FakeIO) IsOutputPiped() bool {
 	return f.Out.Piped
+}
+
+func (f *FakeIO) ReadPassword() ([]byte, error) {
+	return ioutil.ReadAll(f.PasswordReader)
 }
 
 // FakeReader implements the Reader interface.

@@ -23,6 +23,7 @@ type IO interface {
 	Stdin() *os.File
 	Stdout() *os.File
 	Prompts() (io.Reader, io.Writer, error)
+	ReadPassword() ([]byte, error)
 	IsInputPiped() bool
 	IsOutputPiped() bool
 }
@@ -78,22 +79,22 @@ func (o standardIO) IsOutputPiped() bool {
 	return isPiped(o.output)
 }
 
+func (o standardIO) ReadPassword() ([]byte, error) {
+	return readPassword(o.input)
+}
+
 // readPassword reads one line of input from the terminal without echoing the user input.
-func readPassword(r io.Reader) (string, error) {
-	file, ok := r.(*os.File)
-	if !ok {
-		return "", ErrCannotAsk
-	}
+func readPassword(f *os.File) ([]byte, error) {
 	// this case happens among other things when input is piped and ReadPassword is called.
-	if !terminal.IsTerminal(int(file.Fd())) {
-		return "", ErrCannotAsk
+	if !terminal.IsTerminal(int(f.Fd())) {
+		return nil, ErrCannotAsk
 	}
 
-	password, err := terminal.ReadPassword(int(file.Fd()))
+	password, err := terminal.ReadPassword(int(f.Fd()))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(password), nil
+	return password, nil
 }
 
 // Readln reads 1 line of input from a io.Reader. The newline character is not included in the response.

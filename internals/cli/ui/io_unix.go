@@ -63,8 +63,8 @@ func (o ttyIO) Output() io.Writer {
 	return o.output
 }
 
-func (o ttyIO) ReadPassword() ([]byte, error) {
-	return readPassword(o.tty)
+func (o ttyIO) ReadSecret() ([]byte, error) {
+	return readSecret(o.tty)
 }
 
 // isPiped checks whether the file is a pipe.

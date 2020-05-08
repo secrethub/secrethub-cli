@@ -18,13 +18,26 @@ var (
 
 // IO is an interface to work with input/output.
 type IO interface {
+	// Input returns an io,Reader that reads input for the current process.
+	// If the process's input is piped, this reads from the pipe otherwise it asks input from the user.
 	Input() io.Reader
+	// Output returns an io.Writer that writes output for the current process.
+	// If the process's output is piped, this writes to the pipe otherwise it prints to the terminal.
 	Output() io.Writer
+	// Stdin returns the *os.File of the current process's stdin stream.
 	Stdin() *os.File
+	// Stdin returns the *os.File of the current process's stdout stream.
 	Stdout() *os.File
+	// Prompts returns an io.Reader and io.Writer that read and write directly to/from the terminal, even if the
+	// input or output of the current process is piped.
+	// If this is not supported, an error is returned.
 	Prompts() (io.Reader, io.Writer, error)
-	ReadPassword() ([]byte, error)
+	// ReadSecret reads a line of input from the terminal while hiding the entered characters.
+	// Returns an error if secret input is not supported.
+	ReadSecret() ([]byte, error)
+	// IsInputPiped returns whether the current process's input is piped from another process.
 	IsInputPiped() bool
+	// IsOutputPiped returns whether the current process's output is piped to another process.
 	IsOutputPiped() bool
 }
 
@@ -79,13 +92,13 @@ func (o standardIO) IsOutputPiped() bool {
 	return isPiped(o.output)
 }
 
-func (o standardIO) ReadPassword() ([]byte, error) {
-	return readPassword(o.input)
+func (o standardIO) ReadSecret() ([]byte, error) {
+	return readSecret(o.input)
 }
 
-// readPassword reads one line of input from the terminal without echoing the user input.
-func readPassword(f *os.File) ([]byte, error) {
-	// this case happens among other things when input is piped and ReadPassword is called.
+// readSecret reads one line of input from the terminal without echoing the user input.
+func readSecret(f *os.File) ([]byte, error) {
+	// this case happens among other things when input is piped and ReadSecret is called.
 	if !terminal.IsTerminal(int(f.Fd())) {
 		return nil, ErrCannotAsk
 	}

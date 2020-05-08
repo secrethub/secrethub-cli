@@ -62,7 +62,7 @@ func AskSecret(io IO, question string) (string, error) {
 		return "", err
 	}
 
-	raw, err := io.ReadPassword()
+	raw, err := io.ReadSecret()
 	if err != nil {
 		return "", ErrReadInput(err)
 	}

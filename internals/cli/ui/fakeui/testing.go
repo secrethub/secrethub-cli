@@ -98,7 +98,7 @@ func (f *FakeIO) IsOutputPiped() bool {
 	return f.Out.Piped
 }
 
-func (f *FakeIO) ReadPassword() ([]byte, error) {
+func (f *FakeIO) ReadSecret() ([]byte, error) {
 	return ioutil.ReadAll(f.PasswordReader)
 }
 

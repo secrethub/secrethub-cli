@@ -2,6 +2,7 @@ package tfstate
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,34 +45,51 @@ func (b *backend) Serve() error {
 }
 
 func (b *backend) Handle(w http.ResponseWriter, r *http.Request) {
-	isChild, err := connectionFromChildProcess(os.Getpid(), r)
+	resp, err := b.handle(r)
 	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(b.logger, "Encountered an unexpected error: %s\n", err)
 		return
 	}
+	w.WriteHeader(resp.code)
+	fmt.Fprintf(w, resp.body)
+}
+
+type statusResponse struct {
+	code int
+	body string
+}
+
+func (b *backend) respondError(statusCode int, format string, a ...interface{}) *statusResponse {
+	msg := fmt.Sprintf(format, a...)
+	fmt.Fprintf(b.logger, "%s\n", msg)
+	return &statusResponse{
+		code: statusCode,
+		body: msg,
+	}
+}
+
+func (b *backend) handle(r *http.Request) (*statusResponse, error) {
+	isChild, err := connectionFromChildProcess(os.Getpid(), r)
+	if err != nil {
+		return nil, err
+	}
 	if !isChild {
-		fmt.Println("can only be reached from a process spawned with secrethub run")
-		w.WriteHeader(http.StatusForbidden)
-		return
+		return b.respondError(http.StatusForbidden, "can only be reached from a process spawned with secrethub run"), nil
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Printf("Errors: %v\n", err)
-		return
+		return nil, fmt.Errorf("reading request body: %s", err)
 	}
 
 	path, password, ok := r.BasicAuth()
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(b.logger, "set the SecretHub path to the state as the username")
-		return
+		return b.respondError(http.StatusBadRequest, "set the SecretHub path to the state as the username"), nil
 	}
 
 	if secretpath.Count(path) < 2 {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(b.logger, "set user to a valid repository or directory. Got: %s\n", path)
-		return
+		return b.respondError(http.StatusBadRequest, "set user to a valid repository or directory, got: %s", path), nil
 	}
 
 	statePath := secretpath.Join(path, "state")
@@ -80,18 +98,13 @@ func (b *backend) Handle(w http.ResponseWriter, r *http.Request) {
 
 	secret, err := b.client.Secrets().ReadString(passwordPath)
 	if err != nil && !api.IsErrNotFound(err) {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return nil, err
 	} else if err == nil {
 		if password == "" {
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprintf(w, "password stored at %s should be set as auth password", passwordPath)
-			return
+			return b.respondError(http.StatusUnauthorized, "password stored at %s should be set as auth password", passwordPath), nil
 		}
 		if password != secret {
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, "provided password does not password stored at %s", passwordPath)
-			return
+			return b.respondError(http.StatusForbidden, "provided password does not password stored at %s", passwordPath), nil
 		}
 	}
 
@@ -99,75 +112,73 @@ func (b *backend) Handle(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		secret, err := b.client.Secrets().Read(statePath)
 		if api.IsErrNotFound(err) {
-			w.WriteHeader(http.StatusNotFound)
-			return
+			return &statusResponse{code: http.StatusNotFound}, nil
 		} else if err != nil {
-			fmt.Fprintf(b.logger, "%v\n", err)
-
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			return nil, err
 		}
 
-		w.Write(secret.Data)
+		return &statusResponse{
+			code: http.StatusOK,
+			body: string(secret.Data),
+		}, nil
 	case http.MethodPost:
 		_, err = b.client.Secrets().Write(statePath, body)
 		if api.IsErrNotFound(err) {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, err.Error())
-			fmt.Fprintf(b.logger, err.Error())
-			return
+			return b.respondError(http.StatusNotFound, err.Error()), nil
 		} else if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, err.Error())
-			return
+			return nil, err
 		}
+		return &statusResponse{
+			code: http.StatusOK,
+		}, nil
 	case "LOCK":
 		currentLock, err := b.client.Secrets().Versions().GetWithData(lockPath + ":1")
 		if err == nil {
-			w.WriteHeader(http.StatusLocked)
-			fmt.Fprint(w, string(currentLock.Data))
-			return
+			return &statusResponse{
+				code: http.StatusLocked,
+				body: string(currentLock.Data),
+			}, nil
 		} else if !api.IsErrNotFound(err) {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			return nil, err
 		}
 
 		res, err := b.client.Secrets().Write(lockPath, body)
 		if api.IsErrNotFound(err) {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, err.Error())
-			fmt.Fprintf(b.logger, err.Error())
-			return
+			return b.respondError(http.StatusNotFound, err.Error()), nil
 		} else if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, err.Error())
-			return
+			return nil, err
 		}
 		if res.Version != 1 {
-			w.WriteHeader(http.StatusLocked)
+			return &statusResponse{
+				code: http.StatusLocked,
+			}, nil
 		}
+		return &statusResponse{
+			code: http.StatusOK,
+		}, nil
 
 	case "UNLOCK":
 		secret, err := b.client.Secrets().Read(lockPath)
 		if api.IsErrNotFound(err) {
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, "not locked")
-			return
+			return &statusResponse{
+				code: http.StatusOK,
+				body: "not locked",
+			}, nil
 		}
 
 		if len(body) > 0 && !bytes.Equal(body, secret.Data) {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "incorrect lock")
-			return
+			return b.respondError(http.StatusBadRequest, "incorrect lock"), nil
 		}
 
 		err = b.client.Secrets().Delete(lockPath)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
+			return nil, err
 		}
+		return &statusResponse{
+			code: http.StatusOK,
+		}, nil
 	default:
-		w.WriteHeader(http.StatusNotImplemented)
+		return nil, errors.New("received an unexpected request")
 	}
 }
 

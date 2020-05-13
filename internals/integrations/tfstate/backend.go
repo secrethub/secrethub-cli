@@ -111,7 +111,12 @@ func (b *backend) Handle(w http.ResponseWriter, r *http.Request) {
 		w.Write(secret.Data)
 	case http.MethodPost:
 		_, err = b.client.Secrets().Write(statePath, body)
-		if err != nil {
+		if api.IsErrNotFound(err) {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, err.Error())
+			fmt.Fprintf(b.logger, err.Error())
+			return
+		} else if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, err.Error())
 			return
@@ -128,7 +133,12 @@ func (b *backend) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res, err := b.client.Secrets().Write(lockPath, body)
-		if err != nil {
+		if api.IsErrNotFound(err) {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, err.Error())
+			fmt.Fprintf(b.logger, err.Error())
+			return
+		} else if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, err.Error())
 			return

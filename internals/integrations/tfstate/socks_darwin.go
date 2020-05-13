@@ -3,7 +3,7 @@
 package tfstate
 
 import (
-	"github.com/weaveworks/procspy"
+	"github.com/john-pierce/procspy"
 )
 
 func tcpSocks() ([]Connection, error) {

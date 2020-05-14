@@ -1,4 +1,5 @@
 // +build !darwin
+// +build !windows !386
 
 package tfstate
 

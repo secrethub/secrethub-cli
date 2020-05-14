@@ -1,3 +1,5 @@
+// +build !windows !386
+
 package tfstate
 
 import (

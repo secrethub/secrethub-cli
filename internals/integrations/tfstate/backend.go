@@ -14,14 +14,14 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
 
-type backend struct {
+type Backend struct {
 	client secrethub.ClientInterface
 	port   uint16
 	logger io.Writer
 }
 
-func New(client secrethub.ClientInterface, port uint16, logger io.Writer) *backend {
-	return &backend{
+func New(client secrethub.ClientInterface, port uint16, logger io.Writer) *Backend {
+	return &Backend{
 		client: client,
 		port:   port,
 		logger: prefixWriter{
@@ -31,7 +31,7 @@ func New(client secrethub.ClientInterface, port uint16, logger io.Writer) *backe
 	}
 }
 
-func (b *backend) Serve() error {
+func (b *Backend) Serve() error {
 	server := &http.Server{
 		Addr:    fmt.Sprintf("127.0.0.1:%d", b.port),
 		Handler: http.HandlerFunc(b.Handle),
@@ -44,7 +44,7 @@ func (b *backend) Serve() error {
 	return nil
 }
 
-func (b *backend) Handle(w http.ResponseWriter, r *http.Request) {
+func (b *Backend) Handle(w http.ResponseWriter, r *http.Request) {
 	resp, err := b.handle(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -60,7 +60,7 @@ type statusResponse struct {
 	body string
 }
 
-func (b *backend) respondError(statusCode int, format string, a ...interface{}) *statusResponse {
+func (b *Backend) respondError(statusCode int, format string, a ...interface{}) *statusResponse {
 	msg := fmt.Sprintf(format, a...)
 	fmt.Fprintf(b.logger, "%s\n", msg)
 	return &statusResponse{
@@ -69,7 +69,7 @@ func (b *backend) respondError(statusCode int, format string, a ...interface{}) 
 	}
 }
 
-func (b *backend) handle(r *http.Request) (*statusResponse, error) {
+func (b *Backend) handle(r *http.Request) (*statusResponse, error) {
 	isChild, err := connectionFromChildProcess(os.Getpid(), r)
 	if err != nil {
 		return nil, err

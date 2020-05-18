@@ -102,6 +102,8 @@ func (cmd *AuditCommand) run() error {
 	var formatter listFormatter
 	if cmd.format == formatJSON {
 		formatter = newJSONFormatter(paginatedWriter, auditTable.header())
+	} else if cmd.format == formatTable && cmd.io.IsOutputPiped() {
+		formatter = newLineFormatter(paginatedWriter)
 	} else if cmd.format == formatTable {
 		terminalWidth, err := cmd.terminalWidth(int(cmd.io.Stdout().Fd()))
 		if err != nil {

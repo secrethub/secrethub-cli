@@ -11,6 +11,21 @@ type listFormatter interface {
 	Write([]string) error
 }
 
+func newLineFormatter(writer io.Writer) lineFormatter {
+	return lineFormatter{writer: writer}
+}
+
+// lineFormatter returns a formatter that formats the given table into lines of text with unaligned columns.
+type lineFormatter struct {
+	writer io.Writer
+}
+
+// Write writes a the given row entries separated by '\t' characters.
+func (l lineFormatter) Write(line []string) error {
+	_, err := l.writer.Write([]byte(strings.Join(line, "\t") + "\n"))
+	return err
+}
+
 // newJSONFormatter returns a table formatter that formats the given table rows as json.
 func newJSONFormatter(writer io.Writer, fieldNames []string) *jsonFormatter {
 	for i := range fieldNames {

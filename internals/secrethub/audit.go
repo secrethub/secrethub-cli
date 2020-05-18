@@ -64,6 +64,7 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "Number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
 	clause.Flag("output-format", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.").HintOptions("table", "json").Default("table").StringVar(&cmd.format)
+	clause.Flag("limit", "Specify the number of entries to list. If limit < 0 all entries are displayed. If the output of the command is piped, limit defaults to 1000.").Default("-1").IntVar(&cmd.limit)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -90,10 +91,8 @@ func (cmd *AuditCommand) run() error {
 		return fmt.Errorf("per-page should be positive, got %d", cmd.perPage)
 	}
 
-	if cmd.io.IsOutputPiped() {
+	if cmd.limit == -1 && cmd.io.IsOutputPiped() {
 		cmd.limit = pipedOutputLineLimit
-	} else {
-		cmd.limit = -1
 	}
 
 	iter, auditTable, err := cmd.iterAndAuditTable()

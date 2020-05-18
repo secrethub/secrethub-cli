@@ -3,6 +3,7 @@ package secrethub
 import (
 	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 
@@ -60,11 +61,16 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *AuditCommand) Register(r command.Registerer) {
+	defaultLimit := -1
+	if cmd.io.IsOutputPiped() {
+		defaultLimit = pipedOutputLineLimit
+	}
+
 	clause := r.Command("audit", "Show the audit log.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "Number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
 	clause.Flag("output-format", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.").HintOptions("table", "json").Default("table").StringVar(&cmd.format)
-	clause.Flag("limit", "Specify the number of entries to list. If limit < 0 all entries are displayed. If the output of the command is piped, limit defaults to 1000.").Default("-1").IntVar(&cmd.limit)
+	clause.Flag("limit", "Specify the number of entries to list. If limit < 0 all entries are displayed. If the output of the command is piped, limit defaults to 1000.").Default(strconv.Itoa(defaultLimit)).IntVar(&cmd.limit)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -89,10 +95,6 @@ func (cmd *AuditCommand) beforeRun() {
 func (cmd *AuditCommand) run() error {
 	if cmd.perPage < 1 {
 		return fmt.Errorf("per-page should be positive, got %d", cmd.perPage)
-	}
-
-	if cmd.limit == -1 && cmd.io.IsOutputPiped() {
-		cmd.limit = pipedOutputLineLimit
 	}
 
 	iter, auditTable, err := cmd.iterAndAuditTable()

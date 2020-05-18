@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
@@ -73,7 +73,7 @@ func TestMkDirCommand(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO(t)
 			cmd := MkDirCommand{
 				io:        io,
 				path:      api.DirPath(tc.path),
@@ -83,7 +83,7 @@ func TestMkDirCommand(t *testing.T) {
 			err := cmd.Run()
 
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, tc.stdout, io.StdOut.String())
+			assert.Equal(t, tc.stdout, io.Out.String())
 		})
 	}
 }

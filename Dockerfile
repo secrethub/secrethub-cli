@@ -1,4 +1,4 @@
-FROM golang:1.12-alpine as build_base
+FROM golang:1.14-alpine as build_base
 WORKDIR /build
 ENV GO111MODULE=on
 RUN apk add --update git

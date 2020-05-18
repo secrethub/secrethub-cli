@@ -3,7 +3,6 @@ package secrethub
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 
@@ -94,7 +93,7 @@ func (cmd *AuditCommand) run() error {
 		return err
 	}
 
-	paginatedWriter, err := cmd.newPaginatedWriter(cmd.io.Stdout())
+	paginatedWriter, err := cmd.newPaginatedWriter(cmd.io.Output())
 	if err != nil {
 		return err
 	}
@@ -104,7 +103,7 @@ func (cmd *AuditCommand) run() error {
 	if cmd.format == formatJSON {
 		formatter = newJSONFormatter(paginatedWriter, auditTable.header())
 	} else if cmd.format == formatTable {
-		terminalWidth, err := cmd.terminalWidth(int(os.Stdout.Fd()))
+		terminalWidth, err := cmd.terminalWidth(int(cmd.io.Stdout().Fd()))
 		if err != nil {
 			terminalWidth = defaultTerminalWidth
 		}

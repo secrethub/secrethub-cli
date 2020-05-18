@@ -121,7 +121,7 @@ func rmSecretVersion(client secrethub.ClientInterface, secretPath api.SecretPath
 	}
 
 	fmt.Fprintf(
-		io.Stdout(),
+		io.Output(),
 		"Removal complete! The secret version %s has been permanently removed.\n",
 		secretPath,
 	)
@@ -151,7 +151,7 @@ func rmSecret(client secrethub.ClientInterface, secretPath api.SecretPath, force
 	}
 
 	fmt.Fprintf(
-		io.Stdout(),
+		io.Output(),
 		"Removal complete! The secret %s has been permanently removed.\n",
 		secretPath,
 	)
@@ -181,7 +181,7 @@ func rmDir(client secrethub.ClientInterface, dirPath api.DirPath, force bool, io
 	}
 
 	fmt.Fprintf(
-		io.Stdout(),
+		io.Output(),
 		"Removal complete! The directory %s has been permanently removed.\n",
 		dirPath,
 	)
@@ -210,7 +210,7 @@ func askRmConfirmation(io ui.IO, confirmationText string, force bool, expected .
 	}
 
 	if !confirmed {
-		fmt.Fprintln(io.Stdout(), "Name does not match. Aborting.")
+		fmt.Fprintln(io.Output(), "Name does not match. Aborting.")
 		return false, nil
 	}
 	return true, nil

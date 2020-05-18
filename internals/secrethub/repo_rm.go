@@ -60,18 +60,18 @@ func (cmd *RepoRmCommand) Run() error {
 	}
 
 	if !confirmed {
-		fmt.Fprintln(cmd.io.Stdout(), "Name does not match. Aborting.")
+		fmt.Fprintln(cmd.io.Output(), "Name does not match. Aborting.")
 		return nil
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Removing repository...")
+	fmt.Fprintln(cmd.io.Output(), "Removing repository...")
 
 	err = client.Repos().Delete(cmd.path.Value())
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Removal complete! The repository %s has been permanently removed.\n", cmd.path)
+	fmt.Fprintf(cmd.io.Output(), "Removal complete! The repository %s has been permanently removed.\n", cmd.path)
 
 	return nil
 }

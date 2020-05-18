@@ -179,23 +179,23 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 	deployer := newWindowsDeployer(client, destinationPath)
 
-	if !cmd.io.IsStdinPiped() {
+	if !cmd.io.IsInputPiped() {
 		return ErrNoDataOnStdin
 	}
 
-	credential, err := ioutil.ReadAll(cmd.io.Stdin())
+	credential, err := ioutil.ReadAll(cmd.io.Input())
 	if err != nil {
 		return err
 	}
 
 	// Copy the config to the host.
-	fmt.Fprintln(cmd.io.Stdout(), "Deploying configuration...")
+	fmt.Fprintln(cmd.io.Output(), "Deploying configuration...")
 	err = deployer.configure(credential)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Deploy complete! The service account can now be used to connect to SecretHub from the host.")
+	fmt.Fprintln(cmd.io.Output(), "Deploy complete! The service account can now be used to connect to SecretHub from the host.")
 
 	return nil
 }
@@ -203,7 +203,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 // checkWinRMTLS checks if the given schema corresponds to the given CLI flags.
 func (cmd *ServiceDeployWinRmCommand) checkWinRMTLS() (bool, error) {
 	if cmd.resourceURI.Scheme == "http" {
-		fmt.Fprintln(cmd.io.Stdout(), "WARNING: insecure no tls flag is set! We recommend to always use TLS.")
+		fmt.Fprintln(cmd.io.Output(), "WARNING: insecure no tls flag is set! We recommend to always use TLS.")
 		return false, nil
 	}
 
@@ -221,7 +221,7 @@ func (cmd *ServiceDeployWinRmCommand) checkWinRMTLS() (bool, error) {
 // checkWinRMVerifyCert checks if the given schema corresponds to the given CLI flags.
 func (cmd *ServiceDeployWinRmCommand) checkWinRMVerifyCert() bool {
 	if cmd.noVerify {
-		fmt.Fprintln(cmd.io.Stdout(), "WARNING: insecure no verify cert flag is set! We recommend to always verify the certificate.")
+		fmt.Fprintln(cmd.io.Output(), "WARNING: insecure no verify cert flag is set! We recommend to always verify the certificate.")
 		return true
 	}
 

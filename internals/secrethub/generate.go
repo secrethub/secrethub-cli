@@ -133,7 +133,7 @@ func (cmd *GenerateSecretCommand) run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "A randomly generated secret has been written to %s:%d.\n", path, version.Version)
+	fmt.Fprintf(cmd.io.Output(), "A randomly generated secret has been written to %s:%d.\n", path, version.Version)
 
 	if cmd.copyToClipboard {
 		err = WriteClipboardAutoClear(data, cmd.clearClipboardAfter, cmd.clipper)
@@ -142,7 +142,7 @@ func (cmd *GenerateSecretCommand) run() error {
 		}
 
 		fmt.Fprintf(
-			cmd.io.Stdout(),
+			cmd.io.Output(),
 			"The generated value has been copied to the clipboard. It will be cleared after %s.\n",
 			units.HumanDuration(cmd.clearClipboardAfter),
 		)

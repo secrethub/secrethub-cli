@@ -22,7 +22,6 @@ var (
 // WriteCommand is a command to write content to a secret.
 type WriteCommand struct {
 	io           ui.IO
-	askSecret    func(io ui.IO, question string) (string, error)
 	path         api.SecretPath
 	inFile       string
 	multiline    bool
@@ -37,7 +36,6 @@ func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 	return &WriteCommand{
 		clipper:   clip.NewClipboard(),
 		io:        io,
-		askSecret: ui.AskSecret,
 		newClient: newClient,
 	}
 }
@@ -84,8 +82,8 @@ func (cmd *WriteCommand) Run() error {
 		if err != nil {
 			return ErrReadFile(cmd.inFile, err)
 		}
-	} else if cmd.io.IsStdinPiped() {
-		data, err = ioutil.ReadAll(cmd.io.Stdin())
+	} else if cmd.io.IsInputPiped() {
+		data, err = ioutil.ReadAll(cmd.io.Input())
 		if err != nil {
 			return ui.ErrReadInput(err)
 		}
@@ -96,7 +94,7 @@ func (cmd *WriteCommand) Run() error {
 			return err
 		}
 	} else {
-		str, err := cmd.askSecret(cmd.io, "Please type in the value of the secret, followed by an [ENTER]:")
+		str, err := ui.AskSecret(cmd.io, "Please type in the value of the secret, followed by an [ENTER]:")
 		if err != nil {
 			return err
 		}
@@ -112,7 +110,7 @@ func (cmd *WriteCommand) Run() error {
 		return errEmptySecret
 	}
 
-	_, err = fmt.Fprint(cmd.io.Stdout(), "Writing secret value...\n")
+	_, err = fmt.Fprint(cmd.io.Output(), "Writing secret value...\n")
 	if err != nil {
 		return err
 	}
@@ -127,7 +125,7 @@ func (cmd *WriteCommand) Run() error {
 		return err
 	}
 
-	_, err = fmt.Fprintf(cmd.io.Stdout(), "Write complete! The given value has been written to %s:%d\n", cmd.path, version.Version)
+	_, err = fmt.Fprintf(cmd.io.Output(), "Write complete! The given value has been written to %s:%d\n", cmd.path, version.Version)
 	if err != nil {
 		return err
 	}

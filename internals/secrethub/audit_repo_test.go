@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-
-	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
+
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 )
 
 func TestAuditRepoCommand_run(t *testing.T) {
@@ -235,7 +235,7 @@ func TestAuditRepoCommand_run(t *testing.T) {
 			tc.cmd.newPaginatedWriter = func(_ io.Writer) (io.WriteCloser, error) {
 				return &fakes.Pager{Buffer: &buffer}, nil
 			}
-			tc.cmd.io = ui.NewFakeIO()
+			tc.cmd.io = fakeui.NewIO(t)
 
 			// Act
 			err := tc.cmd.run()

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -85,7 +85,7 @@ func TestAccountInspect(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO(t)
 			tc.cmd.io = io
 
 			// Act
@@ -93,7 +93,7 @@ func TestAccountInspect(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.Out.String(), tc.out)
 		})
 	}
 }

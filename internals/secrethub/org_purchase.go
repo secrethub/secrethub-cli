@@ -28,8 +28,8 @@ func (cmd *OrgPurchaseCommand) Register(r command.Registerer) {
 
 // Run prints instructions on purchasing a SecretHub subscription.
 func (cmd OrgPurchaseCommand) Run() error {
-	fmt.Fprintf(cmd.io.Stdout(), "An organization subscription for SecretHub can be purchased through the billing dashboard.\n\n")
-	fmt.Fprintf(cmd.io.Stdout(), "For more information, check out:\nhttps://secrethub.io/docs/organizations/upgrade/\n\n")
+	fmt.Fprintf(cmd.io.Output(), "An organization subscription for SecretHub can be purchased through the billing dashboard.\n\n")
+	fmt.Fprintf(cmd.io.Output(), "For more information, check out:\nhttps://secrethub.io/docs/organizations/upgrade/\n\n")
 
 	return nil
 }

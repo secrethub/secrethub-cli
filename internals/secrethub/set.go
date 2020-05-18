@@ -76,7 +76,7 @@ func (cmd *SetCommand) Run() error {
 	}
 
 	for _, c := range presenter.EmptyConsumables() {
-		fmt.Fprintf(cmd.io.Stdout(), "Warning: %s contains no secret declarations.\n", c)
+		fmt.Fprintf(cmd.io.Output(), "Warning: %s contains no secret declarations.\n", c)
 	}
 
 	secrets := make(map[string]api.SecretVersion)
@@ -88,14 +88,14 @@ func (cmd *SetCommand) Run() error {
 		secrets[path] = *secret
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Setting secrets...")
+	fmt.Fprintln(cmd.io.Output(), "Setting secrets...")
 
 	err = presenter.Set(secrets)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Set complete! The secrets are now available on your system.")
+	fmt.Fprintln(cmd.io.Output(), "Set complete! The secrets are now available on your system.")
 
 	return nil
 }

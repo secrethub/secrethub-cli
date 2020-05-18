@@ -65,10 +65,10 @@ func (cmd *OrgLsCommand) run() error {
 
 	if cmd.quiet {
 		for _, org := range resp {
-			fmt.Fprintf(cmd.io.Stdout(), "%s\n", org.Name)
+			fmt.Fprintf(cmd.io.Output(), "%s\n", org.Name)
 		}
 	} else {
-		w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
+		w := tabwriter.NewWriter(cmd.io.Output(), 0, 2, 2, ' ', 0)
 
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", "NAME", "REPOS", "USERS", "CREATED")
 

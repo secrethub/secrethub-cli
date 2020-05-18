@@ -59,18 +59,18 @@ func (cmd *RepoInviteCommand) Run() error {
 		}
 
 		if !confirmed {
-			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			fmt.Fprintln(cmd.io.Output(), "Aborting.")
 			return nil
 		}
 	}
-	fmt.Fprintln(cmd.io.Stdout(), "Inviting user...")
+	fmt.Fprintln(cmd.io.Output(), "Inviting user...")
 
 	_, err = client.Repos().Users().Invite(cmd.path.Value(), cmd.username)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username, cmd.path)
+	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username, cmd.path)
 
 	return nil
 }

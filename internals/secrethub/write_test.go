@@ -1,13 +1,13 @@
 package secrethub
 
 import (
-	"bufio"
 	"bytes"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -19,32 +19,21 @@ import (
 func TestWriteCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
-	fakeAskSecretFunc := func(io ui.IO, question string) (s string, err error) {
-		reader, writer, err := io.Prompts()
-		if err != nil {
-			return "", err
-		}
-		_, err = writer.Write([]byte(question + "\n"))
-		if err != nil {
-			return "", err
-		}
-		line, _, err := bufio.NewReader(reader).ReadLine()
-		return string(line), err
-	}
-
 	cases := map[string]struct {
-		cmd       WriteCommand
-		writeFunc func(path string, data []byte) (*api.SecretVersion, error)
-		in        string
-		piped     bool
-		promptIn  string
-		promptOut string
-		promptErr error
-		readErr   error
-		err       error
-		path      api.SecretPath
-		data      []byte
-		out       string
+		cmd         WriteCommand
+		writeFunc   func(path string, data []byte) (*api.SecretVersion, error)
+		in          string
+		piped       bool
+		promptIn    string
+		promptOut   string
+		promptErr   error
+		passwordIn  string
+		passwordErr error
+		readErr     error
+		err         error
+		path        api.SecretPath
+		data        []byte
+		out         string
 	}{
 		"path with version": {
 			cmd: WriteCommand{
@@ -135,11 +124,10 @@ func TestWriteCommand_Run(t *testing.T) {
 		},
 		"ask secret success": {
 			cmd: WriteCommand{
-				path:      "namespace/repo/secret",
-				askSecret: fakeAskSecretFunc,
+				path: "namespace/repo/secret",
 			},
-			promptIn:  "asked secret value",
-			promptOut: "Please type in the value of the secret, followed by an [ENTER]:\n",
+			passwordIn: "asked secret value",
+			promptOut:  "Please type in the value of the secret, followed by an [ENTER]:\n",
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{
 					Version: 1,
@@ -150,13 +138,20 @@ func TestWriteCommand_Run(t *testing.T) {
 			data: []byte("asked secret value"),
 			out:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
 		},
-		"ask secret error": {
+		"ask secret prompt error": {
 			cmd: WriteCommand{
-				path:      "namespace/repo/secret",
-				askSecret: fakeAskSecretFunc,
+				path: "namespace/repo/secret",
 			},
 			promptErr: testErr,
 			err:       testErr,
+		},
+		"ask secret read password error": {
+			cmd: WriteCommand{
+				path: "namespace/repo/secret",
+			},
+			promptOut:   "Please type in the value of the secret, followed by an [ENTER]:",
+			passwordErr: testErr,
+			err:         ui.ErrReadInput(testErr),
 		},
 		"piped read error": {
 			cmd: WriteCommand{
@@ -216,12 +211,14 @@ func TestWriteCommand_Run(t *testing.T) {
 				}, nil
 			}
 
-			io := ui.NewFakeIO()
-			io.StdIn.ReadErr = tc.readErr
+			io := fakeui.NewIO(t)
+			io.In.ReadErr = tc.readErr
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.promptIn)
 			io.PromptErr = tc.promptErr
-			io.StdIn.Piped = tc.piped
-			io.StdIn.Buffer = bytes.NewBufferString(tc.in)
+			io.PasswordReader.Buffer = bytes.NewBufferString(tc.passwordIn)
+			io.PasswordReader.ReadErr = tc.passwordErr
+			io.In.Piped = tc.piped
+			io.In.Buffer = bytes.NewBufferString(tc.in)
 
 			tc.cmd.io = io
 
@@ -233,7 +230,7 @@ func TestWriteCommand_Run(t *testing.T) {
 			assert.Equal(t, argPath, tc.path)
 			assert.Equal(t, argData, tc.data)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.Out.String(), tc.out)
 		})
 	}
 }

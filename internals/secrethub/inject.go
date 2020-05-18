@@ -91,11 +91,11 @@ func (cmd *InjectCommand) Run() error {
 			return ErrReadFile(cmd.inFile, err)
 		}
 	} else {
-		if !cmd.io.IsStdinPiped() {
+		if !cmd.io.IsInputPiped() {
 			return ErrNoDataOnStdin
 		}
 
-		raw, err = ioutil.ReadAll(cmd.io.Stdin())
+		raw, err = ioutil.ReadAll(cmd.io.Input())
 		if err != nil {
 			return err
 		}
@@ -135,11 +135,11 @@ func (cmd *InjectCommand) Run() error {
 			return err
 		}
 
-		fmt.Fprintln(cmd.io.Stdout(), fmt.Sprintf("Copied injected template to clipboard. It will be cleared after %s.", units.HumanDuration(cmd.clearClipboardAfter)))
+		fmt.Fprintln(cmd.io.Output(), fmt.Sprintf("Copied injected template to clipboard. It will be cleared after %s.", units.HumanDuration(cmd.clearClipboardAfter)))
 	} else if cmd.outFile != "" {
 		_, err := os.Stat(cmd.outFile)
 		if err == nil && !cmd.force {
-			if cmd.io.IsStdoutPiped() {
+			if cmd.io.IsOutputPiped() {
 				return ErrFileAlreadyExists
 			}
 
@@ -156,7 +156,7 @@ func (cmd *InjectCommand) Run() error {
 			}
 
 			if !confirmed {
-				fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+				fmt.Fprintln(cmd.io.Output(), "Aborting.")
 				return nil
 			}
 		}
@@ -171,9 +171,9 @@ func (cmd *InjectCommand) Run() error {
 			return ErrCannotWrite(err)
 		}
 
-		fmt.Fprintf(cmd.io.Stdout(), "%s\n", absPath)
+		fmt.Fprintf(cmd.io.Output(), "%s\n", absPath)
 	} else {
-		fmt.Fprintf(cmd.io.Stdout(), "%s", posix.AddNewLine(out))
+		fmt.Fprintf(cmd.io.Output(), "%s", posix.AddNewLine(out))
 	}
 
 	return nil

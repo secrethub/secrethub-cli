@@ -48,18 +48,18 @@ func (cmd *ACLCheckCommand) Run() error {
 	if cmd.accountName != "" {
 		for _, level := range levels {
 			if level.Account.Name == cmd.accountName {
-				fmt.Fprintf(cmd.io.Stdout(), "%s\n", level.Permission.String())
+				fmt.Fprintf(cmd.io.Output(), "%s\n", level.Permission.String())
 				return nil
 			}
 		}
 
-		fmt.Fprintln(cmd.io.Stdout(), api.PermissionNone.String())
+		fmt.Fprintln(cmd.io.Output(), api.PermissionNone.String())
 		return nil
 	}
 
 	sort.Sort(api.SortAccessLevels(levels))
 
-	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
+	tabWriter := tabwriter.NewWriter(cmd.io.Output(), 0, 4, 4, ' ', 0)
 	fmt.Fprintf(tabWriter, "%s\t%s\n", "PERMISSIONS", "ACCOUNT")
 
 	for _, level := range levels {

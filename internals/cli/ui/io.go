@@ -18,79 +18,96 @@ var (
 
 // IO is an interface to work with input/output.
 type IO interface {
-	Stdin() io.Reader
-	Stdout() io.Writer
+	// Input returns an io,Reader that reads input for the current process.
+	// If the process's input is piped, this reads from the pipe otherwise it asks input from the user.
+	Input() io.Reader
+	// Output returns an io.Writer that writes output for the current process.
+	// If the process's output is piped, this writes to the pipe otherwise it prints to the terminal.
+	Output() io.Writer
+	// Stdin returns the *os.File of the current process's stdin stream.
+	Stdin() *os.File
+	// Stdin returns the *os.File of the current process's stdout stream.
+	Stdout() *os.File
+	// Prompts returns an io.Reader and io.Writer that read and write directly to/from the terminal, even if the
+	// input or output of the current process is piped.
+	// If this is not supported, an error is returned.
 	Prompts() (io.Reader, io.Writer, error)
-	IsStdinPiped() bool
-	IsStdoutPiped() bool
+	// ReadSecret reads a line of input from the terminal while hiding the entered characters.
+	// Returns an error if secret input is not supported.
+	ReadSecret() ([]byte, error)
+	// IsInputPiped returns whether the current process's input is piped from another process.
+	IsInputPiped() bool
+	// IsOutputPiped returns whether the current process's output is piped to another process.
+	IsOutputPiped() bool
 }
 
-// UserIO is a middleware between input and output to the CLI program.
-// It implements userIO.Prompter and can be passed to libraries.
-type UserIO struct {
-	Input        *os.File
-	Output       *os.File
-	tty          *os.File
-	ttyAvailable bool
+// standardIO is a middleware between input and output to the CLI program.
+// It implements standardIO.Prompter and can be passed to libraries.
+type standardIO struct {
+	input  *os.File
+	output *os.File
 }
 
-// NewStdUserIO creates a new UserIO middleware only from os.Stdin and os.Stdout.
-func NewStdUserIO() UserIO {
-	return UserIO{
-		Input:  os.Stdin,
-		Output: os.Stdout,
+// newStdUserIO creates a new standardIO middleware only from os.Stdin and os.Stdout.
+func newStdUserIO() standardIO {
+	return standardIO{
+		input:  os.Stdin,
+		output: os.Stdout,
 	}
 }
 
-// Stdin returns the UserIO's Input.
-func (o UserIO) Stdin() io.Reader {
-	return o.Input
+func (o standardIO) Stdin() *os.File {
+	return o.input
 }
 
-// Stdout returns the UserIO's Output.
-func (o UserIO) Stdout() io.Writer {
-	return o.Output
+func (o standardIO) Stdout() *os.File {
+	return o.output
+}
+
+// Stdin returns the standardIO's Input.
+func (o standardIO) Input() io.Reader {
+	return o.input
+}
+
+// Stdout returns the standardIO's Output.
+func (o standardIO) Output() io.Writer {
+	return o.output
 }
 
 // Prompts simply returns Stdin and Stdout, when both input and output are
-// not piped. When either input or output is piped, Prompts attempts to
-// bypass stdin and stdout by connecting to /dev/tty on Unix systems when
-// available. On systems where tty is not available and when either input
-// or output is piped, prompting is not possible so an error is returned.
-func (o UserIO) Prompts() (io.Reader, io.Writer, error) {
-	if o.IsStdoutPiped() || o.IsStdinPiped() {
-		if o.ttyAvailable {
-			return o.tty, o.tty, nil
-		}
+// not piped. When either input or output is piped, it returns an error because standardIO does not have
+// access to a tty for prompting.
+func (o standardIO) Prompts() (io.Reader, io.Writer, error) {
+	if o.IsOutputPiped() || o.IsInputPiped() {
 		return nil, nil, ErrCannotAsk
 	}
-	return o.Input, o.Output, nil
+	return o.input, o.output, nil
 }
 
-func (o UserIO) IsStdinPiped() bool {
-	return isPiped(o.Input)
+func (o standardIO) IsInputPiped() bool {
+	return isPiped(o.input)
 }
 
-func (o UserIO) IsStdoutPiped() bool {
-	return isPiped(o.Output)
+func (o standardIO) IsOutputPiped() bool {
+	return isPiped(o.output)
 }
 
-// readPassword reads one line of input from the terminal without echoing the user input.
-func readPassword(r io.Reader) (string, error) {
-	file, ok := r.(*os.File)
-	if !ok {
-		return "", ErrCannotAsk
+func (o standardIO) ReadSecret() ([]byte, error) {
+	return readSecret(o.input)
+}
+
+// readSecret reads one line of input from the terminal without echoing the user input.
+func readSecret(f *os.File) ([]byte, error) {
+	// this case happens among other things when input is piped and ReadSecret is called.
+	if !terminal.IsTerminal(int(f.Fd())) {
+		return nil, ErrCannotAsk
 	}
-	// this case happens among other things when input is piped and ReadPassword is called.
-	if !terminal.IsTerminal(int(file.Fd())) {
-		return "", ErrCannotAsk
-	}
 
-	password, err := terminal.ReadPassword(int(file.Fd()))
+	password, err := terminal.ReadPassword(int(f.Fd()))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(password), nil
+	return password, nil
 }
 
 // Readln reads 1 line of input from a io.Reader. The newline character is not included in the response.
@@ -102,17 +119,6 @@ func Readln(r io.Reader) (string, error) {
 		return "", ErrReadInput(err)
 	}
 	return s.Text(), nil
-}
-
-// isPiped checks whether the file is a pipe.
-// If the file does not exist, it returns false.
-func isPiped(file *os.File) bool {
-	stat, err := file.Stat()
-	if err != nil {
-		return false
-	}
-
-	return (stat.Mode() & os.ModeCharDevice) == 0
 }
 
 // EOFKey returns the key that should be pressed to enter an EOF.

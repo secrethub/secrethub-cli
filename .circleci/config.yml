@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   lint:
     docker:
@@ -6,9 +6,20 @@ jobs:
     steps:
       - checkout
       - run: golangci-lint run
+  verify-build:
+    parameters:
+      os:
+        type: string
+      arch:
+        type: string
+    docker:
+      - image: circleci/golang:1.14
+    steps:
+      - checkout
+      - run: GOOS=<< parameters.os >> GOARCH=<< parameters.arch >> go build ./cmd/secrethub
   test:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
     steps:
       - checkout
       - restore_cache:
@@ -22,7 +33,7 @@ jobs:
       - run: make test
   verify-goreleaser:
     docker:
-      - image: goreleaser/goreleaser:v0.127
+      - image: goreleaser/goreleaser:v0.133
     steps:
       - checkout
       - run: goreleaser check
@@ -31,5 +42,14 @@ workflows:
   pipeline:
     jobs:
       - lint
+      - verify-build:
+          name: verify-build-<< matrix.os >>-<< matrix.arch >>
+          matrix:
+            parameters:
+              os: ["darwin", "linux", "windows"]
+              arch: ["amd64", "386"]
+            exclude:
+              - os: darwin
+                arch: 386
       - test
       - verify-goreleaser

@@ -46,7 +46,7 @@ type jsonFormatter struct {
 	fields  []string
 }
 
-// formatRow returns the json representation of the given row
+// Write writes the json representation of the given row
 // with the configured field names as keys and the provided values
 func (f *jsonFormatter) Write(values []string) error {
 	if len(f.fields) != len(values) {

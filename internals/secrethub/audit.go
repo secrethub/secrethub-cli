@@ -28,6 +28,7 @@ const (
 	defaultTerminalWidth = 80
 	formatTable          = "table"
 	formatJSON           = "json"
+	pipedOutputLineLimit = 1000
 )
 
 // AuditCommand is a command to audit a repo or a secret.
@@ -40,6 +41,7 @@ type AuditCommand struct {
 	newClient          newClientFunc
 	terminalWidth      func(int) (int, error)
 	perPage            int
+	limit              int
 	format             string
 }
 
@@ -88,6 +90,12 @@ func (cmd *AuditCommand) run() error {
 		return fmt.Errorf("per-page should be positive, got %d", cmd.perPage)
 	}
 
+	if cmd.io.IsOutputPiped() {
+		cmd.limit = pipedOutputLineLimit
+	} else {
+		cmd.limit = -1
+	}
+
 	iter, auditTable, err := cmd.iterAndAuditTable()
 	if err != nil {
 		return err
@@ -114,7 +122,7 @@ func (cmd *AuditCommand) run() error {
 		return errNoSuchFormat(cmd.format)
 	}
 
-	for {
+	for lineCount := 0; lineCount != cmd.limit; lineCount++ {
 		event, err := iter.Next()
 		if err == iterator.Done {
 			break

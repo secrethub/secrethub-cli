@@ -59,6 +59,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				},
 				format:  formatTable,
 				perPage: 20,
+				limit:   -1,
 				terminalWidth: func(_ int) (int, error) {
 					return 46, nil
 				},
@@ -90,6 +91,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				},
 				format:  formatTable,
 				perPage: 20,
+				limit:   -1,
 				terminalWidth: func(_ int) (int, error) {
 					return 46, nil
 				},
@@ -156,6 +158,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				},
 				format:  formatTable,
 				perPage: 20,
+				limit:   -1,
 				terminalWidth: func(_ int) (int, error) {
 					return 46, nil
 				},
@@ -184,6 +187,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				},
 				format:  formatTable,
 				perPage: 20,
+				limit:   -1,
 				terminalWidth: func(int) (int, error) {
 					return 83, nil
 				},

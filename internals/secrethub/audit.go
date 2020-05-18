@@ -2,32 +2,57 @@ package secrethub
 
 import (
 	"fmt"
-	"strings"
-	"text/tabwriter"
+	"io"
+
+	"github.com/secrethub/secrethub-go/internals/errio"
+
+	"github.com/secrethub/secrethub-cli/internals/secrethub/pager"
+
+	"golang.org/x/crypto/ssh/terminal"
+
+	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
-	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
+var (
+	errAudit        = errio.Namespace("audit")
+	errNoSuchFormat = errAudit.Code("invalid_format").ErrorPref("invalid format: %s")
+)
+
+const (
+	defaultTerminalWidth = 80
+	formatTable          = "table"
+	formatJSON           = "json"
+)
+
 // AuditCommand is a command to audit a repo or a secret.
 type AuditCommand struct {
-	io            ui.IO
-	path          api.Path
-	useTimestamps bool
-	timeFormatter TimeFormatter
-	newClient     newClientFunc
-	perPage       int
+	io                 ui.IO
+	newPaginatedWriter func(io.Writer) (io.WriteCloser, error)
+	path               api.Path
+	useTimestamps      bool
+	timeFormatter      TimeFormatter
+	newClient          newClientFunc
+	terminalWidth      func(int) (int, error)
+	perPage            int
+	format             string
 }
 
 // NewAuditCommand creates a new audit command.
 func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 	return &AuditCommand{
-		io:        io,
-		newClient: newClient,
+		io:                 io,
+		newPaginatedWriter: pager.NewWithFallback,
+		newClient:          newClient,
+		terminalWidth: func(fd int) (int, error) {
+			w, _, err := terminal.GetSize(fd)
+			return w, err
+		},
 	}
 }
 
@@ -35,7 +60,8 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause := r.Command("audit", "Show the audit log.")
 	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flag("per-page", "number of audit events shown per page").Default("20").IntVar(&cmd.perPage)
+	clause.Flag("per-page", "Number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
+	clause.Flag("output-format", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.").HintOptions("table", "json").Default("table").StringVar(&cmd.format)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.Run)
@@ -49,7 +75,11 @@ func (cmd *AuditCommand) Run() error {
 
 // beforeRun configures the command using the flag values.
 func (cmd *AuditCommand) beforeRun() {
-	cmd.timeFormatter = NewTimeFormatter(cmd.useTimestamps)
+	if cmd.format == formatJSON {
+		cmd.timeFormatter = NewTimeFormatter(true)
+	} else {
+		cmd.timeFormatter = NewTimeFormatter(cmd.useTimestamps)
+	}
 }
 
 // Run prints all audit events for the given repository or secret.
@@ -63,13 +93,26 @@ func (cmd *AuditCommand) run() error {
 		return err
 	}
 
-	tabWriter := tabwriter.NewWriter(cmd.io.Output(), 0, 4, 4, ' ', 0)
-	header := strings.Join(auditTable.header(), "\t") + "\n"
-	fmt.Fprint(tabWriter, header)
+	paginatedWriter, err := cmd.newPaginatedWriter(cmd.io.Output())
+	if err != nil {
+		return err
+	}
+	defer paginatedWriter.Close()
 
-	i := 0
+	var formatter listFormatter
+	if cmd.format == formatJSON {
+		formatter = newJSONFormatter(paginatedWriter, auditTable.header())
+	} else if cmd.format == formatTable {
+		terminalWidth, err := cmd.terminalWidth(int(cmd.io.Stdout().Fd()))
+		if err != nil {
+			terminalWidth = defaultTerminalWidth
+		}
+		formatter = newTableFormatter(paginatedWriter, terminalWidth, auditTable.columns())
+	} else {
+		return errNoSuchFormat(cmd.format)
+	}
+
 	for {
-		i++
 		event, err := iter.Next()
 		if err == iterator.Done {
 			break
@@ -82,29 +125,13 @@ func (cmd *AuditCommand) run() error {
 			return err
 		}
 
-		fmt.Fprint(tabWriter, strings.Join(row, "\t")+"\n")
-
-		if i == cmd.perPage {
-			err = tabWriter.Flush()
-			if err != nil {
-				return err
-			}
-			i = 0
-
-			// wait for <ENTER> to continue.
-			_, err := ui.Ask(cmd.io, "Press <ENTER> to show more results. Press <CTRL+C> to exit.")
-			if err != nil {
-				return err
-			}
-			fmt.Fprint(tabWriter, header)
+		err = formatter.Write(row)
+		if err == pager.ErrPagerClosed {
+			break
+		} else if err != nil {
+			return err
 		}
 	}
-
-	err = tabWriter.Flush()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -150,24 +177,44 @@ func (cmd *AuditCommand) iterAndAuditTable() (secrethub.AuditEventIterator, audi
 	return nil, nil, ErrNoValidRepoOrSecretPath
 }
 
+type tableColumn struct {
+	name     string
+	maxWidth int
+}
+
 type auditTable interface {
 	header() []string
 	row(event api.Audit) ([]string, error)
+	columns() []tableColumn
 }
 
-func newBaseAuditTable(timeFormatter TimeFormatter) baseAuditTable {
+func newBaseAuditTable(timeFormatter TimeFormatter, midColumns ...tableColumn) baseAuditTable {
+	columns := append([]tableColumn{
+		{name: "author", maxWidth: 32},
+		{name: "event", maxWidth: 22},
+	}, midColumns...)
+	columns = append(columns, []tableColumn{
+		{name: "IP address", maxWidth: 45},
+		{name: "date", maxWidth: 22},
+	}...)
+
 	return baseAuditTable{
+		tableColumns:  columns,
 		timeFormatter: timeFormatter,
 	}
 }
 
 type baseAuditTable struct {
+	tableColumns  []tableColumn
 	timeFormatter TimeFormatter
 }
 
-func (table baseAuditTable) header(content ...string) []string {
-	res := append([]string{"AUTHOR", "EVENT"}, content...)
-	return append(res, "IP ADDRESS", "DATE")
+func (table baseAuditTable) header() []string {
+	res := make([]string, len(table.tableColumns))
+	for i, col := range table.tableColumns {
+		res[i] = col.name
+	}
+	return res
 }
 
 func (table baseAuditTable) row(event api.Audit, content ...string) ([]string, error) {
@@ -178,6 +225,10 @@ func (table baseAuditTable) row(event api.Audit, content ...string) ([]string, e
 
 	res := append([]string{actor, getEventAction(event)}, content...)
 	return append(res, event.IPAddress, table.timeFormatter.Format(event.LoggedAt)), nil
+}
+
+func (table baseAuditTable) columns() []tableColumn {
+	return table.tableColumns
 }
 
 func newSecretAuditTable(timeFormatter TimeFormatter) secretAuditTable {
@@ -200,7 +251,7 @@ func (table secretAuditTable) row(event api.Audit) ([]string, error) {
 
 func newRepoAuditTable(tree *api.Tree, timeFormatter TimeFormatter) repoAuditTable {
 	return repoAuditTable{
-		baseAuditTable: newBaseAuditTable(timeFormatter),
+		baseAuditTable: newBaseAuditTable(timeFormatter, tableColumn{name: "event subject"}),
 		tree:           tree,
 	}
 }
@@ -208,10 +259,6 @@ func newRepoAuditTable(tree *api.Tree, timeFormatter TimeFormatter) repoAuditTab
 type repoAuditTable struct {
 	baseAuditTable
 	tree *api.Tree
-}
-
-func (table repoAuditTable) header() []string {
-	return table.baseAuditTable.header("EVENT SUBJECT")
 }
 
 func (table repoAuditTable) row(event api.Audit) ([]string, error) {

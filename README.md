@@ -67,7 +67,9 @@ Revoke an account's access to a repository.
 
 SecretHub integrates with all the tools you already know and love.
 
-<img src="https://secrethub.io/img/features/integrations.png" width="450px" align="left" />
+<p align="left">
+  <img src="https://secrethub.io/img/features/integrations.png" width="450px" />
+</p>
 
 Check out the [Integrations](integrations) page to find out how SecretHub works with your tools.
 

@@ -13,43 +13,63 @@
 
 The SecretHub CLI provides the command-line interface to interact with the SecretHub API.
 
-> [SecretHub][secrethub] is an end-to-end encrypted secret management service that helps developers keep database passwords, API keys, and other secrets out of source code.
-
-## Usage
-
-```sh
-$ secrethub write path/to/secret
-Type in your secret: ************************  
-
-$ cat config.yml.tpl
-db_user: myapp
-db_password: {{ path/to/secret:latest }}
-
-$ cat config.yml.tpl | secrethub inject
-db_user: myapp
-db_password: LEYkTdMCksCVMc4X3gpYN0fk
-```
-
-See the [reference docs][reference-docs] for a detailed overview of all commands.
+> [SecretHub][secrethub] is a secret management platform that every engineer can use. Securely provision passwords and keys throughout your entire stack with just a few lines of code.
 
 ## Get started
 
-### 1. [Download][installation-guide] the CLI.  
+Follow the [Getting Started Guide][getting-started] to quickly get up and running with SecretHub :rocket:
 
-Official distributions are available for Linux, macOS, and Windows for both `386` (32-bit) and `amd64` (64-bit) architectures.
+## Usage
 
-Check out the [installation guide][installation-guide] for detailed instructions on how to install the SecretHub CLI on your platform of choice.
+Below you can find a selection of some of the most-used SecretHub commands. Run `secrethub --help` or the [CLI reference docs][cli-reference-docs] for a complete list of all commands.
 
-### 2. Run `signup`
+### Reading and writing secrets
+```sh
+$ secrethub read <path/to/secret>
+Print a secret to stdout.
 
-Run `signup` to claim your free developer account:
+$ secrethub generate <path/to/secret>
+Generate a random value and store it as a new version of a secret
 
+$ secrethub write <path/to/secret>
+Ask for a value to store as a secret.
+
+$ echo "mysecret" | secrethub write <path/to/secret>
+Store a piped value as a secret.
+
+$ secrethub write -i <filename> <path/to/secret>
+Store the contents of a file as a secret.
 ```
-secrethub signup
+
+### Provisioning your applications with secrets
+```sh
+$ export MYSECRET=secrethub://path/to/secret
+$ secrethub run -- <executable/script>
+Automatically load secrets into environment variables and provide them to the wrapped executable or script.
+
+$ echo "mysecret: {{path/to/secret}}" | secrethub inject
+Read a configuration template from stdin and automatically inject secrets into it.
 ```
 
-And you're done. 
-Follow the [getting started guide][getting-started] for a brief introduction into the basics of SecretHub.
+### Access control
+```sh
+$ secrethub service init <namespace>/<repo> --permission <dir>:<read/write/admin>
+Create a service account for the given repository and automatically grant read, write or admin permission on the given directory.
+
+$ secrethub acl set <path/to/directory> <account-name> <read/write/admin>
+Grant an account read, write or admin permission on a directory.
+
+$ secrethub repo revoke <namespace>/<repo> <account-name>
+Revoke an account's access to a repository.
+```
+
+## Integrations
+
+SecretHub integrates with all the tools you already know and love.
+
+<img src="https://secrethub.io/img/features/integrations.png" width="450px" align="left" />
+
+Check out the [Integrations](integrations) page to find out how SecretHub works with your tools.
 
 ## Getting help
 
@@ -93,10 +113,10 @@ Run a single test:
 
 
 
-[secrethub]: https://secrethub.io
+[secrethub]: https://secrethub.io/
 [getting-started]: https://secrethub.io/docs/getting-started/
-[installation-guide]: https://secrethub.io/docs/getting-started/install
-[reference-docs]: https://secrethub.io/docs/reference/
+[cli-reference-docs]: https://secrethub.io/docs/reference/cli/
+[integrations]: https://secrethub.io/integrations/
 [releases]: https://github.com/secrethub/secrethub-cli/releases
 [latest-version]: https://github.com/secrethub/secrethub-cli/releases/latest
 [godoc]: http://godoc.org/github.com/secrethub/secrethub-cli

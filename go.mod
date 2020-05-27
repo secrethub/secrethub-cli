@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	bitbucket.org/zombiezen/cardcpx v0.0.0-20150417151802-902f68ff43ef
+	cloud.google.com/go v0.57.0 // indirect
 	github.com/alecthomas/kingpin v1.3.8-0.20200323085623-b6657d9477a6
 	github.com/atotto/clipboard v0.1.2
 	github.com/aws/aws-sdk-go v1.25.49
@@ -16,10 +17,12 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/secrethub/demo-app v0.1.0
-	github.com/secrethub/secrethub-go v0.28.0
+	github.com/secrethub/secrethub-go v0.27.1-0.20200527092505-0a02b49a0aa5
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
-	golang.org/x/crypto v0.0.0-20190313024323-a1f597ede03a
-	golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223
-	golang.org/x/text v0.3.0
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	golang.org/x/sys v0.0.0-20200501052902-10377860bb8e
+	golang.org/x/text v0.3.2
+	google.golang.org/api v0.25.0 // indirect
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )

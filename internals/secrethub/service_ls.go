@@ -46,6 +46,18 @@ func NewServiceAWSLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 	}
 }
 
+func NewServiceGCPLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand {
+	return &ServiceLsCommand{
+		io:              io,
+		newClient:       newClient,
+		newServiceTable: newGCPServiceTable,
+		filters: []func(service *api.Service) bool{
+			isGCPService,
+		},
+		help: "List all GCP service accounts in a given repository.",
+	}
+}
+
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceLsCommand) Register(r command.Registerer) {
 	clause := r.Command("ls", cmd.help)
@@ -161,4 +173,28 @@ func isAWSService(service *api.Service) bool {
 	}
 
 	return service.Credential.Type == api.CredentialTypeAWS
+}
+
+type gcpServiceTable struct {
+	baseServiceTable
+}
+
+func newGCPServiceTable(timeFormatter TimeFormatter) serviceTable {
+	return gcpServiceTable{baseServiceTable{timeFormatter: timeFormatter}}
+}
+
+func (sw gcpServiceTable) header() []string {
+	return sw.baseServiceTable.header("SERVICE-ACCOUNT-EMAIL", "KMS-KEY")
+}
+
+func (sw gcpServiceTable) row(service *api.Service) []string {
+	return sw.baseServiceTable.row(service, service.Credential.Metadata[api.CredentialMetadataGCPServiceAccountEmail], service.Credential.Metadata[api.CredentialMetadataGCPKMSKeyResourceID])
+}
+
+func isGCPService(service *api.Service) bool {
+	if service == nil {
+		return false
+	}
+
+	return service.Credential.Type == api.CredentialTypeGCPServiceAccount
 }

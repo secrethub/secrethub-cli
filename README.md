@@ -1,9 +1,15 @@
 <p align="center">
-  <img src="https://secrethub.io/img/secrethub-logo.svg" alt="SecretHub" width="380px"/>
+  <img src="https://secrethub.io/img/github-banner.png?v1" alt="SecretHub" width="620">
 </p>
-<h1 align="center">
-  <i>CLI</i>
-</h1>
+<br/>
+
+<p align="center">
+  <a href="https://secrethub.io/docs/start/getting-started/"><img alt="Get Started" src="https://secrethub.io/img/buttons/github/get-started.png?v1" height="28" /></a>
+  <a href="https://secrethub.io/docs/reference/cli/"><img alt="View Docs" src="https://secrethub.io/img/buttons/github/view-docs.png?v2" height="28" /></a>
+</p>
+<br/>
+
+# CLI
 
 [![GoDoc](https://godoc.org/github.com/secrethub/secrethub-cli?status.svg)][godoc]
 [![CircleCI](https://circleci.com/gh/secrethub/secrethub-cli.svg?style=shield)][circle-ci]

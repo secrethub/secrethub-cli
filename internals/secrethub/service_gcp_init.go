@@ -1,8 +1,11 @@
 package secrethub
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/asaskevich/govalidator"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -42,7 +45,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 	}
 
 	if cmd.serviceAccountEmail == "" {
-		serviceAccountEmail, err := ui.AskAndValidate(cmd.io, "What is the email of the GCP Service Account that should have access to the service?\n", 3, checkIsNotEmpty("service account email"))
+		serviceAccountEmail, err := ui.AskAndValidate(cmd.io, "What is the email of the GCP Service Account that should have access to the service?\n", 3, checkValidEmail)
 		if err != nil {
 			return err
 		}
@@ -101,4 +104,11 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 	)
 
 	command.BindAction(clause, cmd.Run)
+}
+
+func checkValidEmail(v string) error {
+	if !govalidator.IsEmail(v) {
+		return errors.New("invalid email")
+	}
+	return nil
 }

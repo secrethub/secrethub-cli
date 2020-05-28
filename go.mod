@@ -6,6 +6,7 @@ require (
 	bitbucket.org/zombiezen/cardcpx v0.0.0-20150417151802-902f68ff43ef
 	cloud.google.com/go v0.57.0 // indirect
 	github.com/alecthomas/kingpin v1.3.8-0.20200323085623-b6657d9477a6
+	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/atotto/clipboard v0.1.2
 	github.com/aws/aws-sdk-go v1.25.49
 	github.com/docker/go-units v0.3.3

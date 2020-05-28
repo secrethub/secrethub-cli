@@ -9,7 +9,7 @@
 </p>
 <br/>
 
-# CLI
+# SecretHub CLI
 
 [![GoDoc](https://godoc.org/github.com/secrethub/secrethub-cli?status.svg)][godoc]
 [![CircleCI](https://circleci.com/gh/secrethub/secrethub-cli.svg?style=shield)][circle-ci]

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://secrethub.io/img/github-banner.png?v1" alt="SecretHub" width="620">
+  <img src="https://secrethub.io/img/github-banner.png?v2" alt="SecretHub" width="400">
 </p>
 <br/>
 

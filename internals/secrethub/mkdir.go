@@ -41,12 +41,6 @@ func (cmd *MkDirCommand) Register(r command.Registerer) {
 
 // Run executes the command.
 func (cmd *MkDirCommand) Run() error {
-	for _, path := range cmd.paths {
-		if path.IsRepoPath() {
-			return ErrMkDirOnRootDir
-		}
-	}
-
 	client, err := cmd.newClient()
 	if err != nil {
 		return err
@@ -77,11 +71,14 @@ func (d *dirPathList) String() string {
 	return ""
 }
 
-// Set adds a new directory path to the list.
+// Set validates and adds a new directory path to the list.
 func (d *dirPathList) Set(path string) error {
 	dirPath, err := api.NewDirPath(path)
 	if err != nil {
 		return err
+	}
+	if dirPath.IsRepoPath() {
+		return ErrMkDirOnRootDir
 	}
 	*d = append(*d, dirPath)
 	return nil

@@ -63,11 +63,6 @@ func TestMkDirCommand(t *testing.T) {
 			stdout: "Created a new directory at namespace/repo/dir1\nCreated a new directory at namespace/repo/dir2\n",
 			err:    nil,
 		},
-		"on root dir": {
-			paths:  []string{"namespace/repo"},
-			stdout: "",
-			err:    ErrMkDirOnRootDir,
-		},
 		"new client fails": {
 			paths: []string{"namespace/repo/dir"},
 			newClient: func() (secrethub.ClientInterface, error) {
@@ -133,6 +128,35 @@ func TestMkDirCommand(t *testing.T) {
 
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, tc.stdout, io.StdOut.String())
+		})
+	}
+}
+
+func TestDirPathList_Set(t *testing.T) {
+	cases := map[string]struct {
+		path     string
+		expected dirPathList
+		err      error
+	}{
+		"success": {
+			path:     "namespace/repo/dir",
+			expected: dirPathList{"namespace/repo/dir"},
+		},
+		"root dir": {
+			path: "namespace/repo",
+			err:  ErrMkDirOnRootDir,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			list := dirPathList{}
+			err := list.Set(tc.path)
+			assert.Equal(t, err, tc.err)
+			assert.Equal(t, len(list), len(tc.expected))
+			for i := range list {
+				assert.Equal(t, list[i], tc.expected[i])
+			}
 		})
 	}
 }

@@ -70,12 +70,14 @@ func (cmd *MkDirCommand) Run() error {
 	return nil
 }
 
+// dirPathList represents the value of a repeatable directory path argument.
 type dirPathList []api.DirPath
 
 func (d *dirPathList) String() string {
 	return ""
 }
 
+// Set adds a new directory path to the list.
 func (d *dirPathList) Set(path string) error {
 	dirPath, err := api.NewDirPath(path)
 	if err != nil {

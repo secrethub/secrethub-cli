@@ -44,9 +44,9 @@ func TestAuditRepoCommand_run(t *testing.T) {
 				terminalWidth: func(int) (int, error) {
 					return 83, nil
 				},
-				format:  formatTable,
-				perPage: 20,
-				limit:   -1,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
 			},
 			out: "",
 		},
@@ -85,9 +85,9 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				format:  formatTable,
-				perPage: 20,
-				limit:   -1,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
 				terminalWidth: func(_ int) (int, error) {
 					return 83, nil
 				},
@@ -127,9 +127,9 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				format:  formatTable,
-				perPage: 20,
-				limit:   -1,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
 				terminalWidth: func(int) (int, error) {
 					return 83, nil
 				},
@@ -185,9 +185,9 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				format:  formatTable,
-				perPage: 20,
-				limit:   -1,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
 				terminalWidth: func(int) (int, error) {
 					return 83, nil
 				},
@@ -221,9 +221,9 @@ func TestAuditRepoCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				format:  formatTable,
-				perPage: 20,
-				limit:   -1,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
 				terminalWidth: func(int) (int, error) {
 					return 83, nil
 				},

@@ -16,13 +16,13 @@ import (
 
 func TestMkDirCommand(t *testing.T) {
 	cases := map[string]struct {
-		path      string
+		paths     []string
 		newClient func() (secrethub.ClientInterface, error)
 		stdout    string
 		err       error
 	}{
 		"success": {
-			path: "namespace/repo/dir",
+			paths: []string{"namespace/repo/dir"},
 			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
@@ -43,12 +43,12 @@ func TestMkDirCommand(t *testing.T) {
 			err:    nil,
 		},
 		"on root dir": {
-			path:   "namespace/repo",
+			paths:  []string{"namespace/repo"},
 			stdout: "",
 			err:    ErrMkDirOnRootDir,
 		},
 		"new client fails": {
-			path: "namespace/repo/dir",
+			paths: []string{"namespace/repo/dir"},
 			newClient: func() (secrethub.ClientInterface, error) {
 				return nil, errio.Namespace("test").Code("foo").Error("bar")
 			},
@@ -56,7 +56,7 @@ func TestMkDirCommand(t *testing.T) {
 			err:    errio.Namespace("test").Code("foo").Error("bar"),
 		},
 		"create dir fails": {
-			path: "namespace/repo/dir",
+			paths: []string{"namespace/repo/dir"},
 			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
@@ -74,9 +74,13 @@ func TestMkDirCommand(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			io := ui.NewFakeIO()
+			dirPaths := dirPathList{}
+			for _, path := range tc.paths {
+				_ = dirPaths.Set(path)
+			}
 			cmd := MkDirCommand{
 				io:        io,
-				path:      api.DirPath(tc.path),
+				paths:     dirPaths,
 				newClient: tc.newClient,
 			}
 

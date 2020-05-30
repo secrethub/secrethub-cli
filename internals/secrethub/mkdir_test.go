@@ -42,6 +42,27 @@ func TestMkDirCommand(t *testing.T) {
 			stdout: "Created a new directory at namespace/repo/dir\n",
 			err:    nil,
 		},
+		"success multiple dirs": {
+			paths: []string{"namespace/repo/dir1", "namespace/repo/dir2"},
+			newClient: func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					DirService: &fakeclient.DirService{
+						CreateFunc: func(path string) (*api.Dir, error) {
+							return &api.Dir{
+								DirID:          uuid.New(),
+								BlindName:      "blindname",
+								Name:           "dir",
+								Status:         api.StatusOK,
+								CreatedAt:      time.Now().UTC(),
+								LastModifiedAt: time.Now().UTC(),
+							}, nil
+						},
+					},
+				}, nil
+			},
+			stdout: "Created a new directory at namespace/repo/dir1\nCreated a new directory at namespace/repo/dir2\n",
+			err:    nil,
+		},
 		"on root dir": {
 			paths:  []string{"namespace/repo"},
 			stdout: "",
@@ -67,6 +88,30 @@ func TestMkDirCommand(t *testing.T) {
 				}, nil
 			},
 			stdout: "",
+			err:    api.ErrDirAlreadyExists,
+		},
+		"create dir fails on second dir": {
+			paths: []string{"namespace/repo/dir1", "namespace/repo/dir2"},
+			newClient: func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					DirService: &fakeclient.DirService{
+						CreateFunc: func(path string) (*api.Dir, error) {
+							if path == "namespace/repo/dir2" {
+								return nil, api.ErrDirAlreadyExists
+							}
+							return &api.Dir{
+								DirID:          uuid.New(),
+								BlindName:      "blindname",
+								Name:           "dir",
+								Status:         api.StatusOK,
+								CreatedAt:      time.Now().UTC(),
+								LastModifiedAt: time.Now().UTC(),
+							}, nil
+						},
+					},
+				}, nil
+			},
+			stdout: "Created a new directory at namespace/repo/dir1\n",
 			err:    api.ErrDirAlreadyExists,
 		},
 	}

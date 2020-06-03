@@ -21,7 +21,7 @@ func NewServiceGCPCommand(io ui.IO, newClient newClientFunc) *ServiceGCPCommand 
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *ServiceGCPCommand) Register(r command.Registerer) {
-	clause := r.Command("gcp", "Manage GCP service accounts.")
+	clause := r.Command("gcp", "Manage GCP service accounts.").Hidden()
 	NewServiceGCPInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewServiceGCPLsCommand(cmd.io, cmd.newClient).Register(clause)
 }

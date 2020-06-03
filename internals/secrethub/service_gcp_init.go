@@ -230,7 +230,7 @@ type gcpKMSKeyOptionLister struct {
 }
 
 func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
-	var options []ui.Option
+	options := make([]ui.Option, 0, 16)
 
 	errChan := make(chan error, 1)
 	resChan := make(chan ui.Option, 16)

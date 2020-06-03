@@ -107,6 +107,29 @@ func TestMkDirCommand(t *testing.T) {
 			},
 			stdout: "Created a new directory at namespace/repo/dir1\n",
 		},
+		"create dir fails on first dir": {
+			paths: []string{"namespace/repo/dir1", "namespace/repo/dir2"},
+			newClient: func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					DirService: &fakeclient.DirService{
+						CreateFunc: func(path string) (*api.Dir, error) {
+							if path == "namespace/repo/dir1" {
+								return nil, api.ErrDirAlreadyExists
+							}
+							return &api.Dir{
+								DirID:          uuid.New(),
+								BlindName:      "blindname",
+								Name:           "dir",
+								Status:         api.StatusOK,
+								CreatedAt:      time.Now().UTC(),
+								LastModifiedAt: time.Now().UTC(),
+							}, nil
+						},
+					},
+				}, nil
+			},
+			stdout: "Created a new directory at namespace/repo/dir2\n",
+		},
 	}
 
 	for name, tc := range cases {

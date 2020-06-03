@@ -123,14 +123,14 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 	}
 
 	fmt.Fprintln(cmd.io.Stdout(), "Successfully created a new service account with ID: "+service.ServiceID)
-	fmt.Fprintf(cmd.io.Stdout(), "Any host that assumes the Service Account %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", cmd.serviceAccountEmail)
+	fmt.Fprintf(cmd.io.Stdout(), "Any host using the Service Account %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", cmd.serviceAccountEmail)
 
 	return nil
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create a new service account that is tied to an GCP IAM role.")
+	clause := r.Command("init", "Create a new service account that is tied to an GCP Service Account.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flag("kms-key", "The Resource ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyResourceID)
 	clause.Flag("service-account-email", "The email of the GCP Service Account that should have access to this service account.").StringVar(&cmd.serviceAccountEmail)
@@ -144,7 +144,7 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 		"  - The GCP Service Account should be the service account that is assumed by the service during execution.\n" +
 		"  - The KMS key is a key that is used for encryption of the account. Decryption permission on this key must be granted to the previously described GCP Service Account.\n" +
 		"\n" +
-		"To create a new service that uses the GCP identity provider, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore GCP credentials should be configured on this system. For details on how this can be done, see https://cloud.google.com/sdk/docs/quickstarts.\n",
+		"To create a new service that uses the GCP identity provider, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore GCP application default credentials should be configured on this system. To achieve this, first install the Google Cloud SDK (https://cloud.google.com/sdk/docs/quickstarts) and then run `gcloud auth application-default login`.",
 	)
 
 	command.BindAction(clause, cmd.Run)

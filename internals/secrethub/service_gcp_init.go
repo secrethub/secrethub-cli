@@ -237,6 +237,7 @@ func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
 	var wg sync.WaitGroup
 
 	ctx, cancelTimeout := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancelTimeout()
 
 	err := l.kmsService.Projects.Locations.List("projects/"+l.projectID).Pages(ctx, func(resp *cloudkms.ListLocationsResponse) error {
 		for _, loc := range resp.Locations {
@@ -267,7 +268,6 @@ func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
 	}
 	go func() {
 		wg.Wait()
-		cancelTimeout()
 		close(resChan)
 	}()
 	for res := range resChan {

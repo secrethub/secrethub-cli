@@ -38,7 +38,7 @@ func (cmd *TreeCommand) Run() error {
 		return err
 	}
 
-	printTree(t, cmd.io.Stdout())
+	printTree(t, cmd.io.Output())
 	return nil
 }
 

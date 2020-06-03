@@ -88,7 +88,7 @@ func (cmd *ServiceInitCommand) Run() error {
 			return err
 		}
 
-		fmt.Fprintf(cmd.io.Stdout(), "Copied account configuration for %s to clipboard. It will be cleared after 45 seconds.\n", service.ServiceID)
+		fmt.Fprintf(cmd.io.Output(), "Copied account configuration for %s to clipboard. It will be cleared after 45 seconds.\n", service.ServiceID)
 	} else if cmd.file != "" {
 		err = ioutil.WriteFile(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
 		if err != nil {
@@ -96,13 +96,13 @@ func (cmd *ServiceInitCommand) Run() error {
 		}
 
 		fmt.Fprintf(
-			cmd.io.Stdout(),
+			cmd.io.Output(),
 			"Written account configuration for %s to %s. Be sure to remove it when you're done.\n",
 			service.ServiceID,
 			cmd.file,
 		)
 	} else {
-		fmt.Fprintf(cmd.io.Stdout(), "%s", posix.AddNewLine(out))
+		fmt.Fprintf(cmd.io.Output(), "%s", posix.AddNewLine(out))
 	}
 
 	return nil

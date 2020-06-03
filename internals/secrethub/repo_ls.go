@@ -75,10 +75,10 @@ func (cmd *RepoLSCommand) run() error {
 
 	if cmd.quiet {
 		for _, repo := range list {
-			fmt.Fprintf(cmd.io.Stdout(), "%s\n", repo.Path())
+			fmt.Fprintf(cmd.io.Output(), "%s\n", repo.Path())
 		}
 	} else {
-		w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
+		w := tabwriter.NewWriter(cmd.io.Output(), 0, 2, 2, ' ', 0)
 		fmt.Fprintf(w, "%s\t%s\t%s\n", "NAME", "STATUS", "CREATED")
 		for _, repo := range list {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", repo.Path(), repo.Status, cmd.timeFormatter.Format(repo.CreatedAt.Local()))

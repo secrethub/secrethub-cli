@@ -1,11 +1,14 @@
 package secrethub
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"testing"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
+
 	"github.com/secrethub/secrethub-cli/internals/secrethub/fakes"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -54,13 +57,20 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				perPage: 20,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
+				terminalWidth: func(_ int) (int, error) {
+					return 46, nil
+				},
 				timeFormatter: &fakes.TimeFormatter{
 					Response: "2018-01-01T01:01:01+01:00",
 				},
 			},
-			out: "AUTHOR       EVENT            IP ADDRESS    DATE\n" +
-				"developer    create.secret    127.0.0.1     2018-01-01T01:01:01+01:00\n",
+			out: "AUTHOR      EVENT       IP ADDRESS  DATE      \n" +
+				"developer   create.sec  127.0.0.1   2018-01-01\n" +
+				"            ret                     T01:01:01+\n" +
+				"                                    01:00     \n",
 		},
 		"0 events": {
 			cmd: AuditCommand{
@@ -79,13 +89,19 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				perPage: 20,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
+				terminalWidth: func(_ int) (int, error) {
+					return 46, nil
+				},
 			},
-			out: "AUTHOR    EVENT    IP ADDRESS    DATE\n",
+			out: "",
 		},
 		"error secret version": {
 			cmd: AuditCommand{
 				path:    "namespace/repo/secret:1",
+				format:  formatTable,
 				perPage: 20,
 			},
 			err: ErrCannotAuditSecretVersion,
@@ -96,6 +112,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 				newClient: func() (secrethub.ClientInterface, error) {
 					return nil, ErrCannotFindHomeDir()
 				},
+				format:  formatTable,
 				perPage: 20,
 			},
 			err: ErrCannotFindHomeDir(),
@@ -117,6 +134,7 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
+				format:  formatTable,
 				perPage: 20,
 			},
 			err: ErrCannotAuditDir,
@@ -138,9 +156,15 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				perPage: 20,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
+				terminalWidth: func(_ int) (int, error) {
+					return 46, nil
+				},
 			},
 			err: testError,
+			out: "",
 		},
 		"invalid audit actor": {
 			cmd: AuditCommand{
@@ -161,7 +185,12 @@ func TestAuditSecretCommand_run(t *testing.T) {
 						},
 					}, nil
 				},
-				perPage: 20,
+				format:     formatTable,
+				perPage:    20,
+				maxResults: -1,
+				terminalWidth: func(int) (int, error) {
+					return 83, nil
+				},
 			},
 			err: ErrInvalidAuditActor,
 			out: "",
@@ -171,15 +200,18 @@ func TestAuditSecretCommand_run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := ui.NewFakeIO()
-			tc.cmd.io = io
+			buffer := bytes.Buffer{}
+			tc.cmd.newPaginatedWriter = func(_ io.Writer) (io.WriteCloser, error) {
+				return &fakes.Pager{Buffer: &buffer}, nil
+			}
+			tc.cmd.io = fakeui.NewIO(t)
 
 			// Act
 			err := tc.cmd.run()
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, buffer.String(), tc.out)
 		})
 	}
 }

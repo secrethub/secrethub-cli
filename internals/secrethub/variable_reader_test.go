@@ -3,10 +3,11 @@ package secrethub
 import (
 	"testing"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-	"github.com/secrethub/secrethub-go/internals/assert"
 )
 
 func TestVariableReader(t *testing.T) {
@@ -155,7 +156,7 @@ func TestPromptVariableReader(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Reads = tc.promptIn
 
 			reader := newPromptMissingVariableReader(reader, io)

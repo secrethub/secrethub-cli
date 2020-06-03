@@ -53,7 +53,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 
 	if len(planned.Repos) > 0 {
 		fmt.Fprintf(
-			cmd.io.Stdout(),
+			cmd.io.Output(),
 			"[WARNING] Revoking %s from the %s organization will revoke the user from %d repositories, "+
 				"automatically flagging secrets for rotation.\n\n"+
 				"A revocation plan has been generated and is shown below. "+
@@ -65,7 +65,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 			len(planned.Repos),
 		)
 
-		err = writeOrgRevokeRepoList(cmd.io.Stdout(), planned.Repos...)
+		err = writeOrgRevokeRepoList(cmd.io.Output(), planned.Repos...)
 		if err != nil {
 			return err
 		}
@@ -74,10 +74,10 @@ func (cmd *OrgRevokeCommand) Run() error {
 		failed := planned.StatusCounts[api.StatusFailed]
 		unaffected := planned.StatusCounts[api.StatusOK]
 
-		fmt.Fprintf(cmd.io.Stdout(), "Revocation plan: %d to flag, %d to fail, %d OK.\n\n", flagged, failed, unaffected)
+		fmt.Fprintf(cmd.io.Output(), "Revocation plan: %d to flag, %d to fail, %d OK.\n\n", flagged, failed, unaffected)
 	} else {
 		fmt.Fprintf(
-			cmd.io.Stdout(),
+			cmd.io.Output(),
 			"The user %s has no memberships to any of %s's repos and can be safely removed.\n\n",
 			cmd.username,
 			cmd.orgName,
@@ -94,11 +94,11 @@ func (cmd *OrgRevokeCommand) Run() error {
 	}
 
 	if !confirmed {
-		fmt.Fprintln(cmd.io.Stdout(), "Name does not match. Aborting.")
+		fmt.Fprintln(cmd.io.Output(), "Name does not match. Aborting.")
 		return nil
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "\nRevoking user...\n")
+	fmt.Fprintf(cmd.io.Output(), "\nRevoking user...\n")
 
 	revoked, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username, nil)
 	if err != nil {
@@ -106,8 +106,8 @@ func (cmd *OrgRevokeCommand) Run() error {
 	}
 
 	if len(revoked.Repos) > 0 {
-		fmt.Fprintln(cmd.io.Stdout(), "")
-		err = writeOrgRevokeRepoList(cmd.io.Stdout(), revoked.Repos...)
+		fmt.Fprintln(cmd.io.Output(), "")
+		err = writeOrgRevokeRepoList(cmd.io.Output(), revoked.Repos...)
 		if err != nil {
 			return err
 		}
@@ -117,14 +117,14 @@ func (cmd *OrgRevokeCommand) Run() error {
 		unaffected := revoked.StatusCounts[api.StatusOK]
 
 		fmt.Fprintf(
-			cmd.io.Stdout(),
+			cmd.io.Output(),
 			"Revoke complete! Repositories: %d flagged, %d failed, %d OK.\n",
 			flagged,
 			failed,
 			unaffected,
 		)
 	} else {
-		fmt.Fprintln(cmd.io.Stdout(), "Revoke complete!")
+		fmt.Fprintln(cmd.io.Output(), "Revoke complete!")
 	}
 
 	return nil

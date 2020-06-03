@@ -52,7 +52,7 @@ func NewAccountInitCommand(io ui.IO, newClient newClientFunc, credentialStore Cr
 		io:              io,
 		credentialStore: credentialStore,
 		clipper:         clip.NewClipboard(),
-		progressPrinter: progress.NewPrinter(io.Stdout(), 500*time.Millisecond),
+		progressPrinter: progress.NewPrinter(io.Output(), 500*time.Millisecond),
 		newClient:       newClient,
 	}
 }
@@ -105,7 +105,7 @@ func (cmd *AccountInitCommand) Run() error {
 						}
 
 						if !confirmed {
-							fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+							fmt.Fprintln(cmd.io.Output(), "Aborting.")
 							return nil
 						}
 					}
@@ -138,14 +138,14 @@ func (cmd *AccountInitCommand) Run() error {
 				}
 
 				if !confirmed {
-					fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+					fmt.Fprintln(cmd.io.Output(), "Aborting.")
 					return nil
 				}
 			}
 		}
 
 		fmt.Fprintf(
-			cmd.io.Stdout(),
+			cmd.io.Output(),
 			"An account credential will be generated and stored at %s. "+
 				"Losing this credential means you lose the ability to decrypt your secrets. "+
 				"So keep it safe.\n",
@@ -166,13 +166,13 @@ func (cmd *AccountInitCommand) Run() error {
 			}
 		}
 
-		fmt.Fprint(cmd.io.Stdout(), "Generating credential...")
+		fmt.Fprint(cmd.io.Output(), "Generating credential...")
 		err := credential.Create()
 		if err != nil {
 			return err
 		}
 
-		fmt.Fprintln(cmd.io.Stdout(), " Done")
+		fmt.Fprintln(cmd.io.Output(), " Done")
 
 		exportKey := credential.Key
 		if passphrase != "" {
@@ -216,11 +216,11 @@ func (cmd *AccountInitCommand) Run() error {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintln(cmd.io.Stdout(), "The credential's public component has been copied to the clipboard. To add the credential to your account, paste the clipboard contents in https://dashboard.secrethub.io/account-init")
+			fmt.Fprintln(cmd.io.Output(), "The credential's public component has been copied to the clipboard. To add the credential to your account, paste the clipboard contents in https://dashboard.secrethub.io/account-init")
 		} else {
-			fmt.Fprintln(cmd.io.Stdout(), "To add the credential to your account, paste the public component shown below in https://dashboard.secrethub.io/account-init")
+			fmt.Fprintln(cmd.io.Output(), "To add the credential to your account, paste the public component shown below in https://dashboard.secrethub.io/account-init")
 
-			fmt.Fprintf(cmd.io.Stdout(), "\n%s\n", out)
+			fmt.Fprintf(cmd.io.Output(), "\n%s\n", out)
 		}
 	} else {
 		if !cmd.credentialStore.ConfigDir().Credential().Exists() {
@@ -249,21 +249,21 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 
 	if !isAuthenticated {
 		if cmd.noWait {
-			fmt.Fprintln(cmd.io.Stdout(), "Not waiting for credential to be added. To continue initializing your account after you have added the credential, run again with --continue.")
+			fmt.Fprintln(cmd.io.Output(), "Not waiting for credential to be added. To continue initializing your account after you have added the credential, run again with --continue.")
 			return nil
 		}
-		fmt.Fprint(cmd.io.Stdout(), "Waiting for credential to be added...")
+		fmt.Fprint(cmd.io.Output(), "Waiting for credential to be added...")
 
 		authenticatedC, errC := cmd.waitForCredentialToBeAdded(client)
 
 		select {
 		case <-authenticatedC:
-			fmt.Fprintln(cmd.io.Stdout(), " Done")
+			fmt.Fprintln(cmd.io.Output(), " Done")
 		case err := <-errC:
-			fmt.Fprintln(cmd.io.Stdout(), " Failed")
+			fmt.Fprintln(cmd.io.Output(), " Failed")
 			return err
 		case <-time.After(WaitTimeout):
-			fmt.Fprintln(cmd.io.Stdout(), " Failed")
+			fmt.Fprintln(cmd.io.Output(), " Failed")
 			return ErrAddCredentialTimeout
 		}
 	}
@@ -286,7 +286,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 		return ErrAccountAlreadyInitialized
 	}
 
-	fmt.Fprint(cmd.io.Stdout(), "Finishing setup of your account...")
+	fmt.Fprint(cmd.io.Output(), "Finishing setup of your account...")
 
 	key, err := cmd.credentialStore.Import()
 	if err != nil {
@@ -295,7 +295,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 
 	_, err = client.Accounts().Keys().Create(key.Verifier(), key.Encrypter())
 	if err != nil {
-		fmt.Fprintln(cmd.io.Stdout(), " Failed")
+		fmt.Fprintln(cmd.io.Output(), " Failed")
 		return err
 	}
 
@@ -313,7 +313,7 @@ func (cmd *AccountInitCommand) createAccountKey() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), " Done")
+	fmt.Fprintln(cmd.io.Output(), " Done")
 
 	return nil
 }

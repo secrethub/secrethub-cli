@@ -46,7 +46,7 @@ func (cmd *CredentialListCommand) Run() error {
 
 	timeFormatter := NewTimeFormatter(cmd.useTimestamps)
 
-	w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
+	w := tabwriter.NewWriter(cmd.io.Output(), 0, 2, 2, ' ', 0)
 	fmt.Fprintln(w,
 		"FINGERPRINT\t"+
 			"TYPE\t"+

@@ -50,7 +50,7 @@ func (cmd *CredentialBackupCommand) Run() error {
 		return err
 	}
 	if !ok {
-		fmt.Fprintln(cmd.io.Stdout(), "Aborting")
+		fmt.Fprintln(cmd.io.Output(), "Aborting")
 		return nil
 	}
 
@@ -66,8 +66,8 @@ func (cmd *CredentialBackupCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "This is your backup code: \n%s\n", code)
-	fmt.Fprintln(cmd.io.Stdout(), "Write it down and store it in a safe location! "+
+	fmt.Fprintf(cmd.io.Output(), "This is your backup code: \n%s\n", code)
+	fmt.Fprintln(cmd.io.Output(), "Write it down and store it in a safe location! "+
 		"You can restore your account by running `secrethub init`.")
 
 	return nil

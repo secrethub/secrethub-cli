@@ -52,7 +52,7 @@ func AskWithDefault(io IO, question, defaultValue string) (string, error) {
 // AskSecret prints out the question and reads back the input,
 // without echoing it back. Useful for passwords and other sensitive inputs.
 func AskSecret(io IO, question string) (string, error) {
-	promptIn, promptOut, err := io.Prompts()
+	_, promptOut, err := io.Prompts()
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +62,7 @@ func AskSecret(io IO, question string) (string, error) {
 		return "", err
 	}
 
-	raw, err := promptIn.ReadPassword()
+	raw, err := io.ReadSecret()
 	if err != nil {
 		return "", ErrReadInput(err)
 	}

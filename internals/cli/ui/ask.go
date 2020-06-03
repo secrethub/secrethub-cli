@@ -382,7 +382,10 @@ func (s *selecter) process() (string, error) {
 	choice, err := strconv.Atoi(in)
 	if err != nil || choice < 1 || choice > len(s.options) {
 		if s.addOwn {
-			return in, s.validateFunc(in)
+			if s.validateFunc != nil {
+				return in, s.validateFunc(in)
+			}
+			return in, nil
 		}
 
 		fmt.Fprintln(os.Stderr, fmt.Sprintf("%s is not a valid choice", in))

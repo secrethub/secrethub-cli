@@ -232,7 +232,7 @@ type gcpKMSKeyOptionLister struct {
 func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
 	var options []ui.Option
 
-	errChan := make(chan error)
+	errChan := make(chan error, 1)
 	resChan := make(chan ui.Option, 16)
 	var wg sync.WaitGroup
 
@@ -275,7 +275,7 @@ func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
 	}
 	select {
 	case err := <-errChan:
-		return nil, false, err
+		return nil, false, gcp.HandleError(err)
 	default:
 		return options, false, nil
 	}

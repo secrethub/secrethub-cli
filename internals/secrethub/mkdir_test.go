@@ -83,7 +83,6 @@ func TestMkDirCommand(t *testing.T) {
 				}, nil
 			},
 			stdout: "",
-			err:    api.ErrDirAlreadyExists,
 		},
 		"create dir fails on second dir": {
 			paths: []string{"namespace/repo/dir1", "namespace/repo/dir2"},
@@ -107,7 +106,6 @@ func TestMkDirCommand(t *testing.T) {
 				}, nil
 			},
 			stdout: "Created a new directory at namespace/repo/dir1\n",
-			err:    api.ErrDirAlreadyExists,
 		},
 	}
 
@@ -132,31 +130,65 @@ func TestMkDirCommand(t *testing.T) {
 	}
 }
 
-func TestDirPathList_Set(t *testing.T) {
+func TestCreateDirectory(t *testing.T) {
 	cases := map[string]struct {
-		path     string
-		expected dirPathList
-		err      error
+		client secrethub.ClientInterface
+		path   string
+		err    error
 	}{
 		"success": {
-			path:     "namespace/repo/dir",
-			expected: dirPathList{"namespace/repo/dir"},
+			client: fakeclient.Client{
+				DirService: &fakeclient.DirService{
+					CreateFunc: func(path string) (*api.Dir, error) {
+						return &api.Dir{
+							DirID:          uuid.New(),
+							BlindName:      "blindname",
+							Name:           "dir",
+							Status:         api.StatusOK,
+							CreatedAt:      time.Now().UTC(),
+							LastModifiedAt: time.Now().UTC(),
+						}, nil
+					},
+				},
+			},
+			path: "namespace/repo/dir",
 		},
 		"root dir": {
+			client: fakeclient.Client{
+				DirService: &fakeclient.DirService{
+					CreateFunc: func(path string) (*api.Dir, error) {
+						return &api.Dir{
+							DirID:          uuid.New(),
+							BlindName:      "blindname",
+							Name:           "dir",
+							Status:         api.StatusOK,
+							CreatedAt:      time.Now().UTC(),
+							LastModifiedAt: time.Now().UTC(),
+						}, nil
+					},
+				},
+			},
 			path: "namespace/repo",
 			err:  ErrMkDirOnRootDir,
+		},
+		"create dir fails": {
+			client: fakeclient.Client{
+				DirService: &fakeclient.DirService{
+					CreateFunc: func(path string) (*api.Dir, error) {
+						return nil, api.ErrDirAlreadyExists
+					},
+				},
+			},
+			path: "namespace/repo/dir",
+			err:  api.ErrDirAlreadyExists,
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			list := dirPathList{}
-			err := list.Set(tc.path)
+			cmd := MkDirCommand{}
+			err := cmd.createDirectory(tc.client, tc.path)
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, len(list), len(tc.expected))
-			for i := range list {
-				assert.Equal(t, list[i], tc.expected[i])
-			}
 		})
 	}
 }

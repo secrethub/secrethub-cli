@@ -2,11 +2,13 @@ package secrethub
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-
-	"github.com/secrethub/secrethub-go/internals/api"
 )
 
 // Errors
@@ -47,32 +49,18 @@ func (cmd *MkDirCommand) Run() error {
 	}
 
 	for _, path := range cmd.paths {
-		if cmd.parents {
-			err = client.Dirs().CreateAll(path.Value())
-			if err != nil {
-				return err
-			}
+		err := cmd.createDirectory(client, path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Encountered an error: %s\n", err)
 		} else {
-			_, err = client.Dirs().Create(path.Value())
-			if err != nil {
-				return err
-			}
+			fmt.Fprintf(cmd.io.Stdout(), "Created a new directory at %s\n", path)
 		}
-
-		fmt.Fprintf(cmd.io.Stdout(), "Created a new directory at %s\n", path)
 	}
 	return nil
 }
 
-// dirPathList represents the value of a repeatable directory path argument.
-type dirPathList []api.DirPath
-
-func (d *dirPathList) String() string {
-	return ""
-}
-
-// Set validates and adds a new directory path to the list.
-func (d *dirPathList) Set(path string) error {
+// createDirectory validates the given path and creates a directory on it.
+func (cmd *MkDirCommand) createDirectory(client secrethub.ClientInterface, path string) error {
 	dirPath, err := api.NewDirPath(path)
 	if err != nil {
 		return err
@@ -80,7 +68,22 @@ func (d *dirPathList) Set(path string) error {
 	if dirPath.IsRepoPath() {
 		return ErrMkDirOnRootDir
 	}
-	*d = append(*d, dirPath)
+	if cmd.parents {
+		return client.Dirs().CreateAll(dirPath.Value())
+	}
+	_, err = client.Dirs().Create(dirPath.Value())
+	return err
+}
+
+// dirPathList represents the value of a repeatable directory path argument.
+type dirPathList []string
+
+func (d *dirPathList) String() string {
+	return ""
+}
+
+func (d *dirPathList) Set(path string) error {
+	*d = append(*d, path)
 	return nil
 }
 

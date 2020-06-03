@@ -1,14 +1,21 @@
 package secrethub
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 
-	"github.com/asaskevich/govalidator"
+	"google.golang.org/api/cloudkms/v1"
+	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/iam/v1"
+	"google.golang.org/api/option"
+	"google.golang.org/api/transport"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+	"github.com/secrethub/secrethub-go/internals/gcp"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
@@ -42,10 +49,47 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 
 	if cmd.serviceAccountEmail == "" && cmd.kmsKeyResourceID == "" {
 		fmt.Fprintln(cmd.io.Stdout(), "This command creates a new service account for use on GCP. For help on this, run `secrethub service gcp init --help`.")
+
+		var projectID string
+		creds, err := transport.Creds(context.Background())
+		if err == nil && creds.ProjectID != "" {
+			projectID = creds.ProjectID
+		} else {
+			var projectLister gcpProjectOptionLister
+			chosenProjectID, err := ui.ChooseDynamicOptions(cmd.io, "What GCP project do you want to use?", projectLister.Options, true, "project")
+			if err != nil {
+				return err
+			}
+
+			projectID = chosenProjectID
+		}
+
+		serviceAccountLister := gcpServiceAccountOptionLister{
+			ProjectID: projectID,
+		}
+		serviceAccountEmail, err := ui.ChooseDynamicOptionsValidate(cmd.io, "What is the email of the service account you want to use?", serviceAccountLister.Options, "service account", api.ValidateGCPServiceAccountEmail)
+		if err != nil {
+			return err
+		}
+		cmd.serviceAccountEmail = serviceAccountEmail
+
+		kmsKeyLister, err := newGCPKeyOptionsLister(projectID)
+		if err != nil {
+			return err
+		}
+		keyring, err := ui.ChooseDynamicOptions(cmd.io, "In which keyring is the KMS key you want to use for encrypting the service account's key?", kmsKeyLister.KeyringOptions, true, "keyring")
+		if err != nil {
+			return err
+		}
+		kmsKey, err := ui.ChooseDynamicOptions(cmd.io, "What is the KMS key you want to use for encrypting the service account's key?", kmsKeyLister.KeyOptions(keyring), true, "kms key")
+		if err != nil {
+			return err
+		}
+		cmd.kmsKeyResourceID = kmsKey
 	}
 
 	if cmd.serviceAccountEmail == "" {
-		serviceAccountEmail, err := ui.AskAndValidate(cmd.io, "What is the email of the GCP Service Account that should have access to the service?\n", 3, checkValidEmail)
+		serviceAccountEmail, err := ui.AskAndValidate(cmd.io, "What is the email of the GCP Service Account that should have access to the service?\n", 3, api.ValidateGCPServiceAccountEmail)
 		if err != nil {
 			return err
 		}
@@ -53,7 +97,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 	}
 
 	if cmd.kmsKeyResourceID == "" {
-		kmsKey, err := ui.AskAndValidate(cmd.io, "What is the Resource ID of the KMS-key that should be used for encrypting the service's account key?\n", 3, checkIsNotEmpty("kms key"))
+		kmsKey, err := ui.AskAndValidate(cmd.io, "What is the Resource ID of the KMS-key that should be used for encrypting the service's account key?\n", 3, api.ValidateGCPKMSKeyResourceID)
 		if err != nil {
 			return err
 		}
@@ -106,9 +150,153 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 	command.BindAction(clause, cmd.Run)
 }
 
-func checkValidEmail(v string) error {
-	if !govalidator.IsEmail(v) {
-		return errors.New("invalid email")
+type gcpProjectOptionLister struct {
+	nextPage string
+}
+
+func (l *gcpProjectOptionLister) Options() ([]ui.Option, bool, error) {
+	// Explicitly setting the credentials is needed to avoid a permission denied error from cloudresourcemanager.
+	creds, err := transport.Creds(context.Background())
+	if err != nil {
+		return nil, false, gcp.HandleError(err)
 	}
-	return nil
+
+	crm, err := cloudresourcemanager.NewService(context.Background(), option.WithTokenSource(creds.TokenSource))
+	if err != nil {
+		return nil, false, gcp.HandleError(err)
+	}
+
+	resp, err := crm.Projects.List().Filter("lifecycleState:ACTIVE").PageToken(l.nextPage).PageSize(10).Do()
+	if err != nil {
+		return nil, false, gcp.HandleError(err)
+	}
+
+	options := make([]ui.Option, len(resp.Projects))
+	for i, project := range resp.Projects {
+		options[i] = ui.Option{
+			Value:   project.ProjectId,
+			Display: fmt.Sprintf("%s (%s)", project.Name, project.ProjectId),
+		}
+	}
+
+	l.nextPage = resp.NextPageToken
+	return options, resp.NextPageToken == "", nil
+}
+
+type gcpServiceAccountOptionLister struct {
+	ProjectID string
+	nextPage  string
+}
+
+func (l *gcpServiceAccountOptionLister) Options() ([]ui.Option, bool, error) {
+	iamService, err := iam.NewService(context.Background())
+	if err != nil {
+		return nil, false, gcp.HandleError(err)
+	}
+
+	resp, err := iamService.Projects.ServiceAccounts.List("projects/" + l.ProjectID).PageToken(l.nextPage).PageSize(10).Do()
+	if err != nil {
+		return nil, false, gcp.HandleError(err)
+	}
+
+	options := make([]ui.Option, len(resp.Accounts))
+	for i, account := range resp.Accounts {
+		options[i] = ui.Option{
+			Value:   account.Email,
+			Display: fmt.Sprintf("%s (%s)", account.Email, account.Description),
+		}
+	}
+
+	l.nextPage = resp.NextPageToken
+	return options, resp.NextPageToken == "", nil
+}
+
+func newGCPKeyOptionsLister(projectID string) (*gcpKMSKeyOptionLister, error) {
+	kmsService, err := cloudkms.NewService(context.Background())
+	if err != nil {
+		return nil, gcp.HandleError(err)
+	}
+
+	return &gcpKMSKeyOptionLister{
+		projectID:  projectID,
+		kmsService: kmsService,
+	}, nil
+}
+
+type gcpKMSKeyOptionLister struct {
+	projectID  string
+	nextPage   string
+	kmsService *cloudkms.Service
+}
+
+func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
+	var options []ui.Option
+
+	errChan := make(chan error)
+	resChan := make(chan ui.Option, 16)
+	var wg sync.WaitGroup
+
+	ctx, cancelTimeout := context.WithTimeout(context.Background(), 15*time.Second)
+
+	err := l.kmsService.Projects.Locations.List("projects/"+l.projectID).Pages(ctx, func(resp *cloudkms.ListLocationsResponse) error {
+		for _, loc := range resp.Locations {
+			wg.Add(1)
+			go func(locationName string) {
+				err := l.kmsService.Projects.Locations.KeyRings.List(locationName).Pages(ctx, func(resp *cloudkms.ListKeyRingsResponse) error {
+					for _, keyring := range resp.KeyRings {
+						resChan <- ui.Option{
+							Value:   keyring.Name,
+							Display: keyring.Name,
+						}
+					}
+					return nil
+				})
+				wg.Done()
+				if err != nil {
+					select {
+					case errChan <- err:
+					default:
+					}
+				}
+			}(loc.Name)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, false, gcp.HandleError(err)
+	}
+	go func() {
+		wg.Wait()
+		cancelTimeout()
+		close(resChan)
+	}()
+	for res := range resChan {
+		options = append(options, res)
+	}
+	select {
+	case err := <-errChan:
+		return nil, false, err
+	default:
+		return options, false, nil
+	}
+}
+
+func (l *gcpKMSKeyOptionLister) KeyOptions(keyring string) func() ([]ui.Option, bool, error) {
+	return func() ([]ui.Option, bool, error) {
+		resp, err := l.kmsService.Projects.Locations.KeyRings.CryptoKeys.List(keyring).PageSize(10).Filter("purpose:ENCRYPT_DECRYPT").PageToken(l.nextPage).Do()
+		if err != nil {
+			return nil, false, gcp.HandleError(err)
+		}
+
+		options := make([]ui.Option, len(resp.CryptoKeys))
+		for i, key := range resp.CryptoKeys {
+			options[i] = ui.Option{
+				Value:   key.Name,
+				Display: key.Name,
+			}
+		}
+
+		l.nextPage = resp.NextPageToken
+		return options, resp.NextPageToken == "", nil
+	}
 }

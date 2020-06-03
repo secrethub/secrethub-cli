@@ -18,7 +18,7 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/secrethub/demo-app v0.1.0
-	github.com/secrethub/secrethub-go v0.27.1-0.20200603082037-a48b9700bb81
+	github.com/secrethub/secrethub-go v0.27.1-0.20200603102047-1a4e50eafb91
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/sys v0.0.0-20200501052902-10377860bb8e

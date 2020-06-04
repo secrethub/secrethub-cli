@@ -63,14 +63,6 @@ func (f *clientFactory) NewClient() (secrethub.ClientInterface, error) {
 		options := f.baseClientOptions()
 		options = append(options, secrethub.WithCredentials(credentialProvider))
 
-		if f.proxyAddress != nil {
-			transport := http.DefaultTransport.(*http.Transport)
-			transport.Proxy = func(request *http.Request) (*url.URL, error) {
-				return f.proxyAddress, nil
-			}
-			options = append(options, secrethub.WithTransport(transport))
-		}
-
 		client, err := secrethub.NewClient(options...)
 		if err == configdir.ErrCredentialNotFound {
 			return nil, ErrCredentialNotExist
@@ -112,6 +104,14 @@ func (f *clientFactory) baseClientOptions() []secrethub.ClientOption {
 			Name:    "secrethub-cli",
 			Version: Version,
 		}),
+	}
+
+	if f.proxyAddress != nil {
+		transport := http.DefaultTransport.(*http.Transport)
+		transport.Proxy = func(request *http.Request) (*url.URL, error) {
+			return f.proxyAddress, nil
+		}
+		options = append(options, secrethub.WithTransport(transport))
 	}
 
 	if f.ServerURL != nil {

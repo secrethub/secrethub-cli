@@ -8,13 +8,14 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/masker"
+	"github.com/secrethub/secrethub-cli/internals/integrations/tfstate"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
@@ -56,6 +57,8 @@ type RunCommand struct {
 	maskerOptions        masker.Options
 	newClient            newClientFunc
 	ignoreMissingSecrets bool
+	tfStateEnabled       bool
+	tfStatePort          uint16
 }
 
 // NewRunCommand creates a new RunCommand.
@@ -83,6 +86,8 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.Flag("no-output-buffering", "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.").BoolVar(&cmd.maskerOptions.DisableBuffer)
 	clause.Flag("masking-buffer-period", "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.").Default("50ms").DurationVar(&cmd.maskerOptions.BufferDelay)
 	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
+	clause.Flag("tfstate", "Serve HTTP endpoint as a Terraform State Backend.").Hidden().BoolVar(&cmd.tfStateEnabled)
+	clause.Flag("tfstate-port", "Port used for Terraform State HTTP endpoint.").Default("8118").Hidden().Uint16Var(&cmd.tfStatePort)
 	cmd.environment.register(clause)
 	command.BindAction(clause, cmd.Run)
 }
@@ -106,6 +111,20 @@ func (cmd *RunCommand) Run() error {
 			sequences = append(sequences, []byte(val))
 		}
 	}
+	if cmd.tfStateEnabled {
+		client, err := cmd.newClient()
+		if err != nil {
+			return err
+		}
+
+		go func() {
+			err := tfstate.New(client, cmd.tfStatePort, cmd.io.Stdout()).Serve()
+			if err != nil {
+				fmt.Printf("State backend error: %s\n", err)
+			}
+		}()
+	}
+
 	m := masker.New(sequences, &cmd.maskerOptions)
 
 	command := exec.Command(cmd.command[0], cmd.command[1:]...)

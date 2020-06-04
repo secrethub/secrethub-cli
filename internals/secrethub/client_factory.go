@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -34,6 +35,7 @@ type clientFactory struct {
 	client           *secrethub.Client
 	ServerURL        *url.URL
 	identityProvider string
+	proxyAddress     *url.URL
 	store            CredentialConfig
 }
 
@@ -41,6 +43,7 @@ type clientFactory struct {
 func (f *clientFactory) Register(r FlagRegisterer) {
 	r.Flag("api-remote", "The SecretHub API address, don't set this unless you know what you're doing.").Hidden().URLVar(&f.ServerURL)
 	r.Flag("identity-provider", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ").Default("key").StringVar(&f.identityProvider)
+	r.Flag("proxy-address", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`").URLVar(&f.proxyAddress)
 }
 
 // NewClient returns a new client that is configured to use the remote that
@@ -59,6 +62,14 @@ func (f *clientFactory) NewClient() (secrethub.ClientInterface, error) {
 
 		options := f.baseClientOptions()
 		options = append(options, secrethub.WithCredentials(credentialProvider))
+
+		if f.proxyAddress != nil {
+			transport := http.DefaultTransport.(*http.Transport)
+			transport.Proxy = func(request *http.Request) (*url.URL, error) {
+				return f.proxyAddress, nil
+			}
+			options = append(options, secrethub.WithTransport(transport))
+		}
 
 		client, err := secrethub.NewClient(options...)
 		if err == configdir.ErrCredentialNotFound {

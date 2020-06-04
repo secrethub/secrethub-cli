@@ -17,9 +17,14 @@ func TestNewClientFactory_ProxyAddress(t *testing.T) {
 	assert.OK(t, err)
 
 	proxyReceivedRequest := false
-	go http.ListenAndServe(proxyAddress.Hostname()+":"+proxyAddress.Port(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		proxyReceivedRequest = true
-	}))
+	go func() {
+		err := http.ListenAndServe(proxyAddress.Hostname()+":"+proxyAddress.Port(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			proxyReceivedRequest = true
+		}))
+		if err != http.ErrServerClosed && err != nil {
+			t.Errorf("http server error: %s", err)
+		}
+	}()
 
 	// Check if the configuration option takes precedence over the global HTTP_PROXY environment variable
 	os.Setenv("HTTP_PROXY", "http://test.unknown")

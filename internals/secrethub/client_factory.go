@@ -54,6 +54,8 @@ func (f *clientFactory) NewClient() (secrethub.ClientInterface, error) {
 		switch strings.ToLower(f.identityProvider) {
 		case "aws":
 			credentialProvider = credentials.UseAWS()
+		case "gcp":
+			credentialProvider = credentials.UseGCPServiceAccount()
 		case "key":
 			credentialProvider = f.store.Provider()
 		default:

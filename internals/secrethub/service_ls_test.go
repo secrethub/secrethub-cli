@@ -47,7 +47,9 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			out: "ID      DESCRIPTION  TYPE  CREATED\ntest    foobar       key   About an hour ago\nsecond  foobarbaz    key   2 hours ago\n",
+			out: "" +
+				"ID      DESCRIPTION  TYPE  CREATED\n" +
+				"test    foobar       key   About an hour ago\nsecond  foobarbaz    key   2 hours ago\n",
 		},
 		"success quiet": {
 			cmd: ServiceLsCommand{
@@ -91,7 +93,9 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY                               CREATED\ntest  foobar       arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012  About an hour ago\n",
+			out: "" +
+				"ID    DESCRIPTION  ROLE                                   KMS-KEY                               CREATED\n" +
+				"test  foobar       arn:aws:iam::123456:role/path/to/role  12345678-1234-1234-1234-123456789012  About an hour ago\n",
 		},
 		"success aws filter": {
 			cmd: ServiceLsCommand{
@@ -126,7 +130,72 @@ func TestServiceLsCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			out: "ID    DESCRIPTION  ROLE                                   KMS-KEY                                                                CREATED\ntest  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012  About an hour ago\n",
+			out: "" +
+				"ID    DESCRIPTION  ROLE                                   KMS-KEY                                                                CREATED\n" +
+				"test  foobar       arn:aws:iam::123456:role/path/to/role  arn:aws:kms:us-east-1:123456:key/12345678-1234-1234-1234-123456789012  About an hour ago\n",
+		},
+		"success gcp": {
+			cmd: ServiceLsCommand{
+				newServiceTable: newGCPServiceTable,
+			},
+			serviceService: fakeclient.ServiceService{
+				ListFunc: func(path string) ([]*api.Service, error) {
+					return []*api.Service{
+						{
+							ServiceID:   "test",
+							Description: "foobar",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeGCPServiceAccount,
+								Metadata: map[string]string{
+									api.CredentialMetadataGCPServiceAccountEmail: "service-account@secrethub-test-1234567890.iam.gserviceaccount.com",
+									api.CredentialMetadataGCPKMSKeyResourceID:    "projects/secrethub-test-1234567890.iam/locations/global/keyRings/test/cryptoKeys/test",
+								},
+							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
+						},
+					}, nil
+				},
+			},
+			out: "" +
+				"ID    DESCRIPTION  SERVICE-ACCOUNT-EMAIL                                              KMS-KEY                                                                                CREATED\n" +
+				"test  foobar       service-account@secrethub-test-1234567890.iam.gserviceaccount.com  projects/secrethub-test-1234567890.iam/locations/global/keyRings/test/cryptoKeys/test  About an hour ago\n",
+		},
+		"success gcp filter": {
+			cmd: ServiceLsCommand{
+				newServiceTable: newGCPServiceTable,
+				filters: []func(*api.Service) bool{
+					isGCPService,
+				},
+			},
+			serviceService: fakeclient.ServiceService{
+				ListFunc: func(path string) ([]*api.Service, error) {
+					return []*api.Service{
+						{
+							ServiceID:   "test",
+							Description: "foobar",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeGCPServiceAccount,
+								Metadata: map[string]string{
+									api.CredentialMetadataGCPServiceAccountEmail: "service-account@secrethub-test-1234567890.iam.gserviceaccount.com",
+									api.CredentialMetadataGCPKMSKeyResourceID:    "projects/secrethub-test-1234567890.iam/locations/global/keyRings/test/cryptoKeys/test",
+								},
+							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
+						},
+						{
+							ServiceID:   "test2",
+							Description: "foobarbaz",
+							Credential: &api.Credential{
+								Type: api.CredentialTypeKey,
+							},
+							CreatedAt: time.Now().Add(-1 * time.Hour),
+						},
+					}, nil
+				},
+			},
+			out: "" +
+				"ID    DESCRIPTION  SERVICE-ACCOUNT-EMAIL                                              KMS-KEY                                                                                CREATED\n" +
+				"test  foobar       service-account@secrethub-test-1234567890.iam.gserviceaccount.com  projects/secrethub-test-1234567890.iam/locations/global/keyRings/test/cryptoKeys/test  About an hour ago\n",
 		},
 		"new client error": {
 			newClientErr: errors.New("error"),

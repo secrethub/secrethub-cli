@@ -44,7 +44,7 @@ func (cmd *InspectSecretVersionCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), output)
+	fmt.Fprintln(cmd.io.Output(), output)
 
 	return nil
 }

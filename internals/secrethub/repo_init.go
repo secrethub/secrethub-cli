@@ -39,14 +39,14 @@ func (cmd *RepoInitCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Creating repository...")
+	fmt.Fprintln(cmd.io.Output(), "Creating repository...")
 
 	_, err = client.Repos().Create(cmd.path.Value())
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Create complete! The repository %s is now ready to use.\n", cmd.path.String())
+	fmt.Fprintf(cmd.io.Output(), "Create complete! The repository %s is now ready to use.\n", cmd.path.String())
 
 	return nil
 }

@@ -54,7 +54,7 @@ func (cmd *EnvReadCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), res)
+	fmt.Fprintln(cmd.io.Output(), res)
 
 	return nil
 }

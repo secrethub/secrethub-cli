@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -106,7 +107,7 @@ func TestACLSetCommand_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO(t)
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.in)
 			io.PromptErr = tc.askErr
 			tc.cmd.io = io
@@ -116,7 +117,7 @@ func TestACLSetCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.StdOut.String(), tc.stdout)
+			assert.Equal(t, io.Out.String(), tc.stdout)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
 
 		})

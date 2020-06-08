@@ -82,8 +82,8 @@ func (cmd *WriteCommand) Run() error {
 		if err != nil {
 			return ErrReadFile(cmd.inFile, err)
 		}
-	} else if cmd.io.Stdin().IsPiped() {
-		data, err = ioutil.ReadAll(cmd.io.Stdin())
+	} else if cmd.io.IsInputPiped() {
+		data, err = ioutil.ReadAll(cmd.io.Input())
 		if err != nil {
 			return ui.ErrReadInput(err)
 		}
@@ -110,7 +110,7 @@ func (cmd *WriteCommand) Run() error {
 		return errEmptySecret
 	}
 
-	_, err = fmt.Fprint(cmd.io.Stdout(), "Writing secret value...\n")
+	_, err = fmt.Fprint(cmd.io.Output(), "Writing secret value...\n")
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (cmd *WriteCommand) Run() error {
 		return err
 	}
 
-	_, err = fmt.Fprintf(cmd.io.Stdout(), "Write complete! The given value has been written to %s:%d\n", cmd.path, version.Version)
+	_, err = fmt.Fprintf(cmd.io.Output(), "Write complete! The given value has been written to %s:%d\n", cmd.path, version.Version)
 	if err != nil {
 		return err
 	}

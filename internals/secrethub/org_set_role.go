@@ -43,14 +43,14 @@ func (cmd *OrgSetRoleCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Setting role...\n")
+	fmt.Fprintf(cmd.io.Output(), "Setting role...\n")
 
 	resp, err := client.Orgs().Members().Update(cmd.orgName.Value(), cmd.username, cmd.role)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Set complete! The user %s is %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)
+	fmt.Fprintf(cmd.io.Output(), "Set complete! The user %s is %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)
 
 	return nil
 }

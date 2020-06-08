@@ -43,7 +43,7 @@ func (cmd *EnvListCommand) Run() error {
 		// For now only environment variables in which a secret is loaded are printed.
 		// TODO: Make this behavior configurable.
 		if value.containsSecret() {
-			fmt.Fprintln(cmd.io.Stdout(), key)
+			fmt.Fprintln(cmd.io.Output(), key)
 		}
 	}
 

@@ -32,7 +32,7 @@ func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentia
 		newClient:                   newClient,
 		newClientWithoutCredentials: newClientWithoutCredentials,
 		credentialStore:             credentialStore,
-		progressPrinter:             progress.NewPrinter(io.Stdout(), 500*time.Millisecond),
+		progressPrinter:             progress.NewPrinter(io.Output(), 500*time.Millisecond),
 	}
 }
 
@@ -70,7 +70,7 @@ func (cmd *InitCommand) Run() error {
 		}
 
 		if !confirmed {
-			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			fmt.Fprintln(cmd.io.Output(), "Aborting.")
 			return nil
 		}
 	}
@@ -136,13 +136,13 @@ func (cmd *InitCommand) Run() error {
 			return err
 		}
 
-		fmt.Fprintf(cmd.io.Stdout(), "This backup code can be used to recover the account `%s`\n", me.Username)
+		fmt.Fprintf(cmd.io.Output(), "This backup code can be used to recover the account `%s`\n", me.Username)
 		ok, err := ui.AskYesNo(cmd.io, "Do you want to continue?", ui.DefaultYes)
 		if err != nil {
 			return err
 		}
 		if !ok {
-			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			fmt.Fprintln(cmd.io.Output(), "Aborting.")
 			return nil
 		}
 

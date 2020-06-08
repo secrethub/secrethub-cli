@@ -53,14 +53,14 @@ func (cmd *ClearCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Clearing secrets...")
+	fmt.Fprintln(cmd.io.Output(), "Clearing secrets...")
 
 	err = presenter.Clear()
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Clear complete! The secrets are no longer available on the system.\n")
+	fmt.Fprintf(cmd.io.Output(), "Clear complete! The secrets are no longer available on the system.\n")
 
 	return nil
 }

@@ -103,7 +103,7 @@ func (cmd *ACLListCommand) run() error {
 
 	sort.Sort(api.SortDirPaths(paths))
 
-	tabWriter := tabwriter.NewWriter(cmd.io.Stdout(), 0, 4, 4, ' ', 0)
+	tabWriter := tabwriter.NewWriter(cmd.io.Output(), 0, 4, 4, ' ', 0)
 	fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%s\n", "PATH", "PERMISSIONS", "LAST EDITED", "ACCOUNT")
 
 	for _, p := range paths {

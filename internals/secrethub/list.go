@@ -71,7 +71,7 @@ func (cmd *LsCommand) Run() error {
 			return err
 		}
 
-		err = printVersions(cmd.io.Stdout(), cmd.quiet, timeFormatter, version)
+		err = printVersions(cmd.io.Output(), cmd.quiet, timeFormatter, version)
 		if err != nil {
 			return err
 		}
@@ -88,7 +88,7 @@ func (cmd *LsCommand) Run() error {
 		} else if err != nil && !api.IsErrNotFound(err) {
 			return err
 		} else if err == nil {
-			err = printDir(cmd.io.Stdout(), cmd.quiet, dirFS.RootDir, timeFormatter)
+			err = printDir(cmd.io.Output(), cmd.quiet, dirFS.RootDir, timeFormatter)
 			if err != nil {
 				return err
 			}
@@ -106,7 +106,7 @@ func (cmd *LsCommand) Run() error {
 			return err
 		}
 
-		err = printVersions(cmd.io.Stdout(), cmd.quiet, timeFormatter, versions...)
+		err = printVersions(cmd.io.Output(), cmd.quiet, timeFormatter, versions...)
 		if err != nil {
 			return err
 		}

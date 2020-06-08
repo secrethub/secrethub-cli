@@ -54,7 +54,7 @@ func (cmd *ACLRmCommand) Run() error {
 		}
 
 		if !confirmed {
-			fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+			fmt.Fprintln(cmd.io.Output(), "Aborting.")
 			return nil
 		}
 	}
@@ -64,14 +64,14 @@ func (cmd *ACLRmCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Removing access rule...")
+	fmt.Fprintln(cmd.io.Output(), "Removing access rule...")
 
 	err = client.AccessRules().Delete(cmd.path.Value(), cmd.accountName.Value())
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Removal complete! The access rule for %s on %s has been removed.\n", cmd.accountName, cmd.path)
+	fmt.Fprintf(cmd.io.Output(), "Removal complete! The access rule for %s on %s has been removed.\n", cmd.accountName, cmd.path)
 
 	return nil
 }

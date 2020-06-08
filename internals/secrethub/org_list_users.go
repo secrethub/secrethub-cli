@@ -63,7 +63,7 @@ func (cmd *OrgListUsersCommand) run() error {
 
 	sort.Sort(api.SortOrgMemberByUsername(resp))
 
-	w := tabwriter.NewWriter(cmd.io.Stdout(), 0, 2, 2, ' ', 0)
+	w := tabwriter.NewWriter(cmd.io.Output(), 0, 2, 2, ' ', 0)
 
 	fmt.Fprintf(w, "%s\t%s\t%s\n", "USER", "ROLE", "LAST CHANGED")
 	for _, member := range resp {

@@ -51,7 +51,7 @@ func (cmd *OrgRmCommand) Run() error {
 	}
 
 	if !confirmed {
-		fmt.Fprintln(cmd.io.Stdout(), "Name does not match. Aborting.")
+		fmt.Fprintln(cmd.io.Output(), "Name does not match. Aborting.")
 		return nil
 	}
 
@@ -60,14 +60,14 @@ func (cmd *OrgRmCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Deleting organization...")
+	fmt.Fprintln(cmd.io.Output(), "Deleting organization...")
 
 	err = client.Orgs().Delete(cmd.name.Value())
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "Delete complete! The organization %s has been permanently deleted.\n", cmd.name)
+	fmt.Fprintf(cmd.io.Output(), "Delete complete! The organization %s has been permanently deleted.\n", cmd.name)
 
 	return nil
 }

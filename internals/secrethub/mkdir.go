@@ -51,7 +51,7 @@ func (cmd *MkDirCommand) Run() error {
 	for _, path := range cmd.paths {
 		err := cmd.createDirectory(client, path)
 		if err != nil {
-fmt.Fprintf(os.Stderr, "Could not create a new directory at %s: %s\n", path, err)
+			fmt.Fprintf(os.Stderr, "Could not create a new directory at %s: %s\n", path, err)
 		} else {
 			fmt.Fprintf(cmd.io.Output(), "Created a new directory at %s\n", path)
 		}

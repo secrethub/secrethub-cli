@@ -44,7 +44,7 @@ func (cmd *AccountEmailVerifyCommand) Run() error {
 	}
 
 	if user.EmailVerified {
-		fmt.Fprintln(cmd.io.Stdout(), "Your email address is already verified.")
+		fmt.Fprintln(cmd.io.Output(), "Your email address is already verified.")
 		return nil
 	}
 
@@ -53,9 +53,9 @@ func (cmd *AccountEmailVerifyCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Stdout(), "An email has been sent to %s with an email verification link. Please check your mail and click the link.\n\n", user.Email)
+	fmt.Fprintf(cmd.io.Output(), "An email has been sent to %s with an email verification link. Please check your mail and click the link.\n\n", user.Email)
 
-	fmt.Fprintf(cmd.io.Stdout(), "Please contact support@secrethub.io if the problem persists.\n\n")
+	fmt.Fprintf(cmd.io.Output(), "Please contact support@secrethub.io if the problem persists.\n\n")
 
 	return nil
 }

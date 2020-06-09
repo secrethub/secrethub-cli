@@ -3,7 +3,7 @@ package secrethub
 import (
 	"testing"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -99,7 +99,7 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 				}
 			}
 
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO(t)
 			tc.cmd.io = io
 
 			// Run
@@ -107,7 +107,7 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.Out.String(), tc.out)
 			assert.Equal(t, argGetUsername, tc.getArgUsername)
 			assert.Equal(t, argInviteUsername, tc.inviteArgUsername)
 			assert.Equal(t, argPath, tc.inviteArgPath)

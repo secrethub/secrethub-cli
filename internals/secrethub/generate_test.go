@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -184,7 +184,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				}, tc.clientCreationErr
 			}
 
-			io := ui.NewFakeIO()
+			io := fakeui.NewIO(t)
 			tc.cmd.io = io
 
 			// Act
@@ -194,7 +194,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, argPath, tc.path)
 			assert.Equal(t, argData, tc.data)
-			assert.Equal(t, io.StdOut.String(), tc.out)
+			assert.Equal(t, io.Out.String(), tc.out)
 		})
 	}
 }

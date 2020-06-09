@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
@@ -477,7 +477,7 @@ func TestRunCommand_Run(t *testing.T) {
 	}{
 		"success, no secrets": {
 			command: RunCommand{
-				io: ui.NewFakeIO(),
+				io: fakeui.NewIO(t),
 				environment: &environment{
 					osStat: osStatNotExist,
 				},
@@ -517,7 +517,7 @@ func TestRunCommand_Run(t *testing.T) {
 						"missing": "path/to/unexisting/secret",
 					},
 				},
-				io: ui.NewFakeIO(),
+				io: fakeui.NewIO(t),
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
@@ -542,7 +542,7 @@ func TestRunCommand_Run(t *testing.T) {
 					},
 					osStat: osStatNotExist,
 				},
-				io: ui.NewFakeIO(),
+				io: fakeui.NewIO(t),
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
@@ -587,7 +587,7 @@ func TestRunCommand_Run(t *testing.T) {
 		"os env secret not found": {
 			command: RunCommand{
 				command: []string{"echo", "test"},
-				io:      ui.NewFakeIO(),
+				io:      fakeui.NewIO(t),
 				environment: &environment{
 					osEnv:  []string{"TEST=secrethub://nonexistent/secret/path"},
 					osStat: osStatNotExist,
@@ -610,7 +610,7 @@ func TestRunCommand_Run(t *testing.T) {
 			command: RunCommand{
 				ignoreMissingSecrets: true,
 				command:              []string{"echo", "test"},
-				io:                   ui.NewFakeIO(),
+				io:                   fakeui.NewIO(t),
 				environment: &environment{
 					osEnv:  []string{"TEST=secrethub://nonexistent/secret/path"},
 					osStat: osStatNotExist,
@@ -1081,12 +1081,15 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 				defer os.Remove(scriptFile)
 			}
 
-			fakeIO := ui.NewFakeIO()
+			fakeIO := fakeui.NewIO(t)
 			tc.command.io = fakeIO
 
 			err := tc.command.Run()
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, fakeIO.StdOut.String(), tc.expectedStdOut)
+
+			stdout, err := fakeIO.ReadStdout()
+			assert.OK(t, err)
+			assert.Equal(t, string(stdout), tc.expectedStdOut)
 		})
 	}
 }

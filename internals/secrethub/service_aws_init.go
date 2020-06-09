@@ -59,7 +59,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	if cmd.role == "" && cmd.kmsKeyID == "" {
-		fmt.Fprintln(cmd.io.Stdout(), "This command creates a new service account for use on AWS. For help on this, run `secrethub service aws init --help`.")
+		fmt.Fprintln(cmd.io.Output(), "This command creates a new service account for use on AWS. For help on this, run `secrethub service aws init --help`.")
 	}
 
 	cfg := aws.NewConfig()
@@ -85,7 +85,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 	accountID := aws.StringValue(identity.Account)
 
-	fmt.Fprintf(cmd.io.Stdout(), "Detected access to AWS account %s.", accountID)
+	fmt.Fprintf(cmd.io.Output(), "Detected access to AWS account %s.", accountID)
 
 	if cfg.Region == nil && cmd.kmsKeyID != "" {
 		// When the region is not configured in the AWS configuration and not supplied using the flag, use
@@ -97,9 +97,9 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	if cfg.Region != nil {
-		fmt.Fprintf(cmd.io.Stdout(), "Using region %s.", *cfg.Region)
+		fmt.Fprintf(cmd.io.Output(), "Using region %s.", *cfg.Region)
 	}
-	fmt.Fprintln(cmd.io.Stdout())
+	fmt.Fprintln(cmd.io.Output())
 
 	if cfg.Region == nil {
 		region, err := ui.ChooseDynamicOptions(cmd.io, "Which region do you want to use for KMS?", getAWSRegionOptions, true, "region")
@@ -149,8 +149,8 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		}
 	}
 
-	fmt.Fprintln(cmd.io.Stdout(), "Successfully created a new service account with ID: "+service.ServiceID)
-	fmt.Fprintf(cmd.io.Stdout(), "Any host that assumes the IAM role %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", roleNameFromRole(cmd.role))
+	fmt.Fprintln(cmd.io.Output(), "Successfully created a new service account with ID: "+service.ServiceID)
+	fmt.Fprintf(cmd.io.Output(), "Any host that assumes the IAM role %s can now automatically authenticate to SecretHub and fetch the secrets the service has been given access to.\n", roleNameFromRole(cmd.role))
 
 	return nil
 }

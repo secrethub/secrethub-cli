@@ -27,7 +27,7 @@ func NewPrintEnvCommand(app *cli.App, io ui.IO) *PrintEnvCommand {
 
 // Run prints out debug statements about all environment variables.
 func (cmd *PrintEnvCommand) Run() error {
-	err := cmd.app.PrintEnv(cmd.io.Stdout(), cmd.verbose, cmd.osEnv)
+	err := cmd.app.PrintEnv(cmd.io.Output(), cmd.verbose, cmd.osEnv)
 	if err != nil {
 		return err
 	}

@@ -38,7 +38,7 @@ func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore Credent
 		io:              io,
 		newClient:       newClient,
 		credentialStore: credentialStore,
-		progressPrinter: progress.NewPrinter(io.Stdout(), 500*time.Millisecond),
+		progressPrinter: progress.NewPrinter(io.Output(), 500*time.Millisecond),
 	}
 }
 
@@ -78,7 +78,7 @@ func (cmd *SignUpCommand) Run() error {
 			}
 
 			if !confirmed {
-				fmt.Fprintln(cmd.io.Stdout(), "Aborting.")
+				fmt.Fprintln(cmd.io.Output(), "Aborting.")
 				return nil
 			}
 		}
@@ -112,12 +112,12 @@ func (cmd *SignUpCommand) Run() error {
 					return err
 				}
 			}
-			fmt.Fprintln(cmd.io.Stdout())
+			fmt.Fprintln(cmd.io.Output())
 		}
 	}
 
 	fmt.Fprintf(
-		cmd.io.Stdout(),
+		cmd.io.Output(),
 		"An account credential will be generated and stored at %s. "+
 			"Losing this credential means you lose the ability to decrypt your secrets. "+
 			"So keep it safe.\n",
@@ -141,7 +141,7 @@ func (cmd *SignUpCommand) Run() error {
 		return err
 	}
 
-	fmt.Fprint(cmd.io.Stdout(), "Setting up your account...")
+	fmt.Fprint(cmd.io.Output(), "Setting up your account...")
 	cmd.progressPrinter.Start()
 	credential := credentials.CreateKey()
 	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential)
@@ -186,7 +186,7 @@ func (cmd *SignUpCommand) Run() error {
 	}
 
 	cmd.progressPrinter.Stop()
-	fmt.Fprint(cmd.io.Stdout(), "Created your account.\n\n")
+	fmt.Fprint(cmd.io.Output(), "Created your account.\n\n")
 
 	createWorkspace := cmd.org != ""
 	if !createWorkspace {
@@ -194,9 +194,9 @@ func (cmd *SignUpCommand) Run() error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(cmd.io.Stdout())
+		fmt.Fprintln(cmd.io.Output())
 		if !createWorkspace {
-			fmt.Fprint(cmd.io.Stdout(), "You can create a shared workspace later using `secrethub org init`.\n\n")
+			fmt.Fprint(cmd.io.Output(), "You can create a shared workspace later using `secrethub org init`.\n\n")
 		}
 	}
 	if createWorkspace {
@@ -212,20 +212,20 @@ func (cmd *SignUpCommand) Run() error {
 				return err
 			}
 		}
-		fmt.Fprint(cmd.io.Stdout(), "Creating your shared workspace...")
+		fmt.Fprint(cmd.io.Output(), "Creating your shared workspace...")
 		cmd.progressPrinter.Start()
 
 		_, err := client.Orgs().Create(cmd.org, cmd.orgDescription)
 		cmd.progressPrinter.Stop()
 		if err == api.ErrOrgAlreadyExists {
-			fmt.Fprintf(cmd.io.Stdout(), "The workspace %s already exists. If it is your organization, ask a colleague to invite you to the workspace. You can also create a new one using `secrethub org init`.\n", cmd.org)
+			fmt.Fprintf(cmd.io.Output(), "The workspace %s already exists. If it is your organization, ask a colleague to invite you to the workspace. You can also create a new one using `secrethub org init`.\n", cmd.org)
 		} else if err != nil {
 			return err
 		} else {
-			fmt.Fprint(cmd.io.Stdout(), "Created your shared workspace.\n\n")
+			fmt.Fprint(cmd.io.Output(), "Created your shared workspace.\n\n")
 		}
 	}
-	fmt.Fprintf(cmd.io.Stdout(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
+	fmt.Fprintf(cmd.io.Output(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 
 	return nil
 }

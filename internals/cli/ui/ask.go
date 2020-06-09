@@ -52,7 +52,7 @@ func AskWithDefault(io IO, question, defaultValue string) (string, error) {
 // AskSecret prints out the question and reads back the input,
 // without echoing it back. Useful for passwords and other sensitive inputs.
 func AskSecret(io IO, question string) (string, error) {
-	promptIn, promptOut, err := io.Prompts()
+	_, promptOut, err := io.Prompts()
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +62,7 @@ func AskSecret(io IO, question string) (string, error) {
 		return "", err
 	}
 
-	raw, err := promptIn.ReadPassword()
+	raw, err := io.ReadSecret()
 	if err != nil {
 		return "", ErrReadInput(err)
 	}
@@ -272,6 +272,28 @@ func (o Option) String() string {
 	return o.Display
 }
 
+func ChooseDynamicOptionsValidate(io IO, question string, getOptions func() ([]Option, bool, error), optionName string, validateFunc func(string) error) (string, error) {
+	r, w, err := io.Prompts()
+	if err != nil {
+		return "", err
+	}
+
+	if optionName == "" {
+		optionName = "option"
+	}
+
+	s := selecter{
+		r:            r,
+		w:            w,
+		getOptions:   getOptions,
+		question:     question,
+		addOwn:       true,
+		validateFunc: validateFunc,
+		optionName:   optionName,
+	}
+	return s.run()
+}
+
 func ChooseDynamicOptions(io IO, question string, getOptions func() ([]Option, bool, error), addOwn bool, optionName string) (string, error) {
 	r, w, err := io.Prompts()
 	if err != nil {
@@ -294,12 +316,13 @@ func ChooseDynamicOptions(io IO, question string, getOptions func() ([]Option, b
 }
 
 type selecter struct {
-	r          io.Reader
-	w          io.Writer
-	getOptions func() ([]Option, bool, error)
-	question   string
-	addOwn     bool
-	optionName string
+	r            io.Reader
+	w            io.Writer
+	getOptions   func() ([]Option, bool, error)
+	validateFunc func(string) error
+	question     string
+	addOwn       bool
+	optionName   string
 
 	done    bool
 	options []Option
@@ -359,6 +382,9 @@ func (s *selecter) process() (string, error) {
 	choice, err := strconv.Atoi(in)
 	if err != nil || choice < 1 || choice > len(s.options) {
 		if s.addOwn {
+			if s.validateFunc != nil {
+				return in, s.validateFunc(in)
+			}
 			return in, nil
 		}
 

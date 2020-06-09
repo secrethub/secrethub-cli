@@ -13,13 +13,13 @@ jobs:
       arch:
         type: string
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
     steps:
       - checkout
       - run: GOOS=<< parameters.os >> GOARCH=<< parameters.arch >> go build ./cmd/secrethub
   test:
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
     steps:
       - checkout
       - restore_cache:
@@ -33,7 +33,7 @@ jobs:
       - run: make test
   verify-goreleaser:
     docker:
-      - image: goreleaser/goreleaser:v0.127
+      - image: goreleaser/goreleaser:v0.133
     steps:
       - checkout
       - run: goreleaser check

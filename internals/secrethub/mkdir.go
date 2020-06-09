@@ -2,11 +2,13 @@ package secrethub
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-
-	"github.com/secrethub/secrethub-go/internals/api"
 )
 
 // Errors
@@ -17,7 +19,7 @@ var (
 // MkDirCommand creates a new directory inside a repository.
 type MkDirCommand struct {
 	io        ui.IO
-	path      api.DirPath
+	paths     dirPathList
 	parents   bool
 	newClient newClientFunc
 }
@@ -33,7 +35,7 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *MkDirCommand) Register(r command.Registerer) {
 	clause := r.Command("mkdir", "Create a new directory.")
-	clause.Arg("dir-path", "The path to the directory").Required().PlaceHolder(dirPathPlaceHolder).SetValue(&cmd.path)
+	clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
 	clause.Flag("parents", "Create parent directories if needed. Does not error when directories already exist.").BoolVar(&cmd.parents)
 
 	command.BindAction(clause, cmd.Run)
@@ -41,28 +43,50 @@ func (cmd *MkDirCommand) Register(r command.Registerer) {
 
 // Run executes the command.
 func (cmd *MkDirCommand) Run() error {
-	if cmd.path.IsRepoPath() {
-		return ErrMkDirOnRootDir
-	}
-
 	client, err := cmd.newClient()
 	if err != nil {
 		return err
 	}
 
-	if cmd.parents {
-		err = client.Dirs().CreateAll(cmd.path.Value())
+	for _, path := range cmd.paths {
+		err := cmd.createDirectory(client, path)
 		if err != nil {
-			return err
-		}
-	} else {
-		_, err = client.Dirs().Create(cmd.path.Value())
-		if err != nil {
-			return err
+			fmt.Fprintf(os.Stderr, "Could not create a new directory at %s: %s\n", path, err)
+		} else {
+			fmt.Fprintf(cmd.io.Output(), "Created a new directory at %s\n", path)
 		}
 	}
-
-	fmt.Fprintf(cmd.io.Output(), "Created a new directory at %s\n", cmd.path)
-
 	return nil
+}
+
+// createDirectory validates the given path and creates a directory on it.
+func (cmd *MkDirCommand) createDirectory(client secrethub.ClientInterface, path string) error {
+	dirPath, err := api.NewDirPath(path)
+	if err != nil {
+		return err
+	}
+	if dirPath.IsRepoPath() {
+		return ErrMkDirOnRootDir
+	}
+	if cmd.parents {
+		return client.Dirs().CreateAll(dirPath.Value())
+	}
+	_, err = client.Dirs().Create(dirPath.Value())
+	return err
+}
+
+// dirPathList represents the value of a repeatable directory path argument.
+type dirPathList []string
+
+func (d *dirPathList) String() string {
+	return ""
+}
+
+func (d *dirPathList) Set(path string) error {
+	*d = append(*d, path)
+	return nil
+}
+
+func (d *dirPathList) IsCumulative() bool {
+	return true
 }

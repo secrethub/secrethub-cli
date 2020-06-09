@@ -16,13 +16,13 @@ import (
 
 func TestMkDirCommand(t *testing.T) {
 	cases := map[string]struct {
-		path      string
+		paths     []string
 		newClient func() (secrethub.ClientInterface, error)
 		stdout    string
 		err       error
 	}{
 		"success": {
-			path: "namespace/repo/dir",
+			paths: []string{"namespace/repo/dir"},
 			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
@@ -42,13 +42,29 @@ func TestMkDirCommand(t *testing.T) {
 			stdout: "Created a new directory at namespace/repo/dir\n",
 			err:    nil,
 		},
-		"on root dir": {
-			path:   "namespace/repo",
-			stdout: "",
-			err:    ErrMkDirOnRootDir,
+		"success multiple dirs": {
+			paths: []string{"namespace/repo/dir1", "namespace/repo/dir2"},
+			newClient: func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					DirService: &fakeclient.DirService{
+						CreateFunc: func(path string) (*api.Dir, error) {
+							return &api.Dir{
+								DirID:          uuid.New(),
+								BlindName:      "blindname",
+								Name:           "dir",
+								Status:         api.StatusOK,
+								CreatedAt:      time.Now().UTC(),
+								LastModifiedAt: time.Now().UTC(),
+							}, nil
+						},
+					},
+				}, nil
+			},
+			stdout: "Created a new directory at namespace/repo/dir1\nCreated a new directory at namespace/repo/dir2\n",
+			err:    nil,
 		},
 		"new client fails": {
-			path: "namespace/repo/dir",
+			paths: []string{"namespace/repo/dir"},
 			newClient: func() (secrethub.ClientInterface, error) {
 				return nil, errio.Namespace("test").Code("foo").Error("bar")
 			},
@@ -56,7 +72,7 @@ func TestMkDirCommand(t *testing.T) {
 			err:    errio.Namespace("test").Code("foo").Error("bar"),
 		},
 		"create dir fails": {
-			path: "namespace/repo/dir",
+			paths: []string{"namespace/repo/dir"},
 			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
@@ -67,16 +83,65 @@ func TestMkDirCommand(t *testing.T) {
 				}, nil
 			},
 			stdout: "",
-			err:    api.ErrDirAlreadyExists,
+		},
+		"create dir fails on second dir": {
+			paths: []string{"namespace/repo/dir1", "namespace/repo/dir2"},
+			newClient: func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					DirService: &fakeclient.DirService{
+						CreateFunc: func(path string) (*api.Dir, error) {
+							if path == "namespace/repo/dir2" {
+								return nil, api.ErrDirAlreadyExists
+							}
+							return &api.Dir{
+								DirID:          uuid.New(),
+								BlindName:      "blindname",
+								Name:           "dir",
+								Status:         api.StatusOK,
+								CreatedAt:      time.Now().UTC(),
+								LastModifiedAt: time.Now().UTC(),
+							}, nil
+						},
+					},
+				}, nil
+			},
+			stdout: "Created a new directory at namespace/repo/dir1\n",
+		},
+		"create dir fails on first dir": {
+			paths: []string{"namespace/repo/dir1", "namespace/repo/dir2"},
+			newClient: func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					DirService: &fakeclient.DirService{
+						CreateFunc: func(path string) (*api.Dir, error) {
+							if path == "namespace/repo/dir1" {
+								return nil, api.ErrDirAlreadyExists
+							}
+							return &api.Dir{
+								DirID:          uuid.New(),
+								BlindName:      "blindname",
+								Name:           "dir",
+								Status:         api.StatusOK,
+								CreatedAt:      time.Now().UTC(),
+								LastModifiedAt: time.Now().UTC(),
+							}, nil
+						},
+					},
+				}, nil
+			},
+			stdout: "Created a new directory at namespace/repo/dir2\n",
 		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			io := fakeui.NewIO(t)
+			dirPaths := dirPathList{}
+			for _, path := range tc.paths {
+				_ = dirPaths.Set(path)
+			}
 			cmd := MkDirCommand{
 				io:        io,
-				path:      api.DirPath(tc.path),
+				paths:     dirPaths,
 				newClient: tc.newClient,
 			}
 
@@ -84,6 +149,69 @@ func TestMkDirCommand(t *testing.T) {
 
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, tc.stdout, io.Out.String())
+		})
+	}
+}
+
+func TestCreateDirectory(t *testing.T) {
+	cases := map[string]struct {
+		client secrethub.ClientInterface
+		path   string
+		err    error
+	}{
+		"success": {
+			client: fakeclient.Client{
+				DirService: &fakeclient.DirService{
+					CreateFunc: func(path string) (*api.Dir, error) {
+						return &api.Dir{
+							DirID:          uuid.New(),
+							BlindName:      "blindname",
+							Name:           "dir",
+							Status:         api.StatusOK,
+							CreatedAt:      time.Now().UTC(),
+							LastModifiedAt: time.Now().UTC(),
+						}, nil
+					},
+				},
+			},
+			path: "namespace/repo/dir",
+		},
+		"root dir": {
+			client: fakeclient.Client{
+				DirService: &fakeclient.DirService{
+					CreateFunc: func(path string) (*api.Dir, error) {
+						return &api.Dir{
+							DirID:          uuid.New(),
+							BlindName:      "blindname",
+							Name:           "dir",
+							Status:         api.StatusOK,
+							CreatedAt:      time.Now().UTC(),
+							LastModifiedAt: time.Now().UTC(),
+						}, nil
+					},
+				},
+			},
+			path: "namespace/repo",
+			err:  ErrMkDirOnRootDir,
+		},
+		"create dir fails": {
+			client: fakeclient.Client{
+				DirService: &fakeclient.DirService{
+					CreateFunc: func(path string) (*api.Dir, error) {
+						return nil, api.ErrDirAlreadyExists
+					},
+				},
+			},
+			path: "namespace/repo/dir",
+			err:  api.ErrDirAlreadyExists,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			cmd := MkDirCommand{}
+			err := cmd.createDirectory(tc.client, tc.path)
+			assert.Equal(t, err, tc.err)
 		})
 	}
 }

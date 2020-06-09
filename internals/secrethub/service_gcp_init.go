@@ -201,9 +201,13 @@ func (l *gcpServiceAccountOptionLister) Options() ([]ui.Option, bool, error) {
 
 	options := make([]ui.Option, len(resp.Accounts))
 	for i, account := range resp.Accounts {
+		display := account.Email
+		if account.Description != "" {
+			display += " (" + account.Description + ")"
+		}
 		options[i] = ui.Option{
 			Value:   account.Email,
-			Display: fmt.Sprintf("%s (%s)", account.Email, account.Description),
+			Display: display,
 		}
 	}
 

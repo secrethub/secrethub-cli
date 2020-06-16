@@ -98,6 +98,10 @@ func (b *backend) handle(r *http.Request) (*statusResponse, error) {
 	lockPath := secretpath.Join(path, "lock")
 	passwordPath := secretpath.Join(path, "password")
 
+	if _, err := b.client.Dirs().GetTree(path, 0, false); api.IsErrNotFound(err) {
+		return b.respondError(http.StatusBadRequest, "`%s` is not a directory on SecretHub", path), nil
+	}
+
 	secret, err := b.client.Secrets().ReadString(passwordPath)
 	if err != nil && !api.IsErrNotFound(err) {
 		return nil, err

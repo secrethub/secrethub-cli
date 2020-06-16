@@ -87,11 +87,11 @@ func (b *backend) handle(r *http.Request) (*statusResponse, error) {
 
 	path, password, ok := r.BasicAuth()
 	if !ok {
-		return b.respondError(http.StatusBadRequest, "set the SecretHub path to the state as the username"), nil
+		return b.respondError(http.StatusBadRequest, "`username` field must be set to the SecretHub directory where the Terraform state should be stored (for example `<org>/<repo>/terraform-state`)"), nil
 	}
 
 	if secretpath.Count(path) < 2 {
-		return b.respondError(http.StatusBadRequest, "set user to a valid repository or directory, got: %s", path), nil
+		return b.respondError(http.StatusBadRequest, "`username` field must be set to the SecretHub directory where the Terraform state should be stored (for example `<org>/<repo>/terraform-state`), got: %s", path), nil
 	}
 
 	statePath := secretpath.Join(path, "state")
@@ -110,7 +110,7 @@ func (b *backend) handle(r *http.Request) (*statusResponse, error) {
 			return b.respondError(http.StatusUnauthorized, "password stored at %s should be set as auth password", passwordPath), nil
 		}
 		if password != secret {
-			return b.respondError(http.StatusForbidden, "provided password does not password stored at %s", passwordPath), nil
+			return b.respondError(http.StatusForbidden, "provided password does not match password stored at %s", passwordPath), nil
 		}
 	}
 

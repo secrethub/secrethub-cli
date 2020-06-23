@@ -24,4 +24,7 @@ func (cmd *ServiceGCPCommand) Register(r command.Registerer) {
 	clause := r.Command("gcp", "Manage GCP service accounts.").Hidden()
 	NewServiceGCPInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewServiceGCPLsCommand(cmd.io, cmd.newClient).Register(clause)
+	NewServiceGCPLinkCommand(cmd.io, cmd.newClient).Register(clause)
+	NewServiceGCPListLinksCommand(cmd.io, cmd.newClient).Register(clause)
+	NewServiceGCPDeleteLinkCommand(cmd.io, cmd.newClient).Register(clause)
 }

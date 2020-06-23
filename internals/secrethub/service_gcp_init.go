@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -106,6 +107,31 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 
 	if cmd.description == "" {
 		cmd.description = "GCP Service Account " + roleNameFromRole(cmd.serviceAccountEmail)
+	}
+
+	projectID, err := api.ProjectIDFromGCPEmail(cmd.serviceAccountEmail)
+	if err != nil {
+		return fmt.Errorf("invalid service account email: %s", err)
+	}
+
+	_, err = client.IDPLinks().GCP().Get(cmd.repo.GetNamespace(), projectID)
+	if api.IsErrNotFound(err) {
+		fmt.Fprintf(cmd.io.Output(), "GCP project %s is not yet linked to the namespace %s. ", projectID, cmd.repo.GetNamespace())
+
+		confirm, err := ui.AskYesNo(cmd.io, "Do you want to create this link now?", ui.DefaultYes)
+		if err != nil {
+			return err
+		}
+		if !confirm {
+			return errors.New("link between SecretHub organization and GCP project is required to continue")
+		}
+
+		err = createGCPLink(client, cmd.io, cmd.repo.GetNamespace(), projectID)
+		if err != nil {
+			return fmt.Errorf("could not create link: %s", err)
+		}
+	} else if err != nil {
+		return err
 	}
 
 	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credentials.CreateGCPServiceAccount(cmd.serviceAccountEmail, cmd.kmsKeyResourceID))

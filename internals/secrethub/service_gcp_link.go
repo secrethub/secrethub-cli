@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"text/tabwriter"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
@@ -80,14 +81,19 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 		return err
 	}
 
-	f := newTableFormatter(cmd.io.Output(), 80, []tableColumn{
-		{name: "Project ID"}, {name: "Created at", maxWidth: 22},
-	})
+	tw := tabwriter.NewWriter(cmd.io.Output(), 0, 2, 2, ' ', 0)
+	fmt.Fprintf(tw, "%s\t%s\n", "PROJECT ID", "CREATED")
+
 	for _, link := range links {
-		err := f.Write([]string{link.LinkedID, timeFormatter.Format(link.CreatedAt)})
+		_, err := fmt.Fprintf(tw, "%s\t%s\n", link.LinkedID, timeFormatter.Format(link.CreatedAt))
 		if err != nil {
 			return err
 		}
+	}
+
+	err = tw.Flush()
+	if err != nil {
+		return err
 	}
 
 	return nil

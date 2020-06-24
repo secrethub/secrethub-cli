@@ -136,7 +136,7 @@ func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
 		return err
 	}
 
-	question := fmt.Sprintf("Are you sure you want to delete the link link between GCP project %s and the namespace %s? This does not affect any existing service accounts.", cmd.projectID, cmd.namespace)
+	question := fmt.Sprintf("Are you sure you want to delete the link link between GCP project %s and the namespace %s? Without the link, you cannot create new service accounts for this GCP project. This does not affect existing service accounts.", cmd.projectID, cmd.namespace)
 	confirm, err := ui.AskYesNo(cmd.io, question, ui.DefaultNo)
 	if err != nil {
 		return err

@@ -16,8 +16,8 @@ import (
 
 // ServiceGCPLinkCommand create a new link between a SecretHub namespace and a GCP project.
 type ServiceGCPLinkCommand struct {
-	namespace string
-	projectID string
+	namespace api.OrgName
+	projectID gcpProjectID
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -36,7 +36,7 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 		return err
 	}
 
-	_, err = client.IDPLinks().GCP().Get(cmd.namespace, cmd.projectID)
+	_, err = client.IDPLinks().GCP().Get(cmd.namespace.String(), cmd.projectID.String())
 	if err != nil && !api.IsErrNotFound(err) {
 		return err
 	} else if err == nil {
@@ -44,20 +44,20 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 		return nil
 	}
 
-	return createGCPLink(client, cmd.io, cmd.namespace, cmd.projectID)
+	return createGCPLink(client, cmd.io, cmd.namespace.String(), cmd.projectID.String())
 }
 
 func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 	clause := r.Command("link", "Create a new link between a namespace and a GCP project to allow creating SecretHub service accounts for GCP Service Accounts in the GCP project.")
-	clause.Arg("namespace", "The SecretHub namespace to link.").Required().StringVar(&cmd.namespace)
-	clause.Arg("project-id", "The GCP project to link the namespace to.").Required().StringVar(&cmd.projectID)
+	clause.Arg("namespace", "The SecretHub namespace to link.").Required().SetValue(&cmd.namespace)
+	clause.Arg("project-id", "The GCP project to link the namespace to.").Required().SetValue(&cmd.projectID)
 
 	command.BindAction(clause, cmd.Run)
 }
 
 // ServiceGCPListLinksCommand lists all existing links between the given namespace and GCP projects
 type ServiceGCPListLinksCommand struct {
-	namespace     string
+	namespace     api.Namespace
 	useTimestamps bool
 	io            ui.IO
 	newClient     newClientFunc
@@ -78,7 +78,7 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 		return err
 	}
 
-	links, err := client.IDPLinks().GCP().List(cmd.namespace)
+	links, err := client.IDPLinks().GCP().List(cmd.namespace.String())
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 
 func (cmd *ServiceGCPListLinksCommand) Register(r command.Registerer) {
 	clause := r.Command("list-links", "List all existing links between the given namespace and GCP projects.")
-	clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().StringVar(&cmd.namespace)
+	clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().SetValue(&cmd.namespace)
 
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
@@ -112,8 +112,8 @@ func (cmd *ServiceGCPListLinksCommand) Register(r command.Registerer) {
 
 // ServiceGCPDeleteLinkCommand deletes the link between a SecretHub namespace and a GCP project.
 type ServiceGCPDeleteLinkCommand struct {
-	namespace string
-	projectID string
+	namespace api.Namespace
+	projectID gcpProjectID
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -127,8 +127,8 @@ func NewServiceGCPDeleteLinkCommand(io ui.IO, newClient newClientFunc) *ServiceG
 
 func (cmd *ServiceGCPDeleteLinkCommand) Register(r command.Registerer) {
 	clause := r.Command("delete-link", "Delete the link between a SecretHub namespace and a GCP project.")
-	clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().StringVar(&cmd.namespace)
-	clause.Arg("project-id", "The GCP project to delete the link to.").Required().StringVar(&cmd.projectID)
+	clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
+	clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 
 	command.BindAction(clause, cmd.Run)
 }
@@ -139,7 +139,7 @@ func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
 		return err
 	}
 
-	_, err = client.IDPLinks().GCP().Get(cmd.namespace, cmd.projectID)
+	_, err = client.IDPLinks().GCP().Get(cmd.namespace.String(), cmd.projectID.String())
 	if api.IsErrNotFound(err) {
 		return err
 	}
@@ -153,7 +153,21 @@ func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
 		return nil
 	}
 
-	return client.IDPLinks().GCP().Delete(cmd.namespace, cmd.projectID)
+	return client.IDPLinks().GCP().Delete(cmd.namespace.String(), cmd.projectID.String())
+}
+
+type gcpProjectID string
+
+func (g *gcpProjectID) String() string {
+	return string(*g)
+}
+
+func (g *gcpProjectID) Set(s string) error {
+	if err := api.ValidateGCPProjectID(s); err != nil {
+		return err
+	}
+	*g = gcpProjectID(s)
+	return nil
 }
 
 func createGCPLink(client secrethub.ClientInterface, io ui.IO, namespace, projectID string) error {

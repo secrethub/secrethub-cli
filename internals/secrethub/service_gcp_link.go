@@ -37,7 +37,9 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 	}
 
 	_, err = client.IDPLinks().GCP().Get(cmd.namespace, cmd.projectID)
-	if !api.IsErrNotFound(err) {
+	if err != nil && !api.IsErrNotFound(err) {
+		return err
+	} else if err == nil {
 		fmt.Fprintf(cmd.io.Output(), "Namespace %s and GCP project %s are already linked.\n", cmd.namespace, cmd.projectID)
 		return nil
 	}

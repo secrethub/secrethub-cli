@@ -189,3 +189,9 @@ func (app *App) registerCommands() {
 
 	demo.NewCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 }
+
+// Model returns the CLI application model containing all its commands, flags, and args
+func (app *App) Model() *kingpin.ApplicationModel {
+	app.registerCommands()
+	return app.cli.Model()
+}

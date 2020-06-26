@@ -53,6 +53,21 @@ func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 	clause.Arg("namespace", "The SecretHub namespace to link.").Required().SetValue(&cmd.namespace)
 	clause.Arg("project-id", "The GCP project to link the namespace to.").Required().SetValue(&cmd.projectID)
 
+	clause.HelpLong("Linking a GCP project to a namespace is required to create SecretHub service accounts that use a GCP Service Account within the project. " +
+		"A SecretHub namespace can be linked to multiple GCP projects and a GCP project can be linked to multiple namespaces.\n" +
+		"\n" +
+		"As long as the link exists, new service accounts can be created for the GCP project. " +
+		"If a link is deleted, no new services can be created, but previously created services are unaffected. \n" +
+		"\n" +
+		"This command will open browser where you are asked to authorize SecretHub to perform iam.test on your GCP projects. " +
+		"This authorization is used to verify that you have access to the specified GCP project. " +
+		"It is therefore important that the GCP account selected during the authorization process has access to the GCP project.\n" +
+		"\n" +
+		"Once the granted authorization has been used to confirm your access to the GCP project, the authorization will automatically be revoked. " +
+		"This can be verified by going to https://myaccount.google.com/permissions. " +
+		"Any reference to SecretHub should automatically disappear within a few minutes. " +
+		"If it does not, the access can safely be revoked manually.")
+
 	command.BindAction(clause, cmd.Run)
 }
 

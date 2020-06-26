@@ -116,7 +116,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 
 	_, err = client.IDPLinks().GCP().Get(cmd.repo.GetNamespace(), projectID)
 	if api.IsErrNotFound(err) {
-		fmt.Fprintf(cmd.io.Output(), "GCP project %s is not yet linked to the namespace %s. ", projectID, cmd.repo.GetNamespace())
+		fmt.Fprintf(cmd.io.Output(), "GCP project %s is not yet linked to the namespace %s. This link is needed to create SecretHub service accounts for GCP Service Accounts in the GCP project %s. This link only has to be created once for each SecretHub namespace.\n\n", projectID, cmd.repo.GetNamespace(), projectID)
 
 		confirm, err := ui.AskYesNo(cmd.io, "Do you want to create this link now?", ui.DefaultYes)
 		if err != nil {

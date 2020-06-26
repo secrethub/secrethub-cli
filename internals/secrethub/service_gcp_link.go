@@ -195,7 +195,17 @@ func createGCPLink(client secrethub.ClientInterface, io ui.IO, namespace, projec
 		return fmt.Errorf("could not set up listener for authorization process: %s", err)
 	}
 
-	fmt.Fprintf(io.Output(), "If the browser does not automatically open, please go to the following link in your web browser: \n\n%s\n\n", l.AuthorizeURL())
+	fmt.Fprintf(io.Output(), "To create a link between the GCP project %s and the SecretHub namespace %s we have to verify your access to this GCP project. "+
+		"After pressing [ENTER], a browser window will open and ask you to login to a Google account. "+
+		"Please select an account that has read access to the GCP project. "+
+		"You will then be asked to grant `Test IAM Permissions` permission to SecretHub. "+
+		"This will be used to check whether you do have access to the project. "+
+		"After this check has succeeed, the access will directly be revoked.\n\n", projectID, namespace)
+
+	// If this fails, just continue.
+	_, _ = ui.Ask(io, "Press [ENTER] to continue")
+
+	fmt.Fprintf(io.Output(), "If the browser did not automatically open, please manually go to the following address in your browser: \n\n%s\n\n", l.AuthorizeURL())
 	_ = openBrowser(l.AuthorizeURL())
 
 	fmt.Fprint(io.Output(), "Waiting for you to complete authorization process...")

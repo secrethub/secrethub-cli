@@ -36,10 +36,11 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 		return err
 	}
 
-	_, err = client.IDPLinks().GCP().Get(cmd.namespace.String(), cmd.projectID.String())
-	if err != nil && !api.IsErrNotFound(err) {
+	exists, err := client.IDPLinks().GCP().Exists(cmd.namespace.String(), cmd.projectID.String())
+	if err != nil {
 		return err
-	} else if err == nil {
+	}
+	if exists {
 		fmt.Fprintf(cmd.io.Output(), "Namespace %s and GCP project %s are already linked.\n", cmd.namespace, cmd.projectID)
 		return nil
 	}
@@ -139,9 +140,12 @@ func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
 		return err
 	}
 
-	_, err = client.IDPLinks().GCP().Get(cmd.namespace.String(), cmd.projectID.String())
-	if api.IsErrNotFound(err) {
+	exists, err := client.IDPLinks().GCP().Exists(cmd.namespace.String(), cmd.projectID.String())
+	if err != nil {
 		return err
+	}
+	if !exists {
+		return fmt.Errorf("no existing link between GCP project %s and namespace %s found", cmd.projectID, cmd.namespace)
 	}
 
 	question := fmt.Sprintf("Are you sure you want to delete the link link between GCP project %s and the namespace %s? Without the link, you cannot create new service accounts for this GCP project. This does not affect existing service accounts.", cmd.projectID, cmd.namespace)

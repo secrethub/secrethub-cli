@@ -20,7 +20,7 @@ func NewEnvReadCommand(io ui.IO, newClient newClientFunc) *EnvReadCommand {
 	return &EnvReadCommand{
 		io:          io,
 		newClient:   newClient,
-		environment: newEnvironment(io),
+		environment: newEnvironment(io, newClient),
 	}
 }
 

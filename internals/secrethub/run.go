@@ -63,7 +63,7 @@ func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 	return &RunCommand{
 		io:          io,
 		osEnv:       os.Environ(),
-		environment: newEnvironment(io),
+		environment: newEnvironment(io, newClient),
 		newClient:   newClient,
 	}
 }

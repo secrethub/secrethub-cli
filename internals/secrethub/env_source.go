@@ -194,11 +194,15 @@ func newSecretValue(path string) value {
 	return &secretValue{path: path}
 }
 
+// secretsDirEnv sources environment variables from the directory specified with the --secrets-dir flag.
 type secretsDirEnv struct {
 	clientFunc newClientFunc
 	dirPath    string
 }
 
+// env returns a map of environment variables containing all secrets from the specified path.
+// The variable names are the relative paths of their corresponding secrets in uppercase snake case.
+// An error is returned if two secret paths map to the same variable name.
 func (s *secretsDirEnv) env() (map[string]value, error) {
 	client, err := s.clientFunc()
 	if err != nil {
@@ -236,6 +240,8 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 	return result, nil
 }
 
+// envVarName returns the environment variable name corresponding to the secret on the specified path
+// by converting the relative path to uppercase snake case.
 func (s *secretsDirEnv) envVarName(path string) string {
 	envVarName := strings.TrimPrefix(path, s.dirPath)
 	envVarName = strings.TrimPrefix(envVarName, "/")

@@ -33,6 +33,31 @@ func TestSecretsDirEnv(t *testing.T) {
 									DirID: testUUID1,
 									Name:  "repo",
 								},
+								Secrets: map[uuid.UUID]*api.Secret{
+									testUUID2: {
+										SecretID: testUUID2,
+										DirID:    testUUID1,
+										Name:     "foo",
+									},
+								},
+							}, nil
+						},
+					},
+				}, nil
+			},
+			expectedValues: []string{"FOO"},
+		},
+		"success secret in dir": {
+			clientFunc: func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					DirService: &fakeclient.DirService{
+						GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+							return &api.Tree{
+								ParentPath: "namespace",
+								RootDir: &api.Dir{
+									DirID: testUUID1,
+									Name:  "repo",
+								},
 								Dirs: map[uuid.UUID]*api.Dir{
 									testUUID2: {
 										DirID:    testUUID2,

@@ -190,7 +190,7 @@ func (g *gcpProjectID) Set(s string) error {
 }
 
 func createGCPLink(client secrethub.ClientInterface, io ui.IO, namespace, projectID string) error {
-	l, err := client.IDPLinks().GCP().AuthorizationCodeListener()
+	l, err := client.IDPLinks().GCP().AuthorizationCodeListener(namespace, projectID)
 	if err != nil {
 		return fmt.Errorf("could not set up listener for authorization process: %s", err)
 	}
@@ -212,18 +212,16 @@ func createGCPLink(client secrethub.ClientInterface, io ui.IO, namespace, projec
 	progressPrinter := progress.NewPrinter(io.Output(), 2*time.Second)
 	progressPrinter.Start()
 
-	authorizationCode, err := l.WaitForAuthorizationCode()
+	err = l.WithAuthorizationCode(func(authorizationCode string, err error) error {
+		_, err = client.IDPLinks().GCP().Create(namespace, projectID, authorizationCode, l.ListenURL())
+		return err
+	})
 	if err != nil {
 		progressPrinter.Stop()
-		return fmt.Errorf("could not retrieve authorization code: %s", err)
+		return err
 	}
 
 	progressPrinter.Stop()
-
-	_, err = client.IDPLinks().GCP().Create(namespace, projectID, authorizationCode, l.ListenURL())
-	if err != nil {
-		return err
-	}
 
 	fmt.Fprintf(io.Output(), "Created link between GCP project %s and SecretHub namespace %s\n", projectID, namespace)
 

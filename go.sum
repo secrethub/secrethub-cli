@@ -164,6 +164,8 @@ github.com/secrethub/secrethub-cli v0.30.0/go.mod h1:dC0wd40v+iQdV83/0rUrOa01LYq
 github.com/secrethub/secrethub-go v0.21.0/go.mod h1:rc2IfKKBJ4L0wGec0u4XnF5/pe0FFPE4Q1MWfrFso7s=
 github.com/secrethub/secrethub-go v0.29.1-0.20200626075900-f7c68f70dc36 h1:kRVdL7PRfR80xjpOxFy1O0JROVpILWc2FZWE7Ni2Z2M=
 github.com/secrethub/secrethub-go v0.29.1-0.20200626075900-f7c68f70dc36/go.mod h1:tDeBtyjfFQX3UqgaZfY+H4dYkcGfiVzrwLDf0XtfOrw=
+github.com/secrethub/secrethub-go v0.29.1-0.20200630121846-9adfc0eb3add h1:+DzHsSjht15ycb7GFmyfmQ39gy8ZtA7FjWfJbWUPIYk=
+github.com/secrethub/secrethub-go v0.29.1-0.20200630121846-9adfc0eb3add/go.mod h1:tDeBtyjfFQX3UqgaZfY+H4dYkcGfiVzrwLDf0XtfOrw=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.2.0 h1:Hbg2NidpLE8veEBkEZTL3CvlkUIVzuU9jDplZO54c48=

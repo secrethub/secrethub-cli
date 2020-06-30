@@ -101,7 +101,7 @@ func TestSecretsDirEnv(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			source := newSecretsDirEnv(tc.clientFunc, dirPath)
 			secrets, err := source.env()
-			if tc.err != nil && err != nil {
+			if tc.err != nil {
 				assert.Equal(t, err, tc.err)
 			} else {
 				assert.OK(t, err)

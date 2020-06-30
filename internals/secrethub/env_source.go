@@ -24,6 +24,7 @@ import (
 
 type environment struct {
 	io                           ui.IO
+	newClient                    newClientFunc
 	osEnv                        []string
 	readFile                     func(filename string) ([]byte, error)
 	osStat                       func(filename string) (os.FileInfo, error)
@@ -35,9 +36,10 @@ type environment struct {
 	secretsEnvDir                string
 }
 
-func newEnvironment(io ui.IO) *environment {
+func newEnvironment(io ui.IO, newClient newClientFunc) *environment {
 	return &environment{
 		io:           io,
+		newClient:    newClient,
 		osEnv:        os.Environ(),
 		readFile:     ioutil.ReadFile,
 		osStat:       os.Stat,

@@ -212,22 +212,21 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 
 	paths := make(map[string]string, tree.SecretCount())
 	for id := range tree.Secrets {
-		path, err := tree.AbsSecretPath(id)
+		secretPath, err := tree.AbsSecretPath(id)
 		if err != nil {
 			return nil, err
 		}
-		envVarName := strings.TrimPrefix(path.String(), s.dirPath)
-		envVarName = strings.TrimPrefix(envVarName, "/")
-		envVarName = strings.ReplaceAll(envVarName, "/", "_")
-		envVarName = strings.ToUpper(envVarName)
+		path := secretPath.String()
+
+		envVarName := s.envVarName(path)
 		if prevPath, found := paths[envVarName]; found {
 			return nil, errNameCollision{
 				name:       envVarName,
 				firstPath:  prevPath,
-				secondPath: path.String(),
+				secondPath: path,
 			}
 		}
-		paths[envVarName] = path.String()
+		paths[envVarName] = path
 	}
 
 	result := make(map[string]value, tree.SecretCount())
@@ -235,6 +234,14 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 		result[name] = newSecretValue(path)
 	}
 	return result, nil
+}
+
+func (s *secretsDirEnv) envVarName(path string) string {
+	envVarName := strings.TrimPrefix(path, s.dirPath)
+	envVarName = strings.TrimPrefix(envVarName, "/")
+	envVarName = strings.ReplaceAll(envVarName, "/", "_")
+	envVarName = strings.ToUpper(envVarName)
+	return envVarName
 }
 
 func newSecretsDirEnv(clientFunc newClientFunc, dirPath string) *secretsDirEnv {

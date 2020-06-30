@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -199,7 +200,7 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 		return nil, err
 	}
 
-	result := make(map[string]value, tree.SecretCount())
+	paths := make(map[string]string, tree.SecretCount())
 	for id := range tree.Secrets {
 		path, err := tree.AbsSecretPath(id)
 		if err != nil {
@@ -209,7 +210,15 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 		envVarName = strings.TrimPrefix(envVarName, "/")
 		envVarName = strings.ReplaceAll(envVarName, "/", "_")
 		envVarName = strings.ToUpper(envVarName)
-		result[envVarName] = newSecretValue(path.String())
+		if prevPath, found := paths[envVarName]; found {
+			return nil, fmt.Errorf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", prevPath, path, envVarName)
+		}
+		paths[envVarName] = path.String()
+	}
+
+	result := make(map[string]value, tree.SecretCount())
+	for name, path := range paths {
+		result[name] = newSecretValue(path)
 	}
 	return result, nil
 }

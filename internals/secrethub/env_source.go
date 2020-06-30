@@ -33,6 +33,7 @@ type environment struct {
 	templateVars                 map[string]string
 	templateVersion              string
 	dontPromptMissingTemplateVar bool
+	secretsDir                   string
 	secretsEnvDir                string
 }
 
@@ -55,6 +56,7 @@ func (env *environment) register(clause *cli.CommandClause) {
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&env.templateVersion)
 	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
+	clause.Flag("secrets-dir", "Path to a directory from which to inject all secrets. The environment variable storing each secret will be the secret's uppercase relative path with '_' instead of the path delimiter.").StringVar(&env.secretsDir)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&env.secretsEnvDir)
 }
 
@@ -118,6 +120,12 @@ func (env *environment) env() (map[string]value, error) {
 	referenceEnv := newReferenceEnv(osEnvMap)
 	sources = append(sources, referenceEnv)
 
+	// --secrets-dir flag
+	if env.secretsDir != "" {
+		secretsDirEnv := newSecretsDirEnv(env.newClient, env.secretsDir)
+		sources = append(sources, secretsDirEnv)
+	}
+
 	// --envar flag
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
 	flagEnv, err := NewEnvFlags(env.envar)
@@ -173,6 +181,44 @@ func (s *secretValue) containsSecret() bool {
 
 func newSecretValue(path string) value {
 	return &secretValue{path: path}
+}
+
+type secretsDirEnv struct {
+	clientFunc newClientFunc
+	dirPath    string
+}
+
+func (s *secretsDirEnv) env() (map[string]value, error) {
+	client, err := s.clientFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	tree, err := client.Dirs().GetTree(s.dirPath, -1, false)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]value, tree.SecretCount())
+	for id := range tree.Secrets {
+		path, err := tree.AbsSecretPath(id)
+		if err != nil {
+			return nil, err
+		}
+		envVarName := strings.TrimPrefix(path.String(), s.dirPath)
+		envVarName = strings.TrimPrefix(envVarName, "/")
+		envVarName = strings.ReplaceAll(envVarName, "/", "_")
+		envVarName = strings.ToUpper(envVarName)
+		result[envVarName] = newSecretValue(path.String())
+	}
+	return result, nil
+}
+
+func newSecretsDirEnv(clientFunc newClientFunc, dirPath string) *secretsDirEnv {
+	return &secretsDirEnv{
+		clientFunc: clientFunc,
+		dirPath:    dirPath,
+	}
 }
 
 // EnvFlags defines environment variables sourced from command-line flags.

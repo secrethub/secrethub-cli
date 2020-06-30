@@ -23,6 +23,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type errNameCollision struct {
+	name       string
+	firstPath  string
+	secondPath string
+}
+
+func (e errNameCollision) Error() string {
+	return fmt.Sprintf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", e.firstPath, e.secondPath, e.name)
+}
+
 type environment struct {
 	io                           ui.IO
 	newClient                    newClientFunc
@@ -211,7 +221,11 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 		envVarName = strings.ReplaceAll(envVarName, "/", "_")
 		envVarName = strings.ToUpper(envVarName)
 		if prevPath, found := paths[envVarName]; found {
-			return nil, fmt.Errorf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", prevPath, path, envVarName)
+			return nil, errNameCollision{
+				name:       envVarName,
+				firstPath:  prevPath,
+				secondPath: path.String(),
+			}
 		}
 		paths[envVarName] = path.String()
 	}

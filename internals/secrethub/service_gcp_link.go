@@ -59,7 +59,7 @@ func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 		"As long as the link exists, new service accounts can be created for the GCP project. " +
 		"If a link is deleted, no new services can be created, but previously created services are unaffected. \n" +
 		"\n" +
-		"This command will open browser where you are asked to authorize SecretHub to perform iam.test on your GCP projects. " +
+		"This command will open your browser where you are asked to authorize SecretHub to perform iam.test on your GCP projects. " +
 		"This authorization is used to verify that you have access to the specified GCP project. " +
 		"It is therefore important that the GCP account selected during the authorization process has access to the GCP project.\n" +
 		"\n" +

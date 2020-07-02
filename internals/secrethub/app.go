@@ -154,6 +154,11 @@ func (app *App) Run(args []string) error {
 	return err
 }
 
+// Model returns the CLI application model containing all the SecretHub CLI commands, flags, and args.
+func (app *App) Model() *kingpin.ApplicationModel {
+	return app.cli.Model()
+}
+
 // registerCommands initializes all commands and registers them on the app.
 func (app *App) registerCommands() {
 

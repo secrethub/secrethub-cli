@@ -203,7 +203,7 @@ func createGCPLink(client secrethub.ClientInterface, io ui.IO, namespace, projec
 		"Please select an account that has read access to the GCP project. "+
 		"You will then be asked to grant `Test IAM Permissions` permission to SecretHub. "+
 		"This will be used to check whether you do have access to the project. "+
-		"After this check has succeeed, the access will directly be revoked.\n\n", projectID, namespace)
+		"After this check has succeeded, the access will directly be revoked.\n\n", projectID, namespace)
 
 	// If this fails, just continue.
 	_, _ = ui.Ask(io, "Press [ENTER] to continue")

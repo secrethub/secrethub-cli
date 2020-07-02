@@ -17,7 +17,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/secrethub/demo-app v0.1.0
-	github.com/secrethub/secrethub-go v0.29.1-0.20200702094400-d465926a4a6a
+	github.com/secrethub/secrethub-go v0.29.1-0.20200702114848-1a3657310d91
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d

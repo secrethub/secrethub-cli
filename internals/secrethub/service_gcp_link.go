@@ -215,7 +215,7 @@ func createGCPLink(client secrethub.ClientInterface, io ui.IO, namespace, projec
 	progressPrinter := progress.NewPrinter(io.Output(), 2*time.Second)
 	progressPrinter.Start()
 
-	err = l.WithAuthorizationCode(func(authorizationCode string, err error) error {
+	err = l.WithAuthorizationCode(func(authorizationCode string) error {
 		_, err = client.IDPLinks().GCP().Create(namespace, projectID, authorizationCode, l.ListenURL())
 		return err
 	})

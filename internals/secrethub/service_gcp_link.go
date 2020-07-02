@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 	"os/exec"
 	"runtime"
 	"text/tabwriter"
@@ -13,6 +12,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 )
 
 // ServiceGCPLinkCommand create a new link between a SecretHub namespace and a GCP project.

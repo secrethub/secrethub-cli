@@ -3,8 +3,9 @@ commit: format lint test
 format:
 	@goimports -w $(find . -type f -name '*.go')
 
+GOLANGCI_VERSION=v1.23.8
 lint:
-	@golangci-lint run
+	@docker run --rm -t -v $$(go env GOCACHE):/cache/go -e GOCACHE=/cache/go -e GOLANGCI_LINT_CACHE=/cache/go -v $$(go env GOPATH)/pkg:/go/pkg -v ${PWD}:/app -w /app golangci/golangci-lint:${GOLANGCI_VERSION}-alpine golangci-lint run ./...
 
 test:
 	@go test -race ./...
@@ -13,11 +14,6 @@ tools: format-tools lint-tools
 
 format-tools:
 	@go get -u golang.org/x/tools/cmd/goimports
-
-GOLANGCI_VERSION=v1.23.8
-
-lint-tools:
-	@curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin ${GOLANGCI_VERSION}
 
 COMMIT=`git rev-parse --short HEAD`
 VERSION=`git describe --always`

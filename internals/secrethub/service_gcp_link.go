@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 	"os/exec"
 	"runtime"
 	"text/tabwriter"
@@ -94,21 +95,23 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 		return err
 	}
 
-	links, err := client.IDPLinks().GCP().List(cmd.namespace.String())
-	if err != nil {
-		return err
-	}
-
 	tw := tabwriter.NewWriter(cmd.io.Output(), 0, 2, 2, ' ', 0)
 	fmt.Fprintf(tw, "%s\t%s\n", "PROJECT ID", "CREATED")
 
-	for _, link := range links {
-		_, err := fmt.Fprintf(tw, "%s\t%s\n", link.LinkedID, timeFormatter.Format(link.CreatedAt))
+	iter := client.IDPLinks().GCP().List(cmd.namespace.String(), &secrethub.IdpLinkIteratorParams{})
+	for {
+		link, err := iter.Next()
+		if err == iterator.Done {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		_, err = fmt.Fprintf(tw, "%s\t%s\n", link.LinkedID, timeFormatter.Format(link.CreatedAt))
 		if err != nil {
 			return err
 		}
 	}
-
 	err = tw.Flush()
 	if err != nil {
 		return err

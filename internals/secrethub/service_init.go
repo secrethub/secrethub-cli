@@ -88,7 +88,7 @@ func (cmd *ServiceInitCommand) Run() error {
 			return err
 		}
 
-		fmt.Fprintf(cmd.io.Output(), "Copied account configuration for %s to clipboard. It will be cleared after 45 seconds.\n", service.ServiceID)
+		fmt.Fprintf(cmd.io.Output(), "Copied account configuration for %s to clipboard. It will be cleared after 3 minutes.\n", service.ServiceID)
 	} else if cmd.file != "" {
 		err = ioutil.WriteFile(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
 		if err != nil {
@@ -116,8 +116,7 @@ func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
-	// TODO make 45 sec configurable
-	clause.Flag("clip", "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(&cmd.clip)
+	clause.Flag("clip", "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 3 minutes.").Short('c').BoolVar(&cmd.clip)
 	clause.Flag("file", "Write the service account configuration to a file instead of stdout.").Hidden().StringVar(&cmd.file)
 	clause.Flag("out-file", "Write the service account configuration to a file instead of stdout.").StringVar(&cmd.file)
 	clause.Flag("file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.").Default("0440").SetValue(&cmd.fileMode)

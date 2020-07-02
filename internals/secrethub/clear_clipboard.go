@@ -12,7 +12,7 @@ import (
 )
 
 // defaultClearClipboardAfter defines the default TTL for data written to the clipboard.
-const defaultClearClipboardAfter = 45 * time.Second
+const defaultClearClipboardAfter = 3 * time.Minute
 
 // ClearClipboardCommand is a command to clear the contents of the clipboard after some time passed.
 type ClearClipboardCommand struct {

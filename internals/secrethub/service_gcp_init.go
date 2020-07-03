@@ -13,9 +13,10 @@ import (
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
 
+	"github.com/secrethub/secrethub-go/internals/gcp"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-	"github.com/secrethub/secrethub-go/internals/gcp"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
@@ -106,6 +107,24 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 
 	if cmd.description == "" {
 		cmd.description = "GCP Service Account " + roleNameFromRole(cmd.serviceAccountEmail)
+	}
+
+	projectID, err := api.ProjectIDFromGCPEmail(cmd.serviceAccountEmail)
+	if err != nil {
+		return fmt.Errorf("invalid service account email: %s", err)
+	}
+
+	exists, err := client.IDPLinks().GCP().Exists(cmd.repo.GetNamespace(), projectID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		fmt.Fprintf(cmd.io.Output(), "This is the first time you're using a GCP Service Account in the GCP project %s for a SecretHub service account in the namespace %s. You have to link these two first.\n\n", projectID, cmd.repo.GetNamespace())
+
+		err = createGCPLink(client, cmd.io, cmd.repo.GetNamespace(), projectID)
+		if err != nil {
+			return fmt.Errorf("could not create link: %s", err)
+		}
 	}
 
 	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credentials.CreateGCPServiceAccount(cmd.serviceAccountEmail, cmd.kmsKeyResourceID))

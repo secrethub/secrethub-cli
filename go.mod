@@ -6,7 +6,6 @@ require (
 	bitbucket.org/zombiezen/cardcpx v0.0.0-20150417151802-902f68ff43ef
 	cloud.google.com/go v0.57.0 // indirect
 	github.com/alecthomas/kingpin v1.3.8-0.20200323085623-b6657d9477a6
-	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/atotto/clipboard v0.1.2
 	github.com/aws/aws-sdk-go v1.25.49
 	github.com/docker/go-units v0.3.3
@@ -15,15 +14,17 @@ require (
 	github.com/mattn/go-colorable v0.1.1
 	github.com/mattn/go-isatty v0.0.7
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mitchellh/mapstructure v1.1.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/secrethub/demo-app v0.1.0
-	github.com/secrethub/secrethub-go v0.29.0
+	github.com/secrethub/secrethub-go v0.29.1-0.20200703092019-9f5d3de9b0e4
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200501052902-10377860bb8e
 	golang.org/x/text v0.3.2
 	google.golang.org/api v0.26.0
-	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
+	google.golang.org/genproto v0.0.0-20200430143042-b979b6f78d84
 	gopkg.in/yaml.v2 v2.2.2
+	gotest.tools v2.2.0+incompatible
 )

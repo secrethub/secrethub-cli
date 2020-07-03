@@ -146,6 +146,7 @@ func NewServiceGCPDeleteLinkCommand(io ui.IO, newClient newClientFunc) *ServiceG
 
 func (cmd *ServiceGCPDeleteLinkCommand) Register(r command.Registerer) {
 	clause := r.Command("delete-link", "Delete the link between a SecretHub namespace and a GCP project.")
+	clause.HelpLong("After deleting the link you cannot create new GCP service accounts in the specified namespace and GCP project anymore. Exisiting service accounts will keep on working.")
 	clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
 	clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 

@@ -149,7 +149,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create a new service account that is tied to an GCP Service Account.")
+	clause := r.Command("init", "Create a new service account that is tied to a GCP Service Account.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flag("kms-key", "The Resource ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyResourceID)
 	clause.Flag("service-account-email", "The email of the GCP Service Account that should have access to this service account.").StringVar(&cmd.serviceAccountEmail)

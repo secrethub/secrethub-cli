@@ -23,7 +23,7 @@ type ServiceInitCommand struct {
 	description string
 	file        string
 	fileMode    filemode.FileMode
-	path        api.DirPath
+	repo        api.RepoPath
 	permission  string
 	clipper     clip.Clipper
 	io          ui.IO
@@ -54,25 +54,19 @@ func (cmd *ServiceInitCommand) Run() error {
 		return ErrFlagsConflict("--clip and --file")
 	}
 
-	repo := cmd.path.GetRepoPath()
-
 	client, err := cmd.newClient()
 	if err != nil {
 		return err
 	}
 
 	credential := credentials.CreateKey()
-	service, err := client.Services().Create(repo.Value(), cmd.description, credential)
+	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credential)
 	if err != nil {
 		return err
 	}
 
-	if strings.Contains(cmd.permission, ":") && !cmd.path.IsRepoPath() {
-		return api.ErrInvalidRepoPath(cmd.path)
-	}
-
 	if cmd.permission != "" {
-		err = givePermission(service, cmd.path.GetRepoPath(), cmd.permission, client)
+		err = givePermission(service, cmd.repo, cmd.permission, client)
 		if err != nil {
 			return err
 		}

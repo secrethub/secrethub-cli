@@ -48,6 +48,11 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		return err
 	}
 
+	_, err = client.Repos().Get(cmd.repo.String())
+	if err != nil {
+		return err
+	}
+
 	if cmd.serviceAccountEmail == "" && cmd.kmsKeyResourceID == "" {
 		fmt.Fprintln(cmd.io.Stdout(), "This command creates a new service account for use on GCP. For help on this, run `secrethub service gcp init --help`.")
 

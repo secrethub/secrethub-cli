@@ -90,6 +90,12 @@ func (env *environment) env() (map[string]value, error) {
 		sources = append(sources, dirSource)
 	}
 
+	// --secrets-dir flag
+	if env.secretsDir != "" {
+		secretsDirEnv := newSecretsDirEnv(env.newClient, env.secretsDir)
+		sources = append(sources, secretsDirEnv)
+	}
+
 	//secrethub.env file
 	if env.envFile == "" {
 		_, err := env.osStat(defaultEnvFile)
@@ -130,12 +136,6 @@ func (env *environment) env() (map[string]value, error) {
 	// secret references (secrethub://)
 	referenceEnv := newReferenceEnv(osEnvMap)
 	sources = append(sources, referenceEnv)
-
-	// --secrets-dir flag
-	if env.secretsDir != "" {
-		secretsDirEnv := newSecretsDirEnv(env.newClient, env.secretsDir)
-		sources = append(sources, secretsDirEnv)
-	}
 
 	// --envar flag
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.

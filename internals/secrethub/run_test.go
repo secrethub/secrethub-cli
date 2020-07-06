@@ -770,7 +770,7 @@ func TestRunCommand_environment(t *testing.T) {
 			expectedEnv:     []string{"TEST=bbb"},
 		},
 		// TODO Add test case for: envar flag has precedence over secret reference - requires refactoring of fakeclient
-		"secrets-dir flag has precedence over secret reference": {
+		"secret reference has precedence over secrets-dir flag": {
 			command: RunCommand{
 				environment: &environment{
 					newClient: func() (secrethub.ClientInterface, error) {
@@ -818,8 +818,8 @@ func TestRunCommand_environment(t *testing.T) {
 					}, nil
 				},
 			},
-			expectedSecrets: []string{"aaa"},
-			expectedEnv:     []string{"FOO=aaa"},
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"FOO=bbb"},
 		},
 		"secret reference has precedence over .env file": {
 			command: RunCommand{

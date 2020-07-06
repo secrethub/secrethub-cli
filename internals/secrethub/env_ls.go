@@ -14,10 +14,10 @@ type EnvListCommand struct {
 }
 
 // NewEnvListCommand creates a new EnvListCommand.
-func NewEnvListCommand(io ui.IO, clientFunc newClientFunc) *EnvListCommand {
+func NewEnvListCommand(io ui.IO, newClient newClientFunc) *EnvListCommand {
 	return &EnvListCommand{
 		io:          io,
-		environment: newEnvironment(io, clientFunc),
+		environment: newEnvironment(io, newClient),
 	}
 }
 

@@ -18,12 +18,12 @@ func TestSecretsDirEnv(t *testing.T) {
 	testUUID4 := uuid.New()
 
 	cases := map[string]struct {
-		clientFunc     newClientFunc
+		newClient      newClientFunc
 		expectedValues []string
 		err            error
 	}{
 		"success": {
-			clientFunc: func() (secrethub.ClientInterface, error) {
+			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
 						GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
@@ -48,7 +48,7 @@ func TestSecretsDirEnv(t *testing.T) {
 			expectedValues: []string{"FOO"},
 		},
 		"success secret in dir": {
-			clientFunc: func() (secrethub.ClientInterface, error) {
+			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
 						GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
@@ -80,7 +80,7 @@ func TestSecretsDirEnv(t *testing.T) {
 			expectedValues: []string{"FOO_BAR"},
 		},
 		"name collision": {
-			clientFunc: func() (secrethub.ClientInterface, error) {
+			newClient: func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
 					DirService: &fakeclient.DirService{
 						GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
@@ -124,7 +124,7 @@ func TestSecretsDirEnv(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			source := newSecretsDirEnv(tc.clientFunc, dirPath)
+			source := newSecretsDirEnv(tc.newClient, dirPath)
 			secrets, err := source.env()
 			if tc.err != nil {
 				assert.Equal(t, err, tc.err)

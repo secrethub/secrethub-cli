@@ -662,6 +662,8 @@ func TestRunCommand_environment(t *testing.T) {
 	rootDirUUID := uuid.New()
 	secretUUID := uuid.New()
 
+	const secretPathFoo = "namespace/repo/foo"
+
 	cases := map[string]struct {
 		command         RunCommand
 		expectedEnv     []string
@@ -806,7 +808,7 @@ func TestRunCommand_environment(t *testing.T) {
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
 								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
-									if path == "namespace/repo/foo" {
+									if path == secretPathFoo {
 										return &api.SecretVersion{Data: []byte("aaa")}, nil
 									} else if path == "other/secret/path" {
 										return &api.SecretVersion{Data: []byte("bbb")}, nil
@@ -857,7 +859,7 @@ func TestRunCommand_environment(t *testing.T) {
 						SecretService: &fakeclient.SecretService{
 							VersionService: &fakeclient.SecretVersionService{
 								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
-									if path == "namespace/repo/foo" {
+									if path == secretPathFoo {
 										return &api.SecretVersion{Data: []byte("aaa")}, nil
 									}
 									return nil, api.ErrSecretNotFound
@@ -909,7 +911,7 @@ func TestRunCommand_environment(t *testing.T) {
 								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
 									if path == "test/test/test" {
 										return &api.SecretVersion{Data: []byte("bbb")}, nil
-									} else if path == "namespace/repo/foo" {
+									} else if path == secretPathFoo {
 										return &api.SecretVersion{Data: []byte("aaa")}, nil
 									}
 									return nil, api.ErrSecretNotFound

@@ -67,7 +67,7 @@ func (env *environment) register(clause *cli.CommandClause) {
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&env.templateVersion)
 	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
-	clause.Flag("secrets-dir", "Path to a directory from which to inject all secrets. The environment variable storing each secret will be the secret's uppercase relative path with '_' instead of the path delimiter.").StringVar(&env.secretsDir)
+	clause.Flag("secrets-dir", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.").StringVar(&env.secretsDir)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&env.secretsEnvDir)
 }
 

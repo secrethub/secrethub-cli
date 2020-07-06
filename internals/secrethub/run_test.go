@@ -659,8 +659,8 @@ func osStatFunc(name string, err error) func(string) (os.FileInfo, error) {
 }
 
 func TestRunCommand_environment(t *testing.T) {
-	testUUID1 := uuid.New()
-	testUUID2 := uuid.New()
+	rootDirUUID := uuid.New()
+	secretUUID := uuid.New()
 
 	cases := map[string]struct {
 		command         RunCommand
@@ -779,13 +779,13 @@ func TestRunCommand_environment(t *testing.T) {
 									return &api.Tree{
 										ParentPath: "namespace",
 										RootDir: &api.Dir{
-											DirID: testUUID1,
+											DirID: rootDirUUID,
 											Name:  "repo",
 										},
 										Secrets: map[uuid.UUID]*api.Secret{
-											testUUID2: {
-												SecretID: testUUID2,
-												DirID:    testUUID1,
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
 												Name:     "foo",
 											},
 										},
@@ -831,13 +831,13 @@ func TestRunCommand_environment(t *testing.T) {
 									return &api.Tree{
 										ParentPath: "namespace",
 										RootDir: &api.Dir{
-											DirID: testUUID1,
+											DirID: rootDirUUID,
 											Name:  "repo",
 										},
 										Secrets: map[uuid.UUID]*api.Secret{
-											testUUID2: {
-												SecretID: testUUID2,
-												DirID:    testUUID1,
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
 												Name:     "foo",
 											},
 										},
@@ -881,13 +881,13 @@ func TestRunCommand_environment(t *testing.T) {
 									return &api.Tree{
 										ParentPath: "namespace",
 										RootDir: &api.Dir{
-											DirID: testUUID1,
+											DirID: rootDirUUID,
 											Name:  "repo",
 										},
 										Secrets: map[uuid.UUID]*api.Secret{
-											testUUID2: {
-												SecretID: testUUID2,
-												DirID:    testUUID1,
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
 												Name:     "foo",
 											},
 										},

@@ -158,12 +158,12 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
 
-	clause.HelpLong("The native GCP identity provider uses a combination of GCP IAM and GCP KMS to provide access to SecretHub for any service running on GCP. For this to work, a GCP Service Account and a KMS key are needed.\n" +
+	clause.HelpLong("SecretHub GCP service accounts use a combination of GCP IAM and GCP KMS to access SecretHub. They use a GCP Service Account and a KMS key for this.\n" +
 		"\n" +
 		"  - The GCP Service Account should be the service account that is assumed by the service during execution.\n" +
 		"  - The KMS key is a key that is used for encryption of the account. Decryption permission on this key must be granted to the previously described GCP Service Account.\n" +
 		"\n" +
-		"To create a new service that uses the GCP identity provider, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore GCP application default credentials should be configured on this system. To achieve this, first install the Google Cloud SDK (https://cloud.google.com/sdk/docs/quickstarts) and then run `gcloud auth application-default login`.",
+		"To create a new SecretHub GCP service account, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore GCP application default credentials should be configured on this system. To achieve this, first install the Google Cloud SDK (https://cloud.google.com/sdk/docs/quickstarts) and then run `gcloud auth application-default login`.",
 	)
 
 	command.BindAction(clause, cmd.Run)

@@ -769,6 +769,107 @@ func TestRunCommand_environment(t *testing.T) {
 			expectedSecrets: []string{"bbb"},
 			expectedEnv:     []string{"TEST=bbb"},
 		},
+		"env file has precedence over secrets-dir flag": {
+			command: RunCommand{
+				environment: &environment{
+					newClient: func() (secrethub.ClientInterface, error) {
+						return fakeclient.Client{
+							DirService: &fakeclient.DirService{
+								GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+									return &api.Tree{
+										ParentPath: "namespace",
+										RootDir: &api.Dir{
+											DirID: testUUID1,
+											Name:  "repo",
+										},
+										Secrets: map[uuid.UUID]*api.Secret{
+											testUUID2: {
+												SecretID: testUUID2,
+												DirID:    testUUID1,
+												Name:     "foo",
+											},
+										},
+									}, nil
+								},
+							},
+						}, nil
+					},
+					secretsDir:                   "namespace/repo",
+					dontPromptMissingTemplateVar: true,
+					templateVersion:              "2",
+					osEnv:                        []string{"FOO=bbb"},
+					osStat:                       osStatFunc("secrethub.env", nil),
+					readFile:                     readFileFunc("secrethub.env", "FOO= {{ other/secret/path }}"),
+				},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									if path == "namespace/repo/foo" {
+										return &api.SecretVersion{Data: []byte("aaa")}, nil
+									} else if path == "other/secret/path" {
+										return &api.SecretVersion{Data: []byte("bbb")}, nil
+									}
+									return nil, api.ErrSecretNotFound
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"FOO=bbb"},
+		},
+		"secrets-dir flag has precedence over os environment": {
+			command: RunCommand{
+				environment: &environment{
+					newClient: func() (secrethub.ClientInterface, error) {
+						return fakeclient.Client{
+							DirService: &fakeclient.DirService{
+								GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+									return &api.Tree{
+										ParentPath: "namespace",
+										RootDir: &api.Dir{
+											DirID: testUUID1,
+											Name:  "repo",
+										},
+										Secrets: map[uuid.UUID]*api.Secret{
+											testUUID2: {
+												SecretID: testUUID2,
+												DirID:    testUUID1,
+												Name:     "foo",
+											},
+										},
+									}, nil
+								},
+							},
+						}, nil
+					},
+					secretsDir:                   "namespace/repo",
+					dontPromptMissingTemplateVar: true,
+					templateVersion:              "2",
+					osEnv:                        []string{"FOO=bbb"},
+					osStat:                       osStatFunc("secrethub.env", os.ErrNotExist),
+				},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									if path == "namespace/repo/foo" {
+										return &api.SecretVersion{Data: []byte("aaa")}, nil
+									}
+									return nil, api.ErrSecretNotFound
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"aaa"},
+			expectedEnv:     []string{"FOO=aaa"},
+		},
 		// TODO Add test case for: envar flag has precedence over secret reference - requires refactoring of fakeclient
 		"secret reference has precedence over secrets-dir flag": {
 			command: RunCommand{

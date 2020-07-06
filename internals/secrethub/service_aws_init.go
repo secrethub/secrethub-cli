@@ -26,7 +26,6 @@ import (
 // Errors
 var (
 	ErrInvalidAWSRegion      = errMain.Code("invalid_region").Error("invalid AWS region")
-	ErrRoleAlreadyTaken      = errMain.Code("role_taken").Error("a service account with that IAM role already exists. Use the existing service account by assuming the role and passing the --identity-provider=aws flag. Or create a new service account with a different IAM role.")
 	ErrInvalidPermissionPath = errMain.Code("invalid_permission_path").ErrorPref("invalid permission path: %s")
 	ErrMissingRegion         = errMain.Code("missing_region").Error("could not find AWS region. Supply using the --region flag or in the AWS configuration. See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html for the AWS configuration files")
 )
@@ -136,9 +135,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	}
 
 	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credentials.CreateAWS(cmd.kmsKeyID, cmd.role, cfg))
-	if err == api.ErrCredentialAlreadyExists {
-		return ErrRoleAlreadyTaken
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 

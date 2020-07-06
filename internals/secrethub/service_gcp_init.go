@@ -128,9 +128,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 	}
 
 	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credentials.CreateGCPServiceAccount(cmd.serviceAccountEmail, cmd.kmsKeyResourceID))
-	if err == api.ErrCredentialAlreadyExists {
-		return ErrRoleAlreadyTaken
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 

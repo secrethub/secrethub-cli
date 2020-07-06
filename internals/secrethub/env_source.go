@@ -233,7 +233,7 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 		paths[envVarName] = path
 	}
 
-	result := make(map[string]value, tree.SecretCount())
+	result := make(map[string]value, len(paths))
 	for name, path := range paths {
 		result[name] = newSecretValue(path)
 	}

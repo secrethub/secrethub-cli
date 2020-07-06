@@ -12,10 +12,10 @@ import (
 
 func TestSecretsDirEnv(t *testing.T) {
 	const dirPath = "namespace/repo"
-	testUUID1 := uuid.New()
-	testUUID2 := uuid.New()
-	testUUID3 := uuid.New()
-	testUUID4 := uuid.New()
+	rootDirUUID := uuid.New()
+	subDirUUID := uuid.New()
+	secretUUID1 := uuid.New()
+	secretUUID2 := uuid.New()
 
 	cases := map[string]struct {
 		newClient      newClientFunc
@@ -30,13 +30,13 @@ func TestSecretsDirEnv(t *testing.T) {
 							return &api.Tree{
 								ParentPath: "namespace",
 								RootDir: &api.Dir{
-									DirID: testUUID1,
+									DirID: rootDirUUID,
 									Name:  "repo",
 								},
 								Secrets: map[uuid.UUID]*api.Secret{
-									testUUID2: {
-										SecretID: testUUID2,
-										DirID:    testUUID1,
+									secretUUID1: {
+										SecretID: secretUUID1,
+										DirID:    rootDirUUID,
 										Name:     "foo",
 									},
 								},
@@ -55,20 +55,20 @@ func TestSecretsDirEnv(t *testing.T) {
 							return &api.Tree{
 								ParentPath: "namespace",
 								RootDir: &api.Dir{
-									DirID: testUUID1,
+									DirID: rootDirUUID,
 									Name:  "repo",
 								},
 								Dirs: map[uuid.UUID]*api.Dir{
-									testUUID2: {
-										DirID:    testUUID2,
-										ParentID: &testUUID1,
+									subDirUUID: {
+										DirID:    subDirUUID,
+										ParentID: &rootDirUUID,
 										Name:     "foo",
 									},
 								},
 								Secrets: map[uuid.UUID]*api.Secret{
-									testUUID3: {
-										SecretID: testUUID3,
-										DirID:    testUUID2,
+									secretUUID1: {
+										SecretID: secretUUID1,
+										DirID:    subDirUUID,
 										Name:     "bar",
 									},
 								},
@@ -87,25 +87,25 @@ func TestSecretsDirEnv(t *testing.T) {
 							return &api.Tree{
 								ParentPath: "namespace",
 								RootDir: &api.Dir{
-									DirID: testUUID1,
+									DirID: rootDirUUID,
 									Name:  "repo",
 								},
 								Dirs: map[uuid.UUID]*api.Dir{
-									testUUID2: {
-										DirID:    testUUID2,
-										ParentID: &testUUID1,
+									subDirUUID: {
+										DirID:    subDirUUID,
+										ParentID: &rootDirUUID,
 										Name:     "foo",
 									},
 								},
 								Secrets: map[uuid.UUID]*api.Secret{
-									testUUID3: {
-										SecretID: testUUID3,
-										DirID:    testUUID2,
+									secretUUID1: {
+										SecretID: secretUUID1,
+										DirID:    subDirUUID,
 										Name:     "bar",
 									},
-									testUUID4: {
-										SecretID: testUUID4,
-										DirID:    testUUID1,
+									secretUUID2: {
+										SecretID: secretUUID2,
+										DirID:    rootDirUUID,
 										Name:     "foo_bar",
 									},
 								},

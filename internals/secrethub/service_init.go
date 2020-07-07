@@ -105,7 +105,7 @@ func (cmd *ServiceInitCommand) Run() error {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause := r.Command("init", "Create a new service account.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
+	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flag("description", "A description for the service so others will recognize it.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)

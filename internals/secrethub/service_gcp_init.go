@@ -216,7 +216,7 @@ func (l *gcpServiceAccountOptionLister) Options() ([]ui.Option, bool, error) {
 		return nil, false, gcp.HandleError(err)
 	}
 
-	var options []ui.Option
+	options := make([]ui.Option, 0, len(resp.Accounts))
 	for _, account := range resp.Accounts {
 		if err := api.ValidateGCPServiceAccountEmail(account.Email); err != nil {
 			continue

@@ -216,16 +216,19 @@ func (l *gcpServiceAccountOptionLister) Options() ([]ui.Option, bool, error) {
 		return nil, false, gcp.HandleError(err)
 	}
 
-	options := make([]ui.Option, len(resp.Accounts))
-	for i, account := range resp.Accounts {
+	var options []ui.Option
+	for _, account := range resp.Accounts {
+		if err := api.ValidateGCPServiceAccountEmail(account.Email); err != nil {
+			continue
+		}
 		display := account.Email
 		if account.Description != "" {
 			display += " (" + account.Description + ")"
 		}
-		options[i] = ui.Option{
+		options = append(options, ui.Option{
 			Value:   account.Email,
 			Display: display,
-		}
+		})
 	}
 
 	l.nextPage = resp.NextPageToken

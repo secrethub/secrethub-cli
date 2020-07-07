@@ -305,14 +305,14 @@ func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
 }
 
 func validateGCPKeyring(keyring string) error {
-	if !regexp.MustCompile("^projects/[a-zA-Z0-9-]*/locations/[a-zA-Z0-9-]*/keyRings/[a-zA-Z0-9-_]*$").MatchString(keyring) {
+	if !regexp.MustCompile("^projects/[a-zA-Z0-9-]+/locations/[a-zA-Z0-9-]+/keyRings/[a-zA-Z0-9-_]+$").MatchString(keyring) {
 		return errors.New("GCP keyring should be in the form \"projects/<project-id>/locations/<location>/keyRings/<key-ring>\"")
 	}
 	return nil
 }
 
 func validateGCPCryptoKey(cryptoKey string) error {
-	if !regexp.MustCompile("^projects/[a-zA-Z0-9-]*/locations/[a-zA-Z0-9-]*/keyRings/[a-zA-Z0-9-_]*/cryptoKeys/[a-zA-Z0-9-_]*$").MatchString(cryptoKey) {
+	if !regexp.MustCompile("^projects/[a-zA-Z0-9-]+/locations/[a-zA-Z0-9-]+/keyRings/[a-zA-Z0-9-_]+/cryptoKeys/[a-zA-Z0-9-_]+$").MatchString(cryptoKey) {
 		return errors.New("GCP crypto key should be in the form \"projects/<project-id>/locations/<location>/keyRings/<key-ring>/cryptoKeys/<key>\"")
 	}
 	return nil

@@ -84,7 +84,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		if err != nil {
 			return err
 		}
-		kmsKey, err := ui.ChooseDynamicOptions(cmd.io, "What is the KMS key you want to use for encrypting the service account's key?", kmsKeyLister.KeyOptions(keyring), true, "kms key")
+		kmsKey, err := ui.ChooseDynamicOptionsValidate(cmd.io, "What is the KMS key you want to use for encrypting the service account's key?", kmsKeyLister.KeyOptions(keyring), "kms key", validateGCPCryptoKey)
 		if err != nil {
 			return err
 		}
@@ -307,6 +307,13 @@ func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
 func validateGCPKeyring(keyring string) error {
 	if !regexp.MustCompile("^projects/[a-zA-Z0-9-]*/locations/[a-zA-Z0-9-]*/keyRings/[a-zA-Z0-9-_]*$").MatchString(keyring) {
 		return errors.New("GCP keyring should be in the form \"projects/<project-id>/locations/<location>/keyRings/<key-ring>\"")
+	}
+	return nil
+}
+
+func validateGCPCryptoKey(cryptoKey string) error {
+	if !regexp.MustCompile("^projects/[a-zA-Z0-9-]*/locations/[a-zA-Z0-9-]*/keyRings/[a-zA-Z0-9-_]*/cryptoKeys/[a-zA-Z0-9-_]*$").MatchString(cryptoKey) {
+		return errors.New("GCP crypto key should be in the form \"projects/<project-id>/locations/<location>/keyRings/<key-ring>/cryptoKeys/<key>\"")
 	}
 	return nil
 }

@@ -68,7 +68,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		serviceAccountLister := gcpServiceAccountOptionLister{
 			ProjectID: projectID,
 		}
-		serviceAccountEmail, err := ui.ChooseDynamicOptionsValidate(cmd.io, "What is the email of the service account you want to use?", serviceAccountLister.Options, "service account", api.ValidateGCPServiceAccountEmail)
+		serviceAccountEmail, err := ui.ChooseDynamicOptionsValidate(cmd.io, "What is the email of the service account you want to use?", serviceAccountLister.Options, "service account", api.ValidateGCPUserManagedServiceAccountEmail)
 		if err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 	}
 
 	if cmd.serviceAccountEmail == "" {
-		serviceAccountEmail, err := ui.AskAndValidate(cmd.io, "What is the email of the GCP Service Account that should have access to the service?\n", 3, api.ValidateGCPServiceAccountEmail)
+		serviceAccountEmail, err := ui.AskAndValidate(cmd.io, "What is the email of the GCP Service Account that should have access to the service?\n", 3, api.ValidateGCPUserManagedServiceAccountEmail)
 		if err != nil {
 			return err
 		}
@@ -218,7 +218,8 @@ func (l *gcpServiceAccountOptionLister) Options() ([]ui.Option, bool, error) {
 
 	options := make([]ui.Option, 0, len(resp.Accounts))
 	for _, account := range resp.Accounts {
-		if err := api.ValidateGCPServiceAccountEmail(account.Email); err != nil {
+		// Only list user-managed service accounts
+		if err := api.ValidateGCPUserManagedServiceAccountEmail(account.Email); err != nil {
 			continue
 		}
 		display := account.Email

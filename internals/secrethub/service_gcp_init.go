@@ -48,6 +48,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		return err
 	}
 
+	// Fail fast if the repo does not exist.
 	_, err = client.Repos().Get(cmd.repo.String())
 	if err != nil {
 		return err

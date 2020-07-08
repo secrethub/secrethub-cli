@@ -2,7 +2,9 @@ package secrethub
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -13,9 +15,10 @@ import (
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
 
+	"github.com/secrethub/secrethub-go/internals/gcp"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-	"github.com/secrethub/secrethub-go/internals/gcp"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
@@ -47,6 +50,12 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		return err
 	}
 
+	// Fail fast if the repo does not exist.
+	_, err = client.Repos().Get(cmd.repo.String())
+	if err != nil {
+		return err
+	}
+
 	if cmd.serviceAccountEmail == "" && cmd.kmsKeyResourceID == "" {
 		fmt.Fprintln(cmd.io.Stdout(), "This command creates a new service account for use on GCP. For help on this, run `secrethub service gcp init --help`.")
 
@@ -67,7 +76,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		serviceAccountLister := gcpServiceAccountOptionLister{
 			ProjectID: projectID,
 		}
-		serviceAccountEmail, err := ui.ChooseDynamicOptionsValidate(cmd.io, "What is the email of the service account you want to use?", serviceAccountLister.Options, "service account", api.ValidateGCPServiceAccountEmail)
+		serviceAccountEmail, err := ui.ChooseDynamicOptionsValidate(cmd.io, "What is the email of the service account you want to use?", serviceAccountLister.Options, "service account", api.ValidateGCPUserManagedServiceAccountEmail)
 		if err != nil {
 			return err
 		}
@@ -77,11 +86,11 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		if err != nil {
 			return err
 		}
-		keyring, err := ui.ChooseDynamicOptions(cmd.io, "In which keyring is the KMS key you want to use for encrypting the service account's key?", kmsKeyLister.KeyringOptions, true, "keyring")
+		keyring, err := ui.ChooseDynamicOptionsValidate(cmd.io, "In which keyring is the KMS key you want to use for encrypting the service account's key?", kmsKeyLister.KeyringOptions, "keyring", validateGCPKeyring)
 		if err != nil {
 			return err
 		}
-		kmsKey, err := ui.ChooseDynamicOptions(cmd.io, "What is the KMS key you want to use for encrypting the service account's key?", kmsKeyLister.KeyOptions(keyring), true, "kms key")
+		kmsKey, err := ui.ChooseDynamicOptionsValidate(cmd.io, "What is the KMS key you want to use for encrypting the service account's key?", kmsKeyLister.KeyOptions(keyring), "kms key", validateGCPCryptoKey)
 		if err != nil {
 			return err
 		}
@@ -89,7 +98,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 	}
 
 	if cmd.serviceAccountEmail == "" {
-		serviceAccountEmail, err := ui.AskAndValidate(cmd.io, "What is the email of the GCP Service Account that should have access to the service?\n", 3, api.ValidateGCPServiceAccountEmail)
+		serviceAccountEmail, err := ui.AskAndValidate(cmd.io, "What is the email of the GCP Service Account that should have access to the service?\n", 3, api.ValidateGCPUserManagedServiceAccountEmail)
 		if err != nil {
 			return err
 		}
@@ -108,10 +117,26 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		cmd.description = "GCP Service Account " + roleNameFromRole(cmd.serviceAccountEmail)
 	}
 
+	projectID, err := api.ProjectIDFromGCPEmail(cmd.serviceAccountEmail)
+	if err != nil {
+		return fmt.Errorf("invalid service account email: %s", err)
+	}
+
+	exists, err := client.IDPLinks().GCP().Exists(cmd.repo.GetNamespace(), projectID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		fmt.Fprintf(cmd.io.Output(), "This is the first time you're using a GCP Service Account in the GCP project %s for a SecretHub service account in the namespace %s. You have to link these two first.\n\n", projectID, cmd.repo.GetNamespace())
+
+		err = createGCPLink(client, cmd.io, cmd.repo.GetNamespace(), projectID)
+		if err != nil {
+			return fmt.Errorf("could not create link: %s", err)
+		}
+	}
+
 	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credentials.CreateGCPServiceAccount(cmd.serviceAccountEmail, cmd.kmsKeyResourceID))
-	if err == api.ErrCredentialAlreadyExists {
-		return ErrRoleAlreadyTaken
-	} else if err != nil {
+	if err != nil {
 		return err
 	}
 
@@ -130,7 +155,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create a new service account that is tied to an GCP Service Account.")
+	clause := r.Command("init", "Create a new service account that is tied to a GCP Service Account.")
 	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flag("kms-key", "The Resource ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyResourceID)
 	clause.Flag("service-account-email", "The email of the GCP Service Account that should have access to this service account.").StringVar(&cmd.serviceAccountEmail)
@@ -199,16 +224,20 @@ func (l *gcpServiceAccountOptionLister) Options() ([]ui.Option, bool, error) {
 		return nil, false, gcp.HandleError(err)
 	}
 
-	options := make([]ui.Option, len(resp.Accounts))
-	for i, account := range resp.Accounts {
+	options := make([]ui.Option, 0, len(resp.Accounts))
+	for _, account := range resp.Accounts {
+		// Only list user-managed service accounts
+		if err := api.ValidateGCPUserManagedServiceAccountEmail(account.Email); err != nil {
+			continue
+		}
 		display := account.Email
 		if account.Description != "" {
 			display += " (" + account.Description + ")"
 		}
-		options[i] = ui.Option{
+		options = append(options, ui.Option{
 			Value:   account.Email,
 			Display: display,
-		}
+		})
 	}
 
 	l.nextPage = resp.NextPageToken
@@ -283,6 +312,20 @@ func (l *gcpKMSKeyOptionLister) KeyringOptions() ([]ui.Option, bool, error) {
 	default:
 		return options, false, nil
 	}
+}
+
+func validateGCPKeyring(keyring string) error {
+	if !regexp.MustCompile("^projects/[a-zA-Z0-9-]+/locations/[a-zA-Z0-9-]+/keyRings/[a-zA-Z0-9-_]+$").MatchString(keyring) {
+		return errors.New("GCP keyring should be in the form \"projects/<project-id>/locations/<location>/keyRings/<key-ring>\"")
+	}
+	return nil
+}
+
+func validateGCPCryptoKey(cryptoKey string) error {
+	if !regexp.MustCompile("^projects/[a-zA-Z0-9-]+/locations/[a-zA-Z0-9-]+/keyRings/[a-zA-Z0-9-_]+/cryptoKeys/[a-zA-Z0-9-_]+$").MatchString(cryptoKey) {
+		return errors.New("GCP crypto key should be in the form \"projects/<project-id>/locations/<location>/keyRings/<key-ring>/cryptoKeys/<key>\"")
+	}
+	return nil
 }
 
 func (l *gcpKMSKeyOptionLister) KeyOptions(keyring string) func() ([]ui.Option, bool, error) {

@@ -86,7 +86,8 @@ func NewApp() *App {
 		"The CLI is configurable through command-line flags and environment variables. " +
 		"Options set on the command-line take precedence over those set in the environment. " +
 		"The format for environment variables is `SECRETHUB_[COMMAND_]FLAG_NAME`."
-	return &App{
+
+	app := App{
 		cli: cli.NewApp(ApplicationName, help).ExtraEnvVarFunc(
 			func(key string) bool {
 				return strings.HasPrefix(key, "SECRETHUB_VAR_")
@@ -97,18 +98,7 @@ func NewApp() *App {
 		io:              io,
 		logger:          cli.NewLogger(),
 	}
-}
 
-// Version adds a flag for displaying the application version number.
-func (app *App) Version(version string, commit string) *App {
-	app.cli = app.cli.Version(ApplicationName + " version " + version + ", build " + commit)
-	return app
-}
-
-// Run builds the command-line application, parses the arguments,
-// configures global behavior and executes the command given by the args.
-func (app *App) Run(args []string) error {
-	// Construct the CLI
 	RegisterDebugFlag(app.cli, app.logger)
 	RegisterMlockFlag(app.cli)
 	RegisterColorFlag(app.cli)
@@ -147,9 +137,26 @@ func (app *App) Run(args []string) error {
 		},
 	})
 
+	return &app
+}
+
+// Version adds a flag for displaying the application version number.
+func (app *App) Version(version string, commit string) *App {
+	app.cli = app.cli.Version(ApplicationName + " version " + version + ", build " + commit)
+	return app
+}
+
+// Run builds the command-line application, parses the arguments,
+// configures global behavior and executes the command given by the args.
+func (app *App) Run(args []string) error {
 	// Parse also executes the command when parsing is successful.
 	_, err := app.cli.Parse(args)
 	return err
+}
+
+// Model returns the CLI application model containing all the SecretHub CLI commands, flags, and args.
+func (app *App) Model() *kingpin.ApplicationModel {
+	return app.cli.Model()
 }
 
 // registerCommands initializes all commands and registers them on the app.

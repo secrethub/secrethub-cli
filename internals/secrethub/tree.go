@@ -15,6 +15,9 @@ import (
 type TreeCommand struct {
 	path      api.DirPath
 	io        ui.IO
+	fullPaths bool
+	noIndent  bool
+	noReport  bool
 	newClient newClientFunc
 }
 
@@ -38,7 +41,7 @@ func (cmd *TreeCommand) Run() error {
 		return err
 	}
 
-	printTree(t, cmd.io.Output())
+	cmd.printTree(t, cmd.io.Output())
 	return nil
 }
 
@@ -46,43 +49,63 @@ func (cmd *TreeCommand) Run() error {
 func (cmd *TreeCommand) Register(r command.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
 	clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
+	clause.Flag("full-paths", "Prints the full paths of the directories/secrets.").Short('f').BoolVar(&cmd.fullPaths)
+	clause.Flag("no-indent", "Prints the tree structures without indentation.").Short('i').BoolVar(&cmd.noIndent)
+	clause.Flag("no-report", "Does not print the directory and secret counts at the bottom").BoolVar(&cmd.noReport)
 
 	command.BindAction(clause, cmd.Run)
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.
-func printTree(t *api.Tree, w io.Writer) {
+func (cmd *TreeCommand) printTree(t *api.Tree, w io.Writer) {
 	name := colorizeByStatus(t.RootDir.Status, t.RootDir.Name)
 	fmt.Fprintf(w, "%s/\n", name)
 
-	printDirContentsRecursively(t.RootDir, "", w)
+	var prefixes [4]string
 
-	fmt.Fprintf(w,
-		"\n%s, %s\n",
-		pluralize("directory", "directories", t.DirCount()),
-		pluralize("secret", "secrets", t.SecretCount()),
-	)
+	prefixes[0] = stringOrEmpty("└── ", !cmd.noIndent)
+	prefixes[1] = stringOrEmpty("├── ", !cmd.noIndent)
+	prefixes[2] = stringOrEmpty("│   ", !cmd.noIndent)
+	prefixes[3] = stringOrEmpty("    ", !cmd.noIndent)
+
+	cmd.printDirContentsRecursively(t.RootDir.Name, t.RootDir, "", w, prefixes)
+
+	if !cmd.noReport {
+		fmt.Fprintf(w,
+			"\n%s, %s\n",
+			pluralize("directory", "directories", t.DirCount()),
+			pluralize("secret", "secrets", t.SecretCount()),
+		)
+	}
 }
 
 // printDirContentsRecursively is a recursive function that prints the directory's contents
 // in a tree-like structure, subdirs first followed by secrets.
-func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer) {
 
+func stringOrEmpty(string1 string, condition bool) string {
+	if condition {
+		return string1
+	}
+	return ""
+}
+
+func (cmd *TreeCommand) printDirContentsRecursively(priorPath string, dir *api.Dir, prefix string, w io.Writer, prefixes [4]string) {
 	sort.Sort(api.SortDirByName(dir.SubDirs))
 	sort.Sort(api.SortSecretByName(dir.Secrets))
 
 	total := len(dir.SubDirs) + len(dir.Secrets)
+	path := stringOrEmpty(priorPath+"/", cmd.fullPaths)
 
 	i := 0
 	for _, sub := range dir.SubDirs {
 		name := colorizeByStatus(sub.Status, sub.Name)
 
 		if i == total-1 {
-			fmt.Fprintf(w, "%s└── %s/\n", prefix, name)
-			printDirContentsRecursively(sub, prefix+"    ", w)
+			fmt.Fprintf(w, "%s%s%s/\n", prefix, prefixes[0], path+name.(string))
+			cmd.printDirContentsRecursively(path+name.(string), sub, prefix+prefixes[3], w, prefixes)
 		} else {
-			fmt.Fprintf(w, "%s├── %s/\n", prefix, name)
-			printDirContentsRecursively(sub, prefix+"│   ", w)
+			fmt.Fprintf(w, "%s%s%s/\n", prefix, prefixes[1], path+name.(string))
+			cmd.printDirContentsRecursively(path+name.(string), sub, prefix+prefixes[2], w, prefixes)
 		}
 		i++
 	}
@@ -91,9 +114,9 @@ func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer) {
 		name := colorizeByStatus(secret.Status, secret.Name)
 
 		if i == total-1 {
-			fmt.Fprintf(w, "%s└── %s\n", prefix, name)
+			fmt.Fprintf(w, "%s%s%s\n", prefix, prefixes[0], path+name.(string))
 		} else {
-			fmt.Fprintf(w, "%s├── %s\n", prefix, name)
+			fmt.Fprintf(w, "%s%s%s\n", prefix, prefixes[1], path+name.(string))
 		}
 		i++
 	}

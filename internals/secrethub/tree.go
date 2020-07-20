@@ -109,10 +109,10 @@ func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string,
 
 		if i == total-1 {
 			fmt.Fprintf(w, format[0], prefix, prevPath, name)
-			cmd.printDirContentsRecursively(sub, prefix+format[2], w, format, prevPath + name.(string))
+			cmd.printDirContentsRecursively(sub, prefix+format[2], w, format, prevPath+name.(string))
 		} else {
 			fmt.Fprintf(w, format[1], prefix, prevPath, name)
-			cmd.printDirContentsRecursively(sub, prefix+format[3], w, format, prevPath + name.(string))
+			cmd.printDirContentsRecursively(sub, prefix+format[3], w, format, prevPath+name.(string))
 		}
 		i++
 	}

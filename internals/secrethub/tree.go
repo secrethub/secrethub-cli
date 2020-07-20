@@ -60,22 +60,25 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 // printTree recursively prints the tree's contents in a tree-like structure.
 func (cmd *TreeCommand) printTree(t *api.Tree, w io.Writer) {
 	name := colorizeByStatus(t.RootDir.Status, t.RootDir.Name)
-	fmt.Fprintf(w, "%s/\n", name)
+	fmt.Fprintf(w, "%s\n", name)
 
 	var format [4]string
 	if cmd.noIndentation {
-		format[0] = "%s%s/\n"
-		format[1] = "%s%s/\n"
+		format[0] = "%s%s%s\n"
+		format[1] = "%s%s%s\n"
 		format[2] = ""
 		format[3] = ""
 	} else {
-		format[0] = "%s└── %s/\n"
-		format[1] = "%s├── %s/\n"
+		format[0] = "%s└── %s%s\n"
+		format[1] = "%s├── %s%s\n"
 		format[2] = "    "
 		format[3] = "│   "
 	}
-	printDirContentsRecursively(t.RootDir, "", w, format)
-
+	if cmd.fullPaths {
+		cmd.printDirContentsRecursively(t.RootDir, "", w, format, t.RootDir.Name)
+	} else {
+		cmd.printDirContentsRecursively(t.RootDir, "", w, format, "")
+	}
 	if !cmd.noReport {
 		fmt.Fprintf(w,
 			"\n%s, %s\n",
@@ -87,23 +90,29 @@ func (cmd *TreeCommand) printTree(t *api.Tree, w io.Writer) {
 
 // printDirContentsRecursively is a recursive function that prints the directory's contents
 // in a tree-like structure, subdirs first followed by secrets.
-func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer, format [4]string) {
+func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer, format [4]string, prevPath string) {
 
 	sort.Sort(api.SortDirByName(dir.SubDirs))
 	sort.Sort(api.SortSecretByName(dir.Secrets))
 
 	total := len(dir.SubDirs) + len(dir.Secrets)
 
+	if !cmd.fullPaths {
+		prevPath = ""
+	} else {
+		prevPath += "/"
+	}
+
 	i := 0
 	for _, sub := range dir.SubDirs {
 		name := colorizeByStatus(sub.Status, sub.Name)
 
 		if i == total-1 {
-			fmt.Fprintf(w, format[0], prefix, name)
-			printDirContentsRecursively(sub, prefix+format[2], w, format)
+			fmt.Fprintf(w, format[0], prefix, prevPath, name)
+			cmd.printDirContentsRecursively(sub, prefix+format[2], w, format, prevPath + name.(string))
 		} else {
-			fmt.Fprintf(w, format[1], prefix, name)
-			printDirContentsRecursively(sub, prefix+format[3], w, format)
+			fmt.Fprintf(w, format[1], prefix, prevPath, name)
+			cmd.printDirContentsRecursively(sub, prefix+format[3], w, format, prevPath + name.(string))
 		}
 		i++
 	}
@@ -112,9 +121,9 @@ func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer, forma
 		name := colorizeByStatus(secret.Status, secret.Name)
 
 		if i == total-1 {
-			fmt.Fprintf(w, format[0], prefix, name)
+			fmt.Fprintf(w, format[0], prefix, prevPath, name)
 		} else {
-			fmt.Fprintf(w, format[1], prefix, name)
+			fmt.Fprintf(w, format[1], prefix, prevPath, name)
 		}
 		i++
 	}

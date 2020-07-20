@@ -41,7 +41,7 @@ func (cmd *TreeCommand) Run() error {
 		return err
 	}
 
-	printTree(t, cmd.io.Output())
+	cmd.printTree(t, cmd.io.Output())
 	return nil
 }
 
@@ -50,26 +50,44 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
 	clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
+	clause.Flag("full-paths", "Print the full paths of the directories and secrets.").Short('f').BoolVar(&cmd.fullPaths)
+	clause.Flag("no-indentation", "Print the content without indentation.").Short('i').BoolVar(&cmd.noIndentation)
+	clause.Flag("no-report", "Skip the report at the bottom.").BoolVar(&cmd.noReport)
+
 	command.BindAction(clause, cmd.Run)
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.
-func printTree(t *api.Tree, w io.Writer) {
+func (cmd *TreeCommand) printTree(t *api.Tree, w io.Writer) {
 	name := colorizeByStatus(t.RootDir.Status, t.RootDir.Name)
 	fmt.Fprintf(w, "%s/\n", name)
 
-	printDirContentsRecursively(t.RootDir, "", w)
+	var format [4]string
+	if cmd.noIndentation {
+		format[0] = "%s%s/\n"
+		format[1] = "%s%s/\n"
+		format[2] = ""
+		format[3] = ""
+	} else {
+		format[0] = "%s└── %s/\n"
+		format[1] = "%s├── %s/\n"
+		format[2] = "    "
+		format[3] = "│   "
+	}
+	printDirContentsRecursively(t.RootDir, "", w, format)
 
-	fmt.Fprintf(w,
-		"\n%s, %s\n",
-		pluralize("directory", "directories", t.DirCount()),
-		pluralize("secret", "secrets", t.SecretCount()),
-	)
+	if !cmd.noReport {
+		fmt.Fprintf(w,
+			"\n%s, %s\n",
+			pluralize("directory", "directories", t.DirCount()),
+			pluralize("secret", "secrets", t.SecretCount()),
+		)
+	}
 }
 
 // printDirContentsRecursively is a recursive function that prints the directory's contents
 // in a tree-like structure, subdirs first followed by secrets.
-func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer) {
+func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer, format [4]string) {
 
 	sort.Sort(api.SortDirByName(dir.SubDirs))
 	sort.Sort(api.SortSecretByName(dir.Secrets))
@@ -81,11 +99,11 @@ func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer) {
 		name := colorizeByStatus(sub.Status, sub.Name)
 
 		if i == total-1 {
-			fmt.Fprintf(w, "%s└── %s/\n", prefix, name)
-			printDirContentsRecursively(sub, prefix+"    ", w)
+			fmt.Fprintf(w, format[0], prefix, name)
+			printDirContentsRecursively(sub, prefix+format[2], w, format)
 		} else {
-			fmt.Fprintf(w, "%s├── %s/\n", prefix, name)
-			printDirContentsRecursively(sub, prefix+"│   ", w)
+			fmt.Fprintf(w, format[1], prefix, name)
+			printDirContentsRecursively(sub, prefix+format[3], w, format)
 		}
 		i++
 	}
@@ -94,9 +112,9 @@ func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer) {
 		name := colorizeByStatus(secret.Status, secret.Name)
 
 		if i == total-1 {
-			fmt.Fprintf(w, "%s└── %s\n", prefix, name)
+			fmt.Fprintf(w, format[0], prefix, name)
 		} else {
-			fmt.Fprintf(w, "%s├── %s\n", prefix, name)
+			fmt.Fprintf(w, format[1], prefix, name)
 		}
 		i++
 	}

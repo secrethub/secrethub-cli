@@ -13,9 +13,12 @@ import (
 
 // TreeCommand lists the contents of a directory at a given path in a tree-like format.
 type TreeCommand struct {
-	path      api.DirPath
-	io        ui.IO
-	newClient newClientFunc
+	path          api.DirPath
+	io            ui.IO
+	fullPaths     bool
+	noIndentation bool
+	noReport      bool
+	newClient     newClientFunc
 }
 
 // NewTreeCommand creates a new TreeCommand.

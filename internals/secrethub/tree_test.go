@@ -14,20 +14,14 @@ import (
 func TestSimpleTree(t *testing.T) {
 	uuid0, _ := uuid.FromString("0")
 	uuid1, _ := uuid.FromString("1")
-	uuid2, _ := uuid.FromString("2")
 	tree := &api.Tree{
 		RootDir: &api.Dir{
 			Name:  "test/repo",
 			DirID: uuid0,
 			SubDirs: []*api.Dir{
 				{
-					Name:     "happy",
-					DirID:    uuid1,
-					ParentID: &uuid0,
-				},
-				{
 					Name:     "secretFolder",
-					DirID:    uuid2,
+					DirID:    uuid1,
 					ParentID: &uuid0,
 					Secrets: []*api.Secret{
 						{Name: "found you"},
@@ -44,13 +38,8 @@ func TestSimpleTree(t *testing.T) {
 				ParentID: &uuid0,
 			},
 			uuid.New(): {
-				Name:     "happy",
-				DirID:    uuid1,
-				ParentID: &uuid0,
-			},
-			uuid.New(): {
 				Name:     "secretFolder",
-				DirID:    uuid2,
+				DirID:    uuid1,
 				ParentID: &uuid0,
 				Secrets: []*api.Secret{
 					{Name: "found you"},
@@ -74,11 +63,10 @@ func TestSimpleTree(t *testing.T) {
 				},
 			},
 			expectedOutput: "test/repo/\n" +
-				"├── happy/\n" +
 				"├── secretFolder/\n" +
 				"│   └── found you\n" +
 				"└── mySecret\n\n" +
-				"2 directories, 2 secrets\n",
+				"1 directory, 2 secrets\n",
 		},
 		"full path": {
 			cmd: &TreeCommand{
@@ -90,11 +78,10 @@ func TestSimpleTree(t *testing.T) {
 				},
 			},
 			expectedOutput: "test/repo/\n" +
-				"├── test/repo/happy/\n" +
 				"├── test/repo/secretFolder/\n" +
 				"│   └── test/repo/secretFolder/found you\n" +
 				"└── test/repo/mySecret\n\n" +
-				"2 directories, 2 secrets\n",
+				"1 directory, 2 secrets\n",
 		},
 		"no indent": {
 			cmd: &TreeCommand{
@@ -105,11 +92,10 @@ func TestSimpleTree(t *testing.T) {
 				},
 			},
 			expectedOutput: "test/repo/\n" +
-				"happy/\n" +
 				"secretFolder/\n" +
 				"found you\n" +
 				"mySecret\n\n" +
-				"2 directories, 2 secrets\n",
+				"1 directory, 2 secrets\n",
 		},
 		"no report": {
 			cmd: &TreeCommand{
@@ -120,7 +106,6 @@ func TestSimpleTree(t *testing.T) {
 				},
 			},
 			expectedOutput: "test/repo/\n" +
-				"├── happy/\n" +
 				"├── secretFolder/\n" +
 				"│   └── found you\n" +
 				"└── mySecret\n",
@@ -137,7 +122,6 @@ func TestSimpleTree(t *testing.T) {
 				},
 			},
 			expectedOutput: "test/repo/\n" +
-				"test/repo/happy/\n" +
 				"test/repo/secretFolder/\n" +
 				"test/repo/secretFolder/found you\n" +
 				"test/repo/mySecret\n",
@@ -245,7 +229,7 @@ func TestTreeColoring(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			w := &bytes.Buffer{}
+			w := new(bytes.Buffer)
 			tc.cmd.printTree(tree, w)
 			assert.Equal(t, w.String(), tc.expectedOutput)
 		})

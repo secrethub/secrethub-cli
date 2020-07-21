@@ -120,5 +120,8 @@ func (b *indexedBuffer) upToIndex(index int64) []byte {
 	}
 	n := int(index - b.currentIndex)
 	b.currentIndex = index
-	return b.buffer.Next(n)
+	bufferSlice := b.buffer.Next(n)
+	res := make([]byte, len(bufferSlice))
+	copy(res, bufferSlice)
+	return res
 }

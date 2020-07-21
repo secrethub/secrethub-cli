@@ -88,6 +88,12 @@ func (cmd *TreeCommand) printTree(t *api.Tree, w io.Writer) {
 // in a tree-like structure, subdirs first followed by secrets.
 func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer, prevPath string) {
 
+	const (
+		format1 = "%s\n"
+		format2 = "%s└── %s\n"
+		format3 = "%s├── %s\n"
+	)
+
 	sort.Sort(api.SortDirByName(dir.SubDirs))
 	sort.Sort(api.SortSecretByName(dir.Secrets))
 
@@ -106,16 +112,16 @@ func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string,
 		if cmd.fullPaths {
 			name = prevPath + name
 		}
-		colorName := colorizeByStatus(sub.Status, name)
+		colorName := colorizeByStatus(sub.Status, name + "/")
 
 		if cmd.noIndentation {
-			fmt.Fprintf(w, "%s/\n", colorName)
+			fmt.Fprintf(w, format1, colorName)
 			cmd.printDirContentsRecursively(sub, prefix, w, name)
 		} else if i == total-1 {
-			fmt.Fprintf(w, "%s└── %s/\n", prefix, colorName)
+			fmt.Fprintf(w, format2, prefix, colorName)
 			cmd.printDirContentsRecursively(sub, prefix+"    ", w, name)
 		} else {
-			fmt.Fprintf(w, "%s├── %s/\n", prefix, colorName)
+			fmt.Fprintf(w, format3, prefix, colorName)
 			cmd.printDirContentsRecursively(sub, prefix+"│   ", w, name)
 		}
 		i++
@@ -129,11 +135,11 @@ func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string,
 		colorName := colorizeByStatus(secret.Status, name)
 
 		if cmd.noIndentation {
-			fmt.Fprintf(w, "%s\n", colorName)
+			fmt.Fprintf(w, format1, colorName)
 		} else if i == total-1 {
-			fmt.Fprintf(w, "%s└── %s\n", prefix, colorName)
+			fmt.Fprintf(w, format2, prefix, colorName)
 		} else {
-			fmt.Fprintf(w, "%s├── %s\n", prefix, colorName)
+			fmt.Fprintf(w, format3, prefix, colorName)
 		}
 		i++
 	}

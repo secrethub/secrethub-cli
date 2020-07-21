@@ -112,7 +112,7 @@ func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string,
 		if cmd.fullPaths {
 			name = prevPath + name
 		}
-		colorName := colorizeByStatus(sub.Status, name + "/")
+		colorName := colorizeByStatus(sub.Status, name+"/")
 
 		if cmd.noIndentation {
 			fmt.Fprintf(w, format1, colorName)

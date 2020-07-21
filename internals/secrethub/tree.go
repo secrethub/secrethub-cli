@@ -114,14 +114,13 @@ func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string,
 	i := 0
 	for _, sub := range dir.SubDirs {
 		colorName := colorizeByStatus(sub.Status, sub.Name)
-		colorPrefix := colorizeByStatus(sub.Status, prefix)
 		colorPrevPath := colorizeByStatus(sub.Status, prevPath)
 
 		if i == total-1 {
-			fmt.Fprintf(w, format[0], colorPrefix, colorPrevPath, colorName)
+			fmt.Fprintf(w, format[0], prefix, colorPrevPath, colorName)
 			cmd.printDirContentsRecursively(sub, prefix+format[2], w, format, prevPath+sub.Name)
 		} else {
-			fmt.Fprintf(w, format[1], colorPrefix, colorPrevPath, colorName)
+			fmt.Fprintf(w, format[1], prefix, colorPrevPath, colorName)
 			cmd.printDirContentsRecursively(sub, prefix+format[3], w, format, prevPath+sub.Name)
 		}
 		i++
@@ -129,13 +128,12 @@ func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string,
 
 	for _, secret := range dir.Secrets {
 		colorName := colorizeByStatus(secret.Status, secret.Name)
-		colorPrefix := colorizeByStatus(secret.Status, prefix)
 		colorPrevPath := colorizeByStatus(secret.Status, prevPath)
 
 		if i == total-1 {
-			fmt.Fprintf(w, format[0], colorPrefix, colorPrevPath, colorName)
+			fmt.Fprintf(w, format[0], prefix, colorPrevPath, colorName)
 		} else {
-			fmt.Fprintf(w, format[1], colorPrefix, colorPrevPath, colorName)
+			fmt.Fprintf(w, format[1], prefix, colorPrevPath, colorName)
 		}
 		i++
 	}

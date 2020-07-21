@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/secrethub/secrethub-go/internals/api/uuid"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
@@ -657,6 +659,11 @@ func osStatFunc(name string, err error) func(string) (os.FileInfo, error) {
 }
 
 func TestRunCommand_environment(t *testing.T) {
+	rootDirUUID := uuid.New()
+	secretUUID := uuid.New()
+
+	const secretPathFoo = "namespace/repo/foo"
+
 	cases := map[string]struct {
 		command         RunCommand
 		expectedEnv     []string
@@ -764,7 +771,159 @@ func TestRunCommand_environment(t *testing.T) {
 			expectedSecrets: []string{"bbb"},
 			expectedEnv:     []string{"TEST=bbb"},
 		},
+		"env file has precedence over secrets-dir flag": {
+			command: RunCommand{
+				environment: &environment{
+					newClient: func() (secrethub.ClientInterface, error) {
+						return fakeclient.Client{
+							DirService: &fakeclient.DirService{
+								GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+									return &api.Tree{
+										ParentPath: "namespace",
+										RootDir: &api.Dir{
+											DirID: rootDirUUID,
+											Name:  "repo",
+										},
+										Secrets: map[uuid.UUID]*api.Secret{
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
+												Name:     "foo",
+											},
+										},
+									}, nil
+								},
+							},
+						}, nil
+					},
+					secretsDir:                   "namespace/repo",
+					dontPromptMissingTemplateVar: true,
+					templateVersion:              "2",
+					osEnv:                        []string{"FOO=bbb"},
+					osStat:                       osStatFunc("secrethub.env", nil),
+					readFile:                     readFileFunc("secrethub.env", "FOO= {{ other/secret/path }}"),
+				},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									if path == secretPathFoo {
+										return &api.SecretVersion{Data: []byte("aaa")}, nil
+									} else if path == "other/secret/path" {
+										return &api.SecretVersion{Data: []byte("bbb")}, nil
+									}
+									return nil, api.ErrSecretNotFound
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"FOO=bbb"},
+		},
+		"secrets-dir flag has precedence over os environment": {
+			command: RunCommand{
+				environment: &environment{
+					newClient: func() (secrethub.ClientInterface, error) {
+						return fakeclient.Client{
+							DirService: &fakeclient.DirService{
+								GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+									return &api.Tree{
+										ParentPath: "namespace",
+										RootDir: &api.Dir{
+											DirID: rootDirUUID,
+											Name:  "repo",
+										},
+										Secrets: map[uuid.UUID]*api.Secret{
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
+												Name:     "foo",
+											},
+										},
+									}, nil
+								},
+							},
+						}, nil
+					},
+					secretsDir:                   "namespace/repo",
+					dontPromptMissingTemplateVar: true,
+					templateVersion:              "2",
+					osEnv:                        []string{"FOO=bbb"},
+					osStat:                       osStatFunc("secrethub.env", os.ErrNotExist),
+				},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									if path == secretPathFoo {
+										return &api.SecretVersion{Data: []byte("aaa")}, nil
+									}
+									return nil, api.ErrSecretNotFound
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"aaa"},
+			expectedEnv:     []string{"FOO=aaa"},
+		},
 		// TODO Add test case for: envar flag has precedence over secret reference - requires refactoring of fakeclient
+		"secret reference has precedence over secrets-dir flag": {
+			command: RunCommand{
+				environment: &environment{
+					newClient: func() (secrethub.ClientInterface, error) {
+						return fakeclient.Client{
+							DirService: &fakeclient.DirService{
+								GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+									return &api.Tree{
+										ParentPath: "namespace",
+										RootDir: &api.Dir{
+											DirID: rootDirUUID,
+											Name:  "repo",
+										},
+										Secrets: map[uuid.UUID]*api.Secret{
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
+												Name:     "foo",
+											},
+										},
+									}, nil
+								},
+							},
+						}, nil
+					},
+					secretsDir:                   "namespace/repo",
+					dontPromptMissingTemplateVar: true,
+					templateVersion:              "2",
+					osEnv:                        []string{"FOO=secrethub://test/test/test"},
+					osStat:                       osStatFunc("secrethub.env", os.ErrNotExist),
+				},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									if path == "test/test/test" {
+										return &api.SecretVersion{Data: []byte("bbb")}, nil
+									} else if path == secretPathFoo {
+										return &api.SecretVersion{Data: []byte("aaa")}, nil
+									}
+									return nil, api.ErrSecretNotFound
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"FOO=bbb"},
+		},
 		"secret reference has precedence over .env file": {
 			command: RunCommand{
 				environment: &environment{

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -22,8 +23,19 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type errNameCollision struct {
+	name       string
+	firstPath  string
+	secondPath string
+}
+
+func (e errNameCollision) Error() string {
+	return fmt.Sprintf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", e.firstPath, e.secondPath, e.name)
+}
+
 type environment struct {
 	io                           ui.IO
+	newClient                    newClientFunc
 	osEnv                        []string
 	readFile                     func(filename string) ([]byte, error)
 	osStat                       func(filename string) (os.FileInfo, error)
@@ -32,12 +44,14 @@ type environment struct {
 	templateVars                 map[string]string
 	templateVersion              string
 	dontPromptMissingTemplateVar bool
+	secretsDir                   string
 	secretsEnvDir                string
 }
 
-func newEnvironment(io ui.IO) *environment {
+func newEnvironment(io ui.IO, newClient newClientFunc) *environment {
 	return &environment{
 		io:           io,
+		newClient:    newClient,
 		osEnv:        os.Environ(),
 		readFile:     ioutil.ReadFile,
 		osStat:       os.Stat,
@@ -53,6 +67,7 @@ func (env *environment) register(clause *cli.CommandClause) {
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&env.templateVersion)
 	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
+	clause.Flag("secrets-dir", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.").StringVar(&env.secretsDir)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&env.secretsEnvDir)
 }
 
@@ -73,6 +88,12 @@ func (env *environment) env() (map[string]value, error) {
 			return nil, err
 		}
 		sources = append(sources, dirSource)
+	}
+
+	// --secrets-dir flag
+	if env.secretsDir != "" {
+		secretsDirEnv := newSecretsDirEnv(env.newClient, env.secretsDir)
+		sources = append(sources, secretsDirEnv)
 	}
 
 	//secrethub.env file
@@ -171,6 +192,69 @@ func (s *secretValue) containsSecret() bool {
 
 func newSecretValue(path string) value {
 	return &secretValue{path: path}
+}
+
+// secretsDirEnv sources environment variables from the directory specified with the --secrets-dir flag.
+type secretsDirEnv struct {
+	newClient newClientFunc
+	dirPath   string
+}
+
+// env returns a map of environment variables containing all secrets from the specified path.
+// The variable names are the relative paths of their corresponding secrets in uppercase snake case.
+// An error is returned if two secret paths map to the same variable name.
+func (s *secretsDirEnv) env() (map[string]value, error) {
+	client, err := s.newClient()
+	if err != nil {
+		return nil, err
+	}
+
+	tree, err := client.Dirs().GetTree(s.dirPath, -1, false)
+	if err != nil {
+		return nil, err
+	}
+
+	paths := make(map[string]string, tree.SecretCount())
+	for id := range tree.Secrets {
+		secretPath, err := tree.AbsSecretPath(id)
+		if err != nil {
+			return nil, err
+		}
+		path := secretPath.String()
+
+		envVarName := s.envVarName(path)
+		if prevPath, found := paths[envVarName]; found {
+			return nil, errNameCollision{
+				name:       envVarName,
+				firstPath:  prevPath,
+				secondPath: path,
+			}
+		}
+		paths[envVarName] = path
+	}
+
+	result := make(map[string]value, len(paths))
+	for name, path := range paths {
+		result[name] = newSecretValue(path)
+	}
+	return result, nil
+}
+
+// envVarName returns the environment variable name corresponding to the secret on the specified path
+// by converting the relative path to uppercase snake case.
+func (s *secretsDirEnv) envVarName(path string) string {
+	envVarName := strings.TrimPrefix(path, s.dirPath)
+	envVarName = strings.TrimPrefix(envVarName, "/")
+	envVarName = strings.ReplaceAll(envVarName, "/", "_")
+	envVarName = strings.ToUpper(envVarName)
+	return envVarName
+}
+
+func newSecretsDirEnv(newClient newClientFunc, dirPath string) *secretsDirEnv {
+	return &secretsDirEnv{
+		newClient: newClient,
+		dirPath:   dirPath,
+	}
 }
 
 // EnvFlags defines environment variables sourced from command-line flags.

@@ -24,5 +24,5 @@ func (cmd *EnvCommand) Register(r command.Registerer) {
 	clause := r.Command("env", "[BETA] Manage environment variables.").Hidden()
 	clause.HelpLong("This command is hidden because it is still in beta. Future versions may break.")
 	NewEnvReadCommand(cmd.io, cmd.newClient).Register(clause)
-	NewEnvListCommand(cmd.io).Register(clause)
+	NewEnvListCommand(cmd.io, cmd.newClient).Register(clause)
 }

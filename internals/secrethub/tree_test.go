@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"bytes"
+	"github.com/fatih/color"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -138,13 +139,14 @@ func TestSimpleTree(t *testing.T) {
 }
 
 func TestTreeColoring(t *testing.T) {
+	color.NoColor = false
 	uuid0, _ := uuid.FromString("0")
 	uuid1, _ := uuid.FromString("1")
 	uuid2, _ := uuid.FromString("2")
 	tree := &api.Tree{
 		RootDir: &api.Dir{
 			Name:   "test/repo",
-			Status: "flagged",
+			Status: api.StatusFlagged,
 			DirID:  uuid0,
 			SubDirs: []*api.Dir{
 				{
@@ -156,11 +158,11 @@ func TestTreeColoring(t *testing.T) {
 					Name:     "secretFolder",
 					DirID:    uuid2,
 					ParentID: &uuid0,
-					Status:   "flagged",
+					Status:   api.StatusFlagged,
 					Secrets: []*api.Secret{
 						{
 							Name:   "found you",
-							Status: "flagged",
+							Status: api.StatusFlagged,
 						},
 					},
 				},
@@ -203,10 +205,10 @@ func TestTreeColoring(t *testing.T) {
 					return &secrethub.Client{}, nil
 				},
 			},
-			expectedOutput: "test/repo/\n" +
+			expectedOutput: red.Sprint("test/repo/") + "\n" +
 				"├── happy/\n" +
-				"├── secretFolder/\n" +
-				"│   └── found you\n" +
+				"├── " + red.Sprint("secretFolder/") + "\n" +
+				"│   └── " + red.Sprint("found you") + "\n" +
 				"└── mySecret\n\n" +
 				"2 directories, 2 secrets\n",
 		},
@@ -218,10 +220,10 @@ func TestTreeColoring(t *testing.T) {
 					return &secrethub.Client{}, nil
 				},
 			},
-			expectedOutput: "test/repo/\n" +
+			expectedOutput: red.Sprint("test/repo/") + "\n" +
 				"├── test/repo/happy/\n" +
-				"├── test/repo/secretFolder/\n" +
-				"│   └── test/repo/secretFolder/found you\n" +
+				"├── " + red.Sprint("test/repo/secretFolder/") + "\n" +
+				"│   └── " + red.Sprint("test/repo/secretFolder/found you") + "\n" +
 				"└── test/repo/mySecret\n\n" +
 				"2 directories, 2 secrets\n",
 		},

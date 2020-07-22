@@ -2,9 +2,9 @@ package secrethub
 
 import (
 	"bytes"
-	"github.com/fatih/color"
 	"testing"
 
+	"github.com/fatih/color"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"

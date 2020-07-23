@@ -3,6 +3,7 @@ package masker
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"sync"
 	"time"
 )
@@ -64,16 +65,14 @@ func (s *stream) flush(n int) error {
 
 		if exists {
 			// Get any unprocessed bytes before this match to the destination.
-			beforeMatch := s.buf.upToIndex(i)
-
-			_, err := s.dest.Write(beforeMatch)
+			bytesBeforeMatch, err := s.buf.writeUpToIndex(s.dest, i)
 			if err != nil {
 				return err
 			}
 
 			// Only write the redaction text if there were bytes between this match and the previous match
 			// or this is the first flush for the buffer.
-			if len(beforeMatch) > 0 || s.buf.currentIndex == 0 {
+			if bytesBeforeMatch > 0 || s.buf.currentIndex == 0 {
 				_, err = s.dest.Write([]byte("<redacted by SecretHub>"))
 				if err != nil {
 					return err
@@ -81,14 +80,17 @@ func (s *stream) flush(n int) error {
 			}
 
 			// Drop all bytes until the end of the mask.
-			_ = s.buf.upToIndex(i + int64(length))
+			_, err = s.buf.writeUpToIndex(ioutil.Discard, i+int64(length))
+			if err != nil {
+				return err
+			}
 
 			delete(s.matches, i)
 		}
 	}
 
 	// Write all bytes after the last match.
-	_, err := s.dest.Write(s.buf.upToIndex(endIndex))
+	_, err := s.buf.writeUpToIndex(s.dest, endIndex)
 	if err != nil {
 		return err
 	}
@@ -109,16 +111,17 @@ func (b *indexedBuffer) write(p []byte) (n int, err error) {
 	return b.buffer.Write(p)
 }
 
-// upToIndex pops and returns all bytes in the buffer up to the given index.
-// If all bytes up to this given index have already been returned previously, an empty slice is returned.
-func (b *indexedBuffer) upToIndex(index int64) []byte {
+// writeUpToIndex pops all bytes in the buffer up to the given index and writes them to the given writer.
+// The number of bytes written and any errors encountered are returned
+func (b *indexedBuffer) writeUpToIndex(w io.Writer, index int64) (int, error) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
 	if index < b.currentIndex {
-		return []byte{}
+		return 0, nil
 	}
 	n := int(index - b.currentIndex)
 	b.currentIndex = index
-	return b.buffer.Next(n)
+	bufferSlice := b.buffer.Next(n)
+	return w.Write(bufferSlice)
 }

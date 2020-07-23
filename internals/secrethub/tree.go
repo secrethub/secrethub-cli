@@ -50,10 +50,10 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
 	clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
-	clause.Flag("full-paths", "Print the full paths of the directories and secrets.").Short('f').BoolVar(&cmd.fullPaths)
-	clause.Flag("no-indentation", "Print the content without indentation.").Short('i').BoolVar(&cmd.noIndentation)
-	clause.Flag("no-report", "Skip the report at the bottom.").BoolVar(&cmd.noReport)
-	clause.Flag("noreport", "Skip the report at the bottom.").BoolVar(&cmd.noReport)
+	clause.Flag("full-paths", "Print the full path of each directory and secret.").Short('f').BoolVar(&cmd.fullPaths)
+	clause.Flag("no-indentation", "Don't print indentation lines.").Short('i').BoolVar(&cmd.noIndentation)
+	clause.Flag("no-report", "Turn off secret/directory count at end of tree listing.").BoolVar(&cmd.noReport)
+	clause.Flag("noreport", "Turn off secret/directory count at end of tree listing.").Hidden().BoolVar(&cmd.noReport)
 
 	command.BindAction(clause, cmd.Run)
 }

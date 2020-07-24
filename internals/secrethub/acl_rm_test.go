@@ -99,7 +99,6 @@ func TestACLRmCommand_Run(t *testing.T) {
 						DeleteFunc: func(path string, accountName string) error {
 							argPath = path
 							argAccountName = accountName
-							argAccountName = accountName
 							return tc.deleteErr
 						},
 					},

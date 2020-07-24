@@ -1,6 +1,10 @@
 package secrethub
 
 import (
+	"io/ioutil"
+	"os"
+	"testing"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -8,9 +12,6 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
-	"io/ioutil"
-	"os"
-	"testing"
 )
 
 func TestReadCommand_Run(t *testing.T) {

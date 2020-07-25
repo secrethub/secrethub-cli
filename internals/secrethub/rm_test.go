@@ -14,13 +14,7 @@ import (
 
 func TestRmCommand_Run(t *testing.T) {
 
-	var (
-		testErr                = errors.New("test")
-		ErrCannotRemoveDir     = errMain.Code("cannot_remove_dir").Error("cannot remove directory. Use the -r flag to remove directories.")
-		ErrCannotRemoveRootDir = errMain.Code("cannot_remove_root_dir").Errorf(
-			"cannot remove root directory. Use the repo rm command to remove a repository",
-		)
-	)
+	var testErr = errors.New("test")
 
 	cases := map[string]struct {
 		cmd                RmCommand

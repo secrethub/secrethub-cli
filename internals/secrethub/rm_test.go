@@ -261,7 +261,7 @@ func TestRmCommand_Run(t *testing.T) {
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.Out.String(), tc.out)
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
-			if tc.err != nil && len(argPath) > 0 {
+			if len(argPath) > 0 {
 				assert.Equal(t, argPath, tc.argPath.String())
 			}
 		})

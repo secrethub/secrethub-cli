@@ -10,6 +10,7 @@ import (
 )
 
 var ErrForceNoFingerprint = errors.New("fingerprint argument must be set when using --force")
+
 // CredentialDisableCommand is a command that allows to disable an existing credential.
 type CredentialDisableCommand struct {
 	io          ui.IO

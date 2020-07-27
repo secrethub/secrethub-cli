@@ -3,12 +3,13 @@ package secrethub
 import (
 	"bytes"
 	"errors"
+	"testing"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 	"gotest.tools/assert"
-	"testing"
 )
 
 func TestCredentialDisableCommand_Run(t *testing.T) {
@@ -56,10 +57,9 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 			cmd: CredentialDisableCommand{
 				fingerprint: "62542d734d7f3627",
 			},
-			promptOut:
-			"Are you sure you want to disable the credential with fingerprint 62542d734d7f3627? [y/N]: ",
-			in:  "n",
-			out: "A disabled credential can no longer be used to access SecretHub. This process can currently not be reversed.\nAborting.\n",
+			promptOut: "Are you sure you want to disable the credential with fingerprint 62542d734d7f3627? [y/N]: ",
+			in:        "n",
+			out:       "A disabled credential can no longer be used to access SecretHub. This process can currently not be reversed.\nAborting.\n",
 		},
 		"fail-client-error": {
 			newClientError: testError,
@@ -75,7 +75,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		"fail-too-short-fingerprint": {
 			cmd: CredentialDisableCommand{
 				fingerprint: "6254",
-				force: true,
+				force:       true,
 			},
 			err: api.ErrTooShortFingerprint,
 		},
@@ -90,9 +90,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 
 			//var username string
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
-				client := fakeclient.Client{
-
-				}
+				client := fakeclient.Client{}
 				return &client, tc.newClientError
 			}
 

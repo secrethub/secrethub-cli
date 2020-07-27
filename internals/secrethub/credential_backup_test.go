@@ -3,12 +3,14 @@ package secrethub
 import (
 	"bytes"
 	"errors"
+
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
+
+	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"gotest.tools/assert"
-	"testing"
 )
 
 func TestCredentialBackupCommand_Run(t *testing.T) {
@@ -25,7 +27,7 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 		err            error
 	}{
 		"fail-client-error": {
-			err: testError,
+			err:            testError,
 			newClientError: testError,
 		},
 	}

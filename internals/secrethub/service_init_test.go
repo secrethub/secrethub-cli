@@ -32,7 +32,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					credentialCreator.Create()
+					_ = credentialCreator.Create()
 					return &api.Service{}, nil
 				},
 			},
@@ -46,7 +46,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					credentialCreator.Create()
+					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -62,7 +62,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					credentialCreator.Create()
+					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -80,7 +80,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					credentialCreator.Create()
+					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -104,7 +104,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					credentialCreator.Create()
+					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -135,7 +135,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					credentialCreator.Create()
+					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -160,7 +160,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					credentialCreator.Create()
+					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -234,7 +234,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			}
 
 			if name == "init fail file exists" {
-				os.Create("test.txt")
+				_, _ = os.Create("test.txt")
 			}
 
 			// Run

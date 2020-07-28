@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"errors"
+	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
@@ -45,6 +46,24 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			data: []byte("random generated secret"),
 			err:  nil,
 			out:  "A randomly generated secret has been written to namespace/repo/secret:1.\n",
+		},
+		"copy to clipboard": {
+			cmd: GenerateSecretCommand{
+				generator: randchargeneratorfakes.FakeRandomGenerator{
+					Ret: []byte("random generated secret"),
+					Err: nil,
+				},
+				firstArg:        "namespace/repo/secret",
+				copyToClipboard: true,
+				clipper:         fakeclip.New(),
+			},
+			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
+				return &api.SecretVersion{Version: 1}, nil
+			},
+			path: "namespace/repo/secret",
+			data: []byte("random generated secret"),
+			out: "A randomly generated secret has been written to namespace/repo/secret:1.\n" +
+				"The generated value has been copied to the clipboard. It will be cleared after Less than a second.\n",
 		},
 		"length flag": {
 			cmd: GenerateSecretCommand{

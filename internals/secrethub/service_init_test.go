@@ -173,6 +173,13 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				SetFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
 					return &api.AccessRule{}, testErr
 				},
+				ListLevelsFunc: func(path string) ([]*api.AccessLevel, error) {
+					return []*api.AccessLevel{
+						{
+							Permission: api.PermissionRead,
+						},
+					}, nil
+				},
 			},
 			err: fmt.Errorf("revoke has failed"),
 		},

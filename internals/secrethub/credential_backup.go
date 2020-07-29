@@ -12,7 +12,6 @@ import (
 type CredentialBackupCommand struct {
 	io        ui.IO
 	newClient newClientFunc
-	codeFunc  func () (string, error)
 }
 
 // NewAccountInitCommand creates a new AccountInitCommand.

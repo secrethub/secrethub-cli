@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
-	"strings"
 
 	"testing"
 
@@ -66,17 +67,17 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 		},
 		/*
 
-		This test fails, at the moment, since we need to find a way to inject a mock for the
-		'backup.Code()' function, in order to avoid the check done on the http Client.
-			"success": {
-				cmd: CredentialBackupCommand{},
-				promptOut: "This will create a new backup code for Chucky. " +
-					"This code can be used to obtain full access to your account.\n" +
-					"Do you want to continue? [Y/n]: ",
-				in:  "y",
-				out: "This is your backup code: \n%s\n" + "Write it down and store it in a safe location! "+
-					"You can restore your account by running `secrethub init`.",
-			},
+			This test fails, at the moment, since we need to find a way to inject a mock for the
+			'backup.Code()' function, in order to avoid the check done on the http Client.
+				"success": {
+					cmd: CredentialBackupCommand{},
+					promptOut: "This will create a new backup code for Chucky. " +
+						"This code can be used to obtain full access to your account.\n" +
+						"Do you want to continue? [Y/n]: ",
+					in:  "y",
+					out: "This is your backup code: \n%s\n" + "Write it down and store it in a safe location! "+
+						"You can restore your account by running `secrethub init`.",
+				},
 		*/
 
 	}

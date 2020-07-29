@@ -22,7 +22,6 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		promptOut      string
 		out            string
 		in             string
-		fingerprint    string
 		disableError   error
 		newClientError error
 		promptError    error
@@ -117,12 +116,10 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 			io.PromptErr = tc.promptError
 			tc.cmd.io = io
 
-			var fingerprint string
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				client := fakeclient.Client{
 					CredentialService: &fakeclient.CredentialService{
 						DisableFunc: func(fingerprintArg string) error {
-							fingerprint = fingerprintArg
 							if fingerprint == "62542d734d7f3627" {
 								return nil
 							}

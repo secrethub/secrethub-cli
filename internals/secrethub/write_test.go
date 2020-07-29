@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
@@ -28,6 +29,7 @@ func TestWriteCommand_Run(t *testing.T) {
 		promptOut   string
 		promptErr   error
 		passwordIn  string
+		clientErr   error
 		passwordErr error
 		readErr     error
 		err         error
@@ -192,6 +194,37 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			err: errClipAndInFile,
 		},
+		"multiline and clip or in file": {
+			cmd: WriteCommand{
+				multiline:    true,
+				useClipboard: true,
+			},
+			err: errMultilineWithNonInteractiveFlag,
+		},
+		"cannot open file": {
+			cmd: WriteCommand{
+				inFile: "filename",
+			},
+			err: ErrReadFile("filename", errors.New("open filename: no such file or directory")),
+		},
+		"client creation error": {
+			cmd: WriteCommand{
+				path: "namespace/repo/secret",
+			},
+			in:        "secret value",
+			piped:     true,
+			err:       testErr,
+			clientErr: testErr,
+			out:       "Writing secret value...\n",
+		},
+		"empty multiline": {
+			cmd: WriteCommand{
+				path:      "namespace/repo/secret",
+				multiline: true,
+			},
+			promptOut: "Please type in the value of the secret, followed by [CTRL-D]:\n\n",
+			err:       errEmptySecret,
+		},
 	}
 
 	for name, tc := range cases {
@@ -208,7 +241,7 @@ func TestWriteCommand_Run(t *testing.T) {
 							return tc.writeFunc(path, data)
 						},
 					},
-				}, nil
+				}, tc.clientErr
 			}
 
 			io := fakeui.NewIO(t)

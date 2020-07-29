@@ -5,11 +5,12 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/secrethub/secrethub-go/internals/assert"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
-	"gotest.tools/assert"
 )
 
 func TestCredentialDisableCommand_Run(t *testing.T) {
@@ -32,7 +33,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 				fingerprint: "",
 				force:       true,
 			},
-			err: ErrForceNoFingerprint,
+			err: errors.New("fingerprint argument must be set when using --force"),
 		},
 		"fail-prompt-error": {
 			promptError: testError,

@@ -3,8 +3,9 @@ package secrethub
 import (
 	"bytes"
 	"errors"
-	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/internals/api"

@@ -3,13 +3,13 @@ package secrethub
 import (
 	"bytes"
 	"errors"
+	"github.com/secrethub/secrethub-go/internals/assert"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
-	"gotest.tools/assert"
 )
 
 func TestRmCommand_Run(t *testing.T) {

@@ -57,7 +57,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		"fail-abort": {
 			cmd: CredentialDisableCommand{
 				fingerprint: "62542d734d7f3627",
-				force: false,
+				force:       false,
 			},
 			promptOut: "Are you sure you want to disable the credential with fingerprint 62542d734d7f3627? [y/N]: ",
 			in:        "n",

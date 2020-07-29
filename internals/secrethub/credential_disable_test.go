@@ -119,7 +119,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				client := fakeclient.Client{
 					CredentialService: &fakeclient.CredentialService{
-						DisableFunc: func(fingerprintArg string) error {
+						DisableFunc: func(fingerprint string) error {
 							if fingerprint == "62542d734d7f3627" {
 								return nil
 							}

@@ -23,6 +23,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		out            string
 		in             string
 		fingerprint    string
+		disableError   error
 		newClientError error
 		promptError    error
 		err            error
@@ -56,6 +57,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		"fail-abort": {
 			cmd: CredentialDisableCommand{
 				fingerprint: "62542d734d7f3627",
+				force: false,
 			},
 			promptOut: "Are you sure you want to disable the credential with fingerprint 62542d734d7f3627? [y/N]: ",
 			in:        "n",
@@ -79,6 +81,33 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 			},
 			err: api.ErrTooShortFingerprint,
 		},
+		"succeed-force": {
+			cmd: CredentialDisableCommand{
+				fingerprint: "62542d734d7f3627",
+				force:       true,
+			},
+			out: "A disabled credential can no longer be used to access SecretHub. " +
+				"This process can currently not be reversed.\nCredential disabled.\n",
+		},
+		"succeed-no-force": {
+			cmd: CredentialDisableCommand{
+				fingerprint: "62542d734d7f3627",
+				force:       false,
+			},
+			promptOut: "Are you sure you want to disable the credential with fingerprint 62542d734d7f3627? [y/N]: ",
+			in:        "y",
+			out:       "A disabled credential can no longer be used to access SecretHub. This process can currently not be reversed.\nCredential disabled.\n",
+		},
+		"fail-disable-error": {
+			cmd: CredentialDisableCommand{
+				fingerprint: "62542d734d7f3628",
+				force:       true,
+			},
+			out: "A disabled credential can no longer be used to access SecretHub. " +
+				"This process can currently not be reversed.\n",
+			disableError: testError,
+			err:          testError,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -88,9 +117,19 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 			io.PromptErr = tc.promptError
 			tc.cmd.io = io
 
-			//var username string
+			var fingerprint string
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
-				client := fakeclient.Client{}
+				client := fakeclient.Client{
+					CredentialService: &fakeclient.CredentialService{
+						DisableFunc: func(fingerprintArg string) error {
+							fingerprint = fingerprintArg
+							if fingerprint == "62542d734d7f3627" {
+								return nil
+							}
+							return tc.disableError
+						},
+					},
+				}
 				return &client, tc.newClientError
 			}
 

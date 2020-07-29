@@ -2,9 +2,9 @@ package secrethub
 
 import (
 	"errors"
-	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"

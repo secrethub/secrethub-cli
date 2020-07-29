@@ -3,6 +3,7 @@ package secrethub
 import (
 	"bytes"
 	"errors"
+	"github.com/secrethub/secrethub-go/internals/api"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 
@@ -21,6 +22,7 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 		promptOut      string
 		out            string
 		in             string
+		username       string
 		meError        error
 		newClientError error
 		promptError    error
@@ -29,6 +31,15 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 		"fail-client-error": {
 			err:            testError,
 			newClientError: testError,
+		},
+		"fail-me-error": {
+			err: testError,
+			meError: testError,
+		},
+		"fail-abort": {
+			cmd: CredentialBackupCommand{
+
+			},
 		},
 	}
 
@@ -41,7 +52,11 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				client := fakeclient.Client{
-					//MeService: ...
+					MeService: &fakeclient.MeService {
+						GetUserFunc: func() (*api.User, error) {
+							return &api.User{}, tc.meError
+						},
+					},
 				}
 				return client, tc.newClientError
 			}

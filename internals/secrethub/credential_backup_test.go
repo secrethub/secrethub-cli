@@ -3,7 +3,9 @@ package secrethub
 import (
 	"bytes"
 	"errors"
-	"fmt"
+
+	"github.com/secrethub/secrethub-go/internals/assert"
+
 	"strings"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -14,7 +16,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
-	"gotest.tools/assert"
 )
 
 func TestCredentialBackupCommand_Run(t *testing.T) {
@@ -65,21 +66,16 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 			in:  "y",
 			err: errors.New("backup code has not yet been generated"),
 		},
-		/*
 
-			This test fails, at the moment, since we need to find a way to inject a mock for the
-			'backup.Code()' function, in order to avoid the check done on the http Client.
-				"success": {
-					cmd: CredentialBackupCommand{},
-					promptOut: "This will create a new backup code for Chucky. " +
-						"This code can be used to obtain full access to your account.\n" +
-						"Do you want to continue? [Y/n]: ",
-					in:  "y",
-					out: "This is your backup code: \n%s\n" + "Write it down and store it in a safe location! "+
-						"You can restore your account by running `secrethub init`.",
-				},
-		*/
-
+		"success": {
+			cmd: CredentialBackupCommand{},
+			promptOut: "This will create a new backup code for Chucky. " +
+				"This code can be used to obtain full access to your account.\n" +
+				"Do you want to continue? [Y/n]: ",
+			in: "y",
+			out: "This is your backup code: \n%s\n" + "Write it down and store it in a safe location! " +
+				"You can restore your account by running `secrethub init`.",
+		},
 	}
 
 	for name, tc := range testCases {
@@ -100,6 +96,9 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 					},
 					CredentialService: &fakeclient.CredentialService{
 						CreateFunc: func(creator credentials.Creator, s string) (*api.Credential, error) {
+							if name == "success" {
+								_ = creator.Create()
+							}
 							return &api.Credential{}, tc.createError
 						},
 					},
@@ -109,7 +108,7 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 
 			err := tc.cmd.Run()
 
-			assert.Equal(t, fmt.Sprint(err), fmt.Sprint(tc.err))
+			assert.Equal(t, err, tc.err)
 
 			// Since at the moment there is no way to retrieve the generated backup code
 			// we should just compare the beginning and the end of the message with the

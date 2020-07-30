@@ -64,8 +64,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
 			},
-			path: "namespace/repo/secret",
-			data: testData,
+			path:         "namespace/repo/secret",
+			data:         testData,
 			expectedClip: testData,
 			out: "A randomly generated secret has been written to namespace/repo/secret:1.\n" +
 				"The generated value has been copied to the clipboard. It will be cleared after Less than a second.\n",

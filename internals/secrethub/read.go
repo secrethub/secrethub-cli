@@ -27,6 +27,7 @@ type ReadCommand struct {
 	fileMode            filemode.FileMode
 	noNewLine           bool
 	newClient           newClientFunc
+	newWriter           newWriterFunc
 }
 
 // NewReadCommand creates a new ReadCommand.
@@ -36,6 +37,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 		clearClipboardAfter: defaultClearClipboardAfter,
 		io:                  io,
 		newClient:           newClient,
+		newWriter:           ioutil.WriteFile,
 	}
 }
 
@@ -89,7 +91,7 @@ func (cmd *ReadCommand) Run() error {
 	}
 
 	if cmd.outFile != "" {
-		err = ioutil.WriteFile(cmd.outFile, secretData, cmd.fileMode.FileMode())
+		err = cmd.newWriter(cmd.outFile, secretData, cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.outFile, err)
 		}

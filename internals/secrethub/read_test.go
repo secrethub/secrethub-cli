@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -27,7 +26,8 @@ func TestReadCommand_Run(t *testing.T) {
 		serviceErr      error
 		expectedClip    []byte
 		expectedFileOut []byte
-		out             string
+		expectedOut     string
+		fileErr         error
 		err             error
 	}{
 		"success read": {
@@ -36,7 +36,7 @@ func TestReadCommand_Run(t *testing.T) {
 				clipper: fakeclip.New(),
 			},
 			secretVersion: api.SecretVersion{Data: testSecret},
-			out:           string(testSecret) + "\n",
+			expectedOut:   string(testSecret) + "\n",
 		},
 		"success clipboard": {
 			cmd: ReadCommand{
@@ -47,7 +47,7 @@ func TestReadCommand_Run(t *testing.T) {
 			},
 			secretVersion: api.SecretVersion{Data: testSecret},
 			expectedClip:  testSecret,
-			out:           "Copied test/repo/secret to clipboard. It will be cleared after 5 minutes.\n",
+			expectedOut:   "Copied test/repo/secret to clipboard. It will be cleared after 5 minutes.\n",
 		},
 		"success file": {
 			cmd: ReadCommand{
@@ -58,7 +58,7 @@ func TestReadCommand_Run(t *testing.T) {
 			},
 			secretVersion:   api.SecretVersion{Data: testSecret},
 			expectedFileOut: []byte(string(testSecret) + "\n"),
-			out:             "",
+			expectedOut:     "",
 		},
 		"fail file": {
 			cmd: ReadCommand{
@@ -67,9 +67,10 @@ func TestReadCommand_Run(t *testing.T) {
 				fileMode: filemode.New(os.ModeAppend),
 				clipper:  fakeclip.New(),
 			},
+			fileErr:       testErr,
 			secretVersion: api.SecretVersion{Data: testSecret},
-			out:           "",
-			err:           ErrCannotWrite("/fail/read.txt", "open /fail/read.txt: no such file or directory"),
+			expectedOut:   "",
+			err:           ErrCannotWrite("/fail/read.txt", testErr.Error()),
 		},
 		"new client error": {
 			cmd: ReadCommand{
@@ -92,6 +93,7 @@ func TestReadCommand_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
+			var fileOut []byte
 			testIO := fakeui.NewIO(t)
 			tc.cmd.io = testIO
 
@@ -106,22 +108,23 @@ func TestReadCommand_Run(t *testing.T) {
 					},
 				}, tc.newClientErr
 			}
+			tc.cmd.newWriter = func(filename string, data []byte, perm os.FileMode) error {
+				if tc.fileErr == nil {
+					fileOut = data
+				}
+				return tc.fileErr
+			}
 
 			// Run
 			err := tc.cmd.Run()
-			res := []byte("")
-			if _, err := os.Stat(tc.cmd.outFile); err == nil {
-				res, _ = ioutil.ReadFile(tc.cmd.outFile)
-				os.Remove(tc.cmd.outFile)
-			}
 			clip, clipErr := tc.cmd.clipper.ReadAll()
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, testIO.Out.String(), tc.out)
+			assert.Equal(t, testIO.Out.String(), tc.expectedOut)
 			assert.OK(t, clipErr)
 			assert.Equal(t, clip, tc.expectedClip)
-			assert.Equal(t, res, tc.expectedFileOut)
+			assert.Equal(t, fileOut, tc.expectedFileOut)
 		})
 	}
 }

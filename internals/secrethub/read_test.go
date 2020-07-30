@@ -4,7 +4,9 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -16,57 +18,44 @@ import (
 
 func TestReadCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
+	testSecret := []byte("Remember! Reality's an illusion, the universe is a hologram, buy gold! Bye! - Bill Cipher")
 
 	cases := map[string]struct {
-		cmd            ReadCommand
-		newClientErr   error
-		versionService fakeclient.SecretVersionService
-		out            string
-		err            error
+		cmd             ReadCommand
+		newClientErr    error
+		secretVersion   api.SecretVersion
+		serviceErr      error
+		expectedContent string
+		out             string
+		err             error
 	}{
 		"success read": {
 			cmd: ReadCommand{
 				path: "test/repo/secret",
 			},
-			versionService: fakeclient.SecretVersionService{
-				GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
-					return &api.SecretVersion{
-						Data: []byte("testSecret"),
-					}, nil
-				},
-			},
-			out: "testSecret\n",
+			secretVersion: api.SecretVersion{Data: testSecret},
+			out:           string(testSecret) + "\n",
 		},
-		//"success clipboard": {
-		//	cmd: ReadCommand{
-		//		path:                "test/repo/secret",
-		//		clipper:             clip.NewClipboard(),
-		//		useClipboard:        true,
-		//		clearClipboardAfter: 5 * time.Minute,
-		//	},
-		//	versionService: fakeclient.SecretVersionService{
-		//		GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
-		//			return &api.SecretVersion{
-		//				Data: []byte("testSecretClipboard"),
-		//			}, nil
-		//		},
-		//	},
-		//	out: "Copied test/repo/secret to clipboard. It will be cleared after 5 minutes.\n",
-		//},
+		"success clipboard": {
+			cmd: ReadCommand{
+				path:                "test/repo/secret",
+				clipper:             fakeclip.New(),
+				useClipboard:        true,
+				clearClipboardAfter: 5 * time.Minute,
+			},
+			secretVersion:   api.SecretVersion{Data: testSecret},
+			expectedContent: string(testSecret),
+			out:             "Copied test/repo/secret to clipboard. It will be cleared after 5 minutes.\n",
+		},
 		"success file": {
 			cmd: ReadCommand{
 				path:     "test/repo/secret",
 				outFile:  "secret.txt",
 				fileMode: filemode.New(os.ModePerm),
 			},
-			versionService: fakeclient.SecretVersionService{
-				GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
-					return &api.SecretVersion{
-						Data: []byte("testSecretFile"),
-					}, nil
-				},
-			},
-			out: "testSecretFile\n",
+			secretVersion:   api.SecretVersion{Data: testSecret},
+			expectedContent: string(testSecret) + "\n",
+			out:             "",
 		},
 		"fail file": {
 			cmd: ReadCommand{
@@ -74,27 +63,17 @@ func TestReadCommand_Run(t *testing.T) {
 				outFile:  "/fail/read.txt",
 				fileMode: filemode.New(os.ModeAppend),
 			},
-			versionService: fakeclient.SecretVersionService{
-				GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
-					return &api.SecretVersion{
-						Data: []byte("testSecretFile"),
-					}, nil
-				},
-			},
-			out: "",
-			err: ErrCannotWrite("/fail/read.txt", "open /fail/read.txt: no such file or directory"),
+			secretVersion: api.SecretVersion{Data: testSecret},
+			out:           "",
+			err:           ErrCannotWrite("/fail/read.txt", "open /fail/read.txt: no such file or directory"),
 		},
 		"new client error": {
 			newClientErr: testErr,
 			err:          testErr,
 		},
 		"read error": {
-			versionService: fakeclient.SecretVersionService{
-				GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
-					return nil, testErr
-				},
-			},
-			err: testErr,
+			serviceErr: testErr,
+			err:        testErr,
 		},
 	}
 
@@ -112,7 +91,11 @@ func TestReadCommand_Run(t *testing.T) {
 				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
 						SecretService: &fakeclient.SecretService{
-							VersionService: &tc.versionService,
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									return &tc.secretVersion, tc.serviceErr
+								},
+							},
 						},
 					}, nil
 				}
@@ -120,15 +103,20 @@ func TestReadCommand_Run(t *testing.T) {
 
 			// Run
 			err := tc.cmd.Run()
-			if name == "success file" {
+			content := ""
+			if _, err := os.Stat(tc.cmd.outFile); err == nil {
 				res, _ := ioutil.ReadFile(tc.cmd.outFile)
-				io.Out.WriteString(string(res))
+				content = string(res)
 				os.Remove(tc.cmd.outFile)
+			} else if tc.cmd.useClipboard {
+				res, _ := tc.cmd.clipper.ReadAll()
+				content = string(res)
 			}
 
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, io.Out.String(), tc.out)
+			assert.Equal(t, content, tc.expectedContent)
 		})
 	}
 }

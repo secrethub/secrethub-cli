@@ -18,21 +18,21 @@ func TestRmCommand_Run(t *testing.T) {
 	var testErr = errors.New("test")
 
 	cases := map[string]struct {
-		cmd                RmCommand
-		in                 string
-		argPath            api.Path
-		promptOut          string
-		out                string
-		err                error
-		promptError        error
-		deleteSecretError  error
-		deleteVersionError error
-		deleteDirError     error
-		newClientError     error
-		getTreeError       error
-		getSecretError     error
+		cmd              RmCommand
+		in               string
+		argPath          api.Path
+		promptOut        string
+		out              string
+		err              error
+		promptErr        error
+		deleteSecretErr  error
+		deleteVersionErr error
+		deleteDirErr     error
+		newClientErr     error
+		getTreeErr       error
+		getSecretErr     error
 	}{
-		"success-force-dir": {
+		"success force dir": {
 			cmd: RmCommand{
 				force:     true,
 				recursive: true,
@@ -41,7 +41,7 @@ func TestRmCommand_Run(t *testing.T) {
 			argPath: "namespace/repo/dir",
 			out:     "Removal complete! The directory namespace/repo/dir has been permanently removed.\n",
 		},
-		"success-non-force-dir": {
+		"success non force dir": {
 			cmd: RmCommand{
 				force:     false,
 				recursive: true,
@@ -53,8 +53,7 @@ func TestRmCommand_Run(t *testing.T) {
 			in:  "namespace/repo/dir",
 			out: "Removal complete! The directory namespace/repo/dir has been permanently removed.\n",
 		},
-
-		"fail-non-recursive-dir": {
+		"fail non recursive dir": {
 			cmd: RmCommand{
 				force:     true,
 				recursive: false,
@@ -63,7 +62,7 @@ func TestRmCommand_Run(t *testing.T) {
 			argPath: "namespace/repo/dir",
 			err:     ErrCannotRemoveDir,
 		},
-		"fail-remove-root-dir": {
+		"fail remove root dir": {
 			cmd: RmCommand{
 				force:     true,
 				recursive: false,
@@ -72,17 +71,17 @@ func TestRmCommand_Run(t *testing.T) {
 			argPath: "namespace/repo",
 			err:     ErrCannotRemoveRootDir,
 		},
-		"fail-get-tree-error-dir": {
+		"fail get tree error dir": {
 			cmd: RmCommand{
 				force:     true,
 				recursive: true,
 				path:      "namespace/repo/dir",
 			},
-			argPath:      "namespace/repo/dir",
-			getTreeError: testErr,
-			err:          testErr,
+			argPath:    "namespace/repo/dir",
+			getTreeErr: testErr,
+			err:        testErr,
 		},
-		"fail-abort-dir": {
+		"fail abort dir": {
 			cmd: RmCommand{
 				path:      "namespace/repo/dir",
 				recursive: true,
@@ -94,33 +93,32 @@ func TestRmCommand_Run(t *testing.T) {
 			in:  "namespace/repo/directory",
 			out: "Name does not match. Aborting.\n",
 		},
-		"fail-client-error-dir": {
+		"fail client error dir": {
 			cmd: RmCommand{
 				path: "namespace/repo/dir",
 			},
-			err:            testErr,
-			newClientError: testErr,
+			err:          testErr,
+			newClientErr: testErr,
 		},
-		"fail-deletion-error-dir": {
+		"fail deletion error dir": {
 			cmd: RmCommand{
 				path:      "namespace/repo/dir",
 				force:     true,
 				recursive: true,
 			},
-			argPath:        "namespace/repo/dir",
-			err:            testErr,
-			deleteDirError: testErr,
+			argPath:      "namespace/repo/dir",
+			err:          testErr,
+			deleteDirErr: testErr,
 		},
-		"fail-prompt-error-dir": {
+		"fail prompt error dir": {
 			cmd: RmCommand{
 				path:      "namespace/repo/dir",
 				recursive: true,
 			},
-			promptError: testErr,
-			err:         testErr,
+			promptErr: testErr,
+			err:       testErr,
 		},
-
-		"success-force-secret-version": {
+		"success force secret version": {
 			cmd: RmCommand{
 				path:  "namespace/repo/secret:latest",
 				force: true,
@@ -128,8 +126,7 @@ func TestRmCommand_Run(t *testing.T) {
 			argPath: "namespace/repo/secret:latest",
 			out:     "Removal complete! The secret version namespace/repo/secret:latest has been permanently removed.\n",
 		},
-
-		"success-non-force-secret-version": {
+		"success non force secret version": {
 			cmd: RmCommand{
 				force: false,
 				path:  "namespace/repo/secret:latest",
@@ -140,8 +137,7 @@ func TestRmCommand_Run(t *testing.T) {
 			in:  "namespace/repo/secret:latest",
 			out: "Removal complete! The secret version namespace/repo/secret:latest has been permanently removed.\n",
 		},
-
-		"fail-abort-secret-version": {
+		"fail abort secret version": {
 			cmd: RmCommand{
 				path:  "namespace/repo/secret:latest",
 				force: false,
@@ -152,66 +148,65 @@ func TestRmCommand_Run(t *testing.T) {
 			in:  "namespace/repo/secret:oldversion",
 			out: "Name does not match. Aborting.\n",
 		},
-		"fail-deletion-error-secret-version": {
+		"fail deletion error secret version": {
 			cmd: RmCommand{
 				force: true,
 				path:  "namespace/repo/secret:latest",
 			},
-			argPath:            "namespace/repo/secret:latest",
-			deleteVersionError: testErr,
-			err:                testErr,
+			argPath:          "namespace/repo/secret:latest",
+			deleteVersionErr: testErr,
+			err:              testErr,
 		},
-
-		"success-force-secret": {
+		"success force secret": {
 			cmd: RmCommand{
 				force: true,
 				path:  "namespace/repo/dir/secret",
 			},
-			argPath:      "namespace/repo/dir/secret",
-			out:          "Removal complete! The secret namespace/repo/dir/secret has been permanently removed.\n",
-			getTreeError: api.ErrNotFound,
+			argPath:    "namespace/repo/dir/secret",
+			out:        "Removal complete! The secret namespace/repo/dir/secret has been permanently removed.\n",
+			getTreeErr: api.ErrNotFound,
 		},
-		"success-non-force-secret": {
+		"success non force secret": {
 			cmd: RmCommand{
 				force: false,
 				path:  "namespace/repo/dir/secret",
 			},
-			argPath:      "namespace/repo/dir/secret",
-			promptOut:    "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/dir/secret secret and all its versions. Please type in the name of the secret to confirm: ",
-			in:           "namespace/repo/dir/secret",
-			out:          "Removal complete! The secret namespace/repo/dir/secret has been permanently removed.\n",
-			getTreeError: api.ErrNotFound,
+			argPath:    "namespace/repo/dir/secret",
+			promptOut:  "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/dir/secret secret and all its versions. Please type in the name of the secret to confirm: ",
+			in:         "namespace/repo/dir/secret",
+			out:        "Removal complete! The secret namespace/repo/dir/secret has been permanently removed.\n",
+			getTreeErr: api.ErrNotFound,
 		},
-		"fail-abort-secret": {
+		"fail abort secret": {
 			cmd: RmCommand{
 				path:  "namespace/repo/dir/secret",
 				force: false,
 			},
+			argPath:    "namespace/repo/dir/secret",
+			promptOut:  "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/dir/secret secret and all its versions. Please type in the name of the secret to confirm: ",
+			in:         "namespace/repo/dir/secret2",
+			out:        "Name does not match. Aborting.\n",
+			getTreeErr: api.ErrNotFound,
+		},
+		"fail get error secret": {
+			cmd: RmCommand{
+				force: true,
+				path:  "namespace/repo/dir/secret",
+			},
 			argPath:      "namespace/repo/dir/secret",
-			promptOut:    "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/dir/secret secret and all its versions. Please type in the name of the secret to confirm: ",
-			in:           "namespace/repo/dir/secret2",
-			out:          "Name does not match. Aborting.\n",
-			getTreeError: api.ErrNotFound,
+			getSecretErr: api.ErrNotFound,
+			getTreeErr:   api.ErrNotFound,
+			err:          ErrResourceNotFound("namespace/repo/dir/secret"),
 		},
-		"fail-get-error-secret": {
-			cmd: RmCommand{
-				force: true,
-				path:  "namespace/repo/dir/secret",
-			},
-			argPath:        "namespace/repo/dir/secret",
-			getSecretError: api.ErrNotFound,
-			getTreeError:   api.ErrNotFound,
-			err:            ErrResourceNotFound("namespace/repo/dir/secret"),
-		},
-		"fail-deletion-error-secret": {
+		"fail deletion error secret": {
 			cmd: RmCommand{
 				path:  "namespace/repo/dir/secret",
 				force: true,
 			},
-			argPath:           "namespace/repo/dir/secret",
-			err:               testErr,
-			deleteSecretError: testErr,
-			getTreeError:      api.ErrNotFound,
+			argPath:         "namespace/repo/dir/secret",
+			err:             testErr,
+			deleteSecretErr: testErr,
+			getTreeErr:      api.ErrNotFound,
 		},
 	}
 
@@ -219,7 +214,7 @@ func TestRmCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			io := fakeui.NewIO(t)
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.in)
-			io.PromptErr = tc.promptError
+			io.PromptErr = tc.promptErr
 			tc.cmd.io = io
 
 			var argPath string
@@ -229,32 +224,32 @@ func TestRmCommand_Run(t *testing.T) {
 						VersionService: &fakeclient.SecretVersionService{
 							DeleteFunc: func(path string) error {
 								argPath = path
-								return tc.deleteVersionError
+								return tc.deleteVersionErr
 							},
 						},
 						GetFunc: func(path string) (*api.Secret, error) {
 							argPath = path
-							return nil, tc.getSecretError
+							return nil, tc.getSecretErr
 						},
 						DeleteFunc: func(path string) error {
 							argPath = path
-							return tc.deleteSecretError
+							return tc.deleteSecretErr
 						},
 					},
 					DirService: &fakeclient.DirService{
 						DeleteFunc: func(path string) error {
 							argPath = path
-							return tc.deleteDirError
+							return tc.deleteDirErr
 						},
 						GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
 							if path == "namespace/repo/dir" || path == "namespace/repo/dir/secret" {
-								return &api.Tree{}, tc.getTreeError
+								return &api.Tree{}, tc.getTreeErr
 							}
 
-							return nil, tc.getTreeError
+							return nil, tc.getTreeErr
 						},
 					},
-				}, tc.newClientError
+				}, tc.newClientErr
 			}
 
 			err := tc.cmd.Run()

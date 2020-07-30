@@ -28,6 +28,7 @@ type ServiceInitCommand struct {
 	clipper     clip.Clipper
 	io          ui.IO
 	newClient   newClientFunc
+	newWriter   newWriterFunc
 }
 
 // NewServiceInitCommand creates a new ServiceInitCommand.
@@ -36,6 +37,7 @@ func NewServiceInitCommand(io ui.IO, newClient newClientFunc) *ServiceInitComman
 		clipper:   clip.NewClipboard(),
 		io:        io,
 		newClient: newClient,
+		newWriter: ioutil.WriteFile,
 	}
 }
 
@@ -84,7 +86,7 @@ func (cmd *ServiceInitCommand) Run() error {
 
 		fmt.Fprintf(cmd.io.Output(), "Copied account configuration for %s to clipboard. It will be cleared after 45 seconds.\n", service.ServiceID)
 	} else if cmd.file != "" {
-		err = ioutil.WriteFile(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
+		err = cmd.newWriter(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.file, err)
 		}

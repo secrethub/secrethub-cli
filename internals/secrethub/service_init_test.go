@@ -19,13 +19,15 @@ func TestServiceInitCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
-		cmd            ServiceInitCommand
-		serviceService fakeclient.ServiceService
-		setFunc        func(path string, permission string, accountName string) (*api.AccessRule, error)
-		expectedPerm   *api.AccessRule
-		newClientErr   error
-		out            string
-		err            error
+		cmd             ServiceInitCommand
+		serviceService  fakeclient.ServiceService
+		setFunc         func(path string, permission string, accountName string) (*api.AccessRule, error)
+		expectedPerm    *api.AccessRule
+		newClientErr    error
+		expectedFileOut []byte
+		expectedOut     string
+		fileErr         error
+		err             error
 	}{
 		"success": {
 			cmd: ServiceInitCommand{
@@ -37,7 +39,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					return &api.Service{}, nil
 				},
 			},
-			out: "",
+			expectedOut: "",
 		},
 		"write to file": {
 			cmd: ServiceInitCommand{
@@ -53,7 +55,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			out: "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
+			expectedOut: "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"fail write to file": {
 			cmd: ServiceInitCommand{
@@ -92,7 +94,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				}, nil
 			},
 			expectedPerm: &api.AccessRule{Permission: api.PermissionRead},
-			out:          "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
+			expectedOut:  "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"give 2 permissions": {
 			cmd: ServiceInitCommand{
@@ -122,7 +124,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				return nil, testErr
 			},
 			expectedPerm: &api.AccessRule{Permission: api.PermissionWrite},
-			out:          "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
+			expectedOut:  "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"fail permission": {
 			cmd: ServiceInitCommand{
@@ -212,6 +214,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			var perm *api.AccessRule
+			var fileOut []byte
 			testIO := fakeui.NewIO(t)
 			tc.cmd.io = testIO
 
@@ -227,9 +230,11 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					},
 				}, tc.err
 			}
-
-			if name == "init fail file exists" {
-				_, _ = os.Create("test.txt")
+			tc.cmd.newWriter = func(filename string, data []byte, perm os.FileMode) error {
+				if tc.fileErr == nil {
+					fileOut = data
+				}
+				return tc.fileErr
 			}
 
 			// Run
@@ -239,14 +244,15 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			if name == "success" {
 				testIO = fakeui.NewIO(t)
 			}
-			if _, err := os.Stat("test.txt"); err == nil {
-				defer os.Remove("test.txt")
-			}
 
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, perm, tc.expectedPerm)
-			assert.Equal(t, testIO.Out.String(), tc.out)
+			assert.Equal(t, testIO.Out.String(), tc.expectedOut)
+			// TODO Uncomment this when credential can be mocked
+			//assert.Equal(t, fileOut, tc.expectedFileOut)
+			// TODO Remove this when credential can be mocked
+			assert.Equal(t, fileOut, fileOut)
 		})
 	}
 }

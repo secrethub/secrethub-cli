@@ -80,8 +80,8 @@ func TestReadCommand_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO(t)
-			tc.cmd.io = io
+			testIO := fakeui.NewIO(t)
+			tc.cmd.io = testIO
 
 			if tc.newClientErr != nil {
 				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
@@ -115,7 +115,7 @@ func TestReadCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.Out.String(), tc.out)
+			assert.Equal(t, testIO.Out.String(), tc.out)
 			assert.Equal(t, content, tc.expectedContent)
 		})
 	}

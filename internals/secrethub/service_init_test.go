@@ -92,7 +92,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				}, nil
 			},
 			expectedPerm: &api.AccessRule{Permission: api.PermissionRead},
-			out: "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
+			out:          "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"give 2 permissions": {
 			cmd: ServiceInitCommand{
@@ -122,7 +122,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				return nil, testErr
 			},
 			expectedPerm: &api.AccessRule{Permission: api.PermissionWrite},
-			out: "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
+			out:          "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"fail permission": {
 			cmd: ServiceInitCommand{

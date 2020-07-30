@@ -19,14 +19,15 @@ func TestServiceInitCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
-		cmd               ServiceInitCommand
-		serviceService    fakeclient.ServiceService
-		accessRuleService fakeclient.AccessRuleService
-		newClientErr      error
-		out               string
-		err               error
+		cmd            ServiceInitCommand
+		serviceService fakeclient.ServiceService
+		setFunc        func(path string, permission string, accountName string) (*api.AccessRule, error)
+		expectedPerm   *api.AccessRule
+		newClientErr   error
+		out            string
+		err            error
 	}{
-		"success service init": {
+		"success": {
 			cmd: ServiceInitCommand{
 				repo: api.RepoPath("test/repo"),
 			},
@@ -38,7 +39,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			out: "",
 		},
-		"success write to file": {
+		"write to file": {
 			cmd: ServiceInitCommand{
 				repo:     api.RepoPath("test/repo"),
 				file:     "test.txt",
@@ -70,7 +71,6 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			},
 			err: ErrCannotWrite("path/test.txt", "open path/test.txt: no such file or directory"),
 		},
-		// TODO: Check permission on the created service account
 		"give 1 permission": {
 			cmd: ServiceInitCommand{
 				repo:       api.RepoPath("test/repo"),
@@ -86,13 +86,12 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			accessRuleService: fakeclient.AccessRuleService{
-				SetFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
-					return &api.AccessRule{
-						Permission: api.PermissionRead,
-					}, nil
-				},
+			setFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
+				return &api.AccessRule{
+					Permission: api.PermissionRead,
+				}, nil
 			},
+			expectedPerm: &api.AccessRule{Permission: api.PermissionRead},
 			out: "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"give 2 permissions": {
@@ -110,20 +109,19 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			accessRuleService: fakeclient.AccessRuleService{
-				SetFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
-					if permission == "read" {
-						return &api.AccessRule{
-							Permission: api.PermissionRead,
-						}, nil
-					} else if permission == "write" {
-						return &api.AccessRule{
-							Permission: api.PermissionRead,
-						}, nil
-					}
-					return nil, testErr
-				},
+			setFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
+				if permission == "read" {
+					return &api.AccessRule{
+						Permission: api.PermissionRead,
+					}, nil
+				} else if permission == "write" {
+					return &api.AccessRule{
+						Permission: api.PermissionWrite,
+					}, nil
+				}
+				return nil, testErr
 			},
+			expectedPerm: &api.AccessRule{Permission: api.PermissionWrite},
 			out: "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"fail permission": {
@@ -144,10 +142,8 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					return &api.RevokeRepoResponse{}, nil
 				},
 			},
-			accessRuleService: fakeclient.AccessRuleService{
-				SetFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
-					return &api.AccessRule{}, testErr
-				},
+			setFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
+				return &api.AccessRule{}, testErr
 			},
 			err: testErr,
 		},
@@ -169,17 +165,8 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					return nil, fmt.Errorf("revoke has failed")
 				},
 			},
-			accessRuleService: fakeclient.AccessRuleService{
-				SetFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
-					return &api.AccessRule{}, testErr
-				},
-				ListLevelsFunc: func(path string) ([]*api.AccessLevel, error) {
-					return []*api.AccessLevel{
-						{
-							Permission: api.PermissionRead,
-						},
-					}, nil
-				},
+			setFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
+				return &api.AccessRule{}, testErr
 			},
 			err: fmt.Errorf("revoke has failed"),
 		},
@@ -224,20 +211,21 @@ func TestServiceInitCommand_Run(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO(t)
-			tc.cmd.io = io
+			var perm *api.AccessRule
+			testIO := fakeui.NewIO(t)
+			tc.cmd.io = testIO
 
-			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
-					return nil, tc.newClientErr
-				}
-			} else {
-				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						ServiceService:    &tc.serviceService,
-						AccessRuleService: &tc.accessRuleService,
-					}, nil
-				}
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					ServiceService: &tc.serviceService,
+					AccessRuleService: &fakeclient.AccessRuleService{
+						SetFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
+							returnedPerm, err := tc.setFunc(path, permission, accountName)
+							perm = returnedPerm
+							return returnedPerm, err
+						},
+					},
+				}, tc.err
 			}
 
 			if name == "init fail file exists" {
@@ -246,9 +234,10 @@ func TestServiceInitCommand_Run(t *testing.T) {
 
 			// Run
 			err := tc.cmd.Run()
-			if name == "success service init" {
-				//TODO Remove this condition when service credential can be checked
-				io = fakeui.NewIO(t)
+
+			//TODO Remove this condition when service credential can be checked
+			if name == "success" {
+				testIO = fakeui.NewIO(t)
 			}
 			if _, err := os.Stat("test.txt"); err == nil {
 				defer os.Remove("test.txt")
@@ -256,7 +245,8 @@ func TestServiceInitCommand_Run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.Out.String(), tc.out)
+			assert.Equal(t, perm, tc.expectedPerm)
+			assert.Equal(t, testIO.Out.String(), tc.out)
 		})
 	}
 }

@@ -9,27 +9,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
-	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 )
-
-type credentialIterator struct {
-	credentials  []*api.Credential
-	currentIndex int
-	err          error
-}
-
-func (c *credentialIterator) Next() (api.Credential, error) {
-	if c.err != nil {
-		return api.Credential{}, c.err
-	}
-
-	currentIndex := c.currentIndex
-	if currentIndex >= len(c.credentials) {
-		return api.Credential{}, iterator.Done
-	}
-	c.currentIndex++
-	return *c.credentials[currentIndex], nil
-}
 
 func TestCredentialListCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
@@ -45,8 +25,8 @@ func TestCredentialListCommand_Run(t *testing.T) {
 			cmd: CredentialListCommand{},
 			credentialService: fakeclient.CredentialService{
 				ListFunc: func(_ *secrethub.CredentialListParams) secrethub.CredentialIterator {
-					return &credentialIterator{
-						credentials: []*api.Credential{
+					return &fakeclient.CredentialIterator{
+						Credentials: []*api.Credential{
 							{
 								Description: "credential 1",
 								Type:        "test",
@@ -58,8 +38,8 @@ func TestCredentialListCommand_Run(t *testing.T) {
 								Fingerprint: "DFC3D1F0D9842F17425403D0A9474C36",
 							},
 						},
-						currentIndex: 0,
-						err:          nil,
+						CurrentIndex: 0,
+						Err:          nil,
 					}
 				},
 			},

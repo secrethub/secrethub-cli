@@ -30,6 +30,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		clientCreationErr error
 		path              api.SecretPath
 		data              []byte
+		expectedClip      []byte
 		err               error
 		out               string
 	}{
@@ -40,6 +41,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Err: nil,
 				},
 				firstArg: testPath,
+				clipper:  fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
@@ -64,6 +66,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			},
 			path: "namespace/repo/secret",
 			data: testData,
+			expectedClip: testData,
 			out: "A randomly generated secret has been written to namespace/repo/secret:1.\n" +
 				"The generated value has been copied to the clipboard. It will be cleared after Less than a second.\n",
 		},
@@ -75,6 +78,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				},
 				firstArg:   testPath,
 				lengthFlag: newIntValue(24),
+				clipper:    fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
@@ -94,6 +98,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				secondArg:  testPath,
 				lengthFlag: newIntValue(24),
 				lengthArg:  newIntValue(24),
+				clipper:    fakeclip.New(),
 			},
 			err: ErrCannotUseLengthArgAndFlag,
 		},
@@ -106,6 +111,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				firstArg:  "rand",
 				secondArg: testPath,
 				lengthArg: newIntValue(23),
+				clipper:   fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
@@ -120,6 +126,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				firstArg:  "rand",
 				secondArg: testPath,
 				lengthArg: newIntValue(0),
+				clipper:   fakeclip.New(),
 			},
 			err: ErrInvalidRandLength,
 			out: "",
@@ -129,6 +136,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				firstArg:  "rand",
 				secondArg: testPath,
 				lengthArg: newIntValue(-1),
+				clipper:   fakeclip.New(),
 			},
 			err: ErrInvalidRandLength,
 			out: "",
@@ -138,6 +146,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			cmd: GenerateSecretCommand{
 				firstArg:  testPath,
 				lengthArg: newIntValue(24),
+				clipper:   fakeclip.New(),
 			},
 			err: errors.New("unexpected 24"),
 		},
@@ -146,6 +155,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 			cmd: GenerateSecretCommand{
 				firstArg:  testPath,
 				secondArg: "namespace/repo/secret2",
+				clipper:   fakeclip.New(),
 			},
 			err: errors.New("unexpected namespace/repo/secret2"),
 		},
@@ -156,6 +166,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Err: testErr,
 				},
 				firstArg: testPath,
+				clipper:  fakeclip.New(),
 			},
 			err: testErr,
 		},
@@ -166,6 +177,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Err: nil,
 				},
 				firstArg: testPath,
+				clipper:  fakeclip.New(),
 			},
 			clientCreationErr: testErr,
 			err:               testErr,
@@ -177,6 +189,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Err: nil,
 				},
 				firstArg: testPath,
+				clipper:  fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return nil, testErr
@@ -210,11 +223,13 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 
 			// Act
 			err := tc.cmd.run()
+			resClip, _ := tc.cmd.clipper.ReadAll()
 
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, argPath, tc.path)
 			assert.Equal(t, argData, tc.data)
+			assert.Equal(t, resClip, tc.expectedClip)
 			assert.Equal(t, testIO.Out.String(), tc.out)
 		})
 	}

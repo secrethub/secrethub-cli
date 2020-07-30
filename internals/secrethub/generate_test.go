@@ -223,9 +223,10 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 
 			// Act
 			err := tc.cmd.run()
-			resClip, _ := tc.cmd.clipper.ReadAll()
+			resClip, clipErr := tc.cmd.clipper.ReadAll()
 
 			// Assert
+			assert.OK(t, clipErr)
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, argPath, tc.path)
 			assert.Equal(t, argData, tc.data)

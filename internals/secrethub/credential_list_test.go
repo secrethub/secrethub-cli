@@ -59,16 +59,10 @@ func TestCredentialListCommand_Run(t *testing.T) {
 			testIO := fakeui.NewIO(t)
 			tc.cmd.io = testIO
 
-			if tc.newClientErr != nil {
-				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
-					return nil, tc.newClientErr
-				}
-			} else {
-				tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
-					return fakeclient.Client{
-						CredentialService: &tc.credentialService,
-					}, nil
-				}
+			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
+				return fakeclient.Client{
+					CredentialService: &tc.credentialService,
+				}, tc.newClientErr
 			}
 
 			// Run

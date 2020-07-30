@@ -3,6 +3,7 @@ package secrethub
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -15,31 +16,35 @@ import (
 
 func TestCredentialDisableCommand_Run(t *testing.T) {
 
-	var testError = errors.New("test")
-
+	var testErr = errors.New("test")
+	const (
+		validFingerprint = "62542d734d7f3627"
+		warningMessage   = "A disabled credential can no longer be used to access SecretHub. " +
+			"This process can currently not be reversed.\n"
+	)
 	testCases := map[string]struct {
-		cmd            CredentialDisableCommand
-		force          bool
-		promptOut      string
-		out            string
-		in             string
-		disableError   error
-		newClientError error
-		promptError    error
-		err            error
+		cmd          CredentialDisableCommand
+		force        bool
+		promptOut    string
+		out          string
+		in           string
+		disableErr   error
+		newClientErr error
+		promptErr    error
+		err          error
 	}{
-		"fail-force-no-credential": {
+		"fail force no credential": {
 			cmd: CredentialDisableCommand{
 				fingerprint: "",
 				force:       true,
 			},
 			err: errors.New("fingerprint argument must be set when using --force"),
 		},
-		"fail-prompt-error": {
-			promptError: testError,
-			err:         testError,
+		"fail prompt error": {
+			promptErr: testErr,
+			err:       testErr,
 		},
-		"fail-empty-credential-3-times": {
+		"fail empty credential 3 times": {
 			cmd: CredentialDisableCommand{
 				fingerprint: "",
 				force:       false,
@@ -54,59 +59,57 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 				"Invalid input: fingerprint is invalid (api.invalid_fingerprint) \n",
 			err: api.ErrInvalidFingerprint,
 		},
-		"fail-abort": {
+		"fail abort": {
 			cmd: CredentialDisableCommand{
-				fingerprint: "62542d734d7f3627",
+				fingerprint: validFingerprint,
 				force:       false,
 			},
-			promptOut: "Are you sure you want to disable the credential with fingerprint 62542d734d7f3627? [y/N]: ",
+			promptOut: fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s? [y/N]: ", validFingerprint),
 			in:        "n",
-			out:       "A disabled credential can no longer be used to access SecretHub. This process can currently not be reversed.\nAborting.\n",
+			out:       warningMessage + "Aborting.\n",
 		},
-		"fail-client-error": {
-			newClientError: testError,
-			err:            testError,
+		"fail client error": {
+			newClientErr: testErr,
+			err:          testErr,
 		},
-		"fail-force-wrong-credential": {
+		"fail force wrong credential": {
 			cmd: CredentialDisableCommand{
 				fingerprint: "BillyBoy",
 				force:       true,
 			},
 			err: api.ErrInvalidFingerprint,
 		},
-		"fail-too-short-fingerprint": {
+		"fail too short fingerprint": {
 			cmd: CredentialDisableCommand{
 				fingerprint: "6254",
 				force:       true,
 			},
 			err: api.ErrTooShortFingerprint,
 		},
-		"succeed-force": {
+		"succeed force": {
 			cmd: CredentialDisableCommand{
-				fingerprint: "62542d734d7f3627",
+				fingerprint: validFingerprint,
 				force:       true,
 			},
-			out: "A disabled credential can no longer be used to access SecretHub. " +
-				"This process can currently not be reversed.\nCredential disabled.\n",
+			out: warningMessage + "Credential disabled.\n",
 		},
-		"succeed-no-force": {
+		"succeed no force": {
 			cmd: CredentialDisableCommand{
-				fingerprint: "62542d734d7f3627",
+				fingerprint: validFingerprint,
 				force:       false,
 			},
-			promptOut: "Are you sure you want to disable the credential with fingerprint 62542d734d7f3627? [y/N]: ",
+			promptOut: fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s? [y/N]: ", validFingerprint),
 			in:        "y",
-			out:       "A disabled credential can no longer be used to access SecretHub. This process can currently not be reversed.\nCredential disabled.\n",
+			out:       warningMessage + "Credential disabled.\n",
 		},
-		"fail-disable-error": {
+		"fail disable error": {
 			cmd: CredentialDisableCommand{
 				fingerprint: "62542d734d7f3628",
 				force:       true,
 			},
-			out: "A disabled credential can no longer be used to access SecretHub. " +
-				"This process can currently not be reversed.\n",
-			disableError: testError,
-			err:          testError,
+			out:        warningMessage,
+			disableErr: testErr,
+			err:        testErr,
 		},
 	}
 
@@ -114,21 +117,21 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			io := fakeui.NewIO(t)
 			io.PromptIn.Buffer = bytes.NewBufferString(tc.in)
-			io.PromptErr = tc.promptError
+			io.PromptErr = tc.promptErr
 			tc.cmd.io = io
 
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				client := fakeclient.Client{
 					CredentialService: &fakeclient.CredentialService{
 						DisableFunc: func(fingerprint string) error {
-							if fingerprint == "62542d734d7f3627" {
+							if fingerprint == validFingerprint {
 								return nil
 							}
-							return tc.disableError
+							return tc.disableErr
 						},
 					},
 				}
-				return &client, tc.newClientError
+				return &client, tc.newClientErr
 			}
 
 			err := tc.cmd.Run()

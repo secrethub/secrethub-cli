@@ -21,7 +21,7 @@ func TestCredentialListCommand_Run(t *testing.T) {
 		out               string
 		err               error
 	}{
-		"success list credentials": {
+		"success": {
 			cmd: CredentialListCommand{},
 			credentialService: fakeclient.CredentialService{
 				ListFunc: func(_ *secrethub.CredentialListParams) secrethub.CredentialIterator {

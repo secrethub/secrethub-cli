@@ -25,14 +25,14 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 	testPath := "namespace/repo/secret"
 
 	cases := map[string]struct {
-		cmd               GenerateSecretCommand
-		writeFunc         func(path string, data []byte) (*api.SecretVersion, error)
-		clientCreationErr error
-		path              api.SecretPath
-		data              []byte
-		expectedClip      []byte
-		err               error
-		out               string
+		cmd          GenerateSecretCommand
+		writeFunc    func(path string, data []byte) (*api.SecretVersion, error)
+		newClientErr error
+		path         api.SecretPath
+		data         []byte
+		expectedClip []byte
+		err          error
+		out          string
 	}{
 		"success": {
 			cmd: GenerateSecretCommand{
@@ -179,8 +179,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 				firstArg: testPath,
 				clipper:  fakeclip.New(),
 			},
-			clientCreationErr: testErr,
-			err:               testErr,
+			newClientErr: testErr,
+			err:          testErr,
 		},
 		"client error": {
 			cmd: GenerateSecretCommand{
@@ -218,7 +218,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 							return tc.writeFunc(path, data)
 						},
 					},
-				}, tc.clientCreationErr
+				}, tc.newClientErr
 			}
 
 			// Act

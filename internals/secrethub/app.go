@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"text/template"
 
@@ -74,9 +73,6 @@ type App struct {
 
 // newClientFunc creates a ClientAdapater.
 type newClientFunc func() (secrethub.ClientInterface, error)
-
-// newWriterFunc creates a WriterAdapter
-type newWriterFunc func(filename string, data []byte, perm os.FileMode) error
 
 // NewApp creates a new command-line application.
 func NewApp() *App {

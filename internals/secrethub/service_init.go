@@ -19,25 +19,25 @@ import (
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.
 type ServiceInitCommand struct {
-	clip        bool
-	description string
-	file        string
-	fileMode    filemode.FileMode
-	repo        api.RepoPath
-	permission  string
-	clipper     clip.Clipper
-	io          ui.IO
-	newClient   newClientFunc
-	newWriter   newWriterFunc
+	clip          bool
+	description   string
+	file          string
+	fileMode      filemode.FileMode
+	repo          api.RepoPath
+	permission    string
+	clipper       clip.Clipper
+	io            ui.IO
+	newClient     newClientFunc
+	writeFileFunc func(filename string, data []byte, perm os.FileMode) error
 }
 
 // NewServiceInitCommand creates a new ServiceInitCommand.
 func NewServiceInitCommand(io ui.IO, newClient newClientFunc) *ServiceInitCommand {
 	return &ServiceInitCommand{
-		clipper:   clip.NewClipboard(),
-		io:        io,
-		newClient: newClient,
-		newWriter: ioutil.WriteFile,
+		clipper:       clip.NewClipboard(),
+		io:            io,
+		newClient:     newClient,
+		writeFileFunc: ioutil.WriteFile,
 	}
 }
 
@@ -86,7 +86,7 @@ func (cmd *ServiceInitCommand) Run() error {
 
 		fmt.Fprintf(cmd.io.Output(), "Copied account configuration for %s to clipboard. It will be cleared after 45 seconds.\n", service.ServiceID)
 	} else if cmd.file != "" {
-		err = cmd.newWriter(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
+		err = cmd.writeFileFunc(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.file, err)
 		}

@@ -230,7 +230,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					},
 				}, tc.err
 			}
-			tc.cmd.newWriter = func(filename string, data []byte, perm os.FileMode) error {
+			tc.cmd.writeFileFunc = func(filename string, data []byte, perm os.FileMode) error {
 				if tc.fileErr == nil {
 					fileOut = data
 				}

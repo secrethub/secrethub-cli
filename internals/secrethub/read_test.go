@@ -108,7 +108,7 @@ func TestReadCommand_Run(t *testing.T) {
 					},
 				}, tc.newClientErr
 			}
-			tc.cmd.newWriter = func(filename string, data []byte, perm os.FileMode) error {
+			tc.cmd.WriteFileFunc = func(filename string, data []byte, perm os.FileMode) error {
 				if tc.fileErr == nil {
 					fileOut = data
 				}

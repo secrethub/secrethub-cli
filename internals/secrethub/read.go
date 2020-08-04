@@ -3,6 +3,7 @@ package secrethub
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
@@ -27,7 +28,7 @@ type ReadCommand struct {
 	fileMode            filemode.FileMode
 	noNewLine           bool
 	newClient           newClientFunc
-	newWriter           newWriterFunc
+	WriteFileFunc       func(filename string, data []byte, perm os.FileMode) error
 }
 
 // NewReadCommand creates a new ReadCommand.
@@ -37,7 +38,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 		clearClipboardAfter: defaultClearClipboardAfter,
 		io:                  io,
 		newClient:           newClient,
-		newWriter:           ioutil.WriteFile,
+		WriteFileFunc:       ioutil.WriteFile,
 	}
 }
 
@@ -91,7 +92,7 @@ func (cmd *ReadCommand) Run() error {
 	}
 
 	if cmd.outFile != "" {
-		err = cmd.newWriter(cmd.outFile, secretData, cmd.fileMode.FileMode())
+		err = cmd.WriteFileFunc(cmd.outFile, secretData, cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.outFile, err)
 		}

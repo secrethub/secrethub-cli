@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"time"
 
@@ -42,7 +43,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.Command("read", "Read a secret.")
-	clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathOptionalVersionPlaceHolder).SetValue(&cmd.path)
+	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathOptionalVersionPlaceHolder).SetValue(&cmd.path)
 	clause.Flag(
 		"clip",
 		fmt.Sprintf(
@@ -58,7 +59,8 @@ func (cmd *ReadCommand) Register(r command.Registerer) {
 }
 
 // Run handles the command with the options as specified in the command.
-func (cmd *ReadCommand) Run() error {
+func (cmd *ReadCommand) Run(c *cobra.Command, args []string) error {
+	cmd.path = api.SecretPath(args[0])
 	client, err := cmd.newClient()
 	if err != nil {
 		return err

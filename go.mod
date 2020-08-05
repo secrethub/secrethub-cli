@@ -18,13 +18,13 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/secrethub/demo-app v0.1.0
 	github.com/secrethub/secrethub-go v0.30.0
+	github.com/spf13/cobra v1.0.0
+	github.com/spf13/pflag v1.0.5
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200501052902-10377860bb8e
 	golang.org/x/text v0.3.2
 	google.golang.org/api v0.26.0
-	google.golang.org/genproto v0.0.0-20200430143042-b979b6f78d84
 	gopkg.in/yaml.v2 v2.2.2
 	gotest.tools v2.2.0+incompatible
 )

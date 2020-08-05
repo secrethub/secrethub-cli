@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/alecthomas/kingpin"
+	"github.com/spf13/cobra"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 )
@@ -13,10 +13,6 @@ type Registerer interface {
 
 // BindAction binds a function to a command clause, so that
 // it is executed when the command is parsed.
-func BindAction(clause *cli.CommandClause, fn func() error) {
-	clause.Action(
-		func(*kingpin.ParseContext) error {
-			return fn()
-		},
-	)
+func BindAction(clause *cli.CommandClause, fn func(cmd *cobra.Command, args []string) error) {
+	clause.RunE = fn
 }

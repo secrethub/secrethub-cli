@@ -2,17 +2,13 @@ package secrethub
 
 import (
 	"fmt"
-	"strings"
-	"text/template"
-
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/demo"
+	"strings"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
-
-	"github.com/alecthomas/kingpin"
 )
 
 const (
@@ -106,58 +102,58 @@ func NewApp() *App {
 	app.clientFactory.Register(app.cli)
 	app.registerCommands()
 
-	app.cli.UsageTemplate(DefaultUsageTemplate)
-	app.cli.UsageFuncs(template.FuncMap{
-		"ManagementCommands": func(cmds []*kingpin.CmdModel) []*kingpin.CmdModel {
-			var res []*kingpin.CmdModel
-			for _, cmd := range cmds {
-				if len(cmd.Commands) > 0 {
-					res = append(res, cmd)
-				}
-			}
-			return res
-		},
-		"RootCommands": func(cmds []*kingpin.CmdModel) []*kingpin.CmdModel {
-			var res []*kingpin.CmdModel
-			for _, cmd := range cmds {
-				if len(cmd.Commands) == 0 {
-					res = append(res, cmd)
-				}
-			}
-			return res
-		},
-		"CommandsToTwoColumns": func(cmds []*kingpin.CmdModel) [][2]string {
-			var rows [][2]string
-			for _, cmd := range cmds {
-				if !cmd.Hidden {
-					rows = append(rows, [2]string{cmd.Name, cmd.Help})
-				}
-			}
-			return rows
-		},
-	})
+	//app.cli.UsageTemplate(DefaultUsageTemplate)
+	//app.cli.UsageFuncs(template.FuncMap{
+	//	"ManagementCommands": func(cmds []*kingpin.CmdModel) []*kingpin.CmdModel {
+	//		var res []*kingpin.CmdModel
+	//		for _, cmd := range cmds {
+	//			if len(cmd.Commands) > 0 {
+	//				res = append(res, cmd)
+	//			}
+	//		}
+	//		return res
+	//	},
+	//	"RootCommands": func(cmds []*kingpin.CmdModel) []*kingpin.CmdModel {
+	//		var res []*kingpin.CmdModel
+	//		for _, cmd := range cmds {
+	//			if len(cmd.Commands) == 0 {
+	//				res = append(res, cmd)
+	//			}
+	//		}
+	//		return res
+	//	},
+	//	"CommandsToTwoColumns": func(cmds []*kingpin.CmdModel) [][2]string {
+	//		var rows [][2]string
+	//		for _, cmd := range cmds {
+	//			if !cmd.Hidden {
+	//				rows = append(rows, [2]string{cmd.Name, cmd.Help})
+	//			}
+	//		}
+	//		return rows
+	//	},
+	//})
 
 	return &app
 }
 
 // Version adds a flag for displaying the application version number.
-func (app *App) Version(version string, commit string) *App {
-	app.cli = app.cli.Version(ApplicationName + " version " + version + ", build " + commit)
-	return app
-}
+//func (app *App) Version(version string, commit string) *App {
+//	app.cli = app.cli.Version(ApplicationName + " version " + version + ", build " + commit)
+//	return app
+//}
 
 // Run builds the command-line application, parses the arguments,
 // configures global behavior and executes the command given by the args.
 func (app *App) Run(args []string) error {
 	// Parse also executes the command when parsing is successful.
-	_, err := app.cli.Parse(args)
+	err := app.cli.Application.Execute()
 	return err
 }
 
 // Model returns the CLI application model containing all the SecretHub CLI commands, flags, and args.
-func (app *App) Model() *kingpin.ApplicationModel {
-	return app.cli.Model()
-}
+//func (app *App) Model() *kingpin.ApplicationModel {
+//	return app.cli.Model()
+//}
 
 // registerCommands initializes all commands and registers them on the app.
 func (app *App) registerCommands() {

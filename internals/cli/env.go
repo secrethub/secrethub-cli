@@ -230,7 +230,7 @@ func (f *Flag) Envar(name string) *Flag {
 	}
 	f.app.registerEnvVar(name)
 	f.envVar = name
-	//f.Flag = f.Flag.Envar(f.envVar)
+	f.Flag.DefValue = f.envVar
 	return f
 }
 
@@ -240,7 +240,7 @@ func (f *Flag) NoEnvar() *Flag {
 		f.app.unregisterEnvVar(f.envVar)
 	}
 	f.envVar = ""
-	//f.Flag = f.FlagClause.NoEnvar()
+	f.Flag.DefValue = ""
 	return f
 }
 

@@ -193,11 +193,7 @@ func (cmd *CommandClause) Hidden() *CommandClause {
 }
 
 func (cmd *CommandClause) FullCommand() string {
-	out := []string{cmd.name}
-	//for p := cmd.parent; p != nil; p = p.parent {
-	//	out = append([]string{p.name}, out...)
-	//}
-	return strings.Join(out, " ")
+	return strings.Join(os.Args[:], " ")
 }
 
 // Flag defines a new flag with the given long name and help text,

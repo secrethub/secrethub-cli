@@ -2,20 +2,48 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
+	"github.com/secrethub/secrethub-go/internals/errio"
 	"os"
 	"testing"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )
 
+//type credentialMock struct {
+//	Key []byte
+//}
+//
+//func (c *credentialMock) Verifier() credentials.Verifier {
+//	panic("implement me")
+//}
+//
+//func (c *credentialMock) Encrypter() credentials.Encrypter {
+//	return nil
+//}
+//
+//func (c *credentialMock) Metadata() map[string]string {
+//	return nil
+//}
+//
+//func (c *credentialMock) Create() error {
+//	c.Key = []byte("CredentialTest")
+//	return nil
+//}
+//
+//func (c *credentialMock) Export() ([]byte, error) {
+//	return c.Key, nil
+//}
+
 func TestServiceInitCommand_Run(t *testing.T) {
+	keyCreator := credentials.CreateKey()
+	keyCreator.Create()
+	val, _ := keyCreator.Export()
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
@@ -31,41 +59,40 @@ func TestServiceInitCommand_Run(t *testing.T) {
 	}{
 		"success": {
 			cmd: ServiceInitCommand{
-				repo: api.RepoPath("test/repo"),
+				repo:       api.RepoPath("test/repo"),
+				credential: keyCreator,
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					_ = credentialCreator.Create()
 					return &api.Service{}, nil
 				},
 			},
-			expectedOut: "",
+			expectedOut: string(val) + "\n",
 		},
 		"write to file": {
 			cmd: ServiceInitCommand{
-				repo:     api.RepoPath("test/repo"),
-				file:     "test.txt",
-				fileMode: filemode.New(os.ModePerm),
+				repo:       api.RepoPath("test/repo"),
+				credential: keyCreator,
+				file:       "test.txt",
+				fileMode:   filemode.New(os.ModePerm),
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
 				},
 			},
-			expectedOut: "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
+			expectedFileOut: []byte(string(val) + "\n"),
+			expectedOut:     "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"fail write to file": {
 			cmd: ServiceInitCommand{
-				repo:     api.RepoPath("test/repo"),
-				file:     "path/test.txt",
-				fileMode: filemode.New(os.ModePerm),
+				repo:       api.RepoPath("test/repo"),
+				credential: keyCreator,
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -76,13 +103,11 @@ func TestServiceInitCommand_Run(t *testing.T) {
 		"give 1 permission": {
 			cmd: ServiceInitCommand{
 				repo:       api.RepoPath("test/repo"),
-				file:       "test.txt",
-				fileMode:   filemode.New(os.ModePerm),
+				credential: keyCreator,
 				permission: "read",
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -94,18 +119,16 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				}, nil
 			},
 			expectedPerm: &api.AccessRule{Permission: api.PermissionRead},
-			expectedOut:  "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
+			expectedOut:  string(val) + "\n",
 		},
 		"give 2 permissions": {
 			cmd: ServiceInitCommand{
 				repo:       api.RepoPath("test/repo"),
-				file:       "test.txt",
-				fileMode:   filemode.New(os.ModePerm),
+				credential: keyCreator,
 				permission: "read:write",
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -124,18 +147,16 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				return nil, testErr
 			},
 			expectedPerm: &api.AccessRule{Permission: api.PermissionWrite},
-			expectedOut:  "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
+			expectedOut:  string(val) + "\n",
 		},
 		"fail permission": {
 			cmd: ServiceInitCommand{
 				repo:       api.RepoPath("test/repo"),
-				file:       "test.txt",
-				fileMode:   filemode.New(os.ModePerm),
+				credential: keyCreator,
 				permission: "read",
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -152,13 +173,11 @@ func TestServiceInitCommand_Run(t *testing.T) {
 		"fail permission and revoke": {
 			cmd: ServiceInitCommand{
 				repo:       api.RepoPath("test/repo"),
-				file:       "test.txt",
-				fileMode:   filemode.New(os.ModePerm),
+				credential: keyCreator,
 				permission: "read",
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
-					_ = credentialCreator.Create()
 					return &api.Service{
 						ServiceID: "testService",
 					}, nil
@@ -240,19 +259,11 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			// Run
 			err := tc.cmd.Run()
 
-			//TODO Remove this condition when service credential can be checked
-			if name == "success" {
-				testIO = fakeui.NewIO(t)
-			}
-
 			// Assert
 			assert.Equal(t, err, tc.err)
 			assert.Equal(t, perm, tc.expectedPerm)
 			assert.Equal(t, testIO.Out.String(), tc.expectedOut)
-			// TODO Uncomment this when credential can be mocked
-			//assert.Equal(t, fileOut, tc.expectedFileOut)
-			// TODO Remove this when credential can be mocked
-			assert.Equal(t, fileOut, fileOut)
+			assert.Equal(t, fileOut, tc.expectedFileOut)
 		})
 	}
 }

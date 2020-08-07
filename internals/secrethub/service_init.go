@@ -29,6 +29,7 @@ type ServiceInitCommand struct {
 	io            ui.IO
 	newClient     newClientFunc
 	writeFileFunc func(filename string, data []byte, perm os.FileMode) error
+	credential    *credentials.KeyCreator
 }
 
 // NewServiceInitCommand creates a new ServiceInitCommand.
@@ -38,6 +39,7 @@ func NewServiceInitCommand(io ui.IO, newClient newClientFunc) *ServiceInitComman
 		io:            io,
 		newClient:     newClient,
 		writeFileFunc: ioutil.WriteFile,
+		credential:    credentials.CreateKey(),
 	}
 }
 
@@ -61,8 +63,7 @@ func (cmd *ServiceInitCommand) Run() error {
 		return err
 	}
 
-	credential := credentials.CreateKey()
-	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credential)
+	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, cmd.credential)
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,7 @@ func (cmd *ServiceInitCommand) Run() error {
 			return err
 		}
 	}
-	out, err := credential.Export()
+	out, err := cmd.credential.Export()
 	if err != nil {
 		return err
 	}

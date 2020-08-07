@@ -13,9 +13,12 @@ import (
 
 // TreeCommand lists the contents of a directory at a given path in a tree-like format.
 type TreeCommand struct {
-	path      api.DirPath
-	io        ui.IO
-	newClient newClientFunc
+	path          api.DirPath
+	io            ui.IO
+	fullPaths     bool
+	noIndentation bool
+	noReport      bool
+	newClient     newClientFunc
 }
 
 // NewTreeCommand creates a new TreeCommand.
@@ -38,7 +41,7 @@ func (cmd *TreeCommand) Run() error {
 		return err
 	}
 
-	printTree(t, cmd.io.Output())
+	cmd.printTree(t, cmd.io.Output())
 	return nil
 }
 
@@ -47,53 +50,90 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
 	clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
+	clause.Flag("full-paths", "Print the full path of each directory and secret.").Short('f').BoolVar(&cmd.fullPaths)
+	clause.Flag("no-indentation", "Don't print indentation lines.").Short('i').BoolVar(&cmd.noIndentation)
+	clause.Flag("no-report", "Turn off secret/directory count at end of tree listing.").BoolVar(&cmd.noReport)
+	clause.Flag("noreport", "Turn off secret/directory count at end of tree listing.").Hidden().BoolVar(&cmd.noReport)
+
 	command.BindAction(clause, cmd.Run)
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.
-func printTree(t *api.Tree, w io.Writer) {
-	name := colorizeByStatus(t.RootDir.Status, t.RootDir.Name)
-	fmt.Fprintf(w, "%s/\n", name)
+func (cmd *TreeCommand) printTree(t *api.Tree, w io.Writer) {
 
-	printDirContentsRecursively(t.RootDir, "", w)
+	rootDirName := func() string {
+		if cmd.fullPaths {
+			return cmd.path.Value() + "/"
+		}
+		return t.RootDir.Name + "/"
+	}()
+	name := colorizeByStatus(t.RootDir.Status, rootDirName)
+	fmt.Fprintf(w, "%s\n", name)
 
-	fmt.Fprintf(w,
-		"\n%s, %s\n",
-		pluralize("directory", "directories", t.DirCount()),
-		pluralize("secret", "secrets", t.SecretCount()),
-	)
+	if cmd.fullPaths {
+		cmd.printDirContentsRecursively(t.RootDir, "", w, cmd.path.Value())
+	} else {
+		cmd.printDirContentsRecursively(t.RootDir, "", w, "")
+	}
+	if !cmd.noReport {
+		fmt.Fprintf(w,
+			"\n%s, %s\n",
+			pluralize("directory", "directories", t.DirCount()),
+			pluralize("secret", "secrets", t.SecretCount()),
+		)
+	}
 }
 
 // printDirContentsRecursively is a recursive function that prints the directory's contents
 // in a tree-like structure, subdirs first followed by secrets.
-func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer) {
+func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer, prevPath string) {
 
 	sort.Sort(api.SortDirByName(dir.SubDirs))
 	sort.Sort(api.SortSecretByName(dir.Secrets))
 
 	total := len(dir.SubDirs) + len(dir.Secrets)
 
+	if cmd.fullPaths {
+		prevPath += "/"
+	} else {
+		prevPath = ""
+	}
+
 	i := 0
 	for _, sub := range dir.SubDirs {
-		name := colorizeByStatus(sub.Status, sub.Name)
 
-		if i == total-1 {
-			fmt.Fprintf(w, "%s└── %s/\n", prefix, name)
-			printDirContentsRecursively(sub, prefix+"    ", w)
+		name := sub.Name
+		if cmd.fullPaths {
+			name = prevPath + name
+		}
+		colorName := colorizeByStatus(sub.Status, name+"/")
+
+		if cmd.noIndentation {
+			fmt.Fprintf(w, "%s\n", colorName)
+			cmd.printDirContentsRecursively(sub, prefix, w, name)
+		} else if i == total-1 {
+			fmt.Fprintf(w, "%s└── %s\n", prefix, colorName)
+			cmd.printDirContentsRecursively(sub, prefix+"    ", w, name)
 		} else {
-			fmt.Fprintf(w, "%s├── %s/\n", prefix, name)
-			printDirContentsRecursively(sub, prefix+"│   ", w)
+			fmt.Fprintf(w, "%s├── %s\n", prefix, colorName)
+			cmd.printDirContentsRecursively(sub, prefix+"│   ", w, name)
 		}
 		i++
 	}
 
 	for _, secret := range dir.Secrets {
-		name := colorizeByStatus(secret.Status, secret.Name)
+		name := secret.Name
+		if cmd.fullPaths {
+			name = prevPath + name
+		}
+		colorName := colorizeByStatus(secret.Status, name)
 
-		if i == total-1 {
-			fmt.Fprintf(w, "%s└── %s\n", prefix, name)
+		if cmd.noIndentation {
+			fmt.Fprintf(w, "%s\n", colorName)
+		} else if i == total-1 {
+			fmt.Fprintf(w, "%s└── %s\n", prefix, colorName)
 		} else {
-			fmt.Fprintf(w, "%s├── %s\n", prefix, name)
+			fmt.Fprintf(w, "%s├── %s\n", prefix, colorName)
 		}
 		i++
 	}

@@ -14,8 +14,8 @@ import (
 )
 
 func TestRmCommand_Run(t *testing.T) {
-
 	var testErr = errors.New("test")
+	const warningText = "[WARNING] This action cannot be undone. This will permanently remove the"
 
 	cases := map[string]struct {
 		cmd              RmCommand
@@ -48,7 +48,7 @@ func TestRmCommand_Run(t *testing.T) {
 				path:      "namespace/repo/dir",
 			},
 			argPath: "namespace/repo/dir",
-			promptOut: "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/dir directory and all the directories and secrets it contains. " +
+			promptOut: warningText + " namespace/repo/dir directory and all the directories and secrets it contains. " +
 				"Please type in the name of the directory to confirm: ",
 			in:  "namespace/repo/dir",
 			out: "Removal complete! The directory namespace/repo/dir has been permanently removed.\n",
@@ -88,7 +88,7 @@ func TestRmCommand_Run(t *testing.T) {
 				force:     false,
 			},
 			argPath: "namespace/repo/dir",
-			promptOut: "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/dir directory and all the directories and secrets it contains. " +
+			promptOut: warningText + " namespace/repo/dir directory and all the directories and secrets it contains. " +
 				"Please type in the name of the directory to confirm: ",
 			in:  "namespace/repo/directory",
 			out: "Name does not match. Aborting.\n",
@@ -132,7 +132,7 @@ func TestRmCommand_Run(t *testing.T) {
 				path:  "namespace/repo/secret:latest",
 			},
 			argPath: "namespace/repo/secret:latest",
-			promptOut: "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/secret:latest secret version. " +
+			promptOut: warningText + " namespace/repo/secret:latest secret version. " +
 				"Please type in the name of the secret and the version (<name>:<version>) to confirm: ",
 			in:  "namespace/repo/secret:latest",
 			out: "Removal complete! The secret version namespace/repo/secret:latest has been permanently removed.\n",
@@ -143,7 +143,7 @@ func TestRmCommand_Run(t *testing.T) {
 				force: false,
 			},
 			argPath: "namespace/repo/secret:latest",
-			promptOut: "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/secret:latest secret version. " +
+			promptOut: warningText + " namespace/repo/secret:latest secret version. " +
 				"Please type in the name of the secret and the version (<name>:<version>) to confirm: ",
 			in:  "namespace/repo/secret:oldversion",
 			out: "Name does not match. Aborting.\n",
@@ -172,7 +172,7 @@ func TestRmCommand_Run(t *testing.T) {
 				path:  "namespace/repo/dir/secret",
 			},
 			argPath:    "namespace/repo/dir/secret",
-			promptOut:  "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/dir/secret secret and all its versions. Please type in the name of the secret to confirm: ",
+			promptOut:  warningText + " namespace/repo/dir/secret secret and all its versions. Please type in the name of the secret to confirm: ",
 			in:         "namespace/repo/dir/secret",
 			out:        "Removal complete! The secret namespace/repo/dir/secret has been permanently removed.\n",
 			getTreeErr: api.ErrNotFound,
@@ -183,7 +183,7 @@ func TestRmCommand_Run(t *testing.T) {
 				force: false,
 			},
 			argPath:    "namespace/repo/dir/secret",
-			promptOut:  "[WARNING] This action cannot be undone. This will permanently remove the namespace/repo/dir/secret secret and all its versions. Please type in the name of the secret to confirm: ",
+			promptOut:  warningText + " namespace/repo/dir/secret secret and all its versions. Please type in the name of the secret to confirm: ",
 			in:         "namespace/repo/dir/secret2",
 			out:        "Name does not match. Aborting.\n",
 			getTreeErr: api.ErrNotFound,

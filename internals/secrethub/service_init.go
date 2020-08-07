@@ -24,12 +24,12 @@ type ServiceInitCommand struct {
 	file          string
 	fileMode      filemode.FileMode
 	repo          api.RepoPath
+	credential    *credentials.KeyCreator
 	permission    string
 	clipper       clip.Clipper
 	io            ui.IO
 	newClient     newClientFunc
 	writeFileFunc func(filename string, data []byte, perm os.FileMode) error
-	credential    *credentials.KeyCreator
 }
 
 // NewServiceInitCommand creates a new ServiceInitCommand.

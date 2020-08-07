@@ -64,8 +64,15 @@ func (cmd *InitCommand) Run() error {
 	}
 
 	_, err = client.Repos().Create(repoPath)
-	if err == api.ErrRepoAlreadyExists && cmd.repo == "" {
-		return fmt.Errorf("demo repo %s already exists, use --repo to specify another repo to use", repoPath)
+	if err == api.ErrRepoAlreadyExists {
+		demoRepo, err := cmd.isDemoRepo(client, repoPath)
+		if err != nil {
+			return err
+		}
+		if demoRepo {
+			return nil
+		}
+		return fmt.Errorf("repo %s already exists and is not a demo repo, use --repo to specify another repo to use", repoPath)
 	} else if err != nil {
 		return err
 	}
@@ -88,4 +95,35 @@ func (cmd *InitCommand) Run() error {
 	fmt.Printf("Created the following secrets:\n%s\n%s\n", usernamePath, passwordPath)
 
 	return nil
+}
+
+// isDemoRepo checks whether the repo on the given path is a demo repository.
+// It returns true iff the repository contains exactly two secrets named username and password.
+func (cmd *InitCommand) isDemoRepo(client secrethub.ClientInterface, repoPath string) (bool, error) {
+	repo, err := client.Repos().Get(repoPath)
+	if err != nil {
+		return false, err
+	}
+	if repo.SecretCount != 2 {
+		return false, nil
+	}
+
+	usernamePath := secretpath.Join(repoPath, "username")
+	exists, err := client.Secrets().Exists(usernamePath)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, nil
+	}
+
+	passwordPath := secretpath.Join(repoPath, "password")
+	exists, err = client.Secrets().Exists(passwordPath)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, nil
+	}
+	return true, nil
 }

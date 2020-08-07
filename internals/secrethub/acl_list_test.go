@@ -144,13 +144,40 @@ func TestACLListCommand_run(t *testing.T) {
 				"namespace/repo        read           1 hour ago     developer\n" +
 				"namespace/repo/dir    admin          1 hour ago     developer\n",
 		},
+		"tree fail": {
+			cmd: ACLListCommand{
+				path:      api.DirPath("namespace/repo/dir"),
+				depth:     1,
+				ancestors: true,
+			},
+			accessrules: fakeclient.AccessRuleService{
+				ListFunc: func(path string, depth int, ancestors bool) ([]*api.AccessRule, error) {
+					return []*api.AccessRule{
+						{
+							Account: &api.Account{
+								Name: "developer",
+							},
+							DirID:         dir1ID,
+							Permission:    api.PermissionRead,
+							LastChangedAt: time.Date(2018, 1, 1, 1, 1, 1, 1, time.UTC),
+						},
+					}, nil
+				},
+			},
+			dirs: fakeclient.DirService{
+				GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+					return nil, testError
+				},
+			},
+			err: testError,
+		},
 	}
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			io := fakeui.NewIO(t)
-			tc.cmd.io = io
+			testIO := fakeui.NewIO(t)
+			tc.cmd.io = testIO
 
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
@@ -164,7 +191,7 @@ func TestACLListCommand_run(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, io.Out.String(), tc.out)
+			assert.Equal(t, testIO.Out.String(), tc.out)
 		})
 	}
 }

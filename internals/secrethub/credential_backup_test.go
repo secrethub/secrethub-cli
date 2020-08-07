@@ -130,11 +130,11 @@ func TestCredentialBackupCommand_Run(t *testing.T) {
 			if !tc.shouldSucceed {
 				assert.Equal(t, io.Out.String(), tc.out)
 			} else {
-				splitIO := strings.Split(strings.TrimSuffix(io.Out.String(), "\n"), "\n")
-				splitTC := strings.Split(strings.TrimSuffix(tc.out, "\n"), "\n")
-
-				assert.Equal(t, splitIO[0], splitTC[0])
-				assert.Equal(t, splitIO[len(splitIO)-1], splitTC[len(splitTC)-1])
+				beginning := strings.HasPrefix(io.Out.String(), "This is your backup code: ")
+				end := strings.HasSuffix(io.Out.String(), "Write it down and store it in a safe location! You can restore your account by running `secrethub init`.\n")
+				if !beginning && !end {
+					t.Errorf("The output did not match the expected format." + io.Out.String())
+				}
 			}
 			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
 		})

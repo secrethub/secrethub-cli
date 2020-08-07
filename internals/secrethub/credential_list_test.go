@@ -1,6 +1,5 @@
 package secrethub
 
-//
 //import (
 //	"testing"
 //

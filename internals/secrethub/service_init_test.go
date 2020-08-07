@@ -18,7 +18,7 @@ import (
 func TestServiceInitCommand_Run(t *testing.T) {
 	keyCreator := credentials.CreateKey()
 	_ = keyCreator.Create()
-	val, _ := keyCreator.Export()
+	exportedCredential, _ := keyCreator.Export()
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
@@ -42,7 +42,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					return &api.Service{}, nil
 				},
 			},
-			expectedOut: string(val) + "\n",
+			expectedOut: string(exportedCredential) + "\n",
 		},
 		"write to file": {
 			cmd: ServiceInitCommand{
@@ -58,7 +58,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			expectedFileOut: []byte(string(val) + "\n"),
+			expectedFileOut: []byte(string(exportedCredential) + "\n"),
 			expectedOut:     "Written account configuration for testService to test.txt. Be sure to remove it when you're done.\n",
 		},
 		"fail write to file": {
@@ -94,7 +94,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				}, nil
 			},
 			expectedPerm: &api.AccessRule{Permission: api.PermissionRead},
-			expectedOut:  string(val) + "\n",
+			expectedOut:  string(exportedCredential) + "\n",
 		},
 		"give 2 permissions": {
 			cmd: ServiceInitCommand{
@@ -122,7 +122,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				return nil, testErr
 			},
 			expectedPerm: &api.AccessRule{Permission: api.PermissionWrite},
-			expectedOut:  string(val) + "\n",
+			expectedOut:  string(exportedCredential) + "\n",
 		},
 		"fail permission": {
 			cmd: ServiceInitCommand{

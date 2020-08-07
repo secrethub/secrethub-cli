@@ -2,47 +2,22 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
-	"github.com/secrethub/secrethub-go/internals/errio"
 	"os"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
+	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"
 )
 
-//type credentialMock struct {
-//	Key []byte
-//}
-//
-//func (c *credentialMock) Verifier() credentials.Verifier {
-//	panic("implement me")
-//}
-//
-//func (c *credentialMock) Encrypter() credentials.Encrypter {
-//	return nil
-//}
-//
-//func (c *credentialMock) Metadata() map[string]string {
-//	return nil
-//}
-//
-//func (c *credentialMock) Create() error {
-//	c.Key = []byte("CredentialTest")
-//	return nil
-//}
-//
-//func (c *credentialMock) Export() ([]byte, error) {
-//	return c.Key, nil
-//}
-
 func TestServiceInitCommand_Run(t *testing.T) {
 	keyCreator := credentials.CreateKey()
-	keyCreator.Create()
+	_ = keyCreator.Create()
 	val, _ := keyCreator.Export()
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 

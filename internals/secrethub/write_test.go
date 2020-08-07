@@ -21,21 +21,21 @@ func TestWriteCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
-		cmd         WriteCommand
-		writeFunc   func(path string, data []byte) (*api.SecretVersion, error)
-		in          string
-		piped       bool
-		promptIn    string
-		promptOut   string
-		promptErr   error
-		passwordIn  string
-		clientErr   error
-		passwordErr error
-		readErr     error
-		err         error
-		path        api.SecretPath
-		data        []byte
-		out         string
+		cmd            WriteCommand
+		writeFunc      func(path string, data []byte) (*api.SecretVersion, error)
+		in             string
+		piped          bool
+		promptIn       string
+		promptOut      string
+		promptErr      error
+		passwordIn     string
+		newClientError error
+		passwordErr    error
+		readErr        error
+		err            error
+		path           api.SecretPath
+		data           []byte
+		out            string
 	}{
 		"path with version": {
 			cmd: WriteCommand{
@@ -194,7 +194,7 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			err: errClipAndInFile,
 		},
-		"multiline and clip or in file": {
+		"multiline and clip": {
 			cmd: WriteCommand{
 				multiline:    true,
 				useClipboard: true,
@@ -211,11 +211,11 @@ func TestWriteCommand_Run(t *testing.T) {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret",
 			},
-			in:        "secret value",
-			piped:     true,
-			err:       testErr,
-			clientErr: testErr,
-			out:       "Writing secret value...\n",
+			in:             "secret value",
+			piped:          true,
+			err:            testErr,
+			newClientError: testErr,
+			out:            "Writing secret value...\n",
 		},
 		"empty multiline": {
 			cmd: WriteCommand{
@@ -241,7 +241,7 @@ func TestWriteCommand_Run(t *testing.T) {
 							return tc.writeFunc(path, data)
 						},
 					},
-				}, tc.clientErr
+				}, tc.newClientError
 			}
 
 			io := fakeui.NewIO(t)

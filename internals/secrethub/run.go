@@ -176,10 +176,7 @@ func (cmd *RunCommand) Run() error {
 }
 
 func (cmd *RunCommand) PreRun(c *cobra.Command, args []string) error {
-	cmd.command = make([]string, len(args))
-	for i, arg := range args {
-		cmd.command[i] = arg
-	}
+	copy(cmd.command, args)
 	return nil
 }
 

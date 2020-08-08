@@ -27,8 +27,11 @@ type CredentialConfig interface {
 
 // NewCredentialConfig creates a new CredentialConfig.
 func NewCredentialConfig(io ui.IO) CredentialConfig {
+	dir, _ := configdir.Default()
+	c := ConfigDir{Dir: *dir}
 	return &credentialConfig{
-		io: io,
+		configDir: c,
+		io:        io,
 	}
 }
 

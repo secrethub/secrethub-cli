@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/spf13/cobra"
 )
 
 // Errors
@@ -152,10 +153,20 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	return nil
 }
 
+func (cmd *ServiceAWSInitCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.repo, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create a new service account that is tied to an AWS IAM role.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
+	clause := r.CreateCommand("init", "Create a new service account that is tied to an AWS IAM role.")
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flag("kms-key", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
 	clause.Flag("role", "The role name or ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)
 	clause.Flag("region", "The AWS region that should be used for KMS.").StringVar(&cmd.region)
@@ -174,7 +185,7 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 		"If no system-wide default for the AWS region is provided (e.g. with $AWS_REGION), the AWS-region where the KMS key resides should be explicitly provided to this command with the --region flag.",
 	)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {

@@ -34,12 +34,12 @@ func NewInitCommand(io ui.IO, newClient newClientFunc) *InitCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *InitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create the secrets necessary to connect with the demo application.")
+	clause := r.CreateCommand("init", "Create the secrets necessary to connect with the demo application.")
 	clause.HelpLong("demo init creates a repository with the username and password needed to connect to the demo API.")
 
 	clause.Flag("repo", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.").SetValue(&cmd.repo)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.

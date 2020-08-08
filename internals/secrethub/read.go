@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"time"
 
@@ -15,6 +14,8 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 
 	"github.com/docker/go-units"
+
+	"github.com/spf13/cobra"
 )
 
 // ReadCommand is a command to read a secret.
@@ -42,7 +43,8 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ReadCommand) Register(r command.Registerer) {
-	clause := r.Command("read", "Read a secret.")
+	clause := r.CreateCommand("read", "Read a secret.")
+	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathOptionalVersionPlaceHolder).SetValue(&cmd.path)
 	clause.Flag(
 		"clip",
@@ -52,15 +54,14 @@ func (cmd *ReadCommand) Register(r command.Registerer) {
 		),
 	).Short('c').BoolVar(&cmd.useClipboard)
 	clause.Flag("out-file", "Write the secret value to this file.").Short('o').StringVar(&cmd.outFile)
-	clause.Flag("file-mode", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
+	//clause.Flag("file-mode", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
 	clause.Flag("no-newline", "Do not print a new line after the secret.").Short('n').BoolVar(&cmd.noNewLine)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
-func (cmd *ReadCommand) Run(c *cobra.Command, args []string) error {
-	cmd.path = api.SecretPath(args[0])
+func (cmd *ReadCommand) Run() error {
 	client, err := cmd.newClient()
 	if err != nil {
 		return err
@@ -101,5 +102,14 @@ func (cmd *ReadCommand) Run(c *cobra.Command, args []string) error {
 		fmt.Fprintf(cmd.io.Output(), "%s", string(secretData))
 	}
 
+	return nil
+}
+
+func (cmd *ReadCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewSecretPath(args[0])
+	if err != nil {
+		return err
+	}
 	return nil
 }

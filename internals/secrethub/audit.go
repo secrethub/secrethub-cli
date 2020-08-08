@@ -18,6 +18,8 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -66,20 +68,32 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 		defaultLimit = pipedOutputLineLimit
 	}
 
-	clause := r.Command("audit", "Show the audit log.")
-	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
+	clause := r.CreateCommand("audit", "Show the audit log.")
+	clause.Args = cobra.MaximumNArgs(1)
+	//clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("per-page", "Number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
 	clause.Flag("output-format", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.").HintOptions("table", "json").Default("table").StringVar(&cmd.format)
 	clause.Flag("max-results", "Specify the number of entries to list. If maxResults < 0 all entries are displayed. If the output of the command is piped, maxResults defaults to 1000.").Default(strconv.Itoa(defaultLimit)).IntVar(&cmd.maxResults)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run prints all audit events for the given repository or secret.
 func (cmd *AuditCommand) Run() error {
 	cmd.beforeRun()
 	return cmd.run()
+}
+
+func (cmd *AuditCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	if len(args) != 0 {
+		cmd.path, err = api.NewPath(args[0])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // beforeRun configures the command using the flag values.

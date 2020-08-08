@@ -12,6 +12,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // Error
@@ -37,11 +39,12 @@ func NewRepoExportCommand(io ui.IO, newClient newClientFunc) *RepoExportCommand 
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoExportCommand) Register(r command.Registerer) {
-	clause := r.Command("export", "Export the repository to a zip file.")
-	clause.Arg("repo-path", "The repository to export").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
+	clause := r.CreateCommand("export", "Export the repository to a zip file.")
+	clause.Args = cobra.RangeArgs(1, 2)
+	//clause.Arg("repo-path", "The repository to export").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
+	//clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run exports a repo to a zip file
@@ -137,5 +140,17 @@ func (cmd *RepoExportCommand) Run() error {
 		}
 	}
 
+	return nil
+}
+
+func (cmd *RepoExportCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
+	if len(args) == 2 {
+		cmd.zipName = args[1]
+	}
 	return nil
 }

@@ -2,13 +2,13 @@ package secrethub
 
 import (
 	"encoding/hex"
-	"github.com/spf13/cobra"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
+	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -31,15 +31,16 @@ func NewClearClipboardCommand() *ClearClipboardCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ClearClipboardCommand) Register(r command.Registerer) {
-	clause := r.Command("clipboard-clear", "Removes secret from clipboard.").Hidden()
+	clause := r.CreateCommand("clipboard-clear", "Removes secret from clipboard.").Hidden()
+	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("hash", "Hash from the secret to be cleared").Required().HexBytesVar(&cmd.hash)
 	clause.Flag("timeout", "Time to wait before clearing in seconds").DurationVar(&cmd.timeout)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
-func (cmd *ClearClipboardCommand) Run(c *cobra.Command, args []string) error {
+func (cmd *ClearClipboardCommand) Run() error {
 	if cmd.timeout > 0 {
 		time.Sleep(cmd.timeout)
 	}
@@ -78,4 +79,8 @@ func WriteClipboardAutoClear(data []byte, timeout time.Duration, clipper clip.Cl
 		"--timeout", timeout.String())
 
 	return err
+}
+
+func (cmd *ClearClipboardCommand) PreRun(c *cobra.Command, args []string) error {
+	return nil
 }

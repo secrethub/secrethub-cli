@@ -2,11 +2,10 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/demo"
 	"strings"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
@@ -95,9 +94,9 @@ func NewApp() *App {
 		logger:          cli.NewLogger(),
 	}
 
-	RegisterDebugFlag(app.cli, app.logger)
-	RegisterMlockFlag(app.cli)
-	RegisterColorFlag(app.cli)
+	//RegisterDebugFlag(app.cli, app.logger)
+	//RegisterMlockFlag(app.cli)
+	//RegisterColorFlag(app.cli)
 	app.credentialStore.Register(app.cli)
 	app.clientFactory.Register(app.cli)
 	app.registerCommands()
@@ -190,5 +189,5 @@ func (app *App) registerCommands() {
 	NewClearClipboardCommand().Register(app.cli)
 	NewKeyringClearCommand().Register(app.cli)
 
-	demo.NewCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	//demo.NewCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 }

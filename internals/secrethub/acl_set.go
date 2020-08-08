@@ -5,8 +5,8 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
 )
 
 // ACLSetCommand is a command to set access rules.
@@ -30,13 +30,14 @@ func NewACLSetCommand(io ui.IO, newClient newClientFunc) *ACLSetCommand {
 // Register adds a CommandClause and it's args and flags to a Registerer.
 // Register adds args and flags.
 func (cmd *ACLSetCommand) Register(r command.Registerer) {
-	clause := r.Command("set", "Set access rule for an user or service on a path.")
-	clause.Arg("dir-path", "The path of the directory to set the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("account-name", "The account name (username or service name) to set the access rule for").Required().SetValue(&cmd.accountName)
-	clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)
+	clause := r.CreateCommand("set", "Set access rule for an user or service on a path.")
+	clause.Args = cobra.ExactValidArgs(3)
+	//clause.Arg("dir-path", "The path of the directory to set the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
+	//clause.Arg("account-name", "The account name (username or service name) to set the access rule for").Required().SetValue(&cmd.accountName)
+	//clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -78,5 +79,22 @@ func (cmd *ACLSetCommand) Run() error {
 	fmt.Fprintln(cmd.io.Output(), "Access rule set!")
 
 	return nil
+}
 
+func (cmd *ACLSetCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewDirPath(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.accountName, err = api.NewAccountName(args[1])
+	if err != nil {
+		return err
+	}
+	cmd.permission = api.PermissionNone
+	err = cmd.permission.Set(args[2])
+	if err != nil {
+		return err
+	}
+	return nil
 }

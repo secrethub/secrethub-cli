@@ -7,6 +7,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // OrgRmCommand deletes an organization, prompting the user for confirmation.
@@ -27,11 +29,12 @@ func NewOrgRmCommand(io ui.IO, newClient newClientFunc) *OrgRmCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgRmCommand) Register(r command.Registerer) {
-	clause := r.Command("rm", "Permanently delete an organization and all the repositories it owns.")
+	clause := r.CreateCommand("rm", "Permanently delete an organization and all the repositories it owns.")
 	clause.Alias("remove")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run deletes an organization, prompting the user for confirmation.
@@ -69,5 +72,14 @@ func (cmd *OrgRmCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Delete complete! The organization %s has been permanently deleted.\n", cmd.name)
 
+	return nil
+}
+
+func (cmd *OrgRmCommand) PreRun(c *cobra.Command, args []string) error {
+	err := api.ValidateOrgName(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.name = api.OrgName(args[0])
 	return nil
 }

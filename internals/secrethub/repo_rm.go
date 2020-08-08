@@ -7,6 +7,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // RepoRmCommand handles removing a repo.
@@ -26,11 +28,12 @@ func NewRepoRmCommand(io ui.IO, newClient newClientFunc) *RepoRmCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoRmCommand) Register(r command.Registerer) {
-	clause := r.Command("rm", "Permanently delete a repository.")
+	clause := r.CreateCommand("rm", "Permanently delete a repository.")
 	clause.Alias("remove")
-	clause.Arg("repo-path", "The repository to delete").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("repo-path", "The repository to delete").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run removes the repository.
@@ -73,5 +76,14 @@ func (cmd *RepoRmCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Removal complete! The repository %s has been permanently removed.\n", cmd.path)
 
+	return nil
+}
+
+func (cmd *RepoRmCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
 	return nil
 }

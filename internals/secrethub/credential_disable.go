@@ -7,6 +7,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
 )
 
 // CredentialDisableCommand is a command that allows to disable an existing credential.
@@ -27,14 +28,15 @@ func NewCredentialDisableCommand(io ui.IO, newClient newClientFunc) *CredentialD
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *CredentialDisableCommand) Register(r command.Registerer) {
-	clause := r.Command("disable", "Disable a credential for usage on SecretHub.")
+	clause := r.CreateCommand("disable", "Disable a credential for usage on SecretHub.")
+	clause.Args = cobra.MaximumNArgs(1)
 
-	fingerprintHelp := fmt.Sprintf("Fingerprint of the credential to disable. At least the first %d characters must be entered.", api.ShortCredentialFingerprintMinimumLength)
-	clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)
+	//fingerprintHelp := fmt.Sprintf("Fingerprint of the credential to disable. At least the first %d characters must be entered.", api.ShortCredentialFingerprintMinimumLength)
+	//clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)
 
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run disables an existing credential.
@@ -82,5 +84,12 @@ func (cmd *CredentialDisableCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output(), "Credential disabled.")
 
+	return nil
+}
+
+func (cmd *CredentialDisableCommand) PreRun(c *cobra.Command, args []string) error {
+	if len(args) != 0 {
+		cmd.fingerprint = args[0]
+	}
 	return nil
 }

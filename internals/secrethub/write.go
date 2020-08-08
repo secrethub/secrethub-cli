@@ -10,6 +10,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -42,14 +43,15 @@ func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *WriteCommand) Register(r command.Registerer) {
-	clause := r.Command("write", "Write a secret.")
-	clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
+	clause := r.CreateCommand("write", "Write a secret.")
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("clip", "Use clipboard content as input.").Short('c').BoolVar(&cmd.useClipboard)
 	clause.Flag("multiline", "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.").Short('m').BoolVar(&cmd.multiline)
 	clause.Flag("no-trim", "Do not trim leading and trailing whitespace in the secret.").BoolVar(&cmd.noTrim)
 	clause.Flag("in-file", "Use the contents of this file as the value of the secret.").Short('i').StringVar(&cmd.inFile)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -130,5 +132,14 @@ func (cmd *WriteCommand) Run() error {
 		return err
 	}
 
+	return nil
+}
+
+func (cmd *WriteCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewSecretPath(args[0])
+	if err != nil {
+		return err
+	}
 	return nil
 }

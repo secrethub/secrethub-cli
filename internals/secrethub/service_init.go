@@ -15,6 +15,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+	"github.com/spf13/cobra"
 )
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.
@@ -104,8 +105,9 @@ func (cmd *ServiceInitCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create a new service account.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
+	clause := r.CreateCommand("init", "Create a new service account.")
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flag("description", "A description for the service so others will recognize it.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
@@ -116,7 +118,7 @@ func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause.Flag("out-file", "Write the service account configuration to a file instead of stdout.").StringVar(&cmd.file)
 	clause.Flag("file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.").Default("0440").SetValue(&cmd.fileMode)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // givePermission gives the service permission on the repository as defined in the permission flag.
@@ -150,6 +152,15 @@ func givePermission(service *api.Service, repo api.RepoPath, permissionFlagValue
 		}
 	}
 
+	return nil
+}
+
+func (cmd *ServiceInitCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.repo, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

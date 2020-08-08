@@ -9,6 +9,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
 )
 
 // TreeCommand lists the contents of a directory at a given path in a tree-like format.
@@ -45,17 +46,27 @@ func (cmd *TreeCommand) Run() error {
 	return nil
 }
 
+func (cmd *TreeCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewDirPath(args[0])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *TreeCommand) Register(r command.Registerer) {
-	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
-	clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
+	clause := r.CreateCommand("tree", "List contents of a directory in a tree-like format.")
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.Flag("full-paths", "Print the full path of each directory and secret.").Short('f').BoolVar(&cmd.fullPaths)
 	clause.Flag("no-indentation", "Don't print indentation lines.").Short('i').BoolVar(&cmd.noIndentation)
 	clause.Flag("no-report", "Turn off secret/directory count at end of tree listing.").BoolVar(&cmd.noReport)
 	clause.Flag("noreport", "Turn off secret/directory count at end of tree listing.").Hidden().BoolVar(&cmd.noReport)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.

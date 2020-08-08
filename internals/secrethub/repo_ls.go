@@ -9,6 +9,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
 )
 
 // RepoLSCommand lists repositories.
@@ -31,19 +32,32 @@ func NewRepoLSCommand(io ui.IO, newClient newClientFunc) *RepoLSCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoLSCommand) Register(r command.Registerer) {
-	clause := r.Command("ls", "List all repositories you have access to.")
+	clause := r.CreateCommand("ls", "List all repositories you have access to.")
 	clause.Alias("list")
+	clause.Args = cobra.MaximumNArgs(1)
 	clause.Flag("quiet", "Only print paths.").Short('q').BoolVar(&cmd.quiet)
-	clause.Arg("workspace", "When supplied, results are limited to repositories in this workspace.").SetValue(&cmd.workspace)
+	//clause.Arg("workspace", "When supplied, results are limited to repositories in this workspace.").SetValue(&cmd.workspace)
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run lists the repositories a user has access to.
 func (cmd *RepoLSCommand) Run() error {
 	cmd.beforeRun()
 	return cmd.run()
+}
+
+func (cmd *RepoLSCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	if len(args) != 0 {
+		err = api.ValidateNamespace(args[0])
+		if err != nil {
+			return err
+		}
+		cmd.workspace = api.Namespace(args[0])
+	}
+	return nil
 }
 
 // beforeRun configures the command using the flag values.

@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/pflag"
 	"io"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -12,6 +12,7 @@ import (
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -45,7 +46,7 @@ func NewApp(name, help string) *App {
 }
 
 // Command defines a new top-level command with the given name and help text.
-func (a *App) Command(name, help string) *CommandClause {
+func (a *App) CreateCommand(name, help string) *CommandClause {
 	return &CommandClause{
 		Command: func() *cobra.Command {
 			newCommand := &cobra.Command{Use: name, Short: help}
@@ -69,8 +70,12 @@ func (a *App) Command(name, help string) *CommandClause {
 func (a *App) Flag(name, help string) *Flag {
 	envVar := formatName(name, a.name, a.separator, a.delimiters...)
 	a.registerEnvVar(envVar)
-	flag := a.Flag(name, help).Envar(envVar)
-	return flag
+	flag := Flag{
+		Flag:   &pflag.Flag{Name: name, Usage: help},
+		envVar: envVar,
+		app:    a,
+	}
+	return flag.Envar(envVar)
 }
 
 // registerEnvVar ensures the App recognizes an environment variable.
@@ -196,6 +201,18 @@ func (cmd *CommandClause) FullCommand() string {
 	return strings.Join(os.Args[:], " ")
 }
 
+func (cmd *CommandClause) HelpLong(helpLong string) {
+	cmd.Long = helpLong
+}
+
+func (cmd *CommandClause) Alias(alias string) {
+	if cmd.Aliases == nil {
+		cmd.Aliases = []string{alias}
+	} else {
+		cmd.Aliases = append(cmd.Aliases, alias)
+	}
+}
+
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
@@ -205,7 +222,7 @@ func (cmd *CommandClause) Flag(name, help string) *Flag {
 	envVar := formatName(name, prefix, cmd.app.separator, cmd.app.delimiters...)
 
 	cmd.app.registerEnvVar(envVar)
-	flag := cmd.Command.Flag(name)
+	flag := &pflag.Flag{Name: name, Usage: help}
 	return &Flag{
 		Flag:   flag,
 		app:    cmd.app,
@@ -230,7 +247,7 @@ func (f *Flag) Envar(name string) *Flag {
 	}
 	f.app.registerEnvVar(name)
 	f.envVar = name
-	f.Flag.DefValue = f.envVar
+	f.Flag.DefValue = os.Getenv(f.envVar)
 	return f
 }
 
@@ -257,38 +274,72 @@ func (f *Flag) Short(s rune) *Flag {
 }
 
 func (f *Flag) Default(val string) *Flag {
-	f.Flag.DefValue = val
-	return f
-}
-
-func (f *Flag) PlaceHolder(val string) *Flag {
-	if f.Flag.DefValue != "" {
+	if f.Flag.DefValue == "" {
 		f.Flag.DefValue = val
 	}
 	return f
 }
 
+func (f *Flag) PlaceHolder(val string) *Flag {
+	return f
+}
+
+// TODO Implement it properly
+func (f *Flag) HintOptions(options ...string) *Flag {
+	return f
+}
+
+// TODO Implement it properly
 func (f *Flag) SetValue(location interface{}) *Flag {
-	location = f.Value
+	//if f.Value != nil {
+	//	location = &f.Value
+	//}
 	return f
 }
 
 // Hidden hides the command in help texts.
 func (f *Flag) BoolVar(location *bool) *Flag {
-	intermediary, _ := strconv.ParseBool(f.Value.String())
-	location = &intermediary
+	if f.Value != nil {
+		intermediary, _ := strconv.ParseBool(f.Value.String())
+		*location = intermediary
+	} else {
+		*location = false
+	}
+
 	return f
 }
 
 func (f *Flag) StringVar(location *string) *Flag {
-	intermediary := f.Value.String()
-	location = &intermediary
+	if f.Value != nil {
+		*location = f.Value.String()
+	} else {
+		*location = f.DefValue
+	}
 	return f
 }
 
+// TODO Implement the following functions properly
 func (f *Flag) DurationVar(location *time.Duration) *Flag {
-	return f.SetValue(&location)
+	return f
 }
+
+func (f *Flag) URLVar(location **url.URL) *Flag {
+	return f
+}
+
+func (f *Flag) IntVar(location *int) *Flag {
+	return f
+}
+
+func (f *Flag) ExistingFileVar(location *string) *Flag {
+	return f
+}
+
+func (f *Flag) StringMapVar(location *map[string]string) *Flag {
+	return f
+}
+
+// End of TODO
 
 // formatName takes a name and converts it to an uppercased name,
 // joined by the given separator and prefixed with the given prefix.

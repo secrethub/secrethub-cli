@@ -8,6 +8,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/spf13/cobra"
 )
 
 // Errors
@@ -37,13 +38,14 @@ func NewRmCommand(io ui.IO, newClient newClientFunc) *RmCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RmCommand) Register(r command.Registerer) {
-	clause := r.Command("rm", "Remove a directory, secret or version.")
+	clause := r.CreateCommand("rm", "Remove a directory, secret or version.")
 	clause.Alias("remove")
-	clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
 	clause.Flag("recursive", "Remove directories and their contents recursively.").Short('r').BoolVar(&cmd.recursive)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run removes the resource at the given path.
@@ -92,6 +94,15 @@ func (cmd *RmCommand) Run() error {
 	}
 
 	return rmSecret(client, secretPath, cmd.force, cmd.io)
+}
+
+func (cmd *RmCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewPath(args[0])
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func rmSecretVersion(client secrethub.ClientInterface, secretPath api.SecretPath, force bool, io ui.IO) error {

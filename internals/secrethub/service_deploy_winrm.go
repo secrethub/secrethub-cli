@@ -13,6 +13,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-cli/internals/winrm"
+	"github.com/spf13/cobra"
 )
 
 // DefaultServiceConfigFilemode configures the filemode used for writing service configuration files.
@@ -58,8 +59,9 @@ func NewServiceDeployWinRmCommand(io ui.IO) *ServiceDeployWinRmCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceDeployWinRmCommand) Register(r command.Registerer) {
-	clause := r.Command("winrm", "Read a service account configuration from stdin and deploy it to a running instance with WinRM. The instance needs to be reachable, have WinRM enabled, and have PowerShell installed.")
-	clause.Arg("resource-uri", "Hostname, optional connection protocol and port of the host ([http[s]://]<host>[:<port>]). This defaults to https and port 5986.").Required().URLVar(&cmd.resourceURI)
+	clause := r.CreateCommand("winrm", "Read a service account configuration from stdin and deploy it to a running instance with WinRM. The instance needs to be reachable, have WinRM enabled, and have PowerShell installed.")
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("resource-uri", "Hostname, optional connection protocol and port of the host ([http[s]://]<host>[:<port>]). This defaults to https and port 5986.").Required().URLVar(&cmd.resourceURI)
 	clause.Flag("auth-type", "Authentication type (basic/cert)").HintOptions("basic", "cert").Default("basic").StringVar(&cmd.authType)
 	clause.Flag("username", "The username used for logging in when authentication type is basic. Is asked if not supplied.").StringVar(&cmd.username)
 	clause.Flag("password", "The password used for logging in when authentication type is basic. Is asked if not supplied.").StringVar(&cmd.password)
@@ -68,7 +70,7 @@ func (cmd *ServiceDeployWinRmCommand) Register(r command.Registerer) {
 	clause.Flag("ca-cert", "Path to CA certificate used to verify server TLS certificate.").ExistingFileVar(&cmd.caCert)
 	clause.Flag("insecure-no-verify-cert", "Do not verify server TLS certificate (insecure).").BoolVar(&cmd.noVerify)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run creates a service and installs the configuration using WinRM.
@@ -197,6 +199,15 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output(), "Deploy complete! The service account can now be used to connect to SecretHub from the host.")
 
+	return nil
+}
+
+func (cmd *ServiceDeployWinRmCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.resourceURI, err = url.Parse(args[0])
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

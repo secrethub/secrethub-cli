@@ -9,6 +9,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
 )
 
 // RepoRevokeCommand handles revoking an account access to a repository.
@@ -30,12 +31,13 @@ func NewRepoRevokeCommand(io ui.IO, newClient newClientFunc) *RepoRevokeCommand 
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoRevokeCommand) Register(r command.Registerer) {
-	clause := r.Command("revoke", "Revoke an account's access to a repository. A list of secrets that should be rotated will be printed out.")
-	clause.Arg("repo-path", "The repository to revoke the account from").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("account-name", "The account name (username or service name) to revoke access for").Required().SetValue(&cmd.accountName)
+	clause := r.CreateCommand("revoke", "Revoke an account's access to a repository. A list of secrets that should be rotated will be printed out.")
+	clause.Args = cobra.ExactValidArgs(2)
+	//clause.Arg("repo-path", "The repository to revoke the account from").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
+	//clause.Arg("account-name", "The account name (username or service name) to revoke access for").Required().SetValue(&cmd.accountName)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // Run removes and revokes access to an account from a repo if possible.
@@ -123,6 +125,19 @@ func (cmd *RepoRevokeCommand) Run() error {
 		countFlagged,
 	)
 
+	return nil
+}
+
+func (cmd *RepoRevokeCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.accountName, err = api.NewAccountName(args[0])
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

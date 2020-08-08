@@ -13,6 +13,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
+	"github.com/spf13/cobra"
 )
 
 // ServiceGCPLinkCommand create a new link between a SecretHub namespace and a GCP project.
@@ -49,10 +50,25 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 	return createGCPLink(client, cmd.io, cmd.namespace.String(), cmd.projectID.String())
 }
 
+func (cmd *ServiceGCPLinkCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	err = api.ValidateOrgName(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.namespace = api.OrgName(args[0])
+	err = cmd.projectID.Set(args[1])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
-	clause := r.Command("link", "Create a new link between a namespace and a GCP project to allow creating SecretHub service accounts for GCP Service Accounts in the GCP project.")
-	clause.Arg("namespace", "The SecretHub namespace to link.").Required().SetValue(&cmd.namespace)
-	clause.Arg("project-id", "The GCP project to link the namespace to.").Required().SetValue(&cmd.projectID)
+	clause := r.CreateCommand("link", "Create a new link between a namespace and a GCP project to allow creating SecretHub service accounts for GCP Service Accounts in the GCP project.")
+	clause.Args = cobra.ExactValidArgs(2)
+	//clause.Arg("namespace", "The SecretHub namespace to link.").Required().SetValue(&cmd.namespace)
+	//clause.Arg("project-id", "The GCP project to link the namespace to.").Required().SetValue(&cmd.projectID)
 
 	clause.HelpLong("Linking a GCP project to a namespace is required to create SecretHub service accounts that use a GCP Service Account within the project. " +
 		"A SecretHub namespace can be linked to multiple GCP projects and a GCP project can be linked to multiple namespaces.\n" +
@@ -69,7 +85,7 @@ func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 		"Any reference to SecretHub should automatically disappear within a few minutes. " +
 		"If it does not, the access can safely be revoked manually.")
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // ServiceGCPListLinksCommand lists all existing links between the given namespace and GCP projects
@@ -120,13 +136,23 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 	return nil
 }
 
+func (cmd *ServiceGCPListLinksCommand) PreRun(c *cobra.Command, args []string) error {
+	err := api.ValidateNamespace(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.namespace = api.Namespace(args[0])
+	return nil
+}
+
 func (cmd *ServiceGCPListLinksCommand) Register(r command.Registerer) {
-	clause := r.Command("list-links", "List all existing links between the given namespace and GCP projects.")
-	clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().SetValue(&cmd.namespace)
+	clause := r.CreateCommand("list-links", "List all existing links between the given namespace and GCP projects.")
+	clause.Args = cobra.ExactValidArgs(1)
+	//clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().SetValue(&cmd.namespace)
 
 	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 // ServiceGCPDeleteLinkCommand deletes the link between a SecretHub namespace and a GCP project.
@@ -145,12 +171,13 @@ func NewServiceGCPDeleteLinkCommand(io ui.IO, newClient newClientFunc) *ServiceG
 }
 
 func (cmd *ServiceGCPDeleteLinkCommand) Register(r command.Registerer) {
-	clause := r.Command("delete-link", "Delete the link between a SecretHub namespace and a GCP project.")
+	clause := r.CreateCommand("delete-link", "Delete the link between a SecretHub namespace and a GCP project.")
 	clause.HelpLong("After deleting the link you cannot create new GCP service accounts in the specified namespace and GCP project anymore. Exisiting service accounts will keep on working.")
-	clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
-	clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
+	clause.Args = cobra.ExactValidArgs(2)
+	//clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
+	//clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }
 
 func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
@@ -177,6 +204,20 @@ func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
 	}
 
 	return client.IDPLinks().GCP().Delete(cmd.namespace.String(), cmd.projectID.String())
+}
+
+func (cmd *ServiceGCPDeleteLinkCommand) PreRun(c *cobra.Command, args []string) error {
+	var err error
+	err = api.ValidateNamespace(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.namespace = api.Namespace(args[0])
+	err = cmd.projectID.Set(args[1])
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type gcpProjectID string

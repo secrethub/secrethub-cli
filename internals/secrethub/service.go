@@ -21,7 +21,7 @@ func NewServiceCommand(io ui.IO, newClient newClientFunc) *ServiceCommand {
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *ServiceCommand) Register(r command.Registerer) {
-	clause := r.Command("service", "Manage service accounts.")
+	clause := r.CreateCommand("service", "Manage service accounts.")
 	NewServiceAWSCommand(cmd.io, cmd.newClient).Register(clause)
 	NewServiceGCPCommand(cmd.io, cmd.newClient).Register(clause)
 	NewServiceDeployCommand(cmd.io).Register(clause)

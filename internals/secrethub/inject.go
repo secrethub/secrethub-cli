@@ -56,7 +56,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 // Register adds a CommandClause and it's args and flags to a cli.App.
 // Register adds args and flags.
 func (cmd *InjectCommand) Register(r command.Registerer) {
-	clause := r.Command("inject", "Inject secrets into a template.")
+	clause := r.CreateCommand("inject", "Inject secrets into a template.")
 	clause.Flag(
 		"clip",
 		fmt.Sprintf(
@@ -73,7 +73,7 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&cmd.dontPromptMissingTemplateVars)
 	clause.Flag("force", "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.").Short('f').BoolVar(&cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.

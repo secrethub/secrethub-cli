@@ -350,10 +350,21 @@ func (f *Flag) IntVar(location *int) *Flag {
 }
 
 func (f *Flag) ExistingFileVar(location *string) *Flag {
+	if f.Value != nil {
+		*location = f.Value.String()
+	} else {
+		*location = f.DefValue
+	}
 	return f
+
 }
 
 func (f *Flag) StringMapVar(location *map[string]string) *Flag {
+	if f.Value != nil {
+		newVar := f.Value.String()
+		arr := strings.Split(newVar, "=")
+		(*location)[arr[0]] = arr[1]
+	}
 	return f
 }
 

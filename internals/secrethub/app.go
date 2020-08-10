@@ -94,9 +94,9 @@ func NewApp() *App {
 		logger:          cli.NewLogger(),
 	}
 
-	//RegisterDebugFlag(app.cli, app.logger)
-	//RegisterMlockFlag(app.cli)
-	//RegisterColorFlag(app.cli)
+	RegisterDebugFlag(app.cli, app.logger)
+	RegisterMlockFlag(app.cli)
+	RegisterColorFlag(app.cli)
 	app.credentialStore.Register(app.cli)
 	app.clientFactory.Register(app.cli)
 	app.registerCommands()

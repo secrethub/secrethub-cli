@@ -1,3 +1,6 @@
+
+
+
 package command
 
 import (
@@ -13,11 +16,13 @@ type Registerer interface {
 
 // BindAction binds a function to a command clause, so that
 // it is executed when the command is parsed.
-func BindAction(clause *cli.CommandClause, prefn func(c *cobra.Command, args []string) error, fn func() error) {
-	if prefn != nil {
-		clause.Command.RunE = prefn
+func BindAction(clause *cli.CommandClause, argumentRegister func(c *cobra.Command, args []string) error, fn func() error) {
+	if argumentRegister != nil {
+		clause.RunE = argumentRegister
 	}
-	clause.Command.PostRunE = func(cmd *cobra.Command, args []string) error {
-		return fn()
+	if fn != nil {
+		clause.PostRunE = func(cmd *cobra.Command, args []string) error {
+			return fn()
+		}
 	}
 }

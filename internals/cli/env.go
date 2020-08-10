@@ -13,6 +13,7 @@ import (
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/xhit/go-str2duration"
 )
 
 var (
@@ -291,9 +292,9 @@ func (f *Flag) HintOptions(options ...string) *Flag {
 
 // TODO Implement it properly
 func (f *Flag) SetValue(location interface{}) *Flag {
-	//if f.Value != nil {
-	//	location = &f.Value
-	//}
+	if f.Value != nil {
+		location = &f.Value
+	}
 	return f
 }
 
@@ -320,14 +321,31 @@ func (f *Flag) StringVar(location *string) *Flag {
 
 // TODO Implement the following functions properly
 func (f *Flag) DurationVar(location *time.Duration) *Flag {
+	if f.Value != nil {
+		*location, _ = str2duration.Str2Duration(f.Value.String())
+	} else {
+		*location, _ = str2duration.Str2Duration(f.DefValue)
+	}
 	return f
 }
 
 func (f *Flag) URLVar(location **url.URL) *Flag {
+	if f.Value != nil {
+		parsedURL, _ := url.Parse(f.Value.String())
+		*location = parsedURL
+	} else {
+		parsedURL, _ := url.Parse(f.DefValue)
+		location = &parsedURL
+	}
 	return f
 }
 
 func (f *Flag) IntVar(location *int) *Flag {
+	if f.Value != nil {
+		*location, _ = strconv.Atoi(f.Value.String())
+	} else {
+		*location, _ = strconv.Atoi(f.DefValue)
+	}
 	return f
 }
 

@@ -20,6 +20,7 @@ require (
 	github.com/secrethub/secrethub-go v0.30.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
+	github.com/xhit/go-str2duration v1.2.0
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/sys v0.0.0-20200501052902-10377860bb8e

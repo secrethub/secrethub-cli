@@ -24,16 +24,18 @@ type InitCommand struct {
 	io                          ui.IO
 	newClient                   newClientFunc
 	newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error)
+	newClientWithSetupCode      func(string) (secrethub.ClientInterface, error)
 	credentialStore             CredentialConfig
 	progressPrinter             progress.Printer
 }
 
 // NewInitCommand creates a new InitCommand.
-func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
+func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error), newClientWithSetupCode func(string) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
 	return &InitCommand{
 		io:                          io,
 		newClient:                   newClient,
 		newClientWithoutCredentials: newClientWithoutCredentials,
+		newClientWithSetupCode:      newClientWithSetupCode,
 		credentialStore:             credentialStore,
 		progressPrinter:             progress.NewPrinter(io.Output(), 500*time.Millisecond),
 	}
@@ -158,12 +160,7 @@ func (cmd *InitCommand) Run() error {
 		fmt.Fprint(cmd.io.Output(), "Setting up your account...")
 		cmd.progressPrinter.Start()
 
-		client, err := cmd.newClient()
-		if err != nil {
-			return err
-		}
-
-		err = secrethub.WithSetupCode(setupCode)(client.(*secrethub.Client))
+		client, err := cmd.newClientWithSetupCode(setupCode)
 		if err != nil {
 			return err
 		}

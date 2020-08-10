@@ -158,8 +158,12 @@ func (cmd *InitCommand) Run() error {
 		fmt.Fprint(cmd.io.Output(), "Setting up your account...")
 		cmd.progressPrinter.Start()
 
-		var client secrethub.ClientInterface
-		client, err := secrethub.NewClient(secrethub.WithSetupCode(setupCode))
+		client, err := cmd.newClient()
+		if err != nil {
+			return err
+		}
+
+		err = secrethub.WithSetupCode(setupCode)(client.(*secrethub.Client))
 		if err != nil {
 			return err
 		}

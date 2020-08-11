@@ -2,18 +2,17 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/docker/go-units"
+	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"io/ioutil"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
-	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-
-	"github.com/docker/go-units"
 
 	"github.com/spf13/cobra"
 )
@@ -22,12 +21,12 @@ import (
 type ReadCommand struct {
 	io                  ui.IO
 	path                api.SecretPath
-	useClipboard        bool
+	useClipboard        *bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
-	outFile             string
+	outFile             *string
 	fileMode            filemode.FileMode
-	noNewLine           bool
+	noNewLine           *bool
 	newClient           newClientFunc
 }
 
@@ -44,20 +43,17 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("read", "Read a secret.")
-
 	cmd.argumentConstraint(clause.Command)
-	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathOptionalVersionPlaceHolder).SetValue(&cmd.path)
-	clause.Flag(
-		"clip",
+	cmd.useClipboard = clause.Flags().BoolP(
+		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
-	).Short('c').BoolVar(&cmd.useClipboard)
-	clause.Flag("out-file", "Write the secret value to this file.").Short('o').StringVar(&cmd.outFile)
-	clause.Flag("file-mode", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
-	clause.Flag("no-newline", "Do not print a new line after the secret.").Short('n').BoolVar(&cmd.noNewLine)
-
+	)
+	cmd.outFile = clause.Flags().StringP("out-file", "o", "",  "Write the secret value to this file.")
+	cmd.fileMode = ("file-mode", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
+	cmd.noNewLine = clause.Flags().BoolP("no-newline", "n", false, "Do not print a new line after the secret")
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
@@ -73,7 +69,7 @@ func (cmd *ReadCommand) Run() error {
 		return err
 	}
 
-	if cmd.useClipboard {
+	if *cmd.useClipboard {
 		err = WriteClipboardAutoClear(secret.Data, cmd.clearClipboardAfter, cmd.clipper)
 		if err != nil {
 			return err
@@ -88,18 +84,18 @@ func (cmd *ReadCommand) Run() error {
 	}
 
 	secretData := secret.Data
-	if !cmd.noNewLine {
+	if !*cmd.noNewLine {
 		secretData = posix.AddNewLine(secretData)
 	}
 
-	if cmd.outFile != "" {
-		err = ioutil.WriteFile(cmd.outFile, secretData, cmd.fileMode.FileMode())
+	if *cmd.outFile != "" {
+		err = ioutil.WriteFile(*cmd.outFile, secretData, cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.outFile, err)
 		}
 	}
 
-	if cmd.outFile == "" && !cmd.useClipboard {
+	if *cmd.outFile == "" && !*cmd.useClipboard {
 		fmt.Fprintf(cmd.io.Output(), "%s", string(secretData))
 	}
 

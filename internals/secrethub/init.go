@@ -188,7 +188,7 @@ func (cmd *InitCommand) Run() error {
 			return err
 		}
 
-		client, err = cmd.newUnauthenticatedClient()
+		client, err = cmd.newClientWithCredentials(credential)
 		if err != nil {
 			return err
 		}

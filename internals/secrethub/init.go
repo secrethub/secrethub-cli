@@ -18,26 +18,26 @@ import (
 
 // InitCommand configures the user's SecretHub account for use on this machine.
 type InitCommand struct {
-	backupCode                  string
-	setupCode                   string
-	force                       bool
-	io                          ui.IO
-	newClient                   newClientFunc
-	newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error)
-	newClientWithSetupCode      func(string) (secrethub.ClientInterface, error)
-	credentialStore             CredentialConfig
-	progressPrinter             progress.Printer
+	backupCode               string
+	setupCode                string
+	force                    bool
+	io                       ui.IO
+	newUnauthenticatedClient newClientFunc
+	newClientWithCredentials func(credentials.Provider) (secrethub.ClientInterface, error)
+	newClientWithSetupCode   func(string) (secrethub.ClientInterface, error)
+	credentialStore          CredentialConfig
+	progressPrinter          progress.Printer
 }
 
 // NewInitCommand creates a new InitCommand.
-func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error), newClientWithSetupCode func(string) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
+func NewInitCommand(io ui.IO, newUnauthenticatedClient newClientFunc, newClientWithCredentials func(credentials.Provider) (secrethub.ClientInterface, error), newClientWithSetupCode func(string) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
 	return &InitCommand{
-		io:                          io,
-		newClient:                   newClient,
-		newClientWithoutCredentials: newClientWithoutCredentials,
-		newClientWithSetupCode:      newClientWithSetupCode,
-		credentialStore:             credentialStore,
-		progressPrinter:             progress.NewPrinter(io.Output(), 500*time.Millisecond),
+		io:                       io,
+		newUnauthenticatedClient: newUnauthenticatedClient,
+		newClientWithCredentials: newClientWithCredentials,
+		newClientWithSetupCode:   newClientWithSetupCode,
+		credentialStore:          credentialStore,
+		progressPrinter:          progress.NewPrinter(io.Output(), 500*time.Millisecond),
 	}
 }
 
@@ -121,7 +121,7 @@ func (cmd *InitCommand) Run() error {
 	case InitModeSignup:
 		signupCommand := SignUpCommand{
 			io:              cmd.io,
-			newClient:       cmd.newClient,
+			newClient:       cmd.newUnauthenticatedClient,
 			credentialStore: cmd.credentialStore,
 			progressPrinter: cmd.progressPrinter,
 			force:           cmd.force,
@@ -188,7 +188,7 @@ func (cmd *InitCommand) Run() error {
 			return err
 		}
 
-		client, err = cmd.newClient()
+		client, err = cmd.newUnauthenticatedClient()
 		if err != nil {
 			return err
 		}
@@ -224,7 +224,7 @@ func (cmd *InitCommand) Run() error {
 			}
 		}
 
-		client, err := cmd.newClientWithoutCredentials(credentials.UseBackupCode(backupCode))
+		client, err := cmd.newClientWithCredentials(credentials.UseBackupCode(backupCode))
 		if err != nil {
 			return err
 		}

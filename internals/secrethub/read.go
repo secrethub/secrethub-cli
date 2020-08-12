@@ -21,12 +21,12 @@ import (
 type ReadCommand struct {
 	io                  ui.IO
 	path                api.SecretPath
-	useClipboard        *bool
+	useClipboard        bool
 	clearClipboardAfter time.Duration
 	clipper             clip.Clipper
-	outFile             *string
+	outFile             string
 	fileMode            filemode.FileMode
-	noNewLine           *bool
+	noNewLine           bool
 	newClient           newClientFunc
 }
 
@@ -44,16 +44,19 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("read", "Read a secret.")
 	cmd.argumentConstraint(clause.Command)
-	cmd.useClipboard = clause.Flags().BoolP(
+	clause.Flags().BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
 	)
-	cmd.outFile = clause.Flags().StringP("out-file", "o", "",  "Write the secret value to this file.")
-	cmd.fileMode = ("file-mode", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
-	cmd.noNewLine = clause.Flags().BoolP("no-newline", "n", false, "Do not print a new line after the secret")
+	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "",  "Write the secret value to this file.")
+	clause.Flags().BoolVarP(&cmd.noNewLine, "no-newline", "n",false, "Do not print a new line after the secret")
+
+	fileModeFlag := clause.Flags().VarPF(&cmd.fileMode, "file-mode", "","Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
+	fileModeFlag.DefValue = "0600"
+
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
@@ -69,13 +72,13 @@ func (cmd *ReadCommand) Run() error {
 		return err
 	}
 
-	if *cmd.useClipboard {
+	if cmd.useClipboard {
 		err = WriteClipboardAutoClear(secret.Data, cmd.clearClipboardAfter, cmd.clipper)
 		if err != nil {
 			return err
 		}
 
-		fmt.Fprintf(
+		_, _ = fmt.Fprintf(
 			cmd.io.Output(),
 			"Copied %s to clipboard. It will be cleared after %s.\n",
 			cmd.path,
@@ -84,19 +87,19 @@ func (cmd *ReadCommand) Run() error {
 	}
 
 	secretData := secret.Data
-	if !*cmd.noNewLine {
+	if !cmd.noNewLine {
 		secretData = posix.AddNewLine(secretData)
 	}
 
-	if *cmd.outFile != "" {
-		err = ioutil.WriteFile(*cmd.outFile, secretData, cmd.fileMode.FileMode())
+	if cmd.outFile != "" {
+		err = ioutil.WriteFile(cmd.outFile, secretData, cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.outFile, err)
 		}
 	}
 
-	if *cmd.outFile == "" && !*cmd.useClipboard {
-		fmt.Fprintf(cmd.io.Output(), "%s", string(secretData))
+	if cmd.outFile == "" && !cmd.useClipboard {
+		_, _ = fmt.Fprintf(cmd.io.Output(), "%s", string(secretData))
 	}
 
 	return nil
@@ -106,7 +109,7 @@ func (cmd *ReadCommand) argumentConstraint(c *cobra.Command) {
 	c.Args = cobra.ExactValidArgs(1)
 }
 
-func (cmd *ReadCommand) argumentRegister(c *cobra.Command, args []string) error {
+func (cmd *ReadCommand) argumentRegister(_ *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewSecretPath(args[0])
 	if err != nil {

@@ -3,17 +3,13 @@ package cli
 import (
 	"fmt"
 	"io"
-	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"text/tabwriter"
-	"time"
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/xhit/go-str2duration"
 )
 
 var (
@@ -262,113 +258,6 @@ func (f *Flag) NoEnvar() *Flag {
 	return f
 }
 
-// Hidden hides the flag in help texts.
-func (f *Flag) Hidden() *Flag {
-	f.Flag.Hidden = true
-	return f
-}
-
-// Short puts the shorthand of the flag.
-func (f *Flag) Short(s rune) *Flag {
-	f.Flag.Shorthand = string(s)
-	return f
-}
-
-func (f *Flag) Default(val string) *Flag {
-	if f.Flag.DefValue == "" {
-		f.Flag.DefValue = val
-	}
-	return f
-}
-
-func (f *Flag) PlaceHolder(val string) *Flag {
-	return f
-}
-
-// TODO Implement it properly
-func (f *Flag) HintOptions(options ...string) *Flag {
-	return f
-}
-
-// TODO Implement it properly
-func (f *Flag) SetValue(location interface{}) *Flag {
-	if f.Value != nil {
-		location = &f.Value
-	}
-	return f
-}
-
-// Hidden hides the command in help texts.
-func (f *Flag) BoolVar(location *bool) *Flag {
-	if f.Value != nil {
-		intermediary, _ := strconv.ParseBool(f.Value.String())
-		*location = intermediary
-	} else {
-		*location = false
-	}
-
-	return f
-}
-
-func (f *Flag) StringVar(location *string) *Flag {
-	if f.Value != nil {
-		*location = f.Value.String()
-	} else {
-		*location = f.DefValue
-	}
-	return f
-}
-
-// TODO Implement the following functions properly
-func (f *Flag) DurationVar(location *time.Duration) *Flag {
-	if f.Value != nil {
-		*location, _ = str2duration.Str2Duration(f.Value.String())
-	} else {
-		*location, _ = str2duration.Str2Duration(f.DefValue)
-	}
-	return f
-}
-
-func (f *Flag) URLVar(location **url.URL) *Flag {
-	if f.Value != nil {
-		parsedURL, _ := url.Parse(f.Value.String())
-		*location = parsedURL
-	} else {
-		parsedURL, _ := url.Parse(f.DefValue)
-		location = &parsedURL
-	}
-	return f
-}
-
-func (f *Flag) IntVar(location *int) *Flag {
-	if f.Value != nil {
-		*location, _ = strconv.Atoi(f.Value.String())
-	} else {
-		*location, _ = strconv.Atoi(f.DefValue)
-	}
-	return f
-}
-
-func (f *Flag) ExistingFileVar(location *string) *Flag {
-	if f.Value != nil {
-		*location = f.Value.String()
-	} else {
-		*location = f.DefValue
-	}
-	return f
-
-}
-
-func (f *Flag) StringMapVar(location *map[string]string) *Flag {
-	if f.Value != nil {
-		newVar := f.Value.String()
-		arr := strings.Split(newVar, "=")
-		(*location)[arr[0]] = arr[1]
-	}
-	return f
-}
-
-// End of TODO
 
 // formatName takes a name and converts it to an uppercased name,
 // joined by the given separator and prefixed with the given prefix.

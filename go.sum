@@ -166,6 +166,8 @@ github.com/secrethub/secrethub-go v0.30.1-0.20200807145938-681a4665c550 h1:CBeQp
 github.com/secrethub/secrethub-go v0.30.1-0.20200807145938-681a4665c550/go.mod h1:ZIco8Y0G0Pi0Vb7pQROjvEKgSreZiRMLhAbzWUneUSQ=
 github.com/secrethub/secrethub-go v0.30.1-0.20200812113929-edff110cddfc h1:dN6YUlRQ3MwHc1QGWsMMazzFPWxWSOlp1afIzs4ycQo=
 github.com/secrethub/secrethub-go v0.30.1-0.20200812113929-edff110cddfc/go.mod h1:ZIco8Y0G0Pi0Vb7pQROjvEKgSreZiRMLhAbzWUneUSQ=
+github.com/secrethub/secrethub-go v0.30.1-0.20200812121649-846d80e97296 h1:IsbGXusKlVYSThYYepv80H0S9dXYOWMHDSNgoEamt1c=
+github.com/secrethub/secrethub-go v0.30.1-0.20200812121649-846d80e97296/go.mod h1:ZIco8Y0G0Pi0Vb7pQROjvEKgSreZiRMLhAbzWUneUSQ=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.2.0 h1:Hbg2NidpLE8veEBkEZTL3CvlkUIVzuU9jDplZO54c48=

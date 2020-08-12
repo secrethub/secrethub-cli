@@ -169,12 +169,15 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Create a new service account that is tied to a GCP Service Account.")
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
-	clause.Flag("kms-key", "The Resource ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyResourceID)
-	clause.Flag("service-account-email", "The email of the GCP Service Account that should have access to this service account.").StringVar(&cmd.serviceAccountEmail)
-	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
-	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause.Flags().StringVar(&cmd.kmsKeyResourceID,"kms-key", "","The Resource ID of the KMS-key to be used for encrypting the service's account key.")
+	clause.Flags().StringVar(&cmd.serviceAccountEmail, "service-account-email","", "The email of the GCP Service Account that should have access to this service account.")
+	clause.Flags().StringVar(&cmd.description,"description", "","A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.")
+	clause.Flags().StringVar(&cmd.description,"descr", "", "")
+	clause.Flag("desc").Hidden = true
+	clause.Flag("descr").Hidden = true
+	clause.Flags().StringVar(&cmd.description,"desc", "", "")
+	clause.Flags().StringVar(&cmd.permission,"permission","", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
+
 
 	clause.HelpLong("The native GCP identity provider uses a combination of GCP IAM and GCP KMS to provide access to SecretHub for any service running on GCP. For this to work, a GCP Service Account and a KMS key are needed.\n" +
 		"\n" +

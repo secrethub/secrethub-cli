@@ -35,7 +35,8 @@ func (cmd *RepoRevokeCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(2)
 	//clause.Arg("repo-path", "The repository to revoke the account from").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "The account name (username or service name) to revoke access for").Required().SetValue(&cmd.accountName)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	//TODO
+	//registerForceFlag(clause).BoolVar(&cmd.force)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

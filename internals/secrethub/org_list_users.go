@@ -36,7 +36,8 @@ func (cmd *OrgListUsersCommand) Register(r command.Registerer) {
 	clause.Alias("list-members")
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	//TODO
+	//registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

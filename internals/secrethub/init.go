@@ -40,8 +40,7 @@ func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentia
 func (cmd *InitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Initialize the SecretHub client for first use on this device.")
 	clause.Flags().StringVar(&cmd.backupCode,"backup-code", "","The backup code used to restore an existing account to this device.")
-	//TODO
-	//registerForceFlag(clause).BoolVar(&cmd.force)
+	registerForceFlag(clause,&cmd.force)
 
 	command.BindAction(clause, nil, cmd.Run)
 }

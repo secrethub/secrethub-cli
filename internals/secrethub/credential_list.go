@@ -32,8 +32,7 @@ func (cmd *CredentialListCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("ls", "List all your credentials.")
 	clause.Alias("list")
 
-	//TODO
-	//registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	command.BindAction(clause, nil, cmd.Run)
 }

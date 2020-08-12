@@ -34,8 +34,7 @@ func (cmd *RepoInviteCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(2)
 	//clause.Arg("repo-path", "The repository to invite the user to").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
-	//TODO
-	//registerForceFlag(clause).BoolVar(&cmd.force)
+	registerForceFlag(clause, &cmd.force)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

@@ -43,8 +43,7 @@ func (cmd *RmCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
 	clause.Flags().BoolVarP(&cmd.recursive, "recursive", "r", false, "Remove directories and their contents recursively.")
-	//TODO
-	//registerForceFlag(clause).BoolVar(&cmd.force)
+	registerForceFlag(clause,&cmd.force)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

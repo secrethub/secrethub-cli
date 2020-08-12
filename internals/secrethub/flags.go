@@ -9,10 +9,10 @@ type FlagRegisterer interface {
 	Flag(name, help string) *cli.Flag
 }
 
-func registerTimestampFlag(r FlagRegisterer) *cli.Flag {
-	return r.Flag("timestamp", "Show timestamps formatted to RFC3339 instead of human readable durations.").Short('T')
+func registerTimestampFlag(r *cli.CommandClause, p *bool) {
+	r.Flags().BoolVarP(p,"timestamp", "T", false, "Show timestamps formatted to RFC3339 instead of human readable durations.")
 }
 
-func registerForceFlag(r FlagRegisterer) *cli.Flag {
-	return r.Flag("force", "Ignore confirmation and fail instead of prompt for missing arguments.").Short('f')
+func registerForceFlag(r *cli.CommandClause, p *bool) {
+	r.Flags().BoolVarP(p, "force", "f", false,"Ignore confirmation and fail instead of prompt for missing arguments.")
 }

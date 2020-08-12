@@ -33,7 +33,7 @@ func (cmd *OrgInitCommand) Register(r command.Registerer) {
 	clause.Flag("description", "A description (max 144 chars) for your organization so others will recognize it. If not set, you will be asked for it.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	registerForceFlag(clause,&cmd.force)
 
 	command.BindAction(clause, nil, cmd.Run)
 }

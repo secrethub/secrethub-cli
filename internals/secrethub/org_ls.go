@@ -33,8 +33,8 @@ func (cmd *OrgLsCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("ls", "List all organizations you are a member of.")
 	clause.Alias("list")
 	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false,"Only print organization names.")
-	//TODO
-	//registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	command.BindAction(clause, nil, cmd.Run)
 }

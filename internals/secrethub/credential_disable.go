@@ -33,7 +33,7 @@ func (cmd *CredentialDisableCommand) Register(r command.Registerer) {
 
 	//fingerprintHelp := fmt.Sprintf("Fingerprint of the credential to disable. At least the first %d characters must be entered.", api.ShortCredentialFingerprintMinimumLength)
 	//clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)
-//TODO
+	//TODO
 	//registerForceFlag(clause).BoolVar(&cmd.force)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)

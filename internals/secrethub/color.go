@@ -16,8 +16,9 @@ func (f noColorFlag) init() {
 
 // RegisterColorFlag registers a color flag that configures whether colored output is used.
 func RegisterColorFlag(r FlagRegisterer) {
-	flag := noColorFlag(false)
-	r.Flag("no-color", "Disable colored output.").SetValue(&flag)
+	//TODO
+	//flag := noColorFlag(false)
+	//r.Flag("no-color", "Disable colored output.").SetValue(&flag)
 }
 
 // String implements the flag.Value interface.

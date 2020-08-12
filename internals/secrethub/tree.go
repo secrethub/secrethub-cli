@@ -61,10 +61,12 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
-	clause.Flag("full-paths", "Print the full path of each directory and secret.").Short('f').BoolVar(&cmd.fullPaths)
-	clause.Flag("no-indentation", "Don't print indentation lines.").Short('i').BoolVar(&cmd.noIndentation)
-	clause.Flag("no-report", "Turn off secret/directory count at end of tree listing.").BoolVar(&cmd.noReport)
-	clause.Flag("noreport", "Turn off secret/directory count at end of tree listing.").Hidden().BoolVar(&cmd.noReport)
+	clause.Flags().BoolVarP(&cmd.fullPaths, "full-paths", "f",false, "Print the full path of each directory and secret.")
+	clause.Flags().BoolVarP(&cmd.noIndentation, "no-indentation", "n",false, "Do not use the standard indentation.")
+	clause.Flags().BoolVar(&cmd.noReport, "no-report", false,"Turn off secret/directory count at end of tree listing.")
+	clause.Flags().BoolVar(&cmd.noReport, "noreport", false,"Turn off secret/directory count at end of tree listing.")
+
+	clause.Flag("noreport").Hidden = true
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

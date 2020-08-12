@@ -213,19 +213,19 @@ func (cmd *CommandClause) Alias(alias string) {
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
-func (cmd *CommandClause) Flag(name, help string) *Flag {
-	fullCmd := strings.Replace(cmd.FullCommand(), " ", cmd.app.separator, -1)
-	prefix := formatName(fullCmd, cmd.app.name, cmd.app.separator, cmd.app.delimiters...)
-	envVar := formatName(name, prefix, cmd.app.separator, cmd.app.delimiters...)
-
-	cmd.app.registerEnvVar(envVar)
-	flag := &pflag.Flag{Name: name, Usage: help}
-	return &Flag{
-		Flag:   flag,
-		app:    cmd.app,
-		envVar: envVar,
-	}
-}
+//func (cmd *CommandClause) Flag(name, help string) *Flag {
+//	fullCmd := strings.Replace(cmd.FullCommand(), " ", cmd.app.separator, -1)
+//	prefix := formatName(fullCmd, cmd.app.name, cmd.app.separator, cmd.app.delimiters...)
+//	envVar := formatName(name, prefix, cmd.app.separator, cmd.app.delimiters...)
+//
+//	cmd.app.registerEnvVar(envVar)
+//	flag := &pflag.Flag{Name: name, Usage: help}
+//	return &Flag{
+//		Flag:   flag,
+//		app:    cmd.app,
+//		envVar: envVar,
+//	}
+//}
 
 // Flag represents a command-line flag.
 type Flag struct {

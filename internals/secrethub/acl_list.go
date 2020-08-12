@@ -39,9 +39,10 @@ func (cmd *ACLListCommand) Register(r command.Registerer) {
 	clause.Alias("list")
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("dir-path", "The path of the directory to list the access rules for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flag("depth", "The maximum depth to which the rules of child directories should be displayed. Defaults to -1 (no limit).").Short('d').Default("-1").IntVar(&cmd.depth)
-	clause.Flag("all", "List all rules that apply on the directory, including rules on parent directories.").Short('a').BoolVar(&cmd.ancestors)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	clause.Flags().IntVarP(&cmd.depth, "depth", "d", -1, "The maximum depth to which the rules of child directories should be displayed. Defaults to -1 (no limit).")
+	clause.Flags().BoolVarP(&cmd.ancestors, "all", "a", false, "List all rules that apply on the directory, including rules on parent directories.")
+	//TODO timestamps!!!
+	//registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

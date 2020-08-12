@@ -26,7 +26,7 @@ func NewClearCommand(io ui.IO) *ClearCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ClearCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("clear", "Clear the secrets from your local environment. This reads and parses the secrets.yml file in the current working directory.").Hidden()
-	clause.Flag("in", "The path to a secrets.yml file to read").Short('i').Default("secrets.yml").ExistingFileVar(&cmd.in)
+	clause.Flags().StringVarP(&cmd.in,"in", "i", "secrets.yml", "The path to a secrets.yml file to read")
 
 	command.BindAction(clause, nil, cmd.Run)
 }

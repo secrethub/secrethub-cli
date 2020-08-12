@@ -150,7 +150,8 @@ func (cmd *ServiceGCPListLinksCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().SetValue(&cmd.namespace)
 
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	//TODO
+	//registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

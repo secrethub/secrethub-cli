@@ -50,7 +50,7 @@ func (cmd *WriteCommand) Register(r command.Registerer) {
 	clause.Flags().BoolVarP(&cmd.multiline, "multiline", "m", false, "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.")
 	clause.Flags().StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.")
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -134,7 +134,7 @@ func (cmd *WriteCommand) Run() error {
 	return nil
 }
 
-func (cmd *WriteCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *WriteCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewSecretPath(args[0])
 	if err != nil {

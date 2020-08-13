@@ -73,7 +73,7 @@ func (cmd *ServiceDeployWinRmCommand) Register(r command.Registerer) {
 	clause.Flags().StringVar(&cmd.caCert, "ca-cert", "", "Path to CA certificate used to verify server TLS certificate.")
 	clause.Flags().BoolVar(&cmd.noVerify, "insecure-no-verify-cert", false, "Do not verify server TLS certificate (insecure).")
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run creates a service and installs the configuration using WinRM.
@@ -205,7 +205,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	return nil
 }
 
-func (cmd *ServiceDeployWinRmCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ServiceDeployWinRmCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.resourceURI, err = url.Parse(args[0])
 	if err != nil {

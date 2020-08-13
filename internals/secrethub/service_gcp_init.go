@@ -155,7 +155,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 	return nil
 }
 
-func (cmd *ServiceGCPInitCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ServiceGCPInitCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.repo, err = api.NewRepoPath(args[0])
 	if err != nil {
@@ -186,7 +186,7 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 		"To create a new service that uses the GCP identity provider, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore GCP application default credentials should be configured on this system. To achieve this, first install the Google Cloud SDK (https://cloud.google.com/sdk/docs/quickstarts) and then run `gcloud auth application-default login`.",
 	)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 type gcpProjectOptionLister struct {

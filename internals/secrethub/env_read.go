@@ -34,7 +34,7 @@ func (cmd *EnvReadCommand) Register(r command.Registerer) {
 
 	cmd.environment.register(clause)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run executes the command.
@@ -61,7 +61,7 @@ func (cmd *EnvReadCommand) Run() error {
 	return nil
 }
 
-func (cmd *EnvReadCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *EnvReadCommand) argumentRegister(c *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		cmd.key = args[0]
 	}

@@ -43,7 +43,7 @@ func (cmd *ACLListCommand) Register(r command.Registerer) {
 	clause.Flags().BoolVarP(&cmd.ancestors, "all", "a", false, "List all rules that apply on the directory, including rules on parent directories.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run prints access rules for the given directory.
@@ -52,7 +52,7 @@ func (cmd *ACLListCommand) Run() error {
 	return cmd.run()
 }
 
-func (cmd *ACLListCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ACLListCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewDirPath(args[0])
 	if err != nil {

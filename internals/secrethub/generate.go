@@ -79,7 +79,7 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	//clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // before configures the command using the flag values.
@@ -111,7 +111,7 @@ func (cmd *GenerateSecretCommand) Run() error {
 	return cmd.run()
 }
 
-func (cmd *GenerateSecretCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *GenerateSecretCommand) argumentRegister(c *cobra.Command, args []string) error {
 	cmd.firstArg = args[0]
 	if len(args) >= 2 {
 		cmd.secondArg = args[1]

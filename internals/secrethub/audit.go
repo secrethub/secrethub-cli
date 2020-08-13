@@ -79,7 +79,7 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause.Flags().IntVar(&cmd.maxResults, "max-results", defaultLimit, "Specify the number of entries to list. If maxResults < 0 all entries are displayed. If the output of the command is piped, maxResults defaults to 1000.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run prints all audit events for the given repository or secret.
@@ -88,7 +88,7 @@ func (cmd *AuditCommand) Run() error {
 	return cmd.run()
 }
 
-func (cmd *AuditCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *AuditCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	if len(args) != 0 {
 		cmd.path, err = api.NewPath(args[0])

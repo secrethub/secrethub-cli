@@ -122,7 +122,7 @@ func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.")
 	clause.Flag("file-mode").DefValue = "0440"
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // givePermission gives the service permission on the repository as defined in the permission flag.
@@ -159,7 +159,7 @@ func givePermission(service *api.Service, repo api.RepoPath, permissionFlagValue
 	return nil
 }
 
-func (cmd *ServiceInitCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ServiceInitCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.repo, err = api.NewRepoPath(args[0])
 	if err != nil {

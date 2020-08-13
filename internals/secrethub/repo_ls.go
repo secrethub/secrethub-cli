@@ -39,7 +39,7 @@ func (cmd *RepoLSCommand) Register(r command.Registerer) {
 	//clause.Arg("workspace", "When supplied, results are limited to repositories in this workspace.").SetValue(&cmd.workspace)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run lists the repositories a user has access to.
@@ -48,7 +48,7 @@ func (cmd *RepoLSCommand) Run() error {
 	return cmd.run()
 }
 
-func (cmd *RepoLSCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *RepoLSCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	if len(args) != 0 {
 		err = api.ValidateNamespace(args[0])

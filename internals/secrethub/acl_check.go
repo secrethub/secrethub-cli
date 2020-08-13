@@ -38,7 +38,7 @@ func (cmd *ACLCheckCommand) Register(r command.Registerer) {
 	//clause.Arg("dir-path", "The path of the directory to check the effective permission for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run prints the access level(s) on the given directory.
@@ -110,7 +110,7 @@ func (cmd *ACLCheckCommand) listLevels() ([]*api.AccessLevel, error) {
 	return nil, listLevelsErr
 }
 
-func (cmd *ACLCheckCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ACLCheckCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewDirPath(args[0])
 	if err != nil {

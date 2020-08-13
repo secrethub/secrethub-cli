@@ -36,7 +36,7 @@ func (cmd *OrgSetRoleCommand) Register(r command.Registerer) {
 	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 	//clause.Arg("role", "The role to assign to the user. Can be either `admin` or `member`.").Required().StringVar(&cmd.role)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run updates the role of an organization member.
@@ -58,7 +58,7 @@ func (cmd *OrgSetRoleCommand) Run() error {
 	return nil
 }
 
-func (cmd *OrgSetRoleCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *OrgSetRoleCommand) argumentRegister(c *cobra.Command, args []string) error {
 	err := api.ValidateOrgName(args[0])
 	if err != nil {
 		return err

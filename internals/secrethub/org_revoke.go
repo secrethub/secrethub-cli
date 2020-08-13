@@ -36,7 +36,7 @@ func (cmd *OrgRevokeCommand) Register(r command.Registerer) {
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run revokes an organization member.
@@ -133,7 +133,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 	return nil
 }
 
-func (cmd *OrgRevokeCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *OrgRevokeCommand) argumentRegister(c *cobra.Command, args []string) error {
 	err := api.ValidateOrgName(args[0])
 	if err != nil {
 		return err

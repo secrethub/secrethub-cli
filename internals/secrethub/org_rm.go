@@ -34,7 +34,7 @@ func (cmd *OrgRmCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run deletes an organization, prompting the user for confirmation.
@@ -75,7 +75,7 @@ func (cmd *OrgRmCommand) Run() error {
 	return nil
 }
 
-func (cmd *OrgRmCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *OrgRmCommand) argumentRegister(c *cobra.Command, args []string) error {
 	err := api.ValidateOrgName(args[0])
 	if err != nil {
 		return err

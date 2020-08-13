@@ -38,7 +38,7 @@ func (cmd *OrgListUsersCommand) Register(r command.Registerer) {
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run lists the users of an organization.
@@ -47,7 +47,7 @@ func (cmd *OrgListUsersCommand) Run() error {
 	return cmd.run()
 }
 
-func (cmd *OrgListUsersCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *OrgListUsersCommand) argumentRegister(c *cobra.Command, args []string) error {
 	err := api.ValidateOrgName(args[0])
 	if err != nil {
 		return err

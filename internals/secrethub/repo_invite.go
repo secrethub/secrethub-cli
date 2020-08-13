@@ -36,7 +36,7 @@ func (cmd *RepoInviteCommand) Register(r command.Registerer) {
 	//clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run invites the configured user to collaborate on the repo.
@@ -78,7 +78,7 @@ func (cmd *RepoInviteCommand) Run() error {
 	return nil
 }
 
-func (cmd *RepoInviteCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *RepoInviteCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewRepoPath(args[0])
 	if err != nil {

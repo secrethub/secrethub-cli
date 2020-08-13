@@ -45,7 +45,7 @@ func (cmd *RmCommand) Register(r command.Registerer) {
 	clause.Flags().BoolVarP(&cmd.recursive, "recursive", "r", false, "Remove directories and their contents recursively.")
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run removes the resource at the given path.
@@ -96,7 +96,7 @@ func (cmd *RmCommand) Run() error {
 	return rmSecret(client, secretPath, cmd.force, cmd.io)
 }
 
-func (cmd *RmCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *RmCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewPath(args[0])
 	if err != nil {

@@ -44,7 +44,7 @@ func (cmd *RepoExportCommand) Register(r command.Registerer) {
 	//clause.Arg("repo-path", "The repository to export").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run exports a repo to a zip file
@@ -143,7 +143,7 @@ func (cmd *RepoExportCommand) Run() error {
 	return nil
 }
 
-func (cmd *RepoExportCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *RepoExportCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewRepoPath(args[0])
 	if err != nil {

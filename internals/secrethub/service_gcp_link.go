@@ -50,7 +50,7 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 	return createGCPLink(client, cmd.io, cmd.namespace.String(), cmd.projectID.String())
 }
 
-func (cmd *ServiceGCPLinkCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ServiceGCPLinkCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	err = api.ValidateOrgName(args[0])
 	if err != nil {
@@ -85,7 +85,7 @@ func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 		"Any reference to SecretHub should automatically disappear within a few minutes. " +
 		"If it does not, the access can safely be revoked manually.")
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // ServiceGCPListLinksCommand lists all existing links between the given namespace and GCP projects
@@ -136,7 +136,7 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 	return nil
 }
 
-func (cmd *ServiceGCPListLinksCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ServiceGCPListLinksCommand) argumentRegister(c *cobra.Command, args []string) error {
 	err := api.ValidateNamespace(args[0])
 	if err != nil {
 		return err
@@ -151,7 +151,7 @@ func (cmd *ServiceGCPListLinksCommand) Register(r command.Registerer) {
 	//clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().SetValue(&cmd.namespace)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // ServiceGCPDeleteLinkCommand deletes the link between a SecretHub namespace and a GCP project.
@@ -176,7 +176,7 @@ func (cmd *ServiceGCPDeleteLinkCommand) Register(r command.Registerer) {
 	//clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
 	//clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
@@ -205,7 +205,7 @@ func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
 	return client.IDPLinks().GCP().Delete(cmd.namespace.String(), cmd.projectID.String())
 }
 
-func (cmd *ServiceGCPDeleteLinkCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ServiceGCPDeleteLinkCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	err = api.ValidateNamespace(args[0])
 	if err != nil {

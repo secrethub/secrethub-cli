@@ -2,18 +2,18 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/docker/go-units"
-	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"io/ioutil"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
+	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
+	"github.com/docker/go-units"
 	"github.com/spf13/cobra"
 )
 

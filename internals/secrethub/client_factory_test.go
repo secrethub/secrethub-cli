@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"github.com/spf13/cobra"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,7 +18,7 @@ func TestNewClientFactory_ProxyAddress(t *testing.T) {
 
 	proxyReceivedRequest := false
 	go func() {
-		err := http.ListenAndServe(proxyAddress.Hostname()+":"+proxyAddress.Port(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err = http.ListenAndServe(proxyAddress.Hostname()+":"+proxyAddress.Port(), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			proxyReceivedRequest = true
 		}))
 		if err != http.ErrServerClosed && err != nil {
@@ -39,11 +38,10 @@ func TestNewClientFactory_ProxyAddress(t *testing.T) {
 	factory := clientFactory{
 		identityProvider: "key",
 		store:            store,
-		ServerURL:        urlValue{*serverAddress},
-		proxyAddress:     urlValue{*proxyAddress},
+		ServerURL:        urlValue{serverAddress},
+		proxyAddress:     urlValue{proxyAddress},
 	}
 
-	factory.Register(&cobra.Command{})
 	client, err := factory.NewUnauthenticatedClient()
 	assert.OK(t, err)
 

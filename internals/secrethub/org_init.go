@@ -30,12 +30,12 @@ func NewOrgInitCommand(io ui.IO, newClient newClientFunc) *OrgInitCommand {
 func (cmd *OrgInitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Initialize a new organization account.")
 	//clause.Flags().Var(&cmd.name, "name", "The name you would like to use for your organization. If not set, you will be asked for it.")
-	clause.Flags().StringVar(&cmd.description,"description", "","A description (max 144 chars) for your organization so others will recognize it. If not set, you will be asked for it.")
-	clause.Flags().StringVar(&cmd.description,"descr", "","")
+	clause.Flags().StringVar(&cmd.description, "description", "", "A description (max 144 chars) for your organization so others will recognize it. If not set, you will be asked for it.")
+	clause.Flags().StringVar(&cmd.description, "descr", "", "")
 	clause.Flag("descr").Hidden = true
-	clause.Flags().StringVar(&cmd.description,"desc", "","")
+	clause.Flags().StringVar(&cmd.description, "desc", "", "")
 	clause.Flag("desc").Hidden = true
-	registerForceFlag(clause,&cmd.force)
+	registerForceFlag(clause, &cmd.force)
 
 	command.BindAction(clause, nil, cmd.Run)
 }

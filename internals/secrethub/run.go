@@ -82,10 +82,10 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.Alias("exec")
 	clause.Args = cobra.MinimumNArgs(1)
 	//clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
-	clause.Flags().BoolVar(&cmd.noMasking, "no-masking", false,"Disable masking of secrets on stdout and stderr")
+	clause.Flags().BoolVar(&cmd.noMasking, "no-masking", false, "Disable masking of secrets on stdout and stderr")
 	clause.Flags().BoolVar(&cmd.maskerOptions.DisableBuffer, "no-output-buffering", false, "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.")
-	clause.Flags().DurationVar(&cmd.maskerOptions.BufferDelay, "masking-buffer-period", time.Millisecond * 50, "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.")
-	clause.Flags().BoolVar(&cmd.ignoreMissingSecrets,"ignore-missing-secrets", false,"Do not return an error when a secret does not exist and use an empty value instead.")
+	clause.Flags().DurationVar(&cmd.maskerOptions.BufferDelay, "masking-buffer-period", time.Millisecond*50, "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.")
+	clause.Flags().BoolVar(&cmd.ignoreMissingSecrets, "ignore-missing-secrets", false, "Do not return an error when a secret does not exist and use an empty value instead.")
 	cmd.environment.register(clause)
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

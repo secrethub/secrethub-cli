@@ -50,7 +50,7 @@ func (cmd *SignUpCommand) Register(r command.Registerer) {
 	clause.Flags().StringVar(&cmd.email, "email", "", "Your (work) email address we will use for all correspondence.")
 	clause.Flags().StringVar(&cmd.org, "org", "", "The name of your organization.")
 	clause.Flags().StringVar(&cmd.orgDescription, "org-description", "", "A description (max 144 chars) for your organization so others will recognize it.")
-	registerForceFlag(clause,&cmd.force)
+	registerForceFlag(clause, &cmd.force)
 
 	command.BindAction(clause, nil, cmd.Run)
 }

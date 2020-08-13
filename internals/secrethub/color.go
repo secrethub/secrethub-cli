@@ -1,10 +1,10 @@
 package secrethub
 
 import (
-	"github.com/spf13/cobra"
 	"strconv"
 
 	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
 
 // noColorFlag configures the global behaviour to disable colored output.

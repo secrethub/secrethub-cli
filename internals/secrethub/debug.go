@@ -1,10 +1,10 @@
 package secrethub
 
 import (
-	"github.com/spf13/cobra"
 	"strconv"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
+	"github.com/spf13/cobra"
 )
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.

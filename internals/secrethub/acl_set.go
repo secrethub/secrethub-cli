@@ -35,7 +35,7 @@ func (cmd *ACLSetCommand) Register(r command.Registerer) {
 	//clause.Arg("dir-path", "The path of the directory to set the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "The account name (username or service name) to set the access rule for").Required().SetValue(&cmd.accountName)
 	//clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)
-	registerForceFlag(clause,&cmd.force)
+	registerForceFlag(clause, &cmd.force)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

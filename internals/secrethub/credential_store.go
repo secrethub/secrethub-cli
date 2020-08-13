@@ -1,13 +1,14 @@
 package secrethub
 
 import (
-	"github.com/spf13/cobra"
 	"time"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+
+	"github.com/spf13/cobra"
 )
 
 // Errors
@@ -54,7 +55,7 @@ func (store *credentialConfig) IsPassphraseSet() bool {
 
 // Register registers the flags for configuring the store on the provided Registerer.
 func (store *credentialConfig) Register(r *cobra.Command) {
-	r.PersistentFlags().Var(&store.configDir,"config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub")
+	r.PersistentFlags().Var(&store.configDir, "config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub")
 	r.PersistentFlags().StringVar(&store.AccountCredential, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.")
 	//TODO NoEnvVar
 	r.PersistentFlags().StringVarP(&store.credentialPassphrase, "p", "p", "", "") // Shorthand -p is deprecated. Use --credential-passphrase instead.

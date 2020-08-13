@@ -37,7 +37,7 @@ func (cmd *LsCommand) Register(r command.Registerer) {
 	clause.Alias("list")
 	clause.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("path", "The path to list contents of").SetValue(&cmd.path)
-	clause.Flags().BoolVarP(&cmd.quiet,"quiet", "q", false,"Only print paths.")
+	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)

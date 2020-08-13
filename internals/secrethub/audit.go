@@ -72,7 +72,7 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	//clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flags().IntVar(&cmd.perPage, "per-page", 20, "Number of audit events shown per page")
 	clause.Flag("per-page").Hidden = true
-	clause.Flags().StringVar(&cmd.format, "output-format", "table","Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.")
+	clause.Flags().StringVar(&cmd.format, "output-format", "table", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.")
 	_ = clause.RegisterFlagCompletionFunc("output-format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"table", "json"}, cobra.ShellCompDirectiveDefault
 	})

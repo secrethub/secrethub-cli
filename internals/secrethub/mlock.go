@@ -1,10 +1,10 @@
 package secrethub
 
 import (
-	"github.com/spf13/cobra"
 	"strconv"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/mlock"
+	"github.com/spf13/cobra"
 )
 
 // mlockFlag configures locking memory.

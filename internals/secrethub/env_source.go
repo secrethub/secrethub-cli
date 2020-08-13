@@ -39,9 +39,9 @@ type environment struct {
 	osEnv                        []string
 	readFile                     func(filename string) ([]byte, error)
 	osStat                       func(filename string) (os.FileInfo, error)
-	envar                        map[string]string
+	envar                        MapValue
 	envFile                      string
-	templateVars                 map[string]string
+	templateVars                 MapValue
 	templateVersion              string
 	dontPromptMissingTemplateVar bool
 	secretsDir                   string
@@ -55,17 +55,17 @@ func newEnvironment(io ui.IO, newClient newClientFunc) *environment {
 		osEnv:        os.Environ(),
 		readFile:     ioutil.ReadFile,
 		osStat:       os.Stat,
-		templateVars: make(map[string]string),
-		envar:        make(map[string]string),
+		templateVars: MapValue{stringMap: make(map[string]string)},
+		envar:        MapValue{stringMap: make(map[string]string)},
 	}
 }
 
 func (env *environment) register(clause *cli.CommandClause) {
-	//clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&env.envar)
+	clause.Flags().VarP(&env.envar,"envar", "e","Source an environment variable from a secret at a given path with `NAME=<path>`")
 	clause.Flags().StringVar(&env.envFile, "env-file", "", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.")
 	clause.Flags().StringVar(&env.envFile, "template", "", "")
 	clause.Flag("template").Hidden = true
-	//clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
+	clause.Flags().VarP(&env.templateVars,"var","v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
 	clause.Flags().StringVar(&env.templateVersion, "template-version", "auto", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.")
 	clause.Flags().BoolVar(&env.dontPromptMissingTemplateVar, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.")
 	clause.Flags().StringVar(&env.secretsDir, "secrets-dir", "", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.")
@@ -109,7 +109,7 @@ func (env *environment) env() (map[string]value, error) {
 	}
 
 	if env.envFile != "" {
-		templateVariableReader, err := newVariableReader(osEnvMap, env.templateVars)
+		templateVariableReader, err := newVariableReader(osEnvMap, env.templateVars.stringMap)
 		if err != nil {
 			return nil, err
 		}
@@ -141,7 +141,7 @@ func (env *environment) env() (map[string]value, error) {
 
 	// --envar flag
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
-	flagEnv, err := NewEnvFlags(env.envar)
+	flagEnv, err := NewEnvFlags(env.envar.stringMap)
 	if err != nil {
 		return nil, err
 	}
@@ -664,4 +664,27 @@ func (o *osEnv) env() (map[string]value, error) {
 		res[name] = newPlaintextValue(value)
 	}
 	return res, nil
+}
+
+type MapValue struct {
+	stringMap map[string]string
+}
+
+func (m MapValue) String() string {
+	textRepresentation := ""
+	for k, v :=range m.stringMap {
+		textRepresentation += k + "=" + v + ";"
+	}
+	return textRepresentation
+}
+
+//TODO treat the case when the array does not contain exactly 2 elements
+func (m MapValue) Set(s string) error {
+	arr := strings.Split(s, "=")
+	m.stringMap[arr[0]] = arr[1]
+	return nil
+}
+
+func (m MapValue) Type() string {
+	return "mapValue"
 }

@@ -36,7 +36,7 @@ type InjectCommand struct {
 	clipper                       clip.Clipper
 	osEnv                         []string
 	newClient                     newClientFunc
-	templateVars                  map[string]string
+	templateVars                  MapValue
 	templateVersion               string
 	dontPromptMissingTemplateVars bool
 }
@@ -49,7 +49,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 		clearClipboardAfter: defaultClearClipboardAfter,
 		io:                  io,
 		newClient:           newClient,
-		templateVars:        make(map[string]string),
+		templateVars:        MapValue{stringMap: make(map[string]string)},
 	}
 }
 
@@ -69,8 +69,7 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause.Flag("file").Hidden = true
 	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
 	clause.Flag("file-mode").DefValue = "0600"
-	//TODO
-	//clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
+	clause.Flags().VarP(&cmd.templateVars,"var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
 	clause.Flags().StringVar(&cmd.templateVersion, "template-version", "auto", "Do not prompt when a template variable is missing and return an error instead.")
 	clause.Flags().BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.")
 	clause.Flags().BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.")
@@ -106,7 +105,7 @@ func (cmd *InjectCommand) Run() error {
 	osEnv, _ := parseKeyValueStringsToMap(cmd.osEnv)
 
 	var templateVariableReader tpl.VariableReader
-	templateVariableReader, err = newVariableReader(osEnv, cmd.templateVars)
+	templateVariableReader, err = newVariableReader(osEnv, cmd.templateVars.stringMap)
 	if err != nil {
 		return err
 	}

@@ -7,7 +7,7 @@ type ConfigDir struct {
 }
 
 func (c *ConfigDir) Type() string {
-	panic("configDir")
+	return "configDir"
 }
 
 func (c *ConfigDir) String() string {

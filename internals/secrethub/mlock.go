@@ -11,7 +11,7 @@ import (
 type mlockFlag bool
 
 func (f mlockFlag) Type() string {
-	panic("mlockFlag")
+	return "mlockFlag"
 }
 
 // init locks the memory based on the flag value if supported.

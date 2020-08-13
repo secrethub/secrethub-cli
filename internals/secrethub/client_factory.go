@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"net/http"
 	"net/url"
 	"strings"
@@ -35,17 +36,18 @@ func NewClientFactory(store CredentialConfig) ClientFactory {
 type clientFactory struct {
 	client           *secrethub.Client
 	ServerURL        urlValue
+	serverURLFlag    *pflag.Flag
 	identityProvider string
 	proxyAddress     urlValue
+	proxyAddressFlag *pflag.Flag
 	store            CredentialConfig
 }
 
 // Register the flags for configuration on a cli application.
 func (f *clientFactory) Register(r *cobra.Command) {
-
-	r.PersistentFlags().Var(&f.ServerURL, "api-remote", "The SecretHub API address, don't set this unless you know what you're doing.")
-	r.PersistentFlags().StringVar(&f.identityProvider,"identity-provider", "key","Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ")
-	r.PersistentFlags().Var(&f.proxyAddress,"proxy-address", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`")
+	f.serverURLFlag = r.PersistentFlags().VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.")
+	r.PersistentFlags().StringVar(&f.identityProvider, "identity-provider", "key", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ")
+	f.proxyAddressFlag = r.PersistentFlags().VarPF(&f.proxyAddress, "proxy-address", "", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`")
 }
 
 // NewClient returns a new client that is configured to use the remote that
@@ -110,15 +112,15 @@ func (f *clientFactory) baseClientOptions() []secrethub.ClientOption {
 		}),
 	}
 
-	if f.proxyAddress.u != nil {
+	if f.proxyAddressFlag.Changed {
 		transport := http.DefaultTransport.(*http.Transport)
 		transport.Proxy = func(request *http.Request) (*url.URL, error) {
-			return f.proxyAddress.u, nil
+			return &f.proxyAddress.u, nil
 		}
 		options = append(options, secrethub.WithTransport(transport))
 	}
 
-	if &f.ServerURL != nil {
+	if f.serverURLFlag.Changed {
 		options = append(options, secrethub.WithServerURL(f.ServerURL.String()))
 	}
 
@@ -126,7 +128,7 @@ func (f *clientFactory) baseClientOptions() []secrethub.ClientOption {
 }
 
 type urlValue struct {
-	u *url.URL
+	u url.URL
 }
 
 func (u *urlValue) String() string {
@@ -135,7 +137,7 @@ func (u *urlValue) String() string {
 
 func (u *urlValue) Set(s string) error {
 	parsed, err := url.Parse(s)
-	u.u = parsed
+	u.u = *parsed
 	if err != nil {
 		return err
 	}
@@ -145,4 +147,3 @@ func (u *urlValue) Set(s string) error {
 func (u *urlValue) Type() string {
 	return "urlValue"
 }
-

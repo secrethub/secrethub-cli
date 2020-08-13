@@ -69,7 +69,7 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause.Flag("file").Hidden = true
 	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
 	clause.Flag("file-mode").DefValue = "0600"
-	clause.Flags().VarP(&cmd.templateVars,"var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
+	clause.Flags().VarP(&cmd.templateVars, "var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
 	clause.Flags().StringVar(&cmd.templateVersion, "template-version", "auto", "Do not prompt when a template variable is missing and return an error instead.")
 	clause.Flags().BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.")
 	clause.Flags().BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.")

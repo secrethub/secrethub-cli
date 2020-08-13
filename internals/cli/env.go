@@ -56,12 +56,12 @@ func (a *App) CreateCommand(name, help string) *CommandClause {
 }
 
 //
-//// Version adds a flag for displaying the application version number.
-//func (a *App) Version(version string) *App {
-//	a.Application = a.Application.Version(version)
-//	return a
-//}
-//
+// Version adds a flag for displaying the application version number.
+func (a *App) Version(version string) *App {
+	a.Application.Version = version
+	return a
+}
+
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_FLAG_NAME.
 func (a *App) Flag(name, help string) *Flag {

@@ -136,14 +136,14 @@ func NewApp() *App {
 }
 
 // Version adds a flag for displaying the application version number.
-//func (app *App) Version(version string, commit string) *App {
-//	app.cli = app.cli.Version(ApplicationName + " version " + version + ", build " + commit)
-//	return app
-//}
+func (app *App) Version(version string, commit string) *App {
+	app.cli = app.cli.Version(version + ", build " + commit)
+	return app
+}
 
 // Run builds the command-line application, parses the arguments,
 // configures global behavior and executes the command given by the args.
-func (app *App) Run(args []string) error {
+func (app *App) Run() error {
 	// Parse also executes the command when parsing is successful.
 	err := app.cli.Application.Execute()
 	return err

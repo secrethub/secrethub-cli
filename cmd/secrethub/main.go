@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	err := secrethub.NewApp().Run(os.Args[1:])
+	err := secrethub.NewApp().Version(secrethub.Version, secrethub.Commit).Run()
 	if err != nil {
 		handleError(err)
 	}

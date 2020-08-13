@@ -94,11 +94,11 @@ func NewApp() *App {
 		logger:          cli.NewLogger(),
 	}
 
-	RegisterDebugFlag(app.cli, app.logger)
-	RegisterMlockFlag(app.cli)
-	RegisterColorFlag(app.cli)
-	app.credentialStore.Register(app.cli)
-	app.clientFactory.Register(app.cli)
+	RegisterDebugFlag(&app.cli.Application, app.logger)
+	RegisterMlockFlag(&app.cli.Application)
+	RegisterColorFlag(&app.cli.Application)
+	app.credentialStore.Register(&app.cli.Application)
+	app.clientFactory.Register(&app.cli.Application)
 	app.registerCommands()
 
 	//app.cli.UsageTemplate(DefaultUsageTemplate)

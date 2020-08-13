@@ -173,9 +173,9 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 	clause.Flags().StringVar(&cmd.serviceAccountEmail, "service-account-email","", "The email of the GCP Service Account that should have access to this service account.")
 	clause.Flags().StringVar(&cmd.description,"description", "","A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.")
 	clause.Flags().StringVar(&cmd.description,"descr", "", "")
+	clause.Flags().StringVar(&cmd.description,"desc", "", "")
 	clause.Flag("desc").Hidden = true
 	clause.Flag("descr").Hidden = true
-	clause.Flags().StringVar(&cmd.description,"desc", "", "")
 	clause.Flags().StringVar(&cmd.permission,"permission","", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
 
 

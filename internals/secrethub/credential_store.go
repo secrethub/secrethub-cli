@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/spf13/cobra"
 	"time"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
@@ -22,7 +23,7 @@ type CredentialConfig interface {
 	ConfigDir() configdir.Dir
 	PassphraseReader() credentials.Reader
 
-	Register(FlagRegisterer)
+	Register(command *cobra.Command)
 }
 
 // NewCredentialConfig creates a new CredentialConfig.
@@ -52,12 +53,14 @@ func (store *credentialConfig) IsPassphraseSet() bool {
 }
 
 // Register registers the flags for configuring the store on the provided Registerer.
-func (store *credentialConfig) Register(r FlagRegisterer) {
-	r.Flag("config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub").Default("").PlaceHolder("CONFIG-DIR").SetValue(&store.configDir)
-	r.Flag("credential", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.").StringVar(&store.AccountCredential)
-	r.Flag("p", "").Short('p').Hidden().NoEnvar().StringVar(&store.credentialPassphrase) // Shorthand -p is deprecated. Use --credential-passphrase instead.
-	r.Flag("credential-passphrase", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.").StringVar(&store.credentialPassphrase)
-	r.Flag("credential-passphrase-cache-ttl", "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.").Default("5m").DurationVar(&store.CredentialPassphraseCacheTTL)
+func (store *credentialConfig) Register(r *cobra.Command) {
+	r.PersistentFlags().Var(&store.configDir,"config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub")
+	r.PersistentFlags().StringVar(&store.AccountCredential, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.")
+	//TODO NoEnvVar
+	r.PersistentFlags().StringVarP(&store.credentialPassphrase, "p", "p", "", "") // Shorthand -p is deprecated. Use --credential-passphrase instead.
+	r.Flag("p").Hidden = true
+	r.PersistentFlags().StringVar(&store.credentialPassphrase, "credential-passphrase", "", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.")
+	r.PersistentFlags().DurationVar(&store.CredentialPassphraseCacheTTL, "credential-passphrase-cache-ttl", 5*time.Minute, "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.")
 }
 
 // Provider retrieves a credential from the store.

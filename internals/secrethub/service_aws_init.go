@@ -172,9 +172,9 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 	clause.Flags().StringVar(&cmd.region, "region", "","The AWS region that should be used for KMS.")
 	clause.Flags().StringVar(&cmd.description, "description", "","A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.")
 	clause.Flags().StringVar(&cmd.description,"descr", "", "")
+	clause.Flags().StringVar(&cmd.description,"desc", "", "")
 	clause.Flag("desc").Hidden = true
 	clause.Flag("descr").Hidden = true
-	clause.Flags().StringVar(&cmd.description,"desc", "", "")
 	clause.Flags().StringVar(&cmd.permission, "permission", "","Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
 
 	clause.HelpLong("The native AWS identity provider uses a combination of AWS IAM and AWS KMS to provide access to SecretHub for any service running on AWS (e.g. EC2, Lambda or ECS). For this to work, an IAM role and a KMS key are needed.\n" +

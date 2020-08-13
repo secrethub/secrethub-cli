@@ -64,7 +64,7 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 			units.HumanDuration(cmd.clearClipboardAfter),
 		))
 	clause.Flags().StringVarP(&cmd.inFile,"in-file", "i", "","The filename of a template file to inject.")
-	clause.Flags().StringVarP(&cmd.outFile,"out-file", "i", "", "Write the injected template to a file instead of stdout.")
+	clause.Flags().StringVarP(&cmd.outFile,"out-file", "o", "", "Write the injected template to a file instead of stdout.")
 	clause.Flags().StringVar(&cmd.outFile, "file", "", "") // Alias of --out-file (for backwards compatibility)
 	clause.Flag("file").Hidden = true
 	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")

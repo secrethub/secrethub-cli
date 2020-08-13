@@ -4,11 +4,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli"
 )
 
-// FlagRegisterer allows others to register flags on it.
-type FlagRegisterer interface {
-	Flag(name, help string) *cli.Flag
-}
-
 func registerTimestampFlag(r *cli.CommandClause, p *bool) {
 	r.Flags().BoolVarP(p,"timestamp", "T", false, "Show timestamps formatted to RFC3339 instead of human readable durations.")
 }

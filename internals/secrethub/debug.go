@@ -1,23 +1,28 @@
 package secrethub
 
 import (
+	"github.com/spf13/cobra"
 	"strconv"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 )
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
-func RegisterDebugFlag(r FlagRegisterer, logger cli.Logger) {
+func RegisterDebugFlag(r *cobra.Command, logger cli.Logger) {
 	flag := debugFlag{
 		logger: logger,
 	}
-	r.Flag("debug", "Enable debug mode.").Short('D').SetValue(&flag)
+	r.PersistentFlags().VarP(&flag, "debug", "D", "Enable debug mode.")
 }
 
 // debugFlag configures the debug level of a logger.
 type debugFlag struct {
 	debug  bool
 	logger cli.Logger
+}
+
+func (f debugFlag) Type() string {
+	return "debugFlag"
 }
 
 func (f debugFlag) init() {

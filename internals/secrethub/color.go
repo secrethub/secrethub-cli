@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/spf13/cobra"
 	"strconv"
 
 	"github.com/fatih/color"
@@ -9,16 +10,19 @@ import (
 // noColorFlag configures the global behaviour to disable colored output.
 type noColorFlag bool
 
+func (f noColorFlag) Type() string {
+	return "noColorFlag"
+}
+
 // init disables colored output based on the value of the flag.
 func (f noColorFlag) init() {
 	color.NoColor = bool(f)
 }
 
 // RegisterColorFlag registers a color flag that configures whether colored output is used.
-func RegisterColorFlag(r FlagRegisterer) {
-	//TODO
-	//flag := noColorFlag(false)
-	//r.Flag("no-color", "Disable colored output.").SetValue(&flag)
+func RegisterColorFlag(r *cobra.Command) {
+	flag := noColorFlag(false)
+	r.PersistentFlags().Var(&flag, "no-color", "Disable colored output.")
 }
 
 // String implements the flag.Value interface.

@@ -62,13 +62,15 @@ func newEnvironment(io ui.IO, newClient newClientFunc) *environment {
 
 func (env *environment) register(clause *cli.CommandClause) {
 	//clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&env.envar)
-	//clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&env.envFile)
-	//clause.Flag("template", "").Hidden().StringVar(&env.envFile)
+	clause.Flags().StringVar(&env.envFile,"env-file", "","The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.")
+	clause.Flags().StringVar(&env.envFile,"template", "","")
+	clause.Flag("template").Hidden = true
 	//clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
-	//clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&env.templateVersion)
-	//clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
-	//clause.Flag("secrets-dir", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.").StringVar(&env.secretsDir)
-	//clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&env.secretsEnvDir)
+	clause.Flags().StringVar(&env.templateVersion, "template-version", "auto", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.")
+	clause.Flags().BoolVar(&env.dontPromptMissingTemplateVar, "no-prompt", false,"Do not prompt when a template variable is missing and return an error instead.")
+	clause.Flags().StringVar(&env.secretsDir,"secrets-dir", "", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.")
+	clause.Flags().StringVar(&env.secretsEnvDir, "env", "default","The name of the environment prepared by the set command (default is `default`)")
+	clause.Flag("env").Hidden = true
 }
 
 func (env *environment) env() (map[string]value, error) {

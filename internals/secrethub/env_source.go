@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"os"
@@ -67,6 +68,9 @@ func (env *environment) register(clause *cli.CommandClause) {
 	clause.Flag("template").Hidden = true
 	clause.Flags().VarP(&env.templateVars,"var","v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
 	clause.Flags().StringVar(&env.templateVersion, "template-version", "auto", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.")
+	_ = clause.RegisterFlagCompletionFunc("template-version", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"v1", "v2", "latest", "auto"}, cobra.ShellCompDirectiveDefault
+	})
 	clause.Flags().BoolVar(&env.dontPromptMissingTemplateVar, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.")
 	clause.Flags().StringVar(&env.secretsDir, "secrets-dir", "", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.")
 	clause.Flags().StringVar(&env.secretsEnvDir, "env", "default", "The name of the environment prepared by the set command (default is `default`)")

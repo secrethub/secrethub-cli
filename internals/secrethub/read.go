@@ -43,7 +43,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("read", "Read a secret.")
-	cmd.argumentConstraint(clause.Command)
+	clause.Args = cobra.ExactValidArgs(1)
 	clause.Flags().BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
 		fmt.Sprintf(
@@ -103,10 +103,6 @@ func (cmd *ReadCommand) Run() error {
 	}
 
 	return nil
-}
-
-func (cmd *ReadCommand) argumentConstraint(c *cobra.Command) {
-	c.Args = cobra.ExactValidArgs(1)
 }
 
 func (cmd *ReadCommand) argumentRegister(_ *cobra.Command, args []string) error {

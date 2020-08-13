@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/spf13/cobra"
 	"net/http"
 	"net/url"
 	"os"
@@ -38,10 +39,11 @@ func TestNewClientFactory_ProxyAddress(t *testing.T) {
 	factory := clientFactory{
 		identityProvider: "key",
 		store:            store,
-		ServerURL:        serverAddress,
-		proxyAddress:     proxyAddress,
+		ServerURL:        urlValue{*serverAddress},
+		proxyAddress:     urlValue{*proxyAddress},
 	}
 
+	factory.Register(&cobra.Command{})
 	client, err := factory.NewUnauthenticatedClient()
 	assert.OK(t, err)
 

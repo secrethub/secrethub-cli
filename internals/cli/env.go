@@ -178,48 +178,138 @@ type CommandClause struct {
 }
 
 func (cmd *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().BoolVarP(reference, name, shorthand, def, usage)
+	} else {
+		cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
+	}
+
 }
 
 func (cmd *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().IntVarP(reference, name, shorthand, def, usage)
+	} else {
+		cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
+	}
 }
 
 func (cmd *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().StringVarP(reference, name, shorthand, def, usage)
+	} else {
+		cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
+	}
 }
 
 func (cmd *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().DurationVarP(reference, name, shorthand, def, usage)
+	} else {
+		cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
+	}
 }
 
 func (cmd *CommandClause) BoolVar(reference *bool, name string, def bool, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().BoolVar(reference, name, def, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().BoolVar(reference, name, def, usage)
+	} else {
+		cmd.Flags().BoolVar(reference, name, def, usage)
+	}
 }
 
 func (cmd *CommandClause) IntVar(reference *int, name string, def int, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().IntVar(reference, name, def, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().IntVar(reference, name, def, usage)
+	} else {
+		cmd.Flags().IntVar(reference, name, def, usage)
+	}
 }
 
 func (cmd *CommandClause) StringVar(reference *string, name string, def string, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().StringVar(reference, name, def, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().StringVar(reference, name, def, usage)
+	} else {
+		cmd.Flags().StringVar(reference, name, def, usage)
+	}
 }
 
 func (cmd *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().DurationVar(reference, name, def, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().DurationVar(reference, name, def, usage)
+	} else {
+		cmd.Flags().DurationVar(reference, name, def, usage)
+	}
 }
 
 func (cmd *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().VarP(reference, name, shorthand, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().VarP(reference, name, shorthand, usage)
+	} else {
+		cmd.Flags().VarP(reference, name, shorthand, usage)
+	}
 }
 
 func (cmd *CommandClause) Var(reference pflag.Value, name string, usage string, hasEnv bool, persistent bool) {
-	cmd.Flags().Var(reference, name, usage)
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		cmd.PersistentFlags().Var(reference, name, usage)
+	} else {
+		cmd.Flags().Var(reference, name, usage)
+	}
 }
 
-func (cmd *CommandClause) VarPF(reference pflag.Value, name string,shorthand string,  usage string, hasEnv bool, persistent bool) *pflag.Flag {
-	return cmd.Flags().VarPF(reference, name, shorthand, usage)
+func (cmd *CommandClause) VarPF(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) *pflag.Flag {
+	if hasEnv {
+		//doSTH
+	}
+
+	if persistent {
+		return cmd.PersistentFlags().VarPF(reference, name, shorthand, usage)
+	} else {
+		return cmd.Flags().VarPF(reference, name, shorthand, usage)
+	}
 }
+
 // Command adds a new subcommand to this command.
 func (cmd *CommandClause) CreateCommand(name, help string) *CommandClause {
 	return &CommandClause{

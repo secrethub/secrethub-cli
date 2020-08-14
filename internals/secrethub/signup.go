@@ -132,7 +132,7 @@ func (cmd *SignUpCommand) Run() error {
 	var passphrase string
 	if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 		var err error
-		passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+		passphrase, err = askCredentialPassphrase(cmd.io)
 		if err != nil {
 			return err
 		}
@@ -253,4 +253,9 @@ func writeNewCredential(credential *credentials.KeyCreator, passphrase string, c
 	}
 
 	return credentialFile.Write(encodedCredential)
+}
+
+// askCredentialPassphrase prompts the user for a passphrase to protect the local credential.
+func askCredentialPassphrase(io ui.IO) (string, error) {
+	return ui.AskPassphrase(io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 }

@@ -34,7 +34,7 @@ type App struct {
 // NewApp defines a new command-line application.
 func NewApp(name, help string) *App {
 	return &App{
-		Application:      cobra.Command{Use: name, Short: help},
+		Application:      cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true},
 		name:             formatName(name, "", DefaultEnvSeparator, DefaultCommandDelimiters...),
 		delimiters:       DefaultCommandDelimiters,
 		separator:        DefaultEnvSeparator,
@@ -47,7 +47,7 @@ func NewApp(name, help string) *App {
 func (a *App) CreateCommand(name, help string) *CommandClause {
 	return &CommandClause{
 		Command: func() *cobra.Command {
-			newCommand := &cobra.Command{Use: name, Short: help}
+			newCommand := &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true}
 			a.Application.AddCommand(newCommand)
 			return newCommand
 		}(),

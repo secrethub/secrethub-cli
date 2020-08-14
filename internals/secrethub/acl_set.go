@@ -32,7 +32,14 @@ func NewACLSetCommand(io ui.IO, newClient newClientFunc) *ACLSetCommand {
 func (cmd *ACLSetCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("set", "Set access rule for an user or service on a path.")
 	clause.Args = cobra.ExactValidArgs(3)
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.DirectorySuggestions
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.DirectorySuggestions(cmd, args, toComplete)
+		} else if len(args) == 1 {
+			return []string{}, cobra.ShellCompDirectiveDefault
+		}
+		return []string{"read", "write", "admin"}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("dir-path", "The path of the directory to set the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "The account name (username or service name) to set the access rule for").Required().SetValue(&cmd.accountName)
 	//clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)

@@ -177,6 +177,9 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 	clause.Flag("desc").Hidden = true
 	clause.Flag("descr").Hidden = true
 	clause.StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.", true, false)
+	_ = clause.RegisterFlagCompletionFunc("permission", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"read", "write", "admin"}, cobra.ShellCompDirectiveDefault
+	})
 
 	clause.HelpLong("The native AWS identity provider uses a combination of AWS IAM and AWS KMS to provide access to SecretHub for any service running on AWS (e.g. EC2, Lambda or ECS). For this to work, an IAM role and a KMS key are needed.\n" +
 		"\n" +

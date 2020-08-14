@@ -64,6 +64,12 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("generate", "Generate a random secret.")
 	clause.Args = cobra.RangeArgs(1, 3)
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.SecretSuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	clause.VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength), true, false) //.PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Flag("length").DefValue = strconv.Itoa(defaultLength)

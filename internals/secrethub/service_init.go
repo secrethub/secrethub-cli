@@ -115,6 +115,9 @@ func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause.Flag("desc").Hidden = true
 	clause.Flag("descr").Hidden = true
 	clause.StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.", true, false)
+	_ = clause.RegisterFlagCompletionFunc("permission", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"read", "write", "admin"}, cobra.ShellCompDirectiveDefault
+	})
 	// TODO make 45 sec configurable
 	clause.BoolVarP(&cmd.clip, "clip", "c", false, "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.", true, false)
 	clause.StringVar(&cmd.file, "file", "", "Write the service account configuration to a file instead of stdout.", true, false)

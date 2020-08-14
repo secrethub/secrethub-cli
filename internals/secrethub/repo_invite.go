@@ -32,7 +32,12 @@ func NewRepoInviteCommand(io ui.IO, newClient newClientFunc) *RepoInviteCommand 
 func (cmd *RepoInviteCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("invite", "Invite a user to collaborate on a repository.")
 	clause.Args = cobra.ExactValidArgs(2)
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.RepositorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("repo-path", "The repository to invite the user to").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
 	registerForceFlag(clause, &cmd.force)

@@ -67,7 +67,12 @@ func (cmd *ServiceGCPLinkCommand) argumentRegister(c *cobra.Command, args []stri
 func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("link", "Create a new link between a namespace and a GCP project to allow creating SecretHub service accounts for GCP Service Accounts in the GCP project.")
 	clause.Args = cobra.ExactValidArgs(2)
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.NamespaceSuggestions
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.NamespaceSuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("namespace", "The SecretHub namespace to link.").Required().SetValue(&cmd.namespace)
 	//clause.Arg("project-id", "The GCP project to link the namespace to.").Required().SetValue(&cmd.projectID)
 
@@ -175,7 +180,12 @@ func (cmd *ServiceGCPDeleteLinkCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("delete-link", "Delete the link between a SecretHub namespace and a GCP project.")
 	clause.HelpLong("After deleting the link you cannot create new GCP service accounts in the specified namespace and GCP project anymore. Exisiting service accounts will keep on working.")
 	clause.Args = cobra.ExactValidArgs(2)
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.NamespaceSuggestions
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.NamespaceSuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
 	//clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 

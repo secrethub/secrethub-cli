@@ -35,7 +35,12 @@ func NewACLCheckCommand(io ui.IO, newClient newClientFunc) *ACLCheckCommand {
 func (cmd *ACLCheckCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("check", "Checks the effective permission of accounts on a path.")
 	clause.Args = cobra.RangeArgs(1, 2)
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.DirectorySuggestions
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.DirectorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("dir-path", "The path of the directory to check the effective permission for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
 

@@ -33,7 +33,12 @@ func NewRepoRevokeCommand(io ui.IO, newClient newClientFunc) *RepoRevokeCommand 
 func (cmd *RepoRevokeCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("revoke", "Revoke an account's access to a repository. A list of secrets that should be rotated will be printed out.")
 	clause.Args = cobra.ExactValidArgs(2)
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.RepositorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("repo-path", "The repository to revoke the account from").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "The account name (username or service name) to revoke access for").Required().SetValue(&cmd.accountName)
 	registerForceFlag(clause, &cmd.force)

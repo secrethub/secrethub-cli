@@ -41,7 +41,12 @@ func NewRepoExportCommand(io ui.IO, newClient newClientFunc) *RepoExportCommand 
 func (cmd *RepoExportCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("export", "Export the repository to a zip file.")
 	clause.Args = cobra.RangeArgs(1, 2)
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.RepositorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("repo-path", "The repository to export").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
 

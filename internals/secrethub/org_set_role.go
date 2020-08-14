@@ -35,8 +35,10 @@ func (cmd *OrgSetRoleCommand) Register(r command.Registerer) {
 	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		if len(args) == 0 {
 			return AutoCompleter{client: GetClient()}.RepositorySuggestions(cmd, args, toComplete)
+		} else if len(args) == 1 {
+			return []string{}, cobra.ShellCompDirectiveDefault
 		}
-		return []string{}, cobra.ShellCompDirectiveDefault
+		return []string{"admin", "member"}, cobra.ShellCompDirectiveDefault
 	}
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)

@@ -33,10 +33,18 @@ func NewOrgInviteCommand(io ui.IO, newClient newClientFunc) *OrgInviteCommand {
 func (cmd *OrgInviteCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("invite", "Invite a user to join an organization.")
 	clause.Args = cobra.ExactValidArgs(2)
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.RepositorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user to invite").Required().StringVar(&cmd.username)
 	clause.StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.", true, false)
+	_ = clause.RegisterFlagCompletionFunc("role", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"admin", "member"}, cobra.ShellCompDirectiveDefault
+	})
 	registerForceFlag(clause, &cmd.force)
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

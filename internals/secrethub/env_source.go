@@ -676,7 +676,7 @@ type MapValue struct {
 
 func (m MapValue) String() string {
 	textRepresentation := ""
-	for k, v :=range m.stringMap {
+	for k, v := range m.stringMap {
 		textRepresentation += k + "=" + v + ";"
 	}
 	return textRepresentation

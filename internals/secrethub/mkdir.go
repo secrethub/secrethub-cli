@@ -41,7 +41,7 @@ func (cmd *MkDirCommand) Register(r command.Registerer) {
 	//clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
 	clause.BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.")
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run executes the command.
@@ -62,7 +62,7 @@ func (cmd *MkDirCommand) Run() error {
 	return nil
 }
 
-func (cmd *MkDirCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *MkDirCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var list dirPathList
 	for _, arg := range args {
 		list = append(list, arg)

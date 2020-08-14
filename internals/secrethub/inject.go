@@ -74,6 +74,7 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause.BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.")
 	clause.BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.")
 
+
 	command.BindAction(clause, nil, cmd.Run)
 }
 

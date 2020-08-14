@@ -37,7 +37,7 @@ func (cmd *RepoRevokeCommand) Register(r command.Registerer) {
 	//clause.Arg("account-name", "The account name (username or service name) to revoke access for").Required().SetValue(&cmd.accountName)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run removes and revokes access to an account from a repo if possible.
@@ -128,7 +128,7 @@ func (cmd *RepoRevokeCommand) Run() error {
 	return nil
 }
 
-func (cmd *RepoRevokeCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *RepoRevokeCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewRepoPath(args[0])
 	if err != nil {

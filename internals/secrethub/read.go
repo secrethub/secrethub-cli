@@ -44,7 +44,9 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("read", "Read a secret.")
 	clause.Args = cobra.ExactValidArgs(1)
-	clause.BoolVarP(&cmd.useClipboard,
+
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.SecretSuggestions
+	clause.Flags().BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",

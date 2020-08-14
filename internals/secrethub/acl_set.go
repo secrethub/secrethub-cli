@@ -37,7 +37,7 @@ func (cmd *ACLSetCommand) Register(r command.Registerer) {
 	//clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -81,7 +81,7 @@ func (cmd *ACLSetCommand) Run() error {
 	return nil
 }
 
-func (cmd *ACLSetCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ACLSetCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewDirPath(args[0])
 	if err != nil {

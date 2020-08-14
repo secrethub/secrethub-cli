@@ -87,7 +87,7 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.DurationVar(&cmd.maskerOptions.BufferDelay, "masking-buffer-period", time.Millisecond*50, "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.")
 	clause.BoolVar(&cmd.ignoreMissingSecrets, "ignore-missing-secrets", false, "Do not return an error when a secret does not exist and use an empty value instead.")
 	cmd.environment.register(clause)
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run reads files from the .secretsenv/<env-name> directory, sets them as environment variables and runs the given command.
@@ -176,7 +176,7 @@ func (cmd *RunCommand) Run() error {
 	return nil
 }
 
-func (cmd *RunCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *RunCommand) argumentRegister(c *cobra.Command, args []string) error {
 	copy(cmd.command, args)
 	return nil
 }

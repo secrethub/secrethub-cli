@@ -32,7 +32,7 @@ func (cmd *RepoInitCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run creates a new repository.
@@ -54,7 +54,7 @@ func (cmd *RepoInitCommand) Run() error {
 	return nil
 }
 
-func (cmd *RepoInitCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *RepoInitCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewRepoPath(args[0])
 	if err != nil {

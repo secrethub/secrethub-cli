@@ -188,6 +188,7 @@ func (app *App) registerCommands() {
 	NewSetCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewClearClipboardCommand().Register(app.cli)
 	NewKeyringClearCommand().Register(app.cli)
+	NewCompletionCommand().Register(app.cli)
 
 	//demo.NewCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 }

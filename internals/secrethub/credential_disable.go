@@ -35,7 +35,7 @@ func (cmd *CredentialDisableCommand) Register(r command.Registerer) {
 	//clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run disables an existing credential.
@@ -86,7 +86,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 	return nil
 }
 
-func (cmd *CredentialDisableCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *CredentialDisableCommand) argumentRegister(c *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		cmd.fingerprint = args[0]
 	}

@@ -68,7 +68,7 @@ func (cmd *ServiceLsCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run lists all service accounts in a given repository.
@@ -118,7 +118,7 @@ outer:
 	return nil
 }
 
-func (cmd *ServiceLsCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ServiceLsCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.repoPath, err = api.NewRepoPath(args[0])
 	if err != nil {

@@ -153,7 +153,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	return nil
 }
 
-func (cmd *ServiceAWSInitCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ServiceAWSInitCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.repo, err = api.NewRepoPath(args[0])
 	if err != nil {
@@ -187,7 +187,7 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 		"If no system-wide default for the AWS region is provided (e.g. with $AWS_REGION), the AWS-region where the KMS key resides should be explicitly provided to this command with the --region flag.",
 	)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {

@@ -38,7 +38,7 @@ func (cmd *OrgInviteCommand) Register(r command.Registerer) {
 	clause.StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.")
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run invites a user to an organization and gives them a certain role.
@@ -76,7 +76,7 @@ func (cmd *OrgInviteCommand) Run() error {
 	return nil
 }
 
-func (cmd *OrgInviteCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *OrgInviteCommand) argumentRegister(c *cobra.Command, args []string) error {
 	err := api.ValidateOrgName(args[0])
 	if err != nil {
 		return err

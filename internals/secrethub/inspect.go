@@ -35,7 +35,7 @@ func (cmd *InspectCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo or secret-path", "Path to the repository or the secret to inspect "+repoPathPlaceHolder+" or "+secretPathOptionalVersionPlaceHolder).Required().SetValue(&cmd.path)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run inspects a repository or a secret
@@ -70,7 +70,7 @@ func (cmd *InspectCommand) Run() error {
 	return ErrInspectResourceNotSupported
 }
 
-func (cmd *InspectCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *InspectCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewPath(args[0])
 	if err != nil {

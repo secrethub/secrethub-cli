@@ -35,7 +35,7 @@ func (cmd *OrgInspectCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run prints out the details of an organization.
@@ -70,7 +70,7 @@ func (cmd *OrgInspectCommand) Run() error {
 	return nil
 }
 
-func (cmd *OrgInspectCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *OrgInspectCommand) argumentRegister(c *cobra.Command, args []string) error {
 	err := api.ValidateOrgName(args[0])
 	if err != nil {
 		return err

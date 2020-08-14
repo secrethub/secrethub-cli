@@ -46,7 +46,7 @@ func (cmd *TreeCommand) Run() error {
 	return nil
 }
 
-func (cmd *TreeCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *TreeCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewDirPath(args[0])
 	if err != nil {
@@ -68,7 +68,7 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 
 	clause.Flag("noreport").Hidden = true
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.

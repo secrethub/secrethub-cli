@@ -35,7 +35,7 @@ func (cmd *ACLRmCommand) Register(r command.Registerer) {
 	//clause.Arg("account-name", "The account name (username or service name) whose rule to remove").Required().SetValue(&cmd.accountName)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run removes the access rule.
@@ -77,7 +77,7 @@ func (cmd *ACLRmCommand) Run() error {
 	return nil
 }
 
-func (cmd *ACLRmCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *ACLRmCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	cmd.path, err = api.NewDirPath(args[0])
 	if err != nil {

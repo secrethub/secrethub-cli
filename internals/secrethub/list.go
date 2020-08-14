@@ -40,7 +40,7 @@ func (cmd *LsCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.PreRun, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run lists a repo, secret or namespace.
@@ -133,7 +133,7 @@ func (cmd *LsCommand) Run() error {
 	return errio.UnexpectedError(errors.New("invalid path argument"))
 }
 
-func (cmd *LsCommand) PreRun(c *cobra.Command, args []string) error {
+func (cmd *LsCommand) argumentRegister(c *cobra.Command, args []string) error {
 	var err error
 	if len(args) != 0 {
 		cmd.path, err = api.NewPath(args[0])

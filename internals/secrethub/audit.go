@@ -23,7 +23,7 @@ import (
 
 var (
 	errAudit        = errio.Namespace("audit")
-	errNoSuchFormat = errAudit.Code("invalid_format").ErrorPref("invalid format: %s")
+	errNoSuchFormat = errAudit.Code("invalid_format").ErrorPref("invalid se: %s")
 )
 
 const (

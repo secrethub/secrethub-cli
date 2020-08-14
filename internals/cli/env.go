@@ -177,48 +177,48 @@ type CommandClause struct {
 	app  *App
 }
 
-func (cc *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string) {
-	cc.Flags().BoolVarP(reference, name, shorthand, def, usage)
+func (cmd *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
 }
 
-func (cc *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string) {
-	cc.Flags().IntVarP(reference, name, shorthand, def, usage)
+func (cmd *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
 }
 
-func (cc *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string) {
-	cc.Flags().StringVarP(reference, name, shorthand, def, usage)
+func (cmd *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
 }
 
-func (cc *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string) {
-	cc.Flags().DurationVarP(reference, name, shorthand, def, usage)
+func (cmd *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
 }
 
-func (cc *CommandClause) BoolVar(reference *bool, name string, def bool, usage string) {
-	cc.Flags().BoolVar(reference, name, def, usage)
+func (cmd *CommandClause) BoolVar(reference *bool, name string, def bool, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().BoolVar(reference, name, def, usage)
 }
 
-func (cc *CommandClause) IntVar(reference *int, name string, def int, usage string) {
-	cc.Flags().IntVar(reference, name, def, usage)
+func (cmd *CommandClause) IntVar(reference *int, name string, def int, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().IntVar(reference, name, def, usage)
 }
 
-func (cc *CommandClause) StringVar(reference *string, name string, def string, usage string) {
-	cc.Flags().StringVar(reference, name, def, usage)
+func (cmd *CommandClause) StringVar(reference *string, name string, def string, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().StringVar(reference, name, def, usage)
 }
 
-func (cc *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string) {
-	cc.Flags().DurationVar(reference, name, def, usage)
+func (cmd *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().DurationVar(reference, name, def, usage)
 }
 
-func (cc *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string) {
-	cc.Flags().VarP(reference, name, shorthand, usage)
+func (cmd *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().VarP(reference, name, shorthand, usage)
 }
 
-func (cc *CommandClause) Var(reference pflag.Value, name string, usage string) {
-	cc.Flags().Var(reference, name, usage)
+func (cmd *CommandClause) Var(reference pflag.Value, name string, usage string, hasEnv bool, persistent bool) {
+	cmd.Flags().Var(reference, name, usage)
 }
 
-func (cc *CommandClause) VarPF(reference pflag.Value, name string,shorthand string,  usage string) *pflag.Flag {
-	return cc.Flags().VarPF(reference, name, shorthand, usage)
+func (cmd *CommandClause) VarPF(reference pflag.Value, name string,shorthand string,  usage string, hasEnv bool, persistent bool) *pflag.Flag {
+	return cmd.Flags().VarPF(reference, name, shorthand, usage)
 }
 // Command adds a new subcommand to this command.
 func (cmd *CommandClause) CreateCommand(name, help string) *CommandClause {

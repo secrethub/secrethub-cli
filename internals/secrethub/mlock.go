@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"strconv"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/mlock"
@@ -29,8 +30,11 @@ func (f mlockFlag) init() error {
 
 // RegisterMlockFlag registers a mlock flag that enables memory locking when set to true.
 func RegisterMlockFlag(r *cobra.Command) {
+	commandClause := cli.CommandClause{
+		Command: r,
+	}
 	flag := mlockFlag(false)
-	r.PersistentFlags().Var(&flag, "mlock", "Enable memory locking")
+	commandClause.Var(&flag, "mlock", "Enable memory locking")
 }
 
 // String implements the flag.Value interface.

@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"strconv"
 
 	"github.com/fatih/color"
@@ -21,8 +22,11 @@ func (f noColorFlag) init() {
 
 // RegisterColorFlag registers a color flag that configures whether colored output is used.
 func RegisterColorFlag(r *cobra.Command) {
+	commandClause := cli.CommandClause{
+		Command: r,
+	}
 	flag := noColorFlag(false)
-	r.PersistentFlags().Var(&flag, "no-color", "Disable colored output.")
+	commandClause.Var(&flag, "no-color", "Disable colored output.")
 }
 
 // String implements the flag.Value interface.

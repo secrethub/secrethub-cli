@@ -9,10 +9,13 @@ import (
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
 func RegisterDebugFlag(r *cobra.Command, logger cli.Logger) {
+	commandClause := cli.CommandClause{
+		Command: r,
+	}
 	flag := debugFlag{
 		logger: logger,
 	}
-	r.PersistentFlags().VarP(&flag, "debug", "D", "Enable debug mode.")
+	commandClause.VarP(&flag, "debug", "D", "Enable debug mode.")
 }
 
 // debugFlag configures the debug level of a logger.

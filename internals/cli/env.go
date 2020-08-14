@@ -178,16 +178,15 @@ type CommandClause struct {
 }
 
 func (cmd *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().BoolVarP(reference, name, shorthand, def, usage)
 	} else {
 		cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
 	}
 
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
@@ -347,19 +346,19 @@ func (cmd *CommandClause) Alias(alias string) {
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
-//func (cmd *CommandClause) Flag(name, help string) *Flag {
-//	fullCmd := strings.Replace(cmd.FullCommand(), " ", cmd.app.separator, -1)
-//	prefix := formatName(fullCmd, cmd.app.name, cmd.app.separator, cmd.app.delimiters...)
-//	envVar := formatName(name, prefix, cmd.app.separator, cmd.app.delimiters...)
-//
-//	cmd.app.registerEnvVar(envVar)
-//	flag := &pflag.Flag{Name: name, Usage: help}
-//	return &Flag{
-//		Flag:   flag,
-//		app:    cmd.app,
-//		envVar: envVar,
-//	}
-//}
+func (cmd *CommandClause) FlagRegister(name, help string) *Flag {
+	fullCmd := strings.Replace(cmd.FullCommand(), " ", cmd.app.separator, -1)
+	prefix := formatName(fullCmd, cmd.app.name, cmd.app.separator, cmd.app.delimiters...)
+	envVar := formatName(name, prefix, cmd.app.separator, cmd.app.delimiters...)
+
+	cmd.app.registerEnvVar(envVar)
+	flag := cmd.Flag("name")
+	return (&Flag{
+		Flag:   flag,
+		app:    cmd.app,
+		envVar: envVar,
+	}).Envar(name)
+}
 
 // Flag represents a command-line flag.
 type Flag struct {
@@ -379,16 +378,6 @@ func (f *Flag) Envar(name string) *Flag {
 	f.app.registerEnvVar(name)
 	f.envVar = name
 	f.Flag.DefValue = os.Getenv(f.envVar)
-	return f
-}
-
-// NoEnvar forces environment variable defaults to be disabled for this flag.
-func (f *Flag) NoEnvar() *Flag {
-	if f.envVar != "" {
-		f.app.unregisterEnvVar(f.envVar)
-	}
-	f.envVar = ""
-	f.Flag.DefValue = ""
 	return f
 }
 

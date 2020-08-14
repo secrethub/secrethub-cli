@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/spf13/cobra"
@@ -176,6 +177,49 @@ type CommandClause struct {
 	app  *App
 }
 
+func (cc *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string) {
+	cc.Flags().BoolVarP(reference, name, shorthand, def, usage)
+}
+
+func (cc *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string) {
+	cc.Flags().IntVarP(reference, name, shorthand, def, usage)
+}
+
+func (cc *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string) {
+	cc.Flags().StringVarP(reference, name, shorthand, def, usage)
+}
+
+func (cc *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string) {
+	cc.Flags().DurationVarP(reference, name, shorthand, def, usage)
+}
+
+func (cc *CommandClause) BoolVar(reference *bool, name string, def bool, usage string) {
+	cc.Flags().BoolVar(reference, name, def, usage)
+}
+
+func (cc *CommandClause) IntVar(reference *int, name string, def int, usage string) {
+	cc.Flags().IntVar(reference, name, def, usage)
+}
+
+func (cc *CommandClause) StringVar(reference *string, name string, def string, usage string) {
+	cc.Flags().StringVar(reference, name, def, usage)
+}
+
+func (cc *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string) {
+	cc.Flags().DurationVar(reference, name, def, usage)
+}
+
+func (cc *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string) {
+	cc.Flags().VarP(reference, name, shorthand, usage)
+}
+
+func (cc *CommandClause) Var(reference pflag.Value, name string, usage string) {
+	cc.Flags().Var(reference, name, usage)
+}
+
+func (cc *CommandClause) VarPF(reference pflag.Value, name string,shorthand string,  usage string) *pflag.Flag {
+	return cc.Flags().VarPF(reference, name, shorthand, usage)
+}
 // Command adds a new subcommand to this command.
 func (cmd *CommandClause) CreateCommand(name, help string) *CommandClause {
 	return &CommandClause{

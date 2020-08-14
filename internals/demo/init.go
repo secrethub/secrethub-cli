@@ -36,7 +36,7 @@ func (cmd *InitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Create the secrets necessary to connect with the demo application.")
 	clause.HelpLong("demo init creates a repository with the username and password needed to connect to the demo API.")
 
-	clause.Flags().VarPF(&cmd.repo, "repo", "", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.")
+	clause.VarPF(&cmd.repo, "repo", "", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.")
 
 	command.BindAction(clause, nil, cmd.Run)
 }

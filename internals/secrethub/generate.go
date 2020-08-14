@@ -65,16 +65,16 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("generate", "Generate a random secret.")
 	clause.Args = cobra.RangeArgs(1, 3)
 	//clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
-	clause.Flags().VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)) //.PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
+	clause.VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)) //.PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Flag("length").DefValue = strconv.Itoa(defaultLength)
-	clause.Flags().Var(&cmd.mins, "min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constraints reduces the strength of the secret. When possible, avoid any constraints.")
-	clause.Flags().BoolVarP(&cmd.copyToClipboard, "clip", "c", false, "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".")
-	clause.Flags().Var(&cmd.charsetFlag, "charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list. Defaults to alphanumeric.") //Default("alphanumeric").HintOptions("all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable")
+	clause.Var(&cmd.mins, "min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constraints reduces the strength of the secret. When possible, avoid any constraints.")
+	clause.BoolVarP(&cmd.copyToClipboard, "clip", "c", false, "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".")
+	clause.Var(&cmd.charsetFlag, "charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list. Defaults to alphanumeric.") //Default("alphanumeric").HintOptions("all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable")
 	clause.Flag("charset").DefValue = "alphanumeric"
 	_ = clause.RegisterFlagCompletionFunc("charset", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable"}, cobra.ShellCompDirectiveDefault
 	})
-	clause.Flags().VarP(&cmd.symbolsFlag, "symbols", "s", "Include symbols in secret.") //Short('s').Hidden().SetValue(&cmd.symbolsFlag)
+	clause.VarP(&cmd.symbolsFlag, "symbols", "s", "Include symbols in secret.") //Short('s').Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Flag("symbols").Hidden = true
 	//clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)

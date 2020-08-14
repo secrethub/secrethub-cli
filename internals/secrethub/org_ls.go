@@ -32,7 +32,7 @@ func NewOrgLsCommand(io ui.IO, newClient newClientFunc) *OrgLsCommand {
 func (cmd *OrgLsCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("ls", "List all organizations you are a member of.")
 	clause.Alias("list")
-	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print organization names.")
+	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print organization names.")
 
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 

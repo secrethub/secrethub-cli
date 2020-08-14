@@ -108,18 +108,18 @@ func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Create a new service account.")
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
-	clause.Flags().StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it.")
-	clause.Flags().StringVar(&cmd.description, "descr", "", "")
-	clause.Flags().StringVar(&cmd.description, "desc", "", "")
+	clause.StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it.")
+	clause.StringVar(&cmd.description, "descr", "", "")
+	clause.StringVar(&cmd.description, "desc", "", "")
 	clause.Flag("desc").Hidden = true
 	clause.Flag("descr").Hidden = true
-	clause.Flags().StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
+	clause.StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
 	// TODO make 45 sec configurable
-	clause.Flags().BoolVarP(&cmd.clip, "clip", "c", false, "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.")
-	clause.Flags().StringVar(&cmd.file, "file", "", "Write the service account configuration to a file instead of stdout.")
+	clause.BoolVarP(&cmd.clip, "clip", "c", false, "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.")
+	clause.StringVar(&cmd.file, "file", "", "Write the service account configuration to a file instead of stdout.")
 	clause.Flag("file").Hidden = true
-	clause.Flags().StringVar(&cmd.file, "out-file", "", "Write the service account configuration to a file instead of stdout.")
-	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.")
+	clause.StringVar(&cmd.file, "out-file", "", "Write the service account configuration to a file instead of stdout.")
+	clause.Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.")
 	clause.Flag("file-mode").DefValue = "0440"
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)

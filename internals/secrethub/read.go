@@ -44,17 +44,17 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("read", "Read a secret.")
 	clause.Args = cobra.ExactValidArgs(1)
-	clause.Flags().BoolVarP(&cmd.useClipboard,
+	clause.BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
 	)
-	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.")
-	clause.Flags().BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret")
+	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.")
+	clause.BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret")
 
-	fileModeFlag := clause.Flags().VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
+	fileModeFlag := clause.VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
 	fileModeFlag.DefValue = "0600"
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

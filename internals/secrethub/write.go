@@ -46,9 +46,9 @@ func (cmd *WriteCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("write", "Write a secret.")
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flags().BoolVarP(&cmd.useClipboard, "clip", "c", false, "Use clipboard content as input.")
-	clause.Flags().BoolVarP(&cmd.multiline, "multiline", "m", false, "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.")
-	clause.Flags().StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.")
+	clause.BoolVarP(&cmd.useClipboard, "clip", "c", false, "Use clipboard content as input.")
+	clause.BoolVarP(&cmd.multiline, "multiline", "m", false, "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.")
+	clause.StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.")
 
 	command.BindAction(clause, cmd.PreRun, cmd.Run)
 }

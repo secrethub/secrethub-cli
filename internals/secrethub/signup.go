@@ -156,6 +156,7 @@ func (cmd *SignUpCommand) Run() error {
 
 	err = writeNewCredential(credential, passphrase, cmd.credentialStore.ConfigDir().Credential())
 	if err != nil {
+		cmd.progressPrinter.Stop()
 		return err
 	}
 

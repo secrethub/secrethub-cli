@@ -162,27 +162,32 @@ func (cmd *InitCommand) Run() error {
 
 		client, err := cmd.newClientWithSetupCode(setupCode)
 		if err != nil {
+			cmd.progressPrinter.Stop()
 			return err
 		}
 
 		credential := credentials.CreateKey()
 		_, err = client.Credentials().Create(credential, "")
 		if err != nil {
+			cmd.progressPrinter.Stop()
 			return err
 		}
 
 		err = writeNewCredential(credential, passphrase, cmd.credentialStore.ConfigDir().Credential())
 		if err != nil {
+			cmd.progressPrinter.Stop()
 			return err
 		}
 
 		client, err = cmd.newClientWithCredentials(credential)
 		if err != nil {
+			cmd.progressPrinter.Stop()
 			return err
 		}
 
 		me, err := client.Me().GetUser()
 		if err != nil {
+			cmd.progressPrinter.Stop()
 			return err
 		}
 

@@ -207,7 +207,7 @@ func createStartRepo(client secrethub.ClientInterface, username string, fullName
 	return secretPath, nil
 }
 
-// createWorkspace c
+// createWorkspace creates a new org with the given name and description.
 func createWorkspace(client secrethub.ClientInterface, io ui.IO, org string, orgDescription string, progressPrinter progress.Printer) error {
 	if org == "" {
 		createWorkspace, err := ui.AskYesNo(io, "Do you want to create a shared workspace for your team?", ui.DefaultYes)

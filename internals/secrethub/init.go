@@ -151,6 +151,11 @@ func (cmd *InitCommand) Run() error {
 			}
 		}
 
+		deviceName, err := promptForDeviceName(cmd.io)
+		if err != nil {
+			return err
+		}
+
 		fmt.Fprint(cmd.io.Output(), "Setting up your account...")
 		cmd.progressPrinter.Start()
 
@@ -161,7 +166,7 @@ func (cmd *InitCommand) Run() error {
 		}
 
 		credential := credentials.CreateKey()
-		_, err = client.Credentials().Create(credential, "")
+		_, err = client.Credentials().Create(credential, deviceName)
 		if err != nil {
 			cmd.progressPrinter.Stop()
 			return err
@@ -235,19 +240,9 @@ func (cmd *InitCommand) Run() error {
 			return nil
 		}
 
-		deviceName := ""
-		question := "What is the name of this device?"
-		hostName, err := os.Hostname()
-		if err == nil {
-			deviceName, err = ui.AskWithDefault(cmd.io, question, hostName)
-			if err != nil {
-				return err
-			}
-		} else {
-			deviceName, err = ui.Ask(cmd.io, question)
-			if err != nil {
-				return err
-			}
+		deviceName, err := promptForDeviceName(cmd.io)
+		if err != nil {
+			return err
 		}
 
 		// Only prompt for a passphrase when the user hasn't used --force.
@@ -285,4 +280,22 @@ func (cmd *InitCommand) Run() error {
 	default:
 		return errors.New("invalid option")
 	}
+}
+
+func promptForDeviceName(io ui.IO) (string, error) {
+	deviceName := ""
+	question := "What is the name of this device?"
+	hostName, err := os.Hostname()
+	if err == nil {
+		deviceName, err = ui.AskWithDefault(io, question, hostName)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		deviceName, err = ui.Ask(io, question)
+		if err != nil {
+			return "", err
+		}
+	}
+	return deviceName, nil
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
+
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
@@ -152,19 +154,8 @@ func (cmd *SignUpCommand) Run() error {
 		return err
 	}
 
-	exportKey := credential.Key
-	if passphrase != "" {
-		exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
-	}
-
-	encodedCredential, err := credential.Export()
+	err = writeNewCredential(credential, passphrase, cmd.credentialStore.ConfigDir().Credential())
 	if err != nil {
-		cmd.progressPrinter.Stop()
-		return err
-	}
-	err = cmd.credentialStore.ConfigDir().Credential().Write(encodedCredential)
-	if err != nil {
-		cmd.progressPrinter.Stop()
 		return err
 	}
 
@@ -248,4 +239,19 @@ func createWorkspace(client secrethub.ClientInterface, io ui.IO, org string, org
 		fmt.Fprint(io.Output(), "Created your shared workspace.\n\n")
 	}
 	return nil
+}
+
+// writeCredential writes the given credential to the configuration directory.
+func writeNewCredential(credential *credentials.KeyCreator, passphrase string, credentialFile *configdir.CredentialFile) error {
+	exportKey := credential.Key
+	if passphrase != "" {
+		exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
+	}
+
+	encodedCredential, err := credential.Export()
+	if err != nil {
+		return err
+	}
+
+	return credentialFile.Write(encodedCredential)
 }

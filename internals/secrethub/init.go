@@ -171,20 +171,8 @@ func (cmd *InitCommand) Run() error {
 			return err
 		}
 
-		exportKey := credential.Key
-		if passphrase != "" {
-			exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
-		}
-
-		encodedCredential, err := credential.Export()
+		err = writeNewCredential(credential, passphrase, cmd.credentialStore.ConfigDir().Credential())
 		if err != nil {
-			cmd.progressPrinter.Stop()
-			return err
-		}
-
-		err = cmd.credentialStore.ConfigDir().Credential().Write(encodedCredential)
-		if err != nil {
-			cmd.progressPrinter.Stop()
 			return err
 		}
 

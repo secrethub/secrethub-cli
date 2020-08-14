@@ -1,10 +1,10 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"strconv"
 
 	"github.com/fatih/color"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ func RegisterColorFlag(r *cobra.Command) {
 		Command: r,
 	}
 	flag := noColorFlag(false)
-	commandClause.Var(&flag, "no-color", "Disable colored output.")
+	commandClause.Var(&flag, "no-color", "Disable colored output.", true, true)
 }
 
 // String implements the flag.Value interface.

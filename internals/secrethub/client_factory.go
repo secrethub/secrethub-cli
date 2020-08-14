@@ -1,10 +1,11 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
@@ -48,9 +49,9 @@ func (f *clientFactory) Register(r *cobra.Command) {
 		Command: r,
 	}
 	//TODO persistent!!!
-	commandClause.VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.")
-	commandClause.StringVar(&f.identityProvider, "identity-provider", "key", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ")
-	commandClause.VarPF(&f.proxyAddress, "proxy-address", "", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`")
+	commandClause.VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.", true, false)
+	commandClause.StringVar(&f.identityProvider, "identity-provider", "key", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ", true, false)
+	commandClause.VarPF(&f.proxyAddress, "proxy-address", "", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`", true, false)
 }
 
 // NewClient returns a new client that is configured to use the remote that

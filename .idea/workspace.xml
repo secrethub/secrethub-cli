@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:feature" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:feature" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="6c590463-8047-4408-80ab-ada607fe8c88" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/internals/cli/env.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/cli/env.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/demo/init.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/demo/init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/account_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/account_init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/acl_list.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/acl_list.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/audit.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/audit.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/clear.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/clear.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/clear_clipboard.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/clear_clipboard.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/client_factory.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/client_factory.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/color.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/color.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/credential_store.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/credential_store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/debug.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/debug.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/env_source.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/env_source.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/generate.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/generate.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/init.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/inject.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/inject.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/list.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/list.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/mkdir.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/mkdir.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/mlock.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/mlock.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/org_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/org_init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/org_invite.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/org_invite.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/org_ls.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/org_ls.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/printenv.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/printenv.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/read.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/read.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/repo_ls.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/repo_ls.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/rm.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/rm.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/run.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/run.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/service_aws_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/service_aws_init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/service_deploy_winrm.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/service_deploy_winrm.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/service_gcp_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/service_gcp_init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/service_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/service_init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/service_ls.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/service_ls.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/set.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/set.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/signup.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/signup.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/tree.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/tree.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internals/secrethub/write.go" beforeDir="false" afterPath="$PROJECT_DIR$/internals/secrethub/write.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
+  <component name="GOROOT" path="/usr/local/go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="false" />
+  </component>
+  <component name="ProjectId" id="1ewn8z2AZltXdNgNrjDo0uxDnKr" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultGoTemplateProperty" value="Go File" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="configurable.Global.GOPATH.is.expanded" value="true" />
+    <property name="configurable.Module.GOPATH.is.expanded" value="false" />
+    <property name="configurable.Project.GOPATH.is.expanded" value="true" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/internals/secrethub" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="preference.GoLinterConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/internals/secrethub" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Go Test.go test github.com/secrethub/secrethub-cli/internals/secrethub">
+    <configuration name="go build github.com/secrethub/secrethub-cli/cmd/secrethub" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+      <module name="secrethub-cli" />
+      <working_directory value="$PROJECT_DIR$" />
+      <parameters value="--version" />
+      <kind value="PACKAGE" />
+      <filePath value="$PROJECT_DIR$/cmd/secrethub/main.go" />
+      <package value="github.com/secrethub/secrethub-cli/cmd/secrethub" />
+      <directory value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="secrethub-cli" />
+      <working_directory value="$PROJECT_DIR$/internals/secrethub" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/secrethub/secrethub-cli/internals/secrethub" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestNewClientFactory_ProxyAddress\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (2)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="secrethub-cli" />
+      <working_directory value="$PROJECT_DIR$/internals/secrethub" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/secrethub/secrethub-cli/internals/secrethub" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestNewClientFactory_ProxyAddress\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (3)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="secrethub-cli" />
+      <working_directory value="$PROJECT_DIR$/internals/secrethub" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/secrethub/secrethub-cli/internals/secrethub" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestNewClientFactory_ProxyAddress\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestOrgInitCommand_Run in github.com/secrethub/secrethub-cli/internals/secrethub" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="secrethub-cli" />
+      <working_directory value="$PROJECT_DIR$/internals/secrethub" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/secrethub/secrethub-cli/internals/secrethub" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestOrgInitCommand_Run\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test github.com/secrethub/secrethub-cli/internals/secrethub" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="secrethub-cli" />
+      <working_directory value="$PROJECT_DIR$/internals/secrethub" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/secrethub/secrethub-cli/internals/secrethub" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Go Build.go build github.com/secrethub/secrethub-cli/cmd/secrethub" />
+      <item itemvalue="Go Test.TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (3)" />
+      <item itemvalue="Go Test.TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (1)" />
+      <item itemvalue="Go Test.TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (2)" />
+      <item itemvalue="Go Test.TestOrgInitCommand_Run in github.com/secrethub/secrethub-cli/internals/secrethub" />
+      <item itemvalue="Go Test.go test github.com/secrethub/secrethub-cli/internals/secrethub" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.go test github.com/secrethub/secrethub-cli/internals/secrethub" />
+        <item itemvalue="Go Test.TestOrgInitCommand_Run in github.com/secrethub/secrethub-cli/internals/secrethub" />
+        <item itemvalue="Go Test.TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (3)" />
+        <item itemvalue="Go Test.TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (2)" />
+        <item itemvalue="Go Test.TestNewClientFactory_ProxyAddress in github.com/secrethub/secrethub-cli/internals/secrethub (1)" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="2675" y="201" width="400" height="684" key="#GOPATH" timestamp="1595241669789">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state x="2675" y="201" width="400" height="684" key="#GOPATH/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595241669789" />
+    <state x="2675" y="473" width="410" height="141" key="#GOROOT" timestamp="1595241843448">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state x="2675" y="473" width="410" height="141" key="#GOROOT/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595241843448" />
+    <state x="678" y="424" width="554" height="239" key="#Go_Linter" timestamp="1595335270637">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="678" y="424" width="554" height="239" key="#Go_Linter/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595335270637" />
+    <state x="441" y="198" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1597329605590">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state x="441" y="198" key="#com.intellij.execution.impl.EditConfigurationsDialog/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596713439536" />
+    <state x="441" y="198" key="#com.intellij.execution.impl.EditConfigurationsDialog/46.27.1874.1053@46.27.1874.1053" timestamp="1597329605590" />
+    <state x="771" y="321" width="424" height="491" key="FileChooserDialogImpl" timestamp="1596447516552">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state x="743" y="321" width="424" height="491" key="FileChooserDialogImpl/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595498579133" />
+    <state x="2663" y="302" width="424" height="491" key="FileChooserDialogImpl/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595241793794" />
+    <state x="771" y="321" width="424" height="491" key="FileChooserDialogImpl/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596447516552" />
+    <state width="1828" height="340" key="GridCell.Tab.0.bottom" timestamp="1597334160256">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state width="1874" height="255" key="GridCell.Tab.0.bottom/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595429306985" />
+    <state width="1828" height="275" key="GridCell.Tab.0.bottom/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595363416722" />
+    <state width="1828" height="254" key="GridCell.Tab.0.bottom/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1596802143166" />
+    <state width="1828" height="254" key="GridCell.Tab.0.bottom/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596799143035" />
+    <state width="1828" height="340" key="GridCell.Tab.0.bottom/46.27.1874.1053@46.27.1874.1053" timestamp="1597334160256" />
+    <state width="1828" height="340" key="GridCell.Tab.0.center" timestamp="1597334160255">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state width="1874" height="255" key="GridCell.Tab.0.center/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595429306985" />
+    <state width="1828" height="275" key="GridCell.Tab.0.center/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595363416722" />
+    <state width="1828" height="254" key="GridCell.Tab.0.center/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1596802143166" />
+    <state width="1828" height="254" key="GridCell.Tab.0.center/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596799143035" />
+    <state width="1828" height="340" key="GridCell.Tab.0.center/46.27.1874.1053@46.27.1874.1053" timestamp="1597334160255" />
+    <state width="1828" height="340" key="GridCell.Tab.0.left" timestamp="1597334160255">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state width="1874" height="255" key="GridCell.Tab.0.left/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595429306985" />
+    <state width="1828" height="275" key="GridCell.Tab.0.left/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595363416722" />
+    <state width="1828" height="254" key="GridCell.Tab.0.left/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1596802143166" />
+    <state width="1828" height="254" key="GridCell.Tab.0.left/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596799143035" />
+    <state width="1828" height="340" key="GridCell.Tab.0.left/46.27.1874.1053@46.27.1874.1053" timestamp="1597334160255" />
+    <state width="1828" height="340" key="GridCell.Tab.0.right" timestamp="1597334160256">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state width="1874" height="255" key="GridCell.Tab.0.right/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595429306985" />
+    <state width="1828" height="275" key="GridCell.Tab.0.right/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595363416722" />
+    <state width="1828" height="254" key="GridCell.Tab.0.right/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1596802143166" />
+    <state width="1828" height="254" key="GridCell.Tab.0.right/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596799143035" />
+    <state width="1828" height="340" key="GridCell.Tab.0.right/46.27.1874.1053@46.27.1874.1053" timestamp="1597334160256" />
+    <state width="1828" height="340" key="GridCell.Tab.1.bottom" timestamp="1597334160258">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state width="1874" height="351" key="GridCell.Tab.1.bottom/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595416712391" />
+    <state width="1828" height="340" key="GridCell.Tab.1.bottom/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1595619674718" />
+    <state width="1828" height="351" key="GridCell.Tab.1.bottom/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596722911926" />
+    <state width="1828" height="340" key="GridCell.Tab.1.bottom/46.27.1874.1053@46.27.1874.1053" timestamp="1597334160258" />
+    <state width="1828" height="340" key="GridCell.Tab.1.center" timestamp="1597334160257">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state width="1874" height="351" key="GridCell.Tab.1.center/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595416712390" />
+    <state width="1828" height="340" key="GridCell.Tab.1.center/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1595619674718" />
+    <state width="1828" height="351" key="GridCell.Tab.1.center/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596722911926" />
+    <state width="1828" height="340" key="GridCell.Tab.1.center/46.27.1874.1053@46.27.1874.1053" timestamp="1597334160257" />
+    <state width="1828" height="340" key="GridCell.Tab.1.left" timestamp="1597334160256">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state width="1874" height="351" key="GridCell.Tab.1.left/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595416712390" />
+    <state width="1828" height="340" key="GridCell.Tab.1.left/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1595619674718" />
+    <state width="1828" height="351" key="GridCell.Tab.1.left/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596722911926" />
+    <state width="1828" height="340" key="GridCell.Tab.1.left/46.27.1874.1053@46.27.1874.1053" timestamp="1597334160256" />
+    <state width="1828" height="340" key="GridCell.Tab.1.right" timestamp="1597334160257">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state width="1874" height="351" key="GridCell.Tab.1.right/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595416712390" />
+    <state width="1828" height="340" key="GridCell.Tab.1.right/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1595619674718" />
+    <state width="1828" height="351" key="GridCell.Tab.1.right/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596722911926" />
+    <state width="1828" height="340" key="GridCell.Tab.1.right/46.27.1874.1053@46.27.1874.1053" timestamp="1597334160257" />
+    <state x="449" y="198" width="1022" height="737" key="SettingsEditor" timestamp="1595351806411">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="449" y="198" width="1022" height="737" key="SettingsEditor/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595351806411" />
+    <state x="2369" y="175" width="1022" height="737" key="SettingsEditor/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595241811975" />
+    <state x="210" y="339" width="1539" height="668" maximized="true" key="dock-window-1" timestamp="1596802749254">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state x="101" y="294" width="1491" height="731" key="dock-window-1/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595402261063" />
+    <state x="178" y="0" width="1501" height="724" maximized="true" key="dock-window-1/1920.0.1920.1080/0.27.1920.1053@1920.0.1920.1080" timestamp="1595359058723" />
+    <state x="210" y="339" width="1539" height="668" maximized="true" key="dock-window-1/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1596802749254" />
+    <state x="151" y="0" width="1428" height="735" maximized="true" key="dock-window-2" timestamp="1595607156249">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state x="151" y="0" width="1428" height="735" maximized="true" key="dock-window-2/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1595607156249" />
+    <state x="123" y="0" width="1428" height="735" maximized="true" key="dock-window-3" timestamp="1595615463507">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state x="123" y="0" width="1428" height="735" maximized="true" key="dock-window-3/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1595615463507" />
+    <state x="654" y="239" width="672" height="678" key="search.everywhere.popup" timestamp="1596102298826">
+      <screen x="46" y="27" width="1874" height="1053" />
+    </state>
+    <state x="623" y="239" width="672" height="678" key="search.everywhere.popup/1920.0.1920.1080/0.27.1920.1053@0.27.1920.1053" timestamp="1595415259556" />
+    <state x="654" y="239" width="672" height="678" key="search.everywhere.popup/1920.0.1920.1080/46.27.1874.1053@46.27.1874.1053" timestamp="1596102298826" />
+    <state x="2628" y="467" width="540" height="179" key="vcs.readOnlyHandler.ReadOnlyStatusDialog" timestamp="1595608662825">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state x="2628" y="467" width="540" height="179" key="vcs.readOnlyHandler.ReadOnlyStatusDialog/1920.0.1920.1080/46.27.1874.1053@1920.0.1920.1080" timestamp="1595608662825" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/secrethub_cli$TestACLListCommand_run_in_github_com_secrethub_secrethub_cli_internals_secrethub.out" NAME="TestACLListCommand_run in github.com/secrethub/secrethub-cli/internals/secrethub Coverage Results" MODIFIED="1595939386356" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$generate_test_go.out" NAME="generate_test.go Coverage Results" MODIFIED="1595940024151" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$acl_rm_test_go.out" NAME="acl_rm_test.go Coverage Results" MODIFIED="1595931236352" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$credential_list_test_go.out" NAME="credential_list_test.go Coverage Results" MODIFIED="1596019447227" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$acl_check_test_go.out" NAME="acl_check_test.go Coverage Results" MODIFIED="1596021765954" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$TestServiceInitCommand_Run_in_github_com_secrethub_secrethub_cli_internals_secrethub.out" NAME="TestServiceInitCommand_Run in github.com/secrethub/secrethub-cli/internals/secrethub Coverage Results" MODIFIED="1595853737984" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$write_test_go.out" NAME="write_test.go Coverage Results" MODIFIED="1595931367943" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$acl_set_test_go.out" NAME="acl_set_test.go Coverage Results" MODIFIED="1595931224782" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$acl_list_test_go.out" NAME="acl_list_test.go Coverage Results" MODIFIED="1595931269014" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$read_test_go.out" NAME="read_test.go Coverage Results" MODIFIED="1595603917447" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/secrethub_cli$go_test_github_com_secrethub_secrethub_cli_internals_secrethub.out" NAME="go test github.com/secrethub/secrethub-cli/internals/secrethub Coverage Results" MODIFIED="1595924619362" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+  </component>
+</project>

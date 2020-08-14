@@ -62,18 +62,17 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 		fmt.Sprintf(
 			"Copy the injected template to the clipboard instead of stdout. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
-		))
-	clause.StringVarP(&cmd.inFile, "in-file", "i", "", "The filename of a template file to inject.")
-	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the injected template to a file instead of stdout.")
-	clause.StringVar(&cmd.outFile, "file", "", "") // Alias of --out-file (for backwards compatibility)
+		), true, false)
+	clause.StringVarP(&cmd.inFile, "in-file", "i", "", "The filename of a template file to inject.", true, false)
+	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the injected template to a file instead of stdout.", true, false)
+	clause.StringVar(&cmd.outFile, "file", "", "", true, false) // Alias of --out-file (for backwards compatibility)
 	clause.Flag("file").Hidden = true
-	clause.Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
+	clause.Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.", true, false)
 	clause.Flag("file-mode").DefValue = "0600"
-	clause.VarP(&cmd.templateVars,"var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
-	clause.StringVar(&cmd.templateVersion, "template-version", "auto", "Do not prompt when a template variable is missing and return an error instead.")
-	clause.BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.")
-	clause.BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.")
-
+	clause.VarP(&cmd.templateVars, "var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod", true, false)
+	clause.StringVar(&cmd.templateVersion, "template-version", "auto", "Do not prompt when a template variable is missing and return an error instead.", true, false)
+	clause.BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.", true, false)
+	clause.BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.", true, false)
 
 	command.BindAction(clause, nil, cmd.Run)
 }

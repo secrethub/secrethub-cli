@@ -53,10 +53,10 @@ func (cmd *ReadCommand) Register(r command.Registerer) {
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
 	)
-	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.")
-	clause.BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret")
+	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.", true, false)
+	clause.BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret", true, false)
 
-	fileModeFlag := clause.VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
+	fileModeFlag := clause.VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.", true, false)
 	fileModeFlag.DefValue = "0600"
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

@@ -15,7 +15,7 @@ func RegisterDebugFlag(r *cobra.Command, logger cli.Logger) {
 	flag := debugFlag{
 		logger: logger,
 	}
-	commandClause.VarP(&flag, "debug", "D", "Enable debug mode.")
+	commandClause.VarP(&flag, "debug", "D", "Enable debug mode.", true, true)
 }
 
 // debugFlag configures the debug level of a logger.

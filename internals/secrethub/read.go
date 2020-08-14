@@ -45,7 +45,6 @@ func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("read", "Read a secret.")
 	clause.Args = cobra.ExactValidArgs(1)
 
-	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.SecretSuggestions
 	clause.BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
 		fmt.Sprintf(

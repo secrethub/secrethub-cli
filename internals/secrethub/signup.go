@@ -22,6 +22,10 @@ var (
 	ErrLocalAccountFound = errMain.Code("local_account_found").Error("found a local account configuration. To overwrite it, run the same command with the --force or -f flag.")
 )
 
+const credentialCreationMessage = "An account credential will be generated and stored at %s. " +
+	"Losing this credential means you lose the ability to decrypt your secrets. " +
+	"So keep it safe.\n"
+
 // SignUpCommand signs up a new user and configures his account for use on this machine.
 type SignUpCommand struct {
 	username        string
@@ -120,13 +124,7 @@ func (cmd *SignUpCommand) Run() error {
 		}
 	}
 
-	fmt.Fprintf(
-		cmd.io.Output(),
-		"An account credential will be generated and stored at %s. "+
-			"Losing this credential means you lose the ability to decrypt your secrets. "+
-			"So keep it safe.\n",
-		credentialPath,
-	)
+	fmt.Fprintf(cmd.io.Output(), credentialCreationMessage, credentialPath)
 
 	// Only prompt for a passphrase when the user hasn't used --force.
 	// Otherwise, we assume the passphrase was intentionally not

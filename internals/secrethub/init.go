@@ -137,13 +137,7 @@ func (cmd *InitCommand) Run() error {
 			}
 		}
 
-		fmt.Fprintf(
-			cmd.io.Output(),
-			"An account credential will be generated and stored at %s. "+
-				"Losing this credential means you lose the ability to decrypt your secrets. "+
-				"So keep it safe.\n",
-			credentialPath,
-		)
+		fmt.Fprintf(cmd.io.Output(), credentialCreationMessage, credentialPath)
 
 		// Only prompt for a passphrase when the user hasn't used --force.
 		// Otherwise, we assume the passphrase was intentionally not

@@ -52,7 +52,7 @@ func (a *App) CreateCommand(name, help string) *CommandClause {
 			return newCommand
 		}(),
 		name: name,
-		app:  a,
+		App:  a,
 	}
 }
 
@@ -104,7 +104,7 @@ func (a *App) isExtraEnvVar(key string) bool {
 	return false
 }
 
-// PrintEnv reads all environment variables starting with the app name and writes
+// PrintEnv reads all environment variables starting with the App name and writes
 // a table with the keys and their status: set, empty, unrecognized. The value
 // of environment variables are not printed out for security reasons. The list
 // is limited to variables that are actually set in the environment. Setting
@@ -154,7 +154,7 @@ func (a *App) PrintEnv(w io.Writer, verbose bool, osEnv func() []string) error {
 	return nil
 }
 
-// CheckStrictEnv checks that every environment variable that starts with the app name is recognized by the application.
+// CheckStrictEnv checks that every environment variable that starts with the App name is recognized by the application.
 func (a *App) CheckStrictEnv() error {
 	for _, envVar := range os.Environ() {
 		key, _, match := splitVar(a.name, a.separator, envVar)
@@ -174,7 +174,7 @@ type CommandClause struct {
 	*cobra.Command
 
 	name string
-	app  *App
+	App  *App
 }
 
 func (cmd *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string, hasEnv bool, persistent bool) {
@@ -190,135 +190,139 @@ func (cmd *CommandClause) BoolVarP(reference *bool, name, shorthand string, def 
 }
 
 func (cmd *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().IntVarP(reference, name, shorthand, def, usage)
 	} else {
 		cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().StringVarP(reference, name, shorthand, def, usage)
 	} else {
 		cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().DurationVarP(reference, name, shorthand, def, usage)
 	} else {
 		cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) BoolVar(reference *bool, name string, def bool, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().BoolVar(reference, name, def, usage)
 	} else {
 		cmd.Flags().BoolVar(reference, name, def, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) IntVar(reference *int, name string, def int, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().IntVar(reference, name, def, usage)
 	} else {
 		cmd.Flags().IntVar(reference, name, def, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) StringVar(reference *string, name string, def string, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().StringVar(reference, name, def, usage)
 	} else {
 		cmd.Flags().StringVar(reference, name, def, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().DurationVar(reference, name, def, usage)
 	} else {
 		cmd.Flags().DurationVar(reference, name, def, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().VarP(reference, name, shorthand, usage)
 	} else {
 		cmd.Flags().VarP(reference, name, shorthand, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) Var(reference pflag.Value, name string, usage string, hasEnv bool, persistent bool) {
-	if hasEnv {
-		//doSTH
-	}
-
 	if persistent {
 		cmd.PersistentFlags().Var(reference, name, usage)
 	} else {
 		cmd.Flags().Var(reference, name, usage)
 	}
+
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
+	}
 }
 
 func (cmd *CommandClause) VarPF(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) *pflag.Flag {
-	if hasEnv {
-		//doSTH
+	var flag *pflag.Flag
+	if persistent {
+		flag = cmd.PersistentFlags().VarPF(reference, name, shorthand, usage)
+	} else {
+		flag = cmd.Flags().VarPF(reference, name, shorthand, usage)
 	}
 
-	if persistent {
-		return cmd.PersistentFlags().VarPF(reference, name, shorthand, usage)
-	} else {
-		return cmd.Flags().VarPF(reference, name, shorthand, usage)
+	if hasEnv {
+		cmd.FlagRegister(name, usage)
 	}
+	return flag
 }
 
 // Command adds a new subcommand to this command.
 func (cmd *CommandClause) CreateCommand(name, help string) *CommandClause {
-	return &CommandClause{
+	clause := &CommandClause{
 		Command: func() *cobra.Command {
 			newCommand := &cobra.Command{Use: name, Short: help}
 			return newCommand
 		}(),
 		name: name,
-		app:  cmd.app,
+		App:  cmd.App,
 	}
+	cmd.AddCommand(clause.Command)
+	return clause
 }
 
 // Hidden hides the command in help texts.
@@ -328,7 +332,16 @@ func (cmd *CommandClause) Hidden() *CommandClause {
 }
 
 func (cmd *CommandClause) FullCommand() string {
-	return strings.Join(os.Args[:], " ")
+	if cmd.Use == cmd.Root().Use {
+		return ""
+	}
+	out := []string{cmd.Use}
+	for p := cmd.Parent(); p != nil; p = p.Parent() {
+		if p.Use != cmd.Root().Use {
+			out = append([]string{p.Use}, out...)
+		}
+	}
+	return strings.Join(out, " ")
 }
 
 func (cmd *CommandClause) HelpLong(helpLong string) {
@@ -347,17 +360,17 @@ func (cmd *CommandClause) Alias(alias string) {
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
 func (cmd *CommandClause) FlagRegister(name, help string) *Flag {
-	fullCmd := strings.Replace(cmd.FullCommand(), " ", cmd.app.separator, -1)
-	prefix := formatName(fullCmd, cmd.app.name, cmd.app.separator, cmd.app.delimiters...)
-	envVar := formatName(name, prefix, cmd.app.separator, cmd.app.delimiters...)
+	fullCmd := strings.Replace(cmd.FullCommand(), " ", cmd.App.separator, -1)
+	prefix := formatName(fullCmd, cmd.App.name, cmd.App.separator, cmd.App.delimiters...)
+	envVar := formatName(name, prefix, cmd.App.separator, cmd.App.delimiters...)
 
-	cmd.app.registerEnvVar(envVar)
-	flag := cmd.Flag("name")
+	cmd.App.registerEnvVar(envVar)
+	flag := cmd.Flag(name)
 	return (&Flag{
 		Flag:   flag,
-		app:    cmd.app,
+		app:    cmd.App,
 		envVar: envVar,
-	}).Envar(name)
+	}).Envar(envVar)
 }
 
 // Flag represents a command-line flag.
@@ -384,6 +397,9 @@ func (f *Flag) Envar(name string) *Flag {
 // formatName takes a name and converts it to an uppercased name,
 // joined by the given separator and prefixed with the given prefix.
 func formatName(name, prefix, separator string, delimiters ...string) string {
+	if name == "" {
+		return strings.ToUpper(prefix)
+	}
 	for _, delim := range delimiters {
 		name = strings.Replace(name, delim, separator, -1)
 	}

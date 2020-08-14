@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/mlock"
-	"github.com/spf13/cobra"
 )
 
 // mlockFlag configures locking memory.
@@ -29,9 +28,10 @@ func (f mlockFlag) init() error {
 }
 
 // RegisterMlockFlag registers a mlock flag that enables memory locking when set to true.
-func RegisterMlockFlag(r *cobra.Command) {
+func RegisterMlockFlag(app *cli.App) {
 	commandClause := cli.CommandClause{
-		Command: r,
+		Command: &app.Application,
+		App:     app,
 	}
 	flag := mlockFlag(false)
 	commandClause.Var(&flag, "mlock", "Enable memory locking", true, true)

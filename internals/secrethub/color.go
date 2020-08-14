@@ -5,7 +5,6 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/secrethub/secrethub-cli/internals/cli"
-	"github.com/spf13/cobra"
 )
 
 // noColorFlag configures the global behaviour to disable colored output.
@@ -21,9 +20,10 @@ func (f noColorFlag) init() {
 }
 
 // RegisterColorFlag registers a color flag that configures whether colored output is used.
-func RegisterColorFlag(r *cobra.Command) {
+func RegisterColorFlag(app *cli.App) {
 	commandClause := cli.CommandClause{
-		Command: r,
+		Command: &app.Application,
+		App:     app,
 	}
 	flag := noColorFlag(false)
 	commandClause.Var(&flag, "no-color", "Disable colored output.", true, true)

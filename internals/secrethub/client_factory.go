@@ -10,8 +10,6 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
-
-	"github.com/spf13/cobra"
 )
 
 // Errors
@@ -25,7 +23,7 @@ type ClientFactory interface {
 	NewClient() (secrethub.ClientInterface, error)
 	NewClientWithCredentials(credentials.Provider) (secrethub.ClientInterface, error)
 	NewUnauthenticatedClient() (secrethub.ClientInterface, error)
-	Register(command *cobra.Command)
+	Register(app *cli.App)
 }
 
 // NewClientFactory creates a new ClientFactory.
@@ -44,9 +42,10 @@ type clientFactory struct {
 }
 
 // Register the flags for configuration on a cli application.
-func (f *clientFactory) Register(r *cobra.Command) {
+func (f *clientFactory) Register(app *cli.App) {
 	commandClause := cli.CommandClause{
-		Command: r,
+		Command: &app.Application,
+		App:     app,
 	}
 	//TODO persistent!!!
 	commandClause.VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.", true, false)

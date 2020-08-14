@@ -48,6 +48,7 @@ func (cmd *WriteCommand) Register(r command.Registerer) {
 	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.BoolVarP(&cmd.useClipboard, "clip", "c", false, "Use clipboard content as input.", true, false)
 	clause.BoolVarP(&cmd.multiline, "multiline", "m", false, "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.", true, false)
+	clause.BoolVar(&cmd.noTrim, "no-trim", false, "Do not trim leading and trailing whitespace in the secret.", true, false)
 	clause.StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.", true, false)
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

@@ -15,10 +15,10 @@ type Registerer interface {
 // it is executed when the command is parsed.
 func BindAction(clause *cli.CommandClause, argumentRegister func(c *cobra.Command, args []string) error, fn func() error) {
 	if argumentRegister != nil {
-		clause.RunE = argumentRegister
+		clause.PreRunE = argumentRegister
 	}
 	if fn != nil {
-		clause.PostRunE = func(cmd *cobra.Command, args []string) error {
+		clause.RunE = func(cmd *cobra.Command, args []string) error {
 			return fn()
 		}
 	}

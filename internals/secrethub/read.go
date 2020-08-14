@@ -46,12 +46,12 @@ func (cmd *ReadCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 
 	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.SecretSuggestions
-	clause.Flags().BoolVarP(&cmd.useClipboard,
+	clause.BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
-		),
+		), true, false,
 	)
 	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.", true, false)
 	clause.BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret", true, false)

@@ -4,13 +4,13 @@ import (
 	"strconv"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
-	"github.com/spf13/cobra"
 )
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
-func RegisterDebugFlag(r *cobra.Command, logger cli.Logger) {
+func RegisterDebugFlag(app *cli.App, logger cli.Logger) {
 	commandClause := cli.CommandClause{
-		Command: r,
+		Command: &app.Application,
+		App:     app,
 	}
 	flag := debugFlag{
 		logger: logger,

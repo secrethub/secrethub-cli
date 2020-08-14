@@ -63,19 +63,6 @@ func (a *App) Version(version string) *App {
 	return a
 }
 
-// Flag defines a new flag with the given long name and help text,
-// adding an environment variable default configurable by APP_FLAG_NAME.
-func (a *App) Flag(name, help string) *Flag {
-	envVar := formatName(name, a.name, a.separator, a.delimiters...)
-	a.registerEnvVar(envVar)
-	flag := Flag{
-		Flag:   &pflag.Flag{Name: name, Usage: help},
-		envVar: envVar,
-		app:    a,
-	}
-	return flag.Envar(envVar)
-}
-
 // registerEnvVar ensures the App recognizes an environment variable.
 func (a *App) registerEnvVar(name string) {
 	a.knownEnvVars[strings.ToUpper(name)] = struct{}{}

@@ -9,9 +9,9 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
+	"github.com/spf13/cobra"
 )
 
 // LsCommand lists a repo, secret or namespace.
@@ -33,13 +33,15 @@ func NewLsCommand(io ui.IO, newClient newClientFunc) *LsCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *LsCommand) Register(r command.Registerer) {
-	clause := r.Command("ls", "List contents of a path.")
+	clause := r.CreateCommand("ls", "List contents of a path.")
 	clause.Alias("list")
-	clause.Arg("path", "The path to list contents of").SetValue(&cmd.path)
-	clause.Flag("quiet", "Only print paths.").Short('q').BoolVar(&cmd.quiet)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	clause.Args = cobra.MaximumNArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.DirectorySuggestions
+	//clause.Arg("path", "The path to list contents of").SetValue(&cmd.path)
+	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.", true, false)
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run lists a repo, secret or namespace.
@@ -130,6 +132,17 @@ func (cmd *LsCommand) Run() error {
 	// Path should always be a namespace, repository, directory, secret or secret version.
 	// Therefore, this should never happen.
 	return errio.UnexpectedError(errors.New("invalid path argument"))
+}
+
+func (cmd *LsCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var err error
+	if len(args) != 0 {
+		cmd.path, err = api.NewPath(args[0])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // printVersions prints out secret versions in long or short format.

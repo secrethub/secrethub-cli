@@ -9,6 +9,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // OrgListUsersCommand handles listing the users of an organization.
@@ -30,18 +32,29 @@ func NewOrgListUsersCommand(io ui.IO, newClient newClientFunc) *OrgListUsersComm
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgListUsersCommand) Register(r command.Registerer) {
-	clause := r.Command("list-users", "List all members of an organization.")
+	clause := r.CreateCommand("list-users", "List all members of an organization.")
 	clause.Alias("list-members")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run lists the users of an organization.
 func (cmd *OrgListUsersCommand) Run() error {
 	cmd.beforeRun()
 	return cmd.run()
+}
+
+func (cmd *OrgListUsersCommand) argumentRegister(c *cobra.Command, args []string) error {
+	err := api.ValidateOrgName(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.orgName = api.OrgName(args[0])
+	return nil
 }
 
 // beforeRun configures the command using the flag values.

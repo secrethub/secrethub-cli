@@ -16,6 +16,8 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/randchar"
 
 	"github.com/docker/go-units"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -60,17 +62,30 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
-	clause := r.Command("generate", "Generate a random secret.")
-	clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
-	clause.Flag("length", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)).PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
-	clause.Flag("min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constraints reduces the strength of the secret. When possible, avoid any constraints.").SetValue(&cmd.mins)
-	clause.Flag("clip", "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".").Short('c').BoolVar(&cmd.copyToClipboard)
-	clause.Flag("charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list. Defaults to alphanumeric.").Default("alphanumeric").HintOptions("all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable").SetValue(&cmd.charsetFlag)
-	clause.Flag("symbols", "Include symbols in secret.").Short('s').Hidden().SetValue(&cmd.symbolsFlag)
-	clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
-	clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
+	clause := r.CreateCommand("generate", "Generate a random secret.")
+	clause.Args = cobra.RangeArgs(1, 3)
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.SecretSuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
+	//clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
+	clause.VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength), true, false) //.PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
+	clause.Flag("length").DefValue = strconv.Itoa(defaultLength)
+	clause.Var(&cmd.mins, "min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constraints reduces the strength of the secret. When possible, avoid any constraints.", true, false)
+	clause.BoolVarP(&cmd.copyToClipboard, "clip", "c", false, "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".", true, false)
+	clause.Var(&cmd.charsetFlag, "charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list. Defaults to alphanumeric.", true, false) //Default("alphanumeric").HintOptions("all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable")
+	clause.Flag("charset").DefValue = "alphanumeric"
+	_ = clause.RegisterFlagCompletionFunc("charset", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable"}, cobra.ShellCompDirectiveDefault
+	})
+	clause.VarP(&cmd.symbolsFlag, "symbols", "s", "Include symbols in secret.", true, false) //Short('s').Hidden().SetValue(&cmd.symbolsFlag)
+	clause.Flag("symbols").Hidden = true
+	//clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
+	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // before configures the command using the flag values.
@@ -100,6 +115,21 @@ func (cmd *GenerateSecretCommand) Run() error {
 		return err
 	}
 	return cmd.run()
+}
+
+func (cmd *GenerateSecretCommand) argumentRegister(c *cobra.Command, args []string) error {
+	cmd.firstArg = args[0]
+	if len(args) >= 2 {
+		cmd.secondArg = args[1]
+	}
+	if len(args) == 3 {
+		len, err := strconv.Atoi(args[2])
+		if err != nil {
+			return err
+		}
+		cmd.lengthArg = intValue{v: &len}
+	}
+	return nil
 }
 
 // run generates a new secret and writes to the output path.
@@ -198,6 +228,10 @@ type minRuleValue struct {
 	v []randchar.Option
 }
 
+func (ov *minRuleValue) Type() string {
+	return "minRuleValue"
+}
+
 func (ov *minRuleValue) String() string {
 	return ""
 }
@@ -230,6 +264,10 @@ type charsetValue struct {
 	v randchar.Charset
 }
 
+func (cv *charsetValue) Type() string {
+	return "charsetValue"
+}
+
 func (cv *charsetValue) String() string {
 	return ""
 }
@@ -252,6 +290,10 @@ func (cv *charsetValue) IsCumulative() bool {
 
 type intValue struct {
 	v *int
+}
+
+func (iv *intValue) Type() string {
+	return "intValue"
 }
 
 func (iv *intValue) Get() int {
@@ -280,6 +322,10 @@ func (iv *intValue) String() string {
 
 type boolValue struct {
 	v *bool
+}
+
+func (iv *boolValue) Type() string {
+	panic("boolValue")
 }
 
 func (iv *boolValue) Get() bool {

@@ -3,11 +3,16 @@ package secrethub
 import (
 	"strconv"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/mlock"
 )
 
 // mlockFlag configures locking memory.
 type mlockFlag bool
+
+func (f mlockFlag) Type() string {
+	return "mlockFlag"
+}
 
 // init locks the memory based on the flag value if supported.
 func (f mlockFlag) init() error {
@@ -23,9 +28,13 @@ func (f mlockFlag) init() error {
 }
 
 // RegisterMlockFlag registers a mlock flag that enables memory locking when set to true.
-func RegisterMlockFlag(r FlagRegisterer) {
+func RegisterMlockFlag(app *cli.App) {
+	commandClause := cli.CommandClause{
+		Command: &app.Application,
+		App:     app,
+	}
 	flag := mlockFlag(false)
-	r.Flag("mlock", "Enable memory locking").SetValue(&flag)
+	commandClause.Var(&flag, "mlock", "Enable memory locking", true, true)
 }
 
 // String implements the flag.Value interface.

@@ -29,12 +29,12 @@ func NewCredentialListCommand(io ui.IO, newClient newClientFunc) *CredentialList
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *CredentialListCommand) Register(r command.Registerer) {
-	clause := r.Command("ls", "List all your credentials.")
+	clause := r.CreateCommand("ls", "List all your credentials.")
 	clause.Alias("list")
 
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run lists all the currently authenticated account's credentials.

@@ -7,6 +7,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // RepoInviteCommand handles inviting a user to collaborate on a repository.
@@ -28,12 +30,19 @@ func NewRepoInviteCommand(io ui.IO, newClient newClientFunc) *RepoInviteCommand 
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoInviteCommand) Register(r command.Registerer) {
-	clause := r.Command("invite", "Invite a user to collaborate on a repository.")
-	clause.Arg("repo-path", "The repository to invite the user to").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	clause := r.CreateCommand("invite", "Invite a user to collaborate on a repository.")
+	clause.Args = cobra.ExactValidArgs(2)
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.RepositorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
+	//clause.Arg("repo-path", "The repository to invite the user to").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
+	//clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run invites the configured user to collaborate on the repo.
@@ -72,5 +81,15 @@ func (cmd *RepoInviteCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username, cmd.path)
 
+	return nil
+}
+
+func (cmd *RepoInviteCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.username = args[1]
 	return nil
 }

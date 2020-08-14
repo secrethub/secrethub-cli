@@ -5,9 +5,13 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
+
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+
+	"github.com/spf13/cobra"
 )
 
 // Errors
@@ -21,7 +25,7 @@ type ClientFactory interface {
 	NewClient() (secrethub.ClientInterface, error)
 	NewClientWithCredentials(credentials.Provider) (secrethub.ClientInterface, error)
 	NewUnauthenticatedClient() (secrethub.ClientInterface, error)
-	Register(FlagRegisterer)
+	Register(app *cli.App)
 }
 
 // NewClientFactory creates a new ClientFactory.
@@ -33,17 +37,24 @@ func NewClientFactory(store CredentialConfig) ClientFactory {
 
 type clientFactory struct {
 	client           *secrethub.Client
-	ServerURL        *url.URL
+	ServerURL        urlValue
 	identityProvider string
-	proxyAddress     *url.URL
+	proxyAddress     urlValue
 	store            CredentialConfig
 }
 
 // Register the flags for configuration on a cli application.
-func (f *clientFactory) Register(r FlagRegisterer) {
-	r.Flag("api-remote", "The SecretHub API address, don't set this unless you know what you're doing.").Hidden().URLVar(&f.ServerURL)
-	r.Flag("identity-provider", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ").Default("key").StringVar(&f.identityProvider)
-	r.Flag("proxy-address", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`").URLVar(&f.proxyAddress)
+func (f *clientFactory) Register(app *cli.App) {
+	commandClause := cli.CommandClause{
+		Command: &app.Application,
+		App:     app,
+	}
+	commandClause.VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.", true, false)
+	commandClause.StringVar(&f.identityProvider, "identity-provider", "key", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ", true, false)
+	_ = commandClause.RegisterFlagCompletionFunc("identity-provider", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"aws", "gcp", "key"}, cobra.ShellCompDirectiveDefault
+	})
+	commandClause.VarPF(&f.proxyAddress, "proxy-address", "", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`", true, false)
 }
 
 // NewClient returns a new client that is configured to use the remote that
@@ -108,17 +119,41 @@ func (f *clientFactory) baseClientOptions() []secrethub.ClientOption {
 		}),
 	}
 
-	if f.proxyAddress != nil {
+	if f.proxyAddress.u != nil {
 		transport := http.DefaultTransport.(*http.Transport)
 		transport.Proxy = func(request *http.Request) (*url.URL, error) {
-			return f.proxyAddress, nil
+			return f.proxyAddress.u, nil
 		}
 		options = append(options, secrethub.WithTransport(transport))
 	}
 
-	if f.ServerURL != nil {
+	if f.ServerURL.u != nil {
 		options = append(options, secrethub.WithServerURL(f.ServerURL.String()))
 	}
 
 	return options
+}
+
+type urlValue struct {
+	u *url.URL
+}
+
+func (u *urlValue) String() string {
+	if u.u == nil {
+		return ""
+	}
+	return u.u.String()
+}
+
+func (u *urlValue) Set(s string) error {
+	parsed, err := url.Parse(s)
+	u.u = parsed
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *urlValue) Type() string {
+	return "urlValue"
 }

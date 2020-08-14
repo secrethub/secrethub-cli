@@ -44,15 +44,15 @@ func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore Credent
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *SignUpCommand) Register(r command.Registerer) {
-	clause := r.Command("signup", "Create a free personal developer account.")
-	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
-	clause.Flag("full-name", "Your full name.").StringVar(&cmd.fullName)
-	clause.Flag("email", "Your (work) email address we will use for all correspondence.").StringVar(&cmd.email)
-	clause.Flag("org", "The name of your organization.").StringVar(&cmd.org)
-	clause.Flag("org-description", "A description (max 144 chars) for your organization so others will recognize it.").StringVar(&cmd.orgDescription)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	clause := r.CreateCommand("signup", "Create a free personal developer account.")
+	clause.StringVar(&cmd.username, "username", "", "The username you would like to use on SecretHub.", true, false)
+	clause.StringVar(&cmd.fullName, "full-name", "", "Your full name.", true, false)
+	clause.StringVar(&cmd.email, "email", "", "Your (work) email address we will use for all correspondence.", true, false)
+	clause.StringVar(&cmd.org, "org", "", "The name of your organization.", true, false)
+	clause.StringVar(&cmd.orgDescription, "org-description", "", "A description (max 144 chars) for your organization so others will recognize it.", true, false)
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run signs up a new user and configures his account for use on this machine.

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/secrethub/secrethub-go/internals/api/uuid"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
@@ -488,9 +490,9 @@ func TestRunCommand_Run(t *testing.T) {
 			command: RunCommand{
 				command: []string{"echo", "test"},
 				environment: &environment{
-					envar: map[string]string{
+					envar: MapValue{map[string]string{
 						"missing": "path/to/unexisting/secret",
-					},
+					}},
 					osStat: osStatNotExist,
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -513,9 +515,9 @@ func TestRunCommand_Run(t *testing.T) {
 				command: []string{"echo", "test"},
 				environment: &environment{
 					osStat: osStatNotExist,
-					envar: map[string]string{
+					envar: MapValue{map[string]string{
 						"missing": "path/to/unexisting/secret",
-					},
+					}},
 				},
 				io: fakeui.NewIO(t),
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -537,9 +539,9 @@ func TestRunCommand_Run(t *testing.T) {
 			command: RunCommand{
 				command: []string{"echo", "test"},
 				environment: &environment{
-					envar: map[string]string{
-						"missing": "unexisting/repo/secret",
-					},
+					envar: MapValue{map[string]string{
+						"missing": "path/to/unexisting/secret",
+					}},
 					osStat: osStatNotExist,
 				},
 				io: fakeui.NewIO(t),
@@ -563,10 +565,10 @@ func TestRunCommand_Run(t *testing.T) {
 				environment: &environment{
 					osStat:  osStatNotExist,
 					envFile: "secrethub.env",
-					templateVars: map[string]string{
+					templateVars: MapValue{map[string]string{
 						"0foo": "value",
-					},
-					envar: map[string]string{},
+					}},
+					envar: MapValue{map[string]string{}},
 				},
 			},
 			err: ErrInvalidTemplateVar("0foo"),
@@ -576,10 +578,10 @@ func TestRunCommand_Run(t *testing.T) {
 				environment: &environment{
 					osStat:  osStatNotExist,
 					envFile: "secrethub.env",
-					templateVars: map[string]string{
+					templateVars: MapValue{map[string]string{
 						"foo@bar": "value",
-					},
-					envar: map[string]string{},
+					}},
+					envar: MapValue{map[string]string{}},
 				},
 			},
 			err: ErrInvalidTemplateVar("foo@bar"),
@@ -657,6 +659,11 @@ func osStatFunc(name string, err error) func(string) (os.FileInfo, error) {
 }
 
 func TestRunCommand_environment(t *testing.T) {
+	rootDirUUID := uuid.New()
+	secretUUID := uuid.New()
+
+	const secretPathFoo = "namespace/repo/foo"
+
 	cases := map[string]struct {
 		command         RunCommand
 		expectedEnv     []string
@@ -744,9 +751,9 @@ func TestRunCommand_environment(t *testing.T) {
 					osStat:   osStatFunc("secrethub.env", nil),
 					readFile: readFileFunc("secrethub.env", "TEST=aaa"),
 					envFile:  "secrethub.env",
-					envar: map[string]string{
+					envar: MapValue{map[string]string{
 						"TEST": "test/test/test",
-					},
+					}},
 					templateVersion: "2",
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -764,7 +771,159 @@ func TestRunCommand_environment(t *testing.T) {
 			expectedSecrets: []string{"bbb"},
 			expectedEnv:     []string{"TEST=bbb"},
 		},
+		"env file has precedence over secrets-dir flag": {
+			command: RunCommand{
+				environment: &environment{
+					newClient: func() (secrethub.ClientInterface, error) {
+						return fakeclient.Client{
+							DirService: &fakeclient.DirService{
+								GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+									return &api.Tree{
+										ParentPath: "namespace",
+										RootDir: &api.Dir{
+											DirID: rootDirUUID,
+											Name:  "repo",
+										},
+										Secrets: map[uuid.UUID]*api.Secret{
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
+												Name:     "foo",
+											},
+										},
+									}, nil
+								},
+							},
+						}, nil
+					},
+					secretsDir:                   "namespace/repo",
+					dontPromptMissingTemplateVar: true,
+					templateVersion:              "2",
+					osEnv:                        []string{"FOO=bbb"},
+					osStat:                       osStatFunc("secrethub.env", nil),
+					readFile:                     readFileFunc("secrethub.env", "FOO= {{ other/secret/path }}"),
+				},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									if path == secretPathFoo {
+										return &api.SecretVersion{Data: []byte("aaa")}, nil
+									} else if path == "other/secret/path" {
+										return &api.SecretVersion{Data: []byte("bbb")}, nil
+									}
+									return nil, api.ErrSecretNotFound
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"FOO=bbb"},
+		},
+		"secrets-dir flag has precedence over os environment": {
+			command: RunCommand{
+				environment: &environment{
+					newClient: func() (secrethub.ClientInterface, error) {
+						return fakeclient.Client{
+							DirService: &fakeclient.DirService{
+								GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+									return &api.Tree{
+										ParentPath: "namespace",
+										RootDir: &api.Dir{
+											DirID: rootDirUUID,
+											Name:  "repo",
+										},
+										Secrets: map[uuid.UUID]*api.Secret{
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
+												Name:     "foo",
+											},
+										},
+									}, nil
+								},
+							},
+						}, nil
+					},
+					secretsDir:                   "namespace/repo",
+					dontPromptMissingTemplateVar: true,
+					templateVersion:              "2",
+					osEnv:                        []string{"FOO=bbb"},
+					osStat:                       osStatFunc("secrethub.env", os.ErrNotExist),
+				},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									if path == secretPathFoo {
+										return &api.SecretVersion{Data: []byte("aaa")}, nil
+									}
+									return nil, api.ErrSecretNotFound
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"aaa"},
+			expectedEnv:     []string{"FOO=aaa"},
+		},
 		// TODO Add test case for: envar flag has precedence over secret reference - requires refactoring of fakeclient
+		"secret reference has precedence over secrets-dir flag": {
+			command: RunCommand{
+				environment: &environment{
+					newClient: func() (secrethub.ClientInterface, error) {
+						return fakeclient.Client{
+							DirService: &fakeclient.DirService{
+								GetTreeFunc: func(path string, depth int, ancestors bool) (*api.Tree, error) {
+									return &api.Tree{
+										ParentPath: "namespace",
+										RootDir: &api.Dir{
+											DirID: rootDirUUID,
+											Name:  "repo",
+										},
+										Secrets: map[uuid.UUID]*api.Secret{
+											secretUUID: {
+												SecretID: secretUUID,
+												DirID:    rootDirUUID,
+												Name:     "foo",
+											},
+										},
+									}, nil
+								},
+							},
+						}, nil
+					},
+					secretsDir:                   "namespace/repo",
+					dontPromptMissingTemplateVar: true,
+					templateVersion:              "2",
+					osEnv:                        []string{"FOO=secrethub://test/test/test"},
+					osStat:                       osStatFunc("secrethub.env", os.ErrNotExist),
+				},
+				newClient: func() (secrethub.ClientInterface, error) {
+					return fakeclient.Client{
+						SecretService: &fakeclient.SecretService{
+							VersionService: &fakeclient.SecretVersionService{
+								GetWithDataFunc: func(path string) (*api.SecretVersion, error) {
+									if path == "test/test/test" {
+										return &api.SecretVersion{Data: []byte("bbb")}, nil
+									} else if path == secretPathFoo {
+										return &api.SecretVersion{Data: []byte("aaa")}, nil
+									}
+									return nil, api.ErrSecretNotFound
+								},
+							},
+						},
+					}, nil
+				},
+			},
+			expectedSecrets: []string{"bbb"},
+			expectedEnv:     []string{"FOO=bbb"},
+		},
 		"secret reference has precedence over .env file": {
 			command: RunCommand{
 				environment: &environment{
@@ -833,9 +992,9 @@ func TestRunCommand_environment(t *testing.T) {
 					osStat:   osStatFunc("secrethub.env", nil),
 					envFile:  "secrethub.env",
 					readFile: readFileFunc("secrethub.env", ""),
-					envar: map[string]string{
+					envar: MapValue{map[string]string{
 						"TEST": "test/test/test",
-					},
+					}},
 					templateVersion: "2",
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -909,7 +1068,7 @@ func TestRunCommand_environment(t *testing.T) {
 					readFile:                     readFileFunc("secrethub.env", "TEST = {{ test/$variable/test }}"),
 					dontPromptMissingTemplateVar: true,
 					templateVersion:              "2",
-					templateVars:                 map[string]string{"variable": "test"},
+					templateVars:                 MapValue{map[string]string{"variable": "test"}},
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
@@ -934,7 +1093,7 @@ func TestRunCommand_environment(t *testing.T) {
 					readFile:                     readFileFunc("secrethub.env", "TEST=$variable"),
 					dontPromptMissingTemplateVar: true,
 					templateVersion:              "2",
-					templateVars:                 map[string]string{"variable": "foo"},
+					templateVars:                 MapValue{map[string]string{"variable": "foo"}},
 				},
 				osEnv: []string{"SECRETHUB_VAR_VARIABLE=bar"},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -1021,9 +1180,9 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 					osStat:   osStatOnlySecretHubEnv,
 					readFile: readFileWithContent(""),
 					envFile:  "secrethub.env",
-					envar: map[string]string{
+					envar: MapValue{map[string]string{
 						"TEST": "test/test/test",
-					},
+					}},
 					templateVersion: "2",
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -1048,9 +1207,9 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 					osStat:   osStatOnlySecretHubEnv,
 					envFile:  "secrethub.env",
 					readFile: readFileWithContent(""),
-					envar: map[string]string{
+					envar: MapValue{map[string]string{
 						"TEST": "test/test/test",
-					},
+					}},
 					templateVersion: "2",
 				},
 				newClient: func() (secrethub.ClientInterface, error) {

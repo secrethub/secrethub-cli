@@ -5,12 +5,13 @@ import (
 	"sort"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
-	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
 )
 
 // ACLListCommand prints access rules for the given directory.
@@ -34,20 +35,31 @@ func NewACLListCommand(io ui.IO, newClient newClientFunc) *ACLListCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ACLListCommand) Register(r command.Registerer) {
-	clause := r.Command("ls", "List access rules of a directory and its children.")
+	clause := r.CreateCommand("ls", "List access rules of a directory and its children.")
 	clause.Alias("list")
-	clause.Arg("dir-path", "The path of the directory to list the access rules for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flag("depth", "The maximum depth to which the rules of child directories should be displayed. Defaults to -1 (no limit).").Short('d').Default("-1").IntVar(&cmd.depth)
-	clause.Flag("all", "List all rules that apply on the directory, including rules on parent directories.").Short('a').BoolVar(&cmd.ancestors)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.DirectorySuggestions
+	//clause.Arg("dir-path", "The path of the directory to list the access rules for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
+	clause.IntVarP(&cmd.depth, "depth", "d", -1, "The maximum depth to which the rules of child directories should be displayed. Defaults to -1 (no limit).", true, false)
+	clause.BoolVarP(&cmd.ancestors, "all", "a", false, "List all rules that apply on the directory, including rules on parent directories.", true, false)
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run prints access rules for the given directory.
 func (cmd *ACLListCommand) Run() error {
 	cmd.beforeRun()
 	return cmd.run()
+}
+
+func (cmd *ACLListCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewDirPath(args[0])
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // beforeRun configures the command using the flag values.

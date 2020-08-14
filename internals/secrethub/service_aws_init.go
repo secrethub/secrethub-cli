@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/spf13/cobra"
 )
 
 // Errors
@@ -152,17 +153,33 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	return nil
 }
 
+func (cmd *ServiceAWSInitCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var err error
+	cmd.repo, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create a new service account that is tied to an AWS IAM role.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
-	clause.Flag("kms-key", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
-	clause.Flag("role", "The role name or ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)
-	clause.Flag("region", "The AWS region that should be used for KMS.").StringVar(&cmd.region)
-	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
-	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause := r.CreateCommand("init", "Create a new service account that is tied to an AWS IAM role.")
+	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
+	clause.StringVar(&cmd.kmsKeyID, "kms-key", "", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.", true, false)
+	clause.StringVar(&cmd.role, "role", "", "The role name or ARN of the IAM role that should have access to this service account.", true, false)
+	clause.StringVar(&cmd.region, "region", "", "The AWS region that should be used for KMS.", true, false)
+	clause.StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.", true, false)
+	clause.StringVar(&cmd.description, "descr", "", "", true, false)
+	clause.StringVar(&cmd.description, "desc", "", "", true, false)
+	clause.Flag("desc").Hidden = true
+	clause.Flag("descr").Hidden = true
+	clause.StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.", true, false)
+	_ = clause.RegisterFlagCompletionFunc("permission", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"read", "write", "admin"}, cobra.ShellCompDirectiveDefault
+	})
 
 	clause.HelpLong("The native AWS identity provider uses a combination of AWS IAM and AWS KMS to provide access to SecretHub for any service running on AWS (e.g. EC2, Lambda or ECS). For this to work, an IAM role and a KMS key are needed.\n" +
 		"\n" +
@@ -174,7 +191,7 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 		"If no system-wide default for the AWS region is provided (e.g. with $AWS_REGION), the AWS-region where the KMS key resides should be explicitly provided to this command with the --region flag.",
 	)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {

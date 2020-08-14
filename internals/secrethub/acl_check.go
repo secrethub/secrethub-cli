@@ -11,6 +11,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // ACLCheckCommand prints the access level(s) on a given directory.
@@ -31,11 +33,18 @@ func NewACLCheckCommand(io ui.IO, newClient newClientFunc) *ACLCheckCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ACLCheckCommand) Register(r command.Registerer) {
-	clause := r.Command("check", "Checks the effective permission of accounts on a path.")
-	clause.Arg("dir-path", "The path of the directory to check the effective permission for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
+	clause := r.CreateCommand("check", "Checks the effective permission of accounts on a path.")
+	clause.Args = cobra.RangeArgs(1, 2)
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.DirectorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
+	//clause.Arg("dir-path", "The path of the directory to check the effective permission for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
+	//clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run prints the access level(s) on the given directory.
@@ -105,4 +114,19 @@ func (cmd *ACLCheckCommand) listLevels() ([]*api.AccessLevel, error) {
 		return levels, nil
 	}
 	return nil, listLevelsErr
+}
+
+func (cmd *ACLCheckCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewDirPath(args[0])
+	if err != nil {
+		return err
+	}
+	if len(args) == 2 {
+		cmd.accountName, err = api.NewAccountName(args[1])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

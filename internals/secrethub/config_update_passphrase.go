@@ -24,9 +24,9 @@ func NewConfigUpdatePassphraseCommand(io ui.IO, credentialStore CredentialConfig
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ConfigUpdatePassphraseCommand) Register(r command.Registerer) {
-	clause := r.Command("update-passphrase", "Update the passphrase of your local key credential file.")
+	clause := r.CreateCommand("update-passphrase", "Update the passphrase of your local key credential file.")
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run upgrades the configuration in the profile directory to the new version.

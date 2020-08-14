@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+	"github.com/spf13/cobra"
 )
 
 // Errors
@@ -63,7 +65,7 @@ func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 	return &RunCommand{
 		io:          io,
 		osEnv:       os.Environ(),
-		environment: newEnvironment(io),
+		environment: newEnvironment(io, newClient),
 		newClient:   newClient,
 	}
 }
@@ -75,16 +77,17 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 		"The output is buffered to scan for secrets and can be adjusted using the masking-buffer-period flag. " +
 		"You should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
 
-	clause := r.Command("run", helpShort)
+	clause := r.CreateCommand("run", helpShort)
 	clause.HelpLong(helpLong)
 	clause.Alias("exec")
-	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
-	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
-	clause.Flag("no-output-buffering", "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.").BoolVar(&cmd.maskerOptions.DisableBuffer)
-	clause.Flag("masking-buffer-period", "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.").Default("50ms").DurationVar(&cmd.maskerOptions.BufferDelay)
-	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
+	clause.Args = cobra.MinimumNArgs(1)
+	//clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
+	clause.BoolVar(&cmd.noMasking, "no-masking", false, "Disable masking of secrets on stdout and stderr", true, false)
+	clause.BoolVar(&cmd.maskerOptions.DisableBuffer, "no-output-buffering", false, "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.", true, false)
+	clause.DurationVar(&cmd.maskerOptions.BufferDelay, "masking-buffer-period", time.Millisecond*50, "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.", true, false)
+	clause.BoolVar(&cmd.ignoreMissingSecrets, "ignore-missing-secrets", false, "Do not return an error when a secret does not exist and use an empty value instead.", true, false)
 	cmd.environment.register(clause)
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run reads files from the .secretsenv/<env-name> directory, sets them as environment variables and runs the given command.
@@ -170,6 +173,11 @@ func (cmd *RunCommand) Run() error {
 		return commandErr
 	}
 
+	return nil
+}
+
+func (cmd *RunCommand) argumentRegister(c *cobra.Command, args []string) error {
+	copy(cmd.command, args)
 	return nil
 }
 

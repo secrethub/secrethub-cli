@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -19,41 +20,61 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
 
+type errNameCollision struct {
+	name       string
+	firstPath  string
+	secondPath string
+}
+
+func (e errNameCollision) Error() string {
+	return fmt.Sprintf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", e.firstPath, e.secondPath, e.name)
+}
+
 type environment struct {
 	io                           ui.IO
+	newClient                    newClientFunc
 	osEnv                        []string
 	readFile                     func(filename string) ([]byte, error)
 	osStat                       func(filename string) (os.FileInfo, error)
-	envar                        map[string]string
+	envar                        MapValue
 	envFile                      string
-	templateVars                 map[string]string
+	templateVars                 MapValue
 	templateVersion              string
 	dontPromptMissingTemplateVar bool
+	secretsDir                   string
 	secretsEnvDir                string
 }
 
-func newEnvironment(io ui.IO) *environment {
+func newEnvironment(io ui.IO, newClient newClientFunc) *environment {
 	return &environment{
 		io:           io,
+		newClient:    newClient,
 		osEnv:        os.Environ(),
 		readFile:     ioutil.ReadFile,
 		osStat:       os.Stat,
-		templateVars: make(map[string]string),
-		envar:        make(map[string]string),
+		templateVars: MapValue{stringMap: make(map[string]string)},
+		envar:        MapValue{stringMap: make(map[string]string)},
 	}
 }
 
 func (env *environment) register(clause *cli.CommandClause) {
-	clause.Flag("envar", "Source an environment variable from a secret at a given path with `NAME=<path>`").Short('e').StringMapVar(&env.envar)
-	clause.Flag("env-file", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.").StringVar(&env.envFile)
-	clause.Flag("template", "").Hidden().StringVar(&env.envFile)
-	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
-	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&env.templateVersion)
-	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
-	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&env.secretsEnvDir)
+	clause.VarP(&env.envar, "envar", "e", "Source an environment variable from a secret at a given path with `NAME=<path>`", true, false)
+	clause.StringVar(&env.envFile, "env-file", "", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.", true, false)
+	clause.StringVar(&env.envFile, "template", "", "", true, false)
+	clause.Flag("template").Hidden = true
+	clause.VarP(&env.templateVars, "var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod", true, false)
+	clause.StringVar(&env.templateVersion, "template-version", "auto", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.", true, false)
+	_ = clause.RegisterFlagCompletionFunc("template-version", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"v1", "v2", "latest", "auto"}, cobra.ShellCompDirectiveDefault
+	})
+	clause.BoolVar(&env.dontPromptMissingTemplateVar, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.", true, false)
+	clause.StringVar(&env.secretsDir, "secrets-dir", "", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.", true, false)
+	clause.StringVar(&env.secretsEnvDir, "env", "default", "The name of the environment prepared by the set command (default is `default`)", true, false)
+	clause.Flag("env").Hidden = true
 }
 
 func (env *environment) env() (map[string]value, error) {
@@ -75,6 +96,12 @@ func (env *environment) env() (map[string]value, error) {
 		sources = append(sources, dirSource)
 	}
 
+	// --secrets-dir flag
+	if env.secretsDir != "" {
+		secretsDirEnv := newSecretsDirEnv(env.newClient, env.secretsDir)
+		sources = append(sources, secretsDirEnv)
+	}
+
 	//secrethub.env file
 	if env.envFile == "" {
 		_, err := env.osStat(defaultEnvFile)
@@ -86,7 +113,7 @@ func (env *environment) env() (map[string]value, error) {
 	}
 
 	if env.envFile != "" {
-		templateVariableReader, err := newVariableReader(osEnvMap, env.templateVars)
+		templateVariableReader, err := newVariableReader(osEnvMap, env.templateVars.stringMap)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +145,7 @@ func (env *environment) env() (map[string]value, error) {
 
 	// --envar flag
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
-	flagEnv, err := NewEnvFlags(env.envar)
+	flagEnv, err := NewEnvFlags(env.envar.stringMap)
 	if err != nil {
 		return nil, err
 	}
@@ -171,6 +198,69 @@ func (s *secretValue) containsSecret() bool {
 
 func newSecretValue(path string) value {
 	return &secretValue{path: path}
+}
+
+// secretsDirEnv sources environment variables from the directory specified with the --secrets-dir flag.
+type secretsDirEnv struct {
+	newClient newClientFunc
+	dirPath   string
+}
+
+// env returns a map of environment variables containing all secrets from the specified path.
+// The variable names are the relative paths of their corresponding secrets in uppercase snake case.
+// An error is returned if two secret paths map to the same variable name.
+func (s *secretsDirEnv) env() (map[string]value, error) {
+	client, err := s.newClient()
+	if err != nil {
+		return nil, err
+	}
+
+	tree, err := client.Dirs().GetTree(s.dirPath, -1, false)
+	if err != nil {
+		return nil, err
+	}
+
+	paths := make(map[string]string, tree.SecretCount())
+	for id := range tree.Secrets {
+		secretPath, err := tree.AbsSecretPath(id)
+		if err != nil {
+			return nil, err
+		}
+		path := secretPath.String()
+
+		envVarName := s.envVarName(path)
+		if prevPath, found := paths[envVarName]; found {
+			return nil, errNameCollision{
+				name:       envVarName,
+				firstPath:  prevPath,
+				secondPath: path,
+			}
+		}
+		paths[envVarName] = path
+	}
+
+	result := make(map[string]value, len(paths))
+	for name, path := range paths {
+		result[name] = newSecretValue(path)
+	}
+	return result, nil
+}
+
+// envVarName returns the environment variable name corresponding to the secret on the specified path
+// by converting the relative path to uppercase snake case.
+func (s *secretsDirEnv) envVarName(path string) string {
+	envVarName := strings.TrimPrefix(path, s.dirPath)
+	envVarName = strings.TrimPrefix(envVarName, "/")
+	envVarName = strings.ReplaceAll(envVarName, "/", "_")
+	envVarName = strings.ToUpper(envVarName)
+	return envVarName
+}
+
+func newSecretsDirEnv(newClient newClientFunc, dirPath string) *secretsDirEnv {
+	return &secretsDirEnv{
+		newClient: newClient,
+		dirPath:   dirPath,
+	}
 }
 
 // EnvFlags defines environment variables sourced from command-line flags.
@@ -578,4 +668,27 @@ func (o *osEnv) env() (map[string]value, error) {
 		res[name] = newPlaintextValue(value)
 	}
 	return res, nil
+}
+
+type MapValue struct {
+	stringMap map[string]string
+}
+
+func (m MapValue) String() string {
+	textRepresentation := ""
+	for k, v := range m.stringMap {
+		textRepresentation += k + "=" + v + ";"
+	}
+	return textRepresentation
+}
+
+//TODO treat the case when the array does not contain exactly 2 elements
+func (m MapValue) Set(s string) error {
+	arr := strings.Split(s, "=")
+	m.stringMap[arr[0]] = arr[1]
+	return nil
+}
+
+func (m MapValue) Type() string {
+	return "mapValue"
 }

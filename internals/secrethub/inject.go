@@ -36,7 +36,7 @@ type InjectCommand struct {
 	clipper                       clip.Clipper
 	osEnv                         []string
 	newClient                     newClientFunc
-	templateVars                  map[string]string
+	templateVars                  MapValue
 	templateVersion               string
 	dontPromptMissingTemplateVars bool
 }
@@ -49,31 +49,32 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 		clearClipboardAfter: defaultClearClipboardAfter,
 		io:                  io,
 		newClient:           newClient,
-		templateVars:        make(map[string]string),
+		templateVars:        MapValue{stringMap: make(map[string]string)},
 	}
 }
 
 // Register adds a CommandClause and it's args and flags to a cli.App.
 // Register adds args and flags.
 func (cmd *InjectCommand) Register(r command.Registerer) {
-	clause := r.Command("inject", "Inject secrets into a template.")
-	clause.Flag(
-		"clip",
+	clause := r.CreateCommand("inject", "Inject secrets into a template.")
+	clause.BoolVarP(&cmd.useClipboard,
+		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the injected template to the clipboard instead of stdout. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
-		),
-	).Short('c').BoolVar(&cmd.useClipboard)
-	clause.Flag("in-file", "The filename of a template file to inject.").Short('i').StringVar(&cmd.inFile)
-	clause.Flag("out-file", "Write the injected template to a file instead of stdout.").Short('o').StringVar(&cmd.outFile)
-	clause.Flag("file", "").Hidden().StringVar(&cmd.outFile) // Alias of --out-file (for backwards compatibility)
-	clause.Flag("file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
-	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
-	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
-	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&cmd.dontPromptMissingTemplateVars)
-	clause.Flag("force", "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.").Short('f').BoolVar(&cmd.force)
+		), true, false)
+	clause.StringVarP(&cmd.inFile, "in-file", "i", "", "The filename of a template file to inject.", true, false)
+	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the injected template to a file instead of stdout.", true, false)
+	clause.StringVar(&cmd.outFile, "file", "", "", true, false) // Alias of --out-file (for backwards compatibility)
+	clause.Flag("file").Hidden = true
+	clause.Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.", true, false)
+	clause.Flag("file-mode").DefValue = "0600"
+	clause.VarP(&cmd.templateVars, "var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod", true, false)
+	clause.StringVar(&cmd.templateVersion, "template-version", "auto", "Do not prompt when a template variable is missing and return an error instead.", true, false)
+	clause.BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.", true, false)
+	clause.BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.", true, false)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -104,7 +105,7 @@ func (cmd *InjectCommand) Run() error {
 	osEnv, _ := parseKeyValueStringsToMap(cmd.osEnv)
 
 	var templateVariableReader tpl.VariableReader
-	templateVariableReader, err = newVariableReader(osEnv, cmd.templateVars)
+	templateVariableReader, err = newVariableReader(osEnv, cmd.templateVars.stringMap)
 	if err != nil {
 		return err
 	}

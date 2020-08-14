@@ -15,6 +15,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+	"github.com/spf13/cobra"
 )
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.
@@ -104,19 +105,28 @@ func (cmd *ServiceInitCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create a new service account.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
-	clause.Flag("description", "A description for the service so others will recognize it.").StringVar(&cmd.description)
-	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause := r.CreateCommand("init", "Create a new service account.")
+	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
+	clause.StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it.", true, false)
+	clause.StringVar(&cmd.description, "descr", "", "", true, false)
+	clause.StringVar(&cmd.description, "desc", "", "", true, false)
+	clause.Flag("desc").Hidden = true
+	clause.Flag("descr").Hidden = true
+	clause.StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.", true, false)
+	_ = clause.RegisterFlagCompletionFunc("permission", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"read", "write", "admin"}, cobra.ShellCompDirectiveDefault
+	})
 	// TODO make 45 sec configurable
-	clause.Flag("clip", "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(&cmd.clip)
-	clause.Flag("file", "Write the service account configuration to a file instead of stdout.").Hidden().StringVar(&cmd.file)
-	clause.Flag("out-file", "Write the service account configuration to a file instead of stdout.").StringVar(&cmd.file)
-	clause.Flag("file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.").Default("0440").SetValue(&cmd.fileMode)
+	clause.BoolVarP(&cmd.clip, "clip", "c", false, "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.", true, false)
+	clause.StringVar(&cmd.file, "file", "", "Write the service account configuration to a file instead of stdout.", true, false)
+	clause.Flag("file").Hidden = true
+	clause.StringVar(&cmd.file, "out-file", "", "Write the service account configuration to a file instead of stdout.", true, false)
+	clause.Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.", true, false)
+	clause.Flag("file-mode").DefValue = "0440"
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // givePermission gives the service permission on the repository as defined in the permission flag.
@@ -150,6 +160,15 @@ func givePermission(service *api.Service, repo api.RepoPath, permissionFlagValue
 		}
 	}
 
+	return nil
+}
+
+func (cmd *ServiceInitCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var err error
+	cmd.repo, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

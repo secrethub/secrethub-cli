@@ -7,6 +7,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // OrgInviteCommand handles inviting a user to an organization.
@@ -29,13 +31,23 @@ func NewOrgInviteCommand(io ui.IO, newClient newClientFunc) *OrgInviteCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgInviteCommand) Register(r command.Registerer) {
-	clause := r.Command("invite", "Invite a user to join an organization.")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
-	clause.Arg("username", "The username of the user to invite").Required().StringVar(&cmd.username)
-	clause.Flag("role", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.").Default("member").StringVar(&cmd.role)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	clause := r.CreateCommand("invite", "Invite a user to join an organization.")
+	clause.Args = cobra.ExactValidArgs(2)
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.RepositorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
+	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
+	//clause.Arg("username", "The username of the user to invite").Required().StringVar(&cmd.username)
+	clause.StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.", true, false)
+	_ = clause.RegisterFlagCompletionFunc("role", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"admin", "member"}, cobra.ShellCompDirectiveDefault
+	})
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run invites a user to an organization and gives them a certain role.
@@ -70,5 +82,15 @@ func (cmd *OrgInviteCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)
 
+	return nil
+}
+
+func (cmd *OrgInviteCommand) argumentRegister(c *cobra.Command, args []string) error {
+	err := api.ValidateOrgName(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.orgName = api.OrgName(args[0])
+	cmd.username = args[1]
 	return nil
 }

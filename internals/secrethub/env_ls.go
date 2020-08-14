@@ -14,22 +14,22 @@ type EnvListCommand struct {
 }
 
 // NewEnvListCommand creates a new EnvListCommand.
-func NewEnvListCommand(io ui.IO) *EnvListCommand {
+func NewEnvListCommand(io ui.IO, newClient newClientFunc) *EnvListCommand {
 	return &EnvListCommand{
 		io:          io,
-		environment: newEnvironment(io),
+		environment: newEnvironment(io, newClient),
 	}
 }
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
 func (cmd *EnvListCommand) Register(r command.Registerer) {
-	clause := r.Command("ls", "[BETA] List environment variable names that will be populated with secrets.")
+	clause := r.CreateCommand("ls", "[BETA] List environment variable names that will be populated with secrets.")
 	clause.HelpLong("This command is hidden because it is still in beta. Future versions may break.")
 	clause.Alias("list")
 
 	cmd.environment.register(clause)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run executes the command.

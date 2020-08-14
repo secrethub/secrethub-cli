@@ -9,6 +9,8 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
+	"github.com/spf13/cobra"
 )
 
 // Errors
@@ -34,11 +36,13 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *MkDirCommand) Register(r command.Registerer) {
-	clause := r.Command("mkdir", "Create a new directory.")
-	clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
-	clause.Flag("parents", "Create parent directories if needed. Does not error when directories already exist.").BoolVar(&cmd.parents)
+	clause := r.CreateCommand("mkdir", "Create a new directory.")
+	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.DirectorySuggestions
+	//clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
+	clause.BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.", true, false)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run executes the command.
@@ -56,6 +60,15 @@ func (cmd *MkDirCommand) Run() error {
 			fmt.Fprintf(cmd.io.Output(), "Created a new directory at %s\n", path)
 		}
 	}
+	return nil
+}
+
+func (cmd *MkDirCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var list dirPathList
+	for _, arg := range args {
+		list = append(list, arg)
+	}
+	cmd.paths = list
 	return nil
 }
 

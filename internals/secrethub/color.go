@@ -4,10 +4,15 @@ import (
 	"strconv"
 
 	"github.com/fatih/color"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 )
 
 // noColorFlag configures the global behaviour to disable colored output.
 type noColorFlag bool
+
+func (f noColorFlag) Type() string {
+	return "noColorFlag"
+}
 
 // init disables colored output based on the value of the flag.
 func (f noColorFlag) init() {
@@ -15,9 +20,13 @@ func (f noColorFlag) init() {
 }
 
 // RegisterColorFlag registers a color flag that configures whether colored output is used.
-func RegisterColorFlag(r FlagRegisterer) {
+func RegisterColorFlag(app *cli.App) {
+	commandClause := cli.CommandClause{
+		Command: &app.Application,
+		App:     app,
+	}
 	flag := noColorFlag(false)
-	r.Flag("no-color", "Disable colored output.").SetValue(&flag)
+	commandClause.Var(&flag, "no-color", "Disable colored output.", true, true)
 }
 
 // String implements the flag.Value interface.

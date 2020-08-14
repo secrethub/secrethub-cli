@@ -22,6 +22,8 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+
+	"github.com/spf13/cobra"
 )
 
 // ServiceGCPInitCommand initializes a service for GCP.
@@ -153,16 +155,32 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 	return nil
 }
 
+func (cmd *ServiceGCPInitCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var err error
+	cmd.repo, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Create a new service account that is tied to a GCP Service Account.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
-	clause.Flag("kms-key", "The Resource ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyResourceID)
-	clause.Flag("service-account-email", "The email of the GCP Service Account that should have access to this service account.").StringVar(&cmd.serviceAccountEmail)
-	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
-	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause := r.CreateCommand("init", "Create a new service account that is tied to a GCP Service Account.")
+	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
+	clause.StringVar(&cmd.kmsKeyResourceID, "kms-key", "", "The Resource ID of the KMS-key to be used for encrypting the service's account key.", true, false)
+	clause.StringVar(&cmd.serviceAccountEmail, "service-account-email", "", "The email of the GCP Service Account that should have access to this service account.", true, false)
+	clause.StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.", true, false)
+	clause.StringVar(&cmd.description, "descr", "", "", true, false)
+	clause.StringVar(&cmd.description, "desc", "", "", true, false)
+	clause.Flag("desc").Hidden = true
+	clause.Flag("descr").Hidden = true
+	clause.StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.", true, false)
+	_ = clause.RegisterFlagCompletionFunc("permission", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"read", "write", "admin"}, cobra.ShellCompDirectiveDefault
+	})
 
 	clause.HelpLong("The native GCP identity provider uses a combination of GCP IAM and GCP KMS to provide access to SecretHub for any service running on GCP. For this to work, a GCP Service Account and a KMS key are needed.\n" +
 		"\n" +
@@ -172,7 +190,7 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 		"To create a new service that uses the GCP identity provider, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore GCP application default credentials should be configured on this system. To achieve this, first install the Google Cloud SDK (https://cloud.google.com/sdk/docs/quickstarts) and then run `gcloud auth application-default login`.",
 	)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 type gcpProjectOptionLister struct {

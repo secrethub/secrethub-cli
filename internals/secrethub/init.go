@@ -38,11 +38,11 @@ func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentia
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *InitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Initialize the SecretHub client for first use on this device.")
-	clause.Flag("backup-code", "The backup code used to restore an existing account to this device.").StringVar(&cmd.backupCode)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	clause := r.CreateCommand("init", "Initialize the SecretHub client for first use on this device.")
+	clause.StringVar(&cmd.backupCode, "backup-code", "", "The backup code used to restore an existing account to this device.", true, false)
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 type InitMode int

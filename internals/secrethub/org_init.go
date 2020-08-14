@@ -11,7 +11,7 @@ import (
 
 // OrgInitCommand handles creating an organization.
 type OrgInitCommand struct {
-	name        api.OrgName
+	name        orgNameValue
 	description string
 	force       bool
 	io          ui.IO
@@ -28,21 +28,24 @@ func NewOrgInitCommand(io ui.IO, newClient newClientFunc) *OrgInitCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Initialize a new organization account.")
-	clause.Flag("name", "The name you would like to use for your organization. If not set, you will be asked for it.").SetValue(&cmd.name)
-	clause.Flag("description", "A description (max 144 chars) for your organization so others will recognize it. If not set, you will be asked for it.").StringVar(&cmd.description)
-	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	clause := r.CreateCommand("init", "Initialize a new organization account.")
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	clause.Var(&cmd.name, "name", "The name you would like to use for your organization. If not set, you will be asked for it.", true, false)
+	clause.StringVar(&cmd.description, "description", "", "A description (max 144 chars) for your organization so others will recognize it. If not set, you will be asked for it.", true, false)
+	clause.StringVar(&cmd.description, "descr", "", "", true, false)
+	clause.Flag("descr").Hidden = true
+	clause.StringVar(&cmd.description, "desc", "", "", true, false)
+	clause.Flag("desc").Hidden = true
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run creates an organization.
 func (cmd *OrgInitCommand) Run() error {
 	var err error
 
-	incompleteInput := cmd.name == "" || cmd.description == ""
+	incompleteInput := cmd.name.orgName == "" || cmd.description == ""
 	if cmd.force && incompleteInput {
 		return ErrMissingFlags
 	} else if !cmd.force && incompleteInput {
@@ -52,12 +55,12 @@ func (cmd *OrgInitCommand) Run() error {
 				"Please answer the questions below, followed by an [ENTER]\n\n",
 		)
 
-		if cmd.name == "" {
+		if cmd.name.orgName == "" {
 			name, err := ui.AskAndValidate(cmd.io, "The name you would like to use for your organization: ", 2, api.ValidateOrgName)
 			if err != nil {
 				return err
 			}
-			cmd.name = api.OrgName(name)
+			cmd.name = orgNameValue{orgName: api.OrgName(name)}
 		}
 
 		if cmd.description == "" {
@@ -78,7 +81,7 @@ func (cmd *OrgInitCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Creating organization...\n")
 
-	resp, err := client.Orgs().Create(cmd.name.Value(), cmd.description)
+	resp, err := client.Orgs().Create(cmd.name.orgName.Value(), cmd.description)
 	if err != nil {
 		return err
 	}
@@ -86,4 +89,20 @@ func (cmd *OrgInitCommand) Run() error {
 	fmt.Fprintf(cmd.io.Output(), "Creation complete! The organization %s is now ready to use.\n", resp.Name)
 
 	return nil
+}
+
+type orgNameValue struct {
+	orgName api.OrgName
+}
+
+func (o orgNameValue) String() string {
+	return o.orgName.String()
+}
+
+func (o orgNameValue) Set(s string) error {
+	return o.orgName.Set(s)
+}
+
+func (o orgNameValue) Type() string {
+	return "orgNameValue"
 }

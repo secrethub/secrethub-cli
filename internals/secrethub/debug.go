@@ -7,17 +7,25 @@ import (
 )
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
-func RegisterDebugFlag(r FlagRegisterer, logger cli.Logger) {
+func RegisterDebugFlag(app *cli.App, logger cli.Logger) {
+	commandClause := cli.CommandClause{
+		Command: &app.Application,
+		App:     app,
+	}
 	flag := debugFlag{
 		logger: logger,
 	}
-	r.Flag("debug", "Enable debug mode.").Short('D').SetValue(&flag)
+	commandClause.VarP(&flag, "debug", "D", "Enable debug mode.", true, true)
 }
 
 // debugFlag configures the debug level of a logger.
 type debugFlag struct {
 	debug  bool
 	logger cli.Logger
+}
+
+func (f debugFlag) Type() string {
+	return "debugFlag"
 }
 
 func (f debugFlag) init() {

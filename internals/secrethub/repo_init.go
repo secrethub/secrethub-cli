@@ -7,6 +7,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // RepoInitCommand handles creating new repositories.
@@ -26,10 +28,12 @@ func NewRepoInitCommand(io ui.IO, newClient newClientFunc) *RepoInitCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoInitCommand) Register(r command.Registerer) {
-	clause := r.Command("init", "Initialize a new repository.")
-	clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
+	clause := r.CreateCommand("init", "Initialize a new repository.")
+	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
+	//clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run creates a new repository.
@@ -48,5 +52,14 @@ func (cmd *RepoInitCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Create complete! The repository %s is now ready to use.\n", cmd.path.String())
 
+	return nil
+}
+
+func (cmd *RepoInitCommand) argumentRegister(c *cobra.Command, args []string) error {
+	var err error
+	cmd.path, err = api.NewRepoPath(args[0])
+	if err != nil {
+		return err
+	}
 	return nil
 }

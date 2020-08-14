@@ -9,6 +9,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+
+	"github.com/spf13/cobra"
 )
 
 // OrgRevokeCommand handles revoking a member from an organization.
@@ -29,11 +31,18 @@ func NewOrgRevokeCommand(io ui.IO, newClient newClientFunc) *OrgRevokeCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgRevokeCommand) Register(r command.Registerer) {
-	clause := r.Command("revoke", "Revoke a user from an organization. This automatically revokes the user from all of the organization's repositories. A list of repositories containing secrets that should be rotated will be printed out.")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
-	clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
+	clause := r.CreateCommand("revoke", "Revoke a user from an organization. This automatically revokes the user from all of the organization's repositories. A list of repositories containing secrets that should be rotated will be printed out.")
+	clause.Args = cobra.ExactValidArgs(2)
+	clause.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) == 0 {
+			return AutoCompleter{client: GetClient()}.RepositorySuggestions(cmd, args, toComplete)
+		}
+		return []string{}, cobra.ShellCompDirectiveDefault
+	}
+	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
+	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 
-	command.BindAction(clause, cmd.Run)
+	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
 }
 
 // Run revokes an organization member.
@@ -127,6 +136,16 @@ func (cmd *OrgRevokeCommand) Run() error {
 		fmt.Fprintln(cmd.io.Output(), "Revoke complete!")
 	}
 
+	return nil
+}
+
+func (cmd *OrgRevokeCommand) argumentRegister(c *cobra.Command, args []string) error {
+	err := api.ValidateOrgName(args[0])
+	if err != nil {
+		return err
+	}
+	cmd.orgName = api.OrgName(args[0])
+	cmd.username = args[1]
 	return nil
 }
 

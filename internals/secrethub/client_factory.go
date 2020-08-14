@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"github.com/spf13/cobra"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,6 +10,8 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+
+	"github.com/spf13/cobra"
 )
 
 // Errors

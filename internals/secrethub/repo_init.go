@@ -30,6 +30,7 @@ func NewRepoInitCommand(io ui.IO, newClient newClientFunc) *RepoInitCommand {
 func (cmd *RepoInitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Initialize a new repository.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

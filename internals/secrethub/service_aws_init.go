@@ -166,6 +166,7 @@ func (cmd *ServiceAWSInitCommand) argumentRegister(c *cobra.Command, args []stri
 func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Create a new service account that is tied to an AWS IAM role.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.StringVar(&cmd.kmsKeyID, "kms-key", "", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.", true, false)
 	clause.StringVar(&cmd.role, "role", "", "The role name or ARN of the IAM role that should have access to this service account.", true, false)

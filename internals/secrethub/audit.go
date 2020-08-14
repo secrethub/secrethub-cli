@@ -69,6 +69,7 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 
 	clause := r.CreateCommand("audit", "Show the audit log.")
 	clause.Args = cobra.MaximumNArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.SecretSuggestions
 	//clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.IntVar(&cmd.perPage, "per-page", 20, "Number of audit events shown per page", true, false)
 	clause.Flag("per-page").Hidden = true

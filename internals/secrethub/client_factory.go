@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/spf13/cobra"
 	"net/http"
 	"net/url"
 	"strings"
@@ -47,9 +48,11 @@ func (f *clientFactory) Register(app *cli.App) {
 		Command: &app.Application,
 		App:     app,
 	}
-	//TODO persistent!!!
 	commandClause.VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.", true, false)
 	commandClause.StringVar(&f.identityProvider, "identity-provider", "key", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ", true, false)
+	_ = commandClause.RegisterFlagCompletionFunc("identity-provider", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"aws", "gcp", "key"}, cobra.ShellCompDirectiveDefault
+	})
 	commandClause.VarPF(&f.proxyAddress, "proxy-address", "", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`", true, false)
 }
 

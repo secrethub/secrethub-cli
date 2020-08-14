@@ -33,6 +33,7 @@ func NewInspectCommand(io ui.IO, newClient newClientFunc) *InspectCommand {
 func (cmd *InspectCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("inspect", "Print details of a resource.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.SecretSuggestions
 	//clause.Arg("repo or secret-path", "Path to the repository or the secret to inspect "+repoPathPlaceHolder+" or "+secretPathOptionalVersionPlaceHolder).Required().SetValue(&cmd.path)
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

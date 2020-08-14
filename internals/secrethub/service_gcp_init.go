@@ -168,6 +168,7 @@ func (cmd *ServiceGCPInitCommand) argumentRegister(c *cobra.Command, args []stri
 func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Create a new service account that is tied to a GCP Service Account.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.StringVar(&cmd.kmsKeyResourceID, "kms-key", "", "The Resource ID of the KMS-key to be used for encrypting the service's account key.", true, false)
 	clause.StringVar(&cmd.serviceAccountEmail, "service-account-email", "", "The email of the GCP Service Account that should have access to this service account.", true, false)

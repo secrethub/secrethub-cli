@@ -33,6 +33,7 @@ func NewRepoInspectCommand(io ui.IO, newClient newClientFunc) *RepoInspectComman
 func (cmd *RepoInspectCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("inspect", "Show the details of a repository.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("repo-path", "Path to the repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

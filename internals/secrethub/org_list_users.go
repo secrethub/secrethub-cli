@@ -35,6 +35,7 @@ func (cmd *OrgListUsersCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("list-users", "List all members of an organization.")
 	clause.Alias("list-members")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 

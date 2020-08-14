@@ -107,6 +107,7 @@ func (cmd *ServiceInitCommand) Run() error {
 func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Create a new service account.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it.", true, false)
 	clause.StringVar(&cmd.description, "descr", "", "", true, false)

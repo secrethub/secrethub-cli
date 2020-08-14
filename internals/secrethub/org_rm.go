@@ -32,6 +32,7 @@ func (cmd *OrgRmCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("rm", "Permanently delete an organization and all the repositories it owns.")
 	clause.Alias("remove")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

@@ -45,6 +45,7 @@ func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 func (cmd *WriteCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("write", "Write a secret.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.SecretSuggestions
 	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.BoolVarP(&cmd.useClipboard, "clip", "c", false, "Use clipboard content as input.", true, false)
 	clause.BoolVarP(&cmd.multiline, "multiline", "m", false, "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.", true, false)

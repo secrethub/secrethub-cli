@@ -31,6 +31,7 @@ func (cmd *RepoRmCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("rm", "Permanently delete a repository.")
 	clause.Alias("remove")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("repo-path", "The repository to delete").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

@@ -59,6 +59,7 @@ func (cmd *TreeCommand) argumentRegister(c *cobra.Command, args []string) error 
 func (cmd *TreeCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("tree", "List contents of a directory in a tree-like format.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.DirectorySuggestions
 	//clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BoolVarP(&cmd.fullPaths, "full-paths", "f", false, "Print the full path of each directory and secret.", true, false)

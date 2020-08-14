@@ -33,6 +33,7 @@ func NewOrgInspectCommand(io ui.IO, newClient newClientFunc) *OrgInspectCommand 
 func (cmd *OrgInspectCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("inspect", "Show the details of an organization.")
 	clause.Args = cobra.ExactValidArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.RepositorySuggestions
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	command.BindAction(clause, cmd.argumentRegister, cmd.Run)

@@ -36,6 +36,7 @@ func (cmd *LsCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("ls", "List contents of a path.")
 	clause.Alias("list")
 	clause.Args = cobra.MaximumNArgs(1)
+	clause.ValidArgsFunction = AutoCompleter{client: GetClient()}.DirectorySuggestions
 	//clause.Arg("path", "The path to list contents of").SetValue(&cmd.path)
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)

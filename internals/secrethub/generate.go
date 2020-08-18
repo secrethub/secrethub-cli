@@ -35,7 +35,7 @@ const defaultLength = 22
 
 // GenerateSecretCommand generates a new secret and writes to the output path.
 type GenerateSecretCommand struct {
-	symbolsFlag         boolValue
+	symbolsFlag         bool
 	generator           randchar.Generator
 	io                  ui.IO
 	lengthFlag          intValue
@@ -74,7 +74,7 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	_ = clause.RegisterFlagCompletionFunc("charset", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable"}, cobra.ShellCompDirectiveDefault
 	})
-	clause.VarP(&cmd.symbolsFlag, "symbols", "s", "Include symbols in secret.", true, false) //Short('s').Hidden().SetValue(&cmd.symbolsFlag)
+	clause.BoolVarP(&cmd.symbolsFlag, "symbols", "s", false, "Include symbols in secret.", true, false) //Short('s').Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Flag("symbols").Hidden = true
 	//clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
@@ -202,8 +202,8 @@ func (cmd *GenerateSecretCommand) path() (string, error) {
 }
 
 func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {
-	if cmd.symbolsFlag.IsSet() {
-		return cmd.symbolsFlag.Get(), nil
+	if cmd.symbolsFlag {
+		return true, nil
 	}
 
 	useSymbolsEnv := os.Getenv("SECRETHUB_GENERATE_RAND_SYMBOLS")
@@ -311,36 +311,5 @@ func (iv *intValue) Set(s string) error {
 }
 
 func (iv *intValue) String() string {
-	return fmt.Sprintf("%v", iv.v)
-}
-
-type boolValue struct {
-	v *bool
-}
-
-func (iv *boolValue) Type() string {
-	panic("boolValue")
-}
-
-func (iv *boolValue) Get() bool {
-	if iv.v == nil {
-		return false
-	}
-	return *iv.v
-}
-
-func (iv *boolValue) IsSet() bool {
-	return iv.v != nil
-}
-
-func (iv *boolValue) Set(s string) error {
-	b, err := strconv.ParseBool(s)
-	if err == nil {
-		iv.v = &b
-	}
-	return err
-}
-
-func (iv *boolValue) String() string {
 	return fmt.Sprintf("%v", iv.v)
 }

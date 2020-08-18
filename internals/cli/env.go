@@ -318,7 +318,7 @@ func (cmd *CommandClause) Hidden() *CommandClause {
 	return cmd
 }
 
-func (cmd *CommandClause) FullCommand() string {
+func (cmd *CommandClause) fullCommand() string {
 	if cmd.Use == cmd.Root().Use {
 		return ""
 	}
@@ -347,7 +347,7 @@ func (cmd *CommandClause) Alias(alias string) {
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
 func (cmd *CommandClause) FlagRegister(name, help string) *Flag {
-	fullCmd := strings.Replace(cmd.FullCommand(), " ", cmd.App.separator, -1)
+	fullCmd := strings.Replace(cmd.fullCommand(), " ", cmd.App.separator, -1)
 	prefix := formatName(fullCmd, cmd.App.name, cmd.App.separator, cmd.App.delimiters...)
 	envVar := formatName(name, prefix, cmd.App.separator, cmd.App.delimiters...)
 

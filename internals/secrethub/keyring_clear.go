@@ -21,7 +21,7 @@ func NewKeyringClearCommand() *KeyringClearCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *KeyringClearCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("keyring-clear", "Clear the key passphrase from the keyring.").Hidden()
+	clause := r.Command("keyring-clear", "Clear the key passphrase from the keyring.").Hidden()
 
 	// Alias for backwards compatibility with old name of command.
 	clause.Alias("key-passphrase-clear")

@@ -29,9 +29,9 @@ func NewRepoRmCommand(io ui.IO, newClient newClientFunc) *RepoRmCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoRmCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("rm", "Permanently delete a repository.")
+	clause := r.Command("rm", "Permanently delete a repository.")
 	clause.Alias("remove")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "The repository to delete").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)

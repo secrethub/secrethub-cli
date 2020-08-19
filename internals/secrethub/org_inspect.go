@@ -31,8 +31,8 @@ func NewOrgInspectCommand(io ui.IO, newClient newClientFunc) *OrgInspectCommand 
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgInspectCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("inspect", "Show the details of an organization.")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause := r.Command("inspect", "Show the details of an organization.")
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	command.BindAction(clause, []cli.ArgValue{&cmd.name}, cmd.Run)

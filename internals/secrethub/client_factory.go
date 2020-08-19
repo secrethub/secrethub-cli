@@ -44,7 +44,7 @@ type clientFactory struct {
 // Register the flags for configuration on a cli application.
 func (f *clientFactory) Register(app *cli.App) {
 	commandClause := cli.CommandClause{
-		Command: &app.Application,
+		Cmd: &app.Application,
 		App:     app,
 	}
 	commandClause.VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.", true, true)

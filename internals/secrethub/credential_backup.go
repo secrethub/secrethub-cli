@@ -24,7 +24,7 @@ func NewCredentialBackupCommand(io ui.IO, newClient newClientFunc) *CredentialBa
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *CredentialBackupCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("backup", "Create a backup code for restoring your account.")
+	clause := r.Command("backup", "Create a backup code for restoring your account.")
 
 	command.BindAction(clause, nil, cmd.Run)
 }

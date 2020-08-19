@@ -9,7 +9,7 @@ import (
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
 func RegisterDebugFlag(app *cli.App, logger cli.Logger) {
 	commandClause := cli.CommandClause{
-		Command: &app.Application,
+		Cmd: &app.Application,
 		App:     app,
 	}
 	flag := debugFlag{

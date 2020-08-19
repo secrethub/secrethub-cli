@@ -23,7 +23,7 @@ package demo
 //
 //// Register registers the command, arguments and flags on the provided Registerer.
 //func (cmd *Command) Register(r command.Registerer) {
-//	clause := r.CreateCommand("demo", "Manage the demo application.")
+//	clause := r.Command("demo", "Manage the demo application.")
 //	clause.Hidden()
 //
 //	NewInitCommand(cmd.io, cmd.newClient).Register(clause)

@@ -36,9 +36,9 @@ func NewACLListCommand(io ui.IO, newClient newClientFunc) *ACLListCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ACLListCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("ls", "List access rules of a directory and its children.")
+	clause := r.Command("ls", "List access rules of a directory and its children.")
 	clause.Alias("list")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("dir-path", "The path of the directory to list the access rules for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	clause.IntVarP(&cmd.depth, "depth", "d", -1, "The maximum depth to which the rules of child directories should be displayed. Defaults to -1 (no limit).", true, false)
 	clause.BoolVarP(&cmd.ancestors, "all", "a", false, "List all rules that apply on the directory, including rules on parent directories.", true, false)

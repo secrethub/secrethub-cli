@@ -28,7 +28,7 @@ func NewAccountInspectCommand(io ui.IO, newClient newClientFunc) *AccountInspect
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *AccountInspectCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("inspect", "Show the details of your SecretHub account.")
+	clause := r.Command("inspect", "Show the details of your SecretHub account.")
 
 	command.BindAction(clause, nil, cmd.Run)
 }

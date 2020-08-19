@@ -49,8 +49,8 @@ func (cmd *TreeCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *TreeCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("tree", "List contents of a directory in a tree-like format.")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BoolVarP(&cmd.fullPaths, "full-paths", "f", false, "Print the full path of each directory and secret.", true, false)
@@ -58,7 +58,7 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 	clause.BoolVar(&cmd.noReport, "no-report", false, "Turn off secret/directory count at end of tree listing.", true, false)
 	clause.BoolVar(&cmd.noReport, "noreport", false, "Turn off secret/directory count at end of tree listing.", true, false)
 
-	clause.Flag("noreport").Hidden = true
+	clause.Cmd.Flag("noreport").Hidden = true
 
 	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
 }

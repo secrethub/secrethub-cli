@@ -29,8 +29,8 @@ func NewCredentialDisableCommand(io ui.IO, newClient newClientFunc) *CredentialD
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *CredentialDisableCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("disable", "Disable a credential for usage on SecretHub.")
-	clause.Args = cobra.MaximumNArgs(1)
+	clause := r.Command("disable", "Disable a credential for usage on SecretHub.")
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 
 	//fingerprintHelp := fmt.Sprintf("Fingerprint of the credential to disable. At least the first %d characters must be entered.", api.ShortCredentialFingerprintMinimumLength)
 	//clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)

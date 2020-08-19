@@ -37,8 +37,8 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *MkDirCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("mkdir", "Create a new directory.")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause := r.Command("mkdir", "Create a new directory.")
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
 	clause.BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.", true, false)
 

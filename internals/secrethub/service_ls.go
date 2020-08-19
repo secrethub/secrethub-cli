@@ -62,9 +62,9 @@ func NewServiceGCPLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceLsCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("ls", cmd.help)
+	clause := r.Command("ls", cmd.help)
 	clause.Alias("list")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "The path to the repository to list services for").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repoPath)
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)

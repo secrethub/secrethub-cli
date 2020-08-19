@@ -34,9 +34,9 @@ func NewLsCommand(io ui.IO, newClient newClientFunc) *LsCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *LsCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("ls", "List contents of a path.")
+	clause := r.Command("ls", "List contents of a path.")
 	clause.Alias("list")
-	clause.Args = cobra.MaximumNArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("path", "The path to list contents of").SetValue(&cmd.path)
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)

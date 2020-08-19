@@ -156,8 +156,8 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("init", "Create a new service account that is tied to an AWS IAM role.")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause := r.Command("init", "Create a new service account that is tied to an AWS IAM role.")
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.StringVar(&cmd.kmsKeyID, "kms-key", "", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.", true, false)
 	clause.StringVar(&cmd.role, "role", "", "The role name or ARN of the IAM role that should have access to this service account.", true, false)
@@ -165,8 +165,8 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 	clause.StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.", true, false)
 	clause.StringVar(&cmd.description, "descr", "", "", true, false)
 	clause.StringVar(&cmd.description, "desc", "", "", true, false)
-	clause.Flag("desc").Hidden = true
-	clause.Flag("descr").Hidden = true
+	clause.Cmd.Flag("desc").Hidden = true
+	clause.Cmd.Flag("descr").Hidden = true
 	clause.StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.", true, false)
 
 	clause.HelpLong("The native AWS identity provider uses a combination of AWS IAM and AWS KMS to provide access to SecretHub for any service running on AWS (e.g. EC2, Lambda or ECS). For this to work, an IAM role and a KMS key are needed.\n" +

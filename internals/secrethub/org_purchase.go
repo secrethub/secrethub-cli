@@ -21,7 +21,7 @@ func NewOrgPurchaseCommand(io ui.IO) *OrgPurchaseCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgPurchaseCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("purchase", "Purchase a SecretHub subscription.")
+	clause := r.Command("purchase", "Purchase a SecretHub subscription.")
 
 	command.BindAction(clause, nil, cmd.Run)
 }

@@ -68,13 +68,13 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 		defaultLimit = pipedOutputLineLimit
 	}
 
-	clause := r.CreateCommand("audit", "Show the audit log.")
-	clause.Args = cobra.MaximumNArgs(1)
+	clause := r.Command("audit", "Show the audit log.")
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.IntVar(&cmd.perPage, "per-page", 20, "Number of audit events shown per page", true, false)
-	clause.Flag("per-page").Hidden = true
+	clause.Cmd.Flag("per-page").Hidden = true
 	clause.StringVar(&cmd.format, "output-format", "table", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.", true, false)
-	_ = clause.RegisterFlagCompletionFunc("output-format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = clause.Cmd.RegisterFlagCompletionFunc("output-format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"table", "json"}, cobra.ShellCompDirectiveDefault
 	})
 	clause.IntVar(&cmd.maxResults, "max-results", defaultLimit, "Specify the number of entries to list. If maxResults < 0 all entries are displayed. If the output of the command is piped, maxResults defaults to 1000.", true, false)

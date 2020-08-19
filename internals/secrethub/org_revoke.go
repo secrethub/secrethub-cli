@@ -32,8 +32,8 @@ func NewOrgRevokeCommand(io ui.IO, newClient newClientFunc) *OrgRevokeCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgRevokeCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("revoke", "Revoke a user from an organization. This automatically revokes the user from all of the organization's repositories. A list of repositories containing secrets that should be rotated will be printed out.")
-	clause.Args = cobra.ExactValidArgs(2)
+	clause := r.Command("revoke", "Revoke a user from an organization. This automatically revokes the user from all of the organization's repositories. A list of repositories containing secrets that should be rotated will be printed out.")
+	clause.Cmd.Args = cobra.ExactValidArgs(2)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 

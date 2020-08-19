@@ -14,7 +14,7 @@ func NewConfigUpgradeCommand() *ConfigUpgradeCommand {
 }
 
 func (cmd *ConfigUpgradeCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("upgrade", "Upgrade your .secrethub configuration directory. This can be useful to migrate to a newer version of the configuration files.").Hidden()
+	clause := r.Command("upgrade", "Upgrade your .secrethub configuration directory. This can be useful to migrate to a newer version of the configuration files.").Hidden()
 	command.BindAction(clause, nil, cmd.Run)
 }
 

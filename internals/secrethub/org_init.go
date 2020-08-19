@@ -28,13 +28,13 @@ func NewOrgInitCommand(io ui.IO, newClient newClientFunc) *OrgInitCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgInitCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("init", "Initialize a new organization account.")
+	clause := r.Command("init", "Initialize a new organization account.")
 	clause.Var(&cmd.name, "name", "The name you would like to use for your organization. If not set, you will be asked for it.", true, false)
 	clause.StringVar(&cmd.description, "description", "", "A description (max 144 chars) for your organization so others will recognize it. If not set, you will be asked for it.", true, false)
 	clause.StringVar(&cmd.description, "descr", "", "", true, false)
-	clause.Flag("descr").Hidden = true
+	clause.Cmd.Flag("descr").Hidden = true
 	clause.StringVar(&cmd.description, "desc", "", "", true, false)
-	clause.Flag("desc").Hidden = true
+	clause.Cmd.Flag("desc").Hidden = true
 	registerForceFlag(clause, &cmd.force)
 
 	command.BindAction(clause, nil, cmd.Run)

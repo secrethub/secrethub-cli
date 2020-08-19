@@ -45,9 +45,9 @@ func NewApp(name, help string) *App {
 }
 
 // Command defines a new top-level command with the given name and help text.
-func (a *App) CreateCommand(name, help string) *CommandClause {
+func (a *App) Command(name, help string) *CommandClause {
 	return &CommandClause{
-		Command: func() *cobra.Command {
+		Cmd: func() *cobra.Command {
 			newCommand := &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true}
 			a.Application.AddCommand(newCommand)
 			return newCommand
@@ -159,17 +159,16 @@ func (a *App) CheckStrictEnv() error {
 
 // CommandClause represents a command clause in a command0-line application.
 type CommandClause struct {
-	*cobra.Command
-
+	Cmd *cobra.Command
 	name string
 	App  *App
 }
 
 func (cmd *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().BoolVarP(reference, name, shorthand, def, usage)
+		cmd.Cmd.PersistentFlags().BoolVarP(reference, name, shorthand, def, usage)
 	} else {
-		cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
+		cmd.Cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
 	}
 
 	if hasEnv {
@@ -179,9 +178,9 @@ func (cmd *CommandClause) BoolVarP(reference *bool, name, shorthand string, def 
 
 func (cmd *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().IntVarP(reference, name, shorthand, def, usage)
+		cmd.Cmd.PersistentFlags().IntVarP(reference, name, shorthand, def, usage)
 	} else {
-		cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
+		cmd.Cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
 	}
 
 	if hasEnv {
@@ -191,9 +190,9 @@ func (cmd *CommandClause) IntVarP(reference *int, name, shorthand string, def in
 
 func (cmd *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().StringVarP(reference, name, shorthand, def, usage)
+		cmd.Cmd.PersistentFlags().StringVarP(reference, name, shorthand, def, usage)
 	} else {
-		cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
+		cmd.Cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
 	}
 
 	if hasEnv {
@@ -203,9 +202,9 @@ func (cmd *CommandClause) StringVarP(reference *string, name, shorthand string, 
 
 func (cmd *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().DurationVarP(reference, name, shorthand, def, usage)
+		cmd.Cmd.PersistentFlags().DurationVarP(reference, name, shorthand, def, usage)
 	} else {
-		cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
+		cmd.Cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
 	}
 
 	if hasEnv {
@@ -215,9 +214,9 @@ func (cmd *CommandClause) DurationVarP(reference *time.Duration, name, shorthand
 
 func (cmd *CommandClause) BoolVar(reference *bool, name string, def bool, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().BoolVar(reference, name, def, usage)
+		cmd.Cmd.PersistentFlags().BoolVar(reference, name, def, usage)
 	} else {
-		cmd.Flags().BoolVar(reference, name, def, usage)
+		cmd.Cmd.Flags().BoolVar(reference, name, def, usage)
 	}
 
 	if hasEnv {
@@ -227,9 +226,9 @@ func (cmd *CommandClause) BoolVar(reference *bool, name string, def bool, usage 
 
 func (cmd *CommandClause) IntVar(reference *int, name string, def int, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().IntVar(reference, name, def, usage)
+		cmd.Cmd.PersistentFlags().IntVar(reference, name, def, usage)
 	} else {
-		cmd.Flags().IntVar(reference, name, def, usage)
+		cmd.Cmd.Flags().IntVar(reference, name, def, usage)
 	}
 
 	if hasEnv {
@@ -239,9 +238,9 @@ func (cmd *CommandClause) IntVar(reference *int, name string, def int, usage str
 
 func (cmd *CommandClause) StringVar(reference *string, name string, def string, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().StringVar(reference, name, def, usage)
+		cmd.Cmd.PersistentFlags().StringVar(reference, name, def, usage)
 	} else {
-		cmd.Flags().StringVar(reference, name, def, usage)
+		cmd.Cmd.Flags().StringVar(reference, name, def, usage)
 	}
 
 	if hasEnv {
@@ -251,9 +250,9 @@ func (cmd *CommandClause) StringVar(reference *string, name string, def string, 
 
 func (cmd *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().DurationVar(reference, name, def, usage)
+		cmd.Cmd.PersistentFlags().DurationVar(reference, name, def, usage)
 	} else {
-		cmd.Flags().DurationVar(reference, name, def, usage)
+		cmd.Cmd.Flags().DurationVar(reference, name, def, usage)
 	}
 
 	if hasEnv {
@@ -263,9 +262,9 @@ func (cmd *CommandClause) DurationVar(reference *time.Duration, name string, def
 
 func (cmd *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().VarP(reference, name, shorthand, usage)
+		cmd.Cmd.PersistentFlags().VarP(reference, name, shorthand, usage)
 	} else {
-		cmd.Flags().VarP(reference, name, shorthand, usage)
+		cmd.Cmd.Flags().VarP(reference, name, shorthand, usage)
 	}
 
 	if hasEnv {
@@ -275,9 +274,9 @@ func (cmd *CommandClause) VarP(reference pflag.Value, name string, shorthand str
 
 func (cmd *CommandClause) Var(reference pflag.Value, name string, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.PersistentFlags().Var(reference, name, usage)
+		cmd.Cmd.PersistentFlags().Var(reference, name, usage)
 	} else {
-		cmd.Flags().Var(reference, name, usage)
+		cmd.Cmd.Flags().Var(reference, name, usage)
 	}
 
 	if hasEnv {
@@ -288,9 +287,9 @@ func (cmd *CommandClause) Var(reference pflag.Value, name string, usage string, 
 func (cmd *CommandClause) VarPF(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) *pflag.Flag {
 	var flag *pflag.Flag
 	if persistent {
-		flag = cmd.PersistentFlags().VarPF(reference, name, shorthand, usage)
+		flag = cmd.Cmd.PersistentFlags().VarPF(reference, name, shorthand, usage)
 	} else {
-		flag = cmd.Flags().VarPF(reference, name, shorthand, usage)
+		flag = cmd.Cmd.Flags().VarPF(reference, name, shorthand, usage)
 	}
 
 	if hasEnv {
@@ -300,32 +299,32 @@ func (cmd *CommandClause) VarPF(reference pflag.Value, name string, shorthand st
 }
 
 // Command adds a new subcommand to this command.
-func (cmd *CommandClause) CreateCommand(name, help string) *CommandClause {
+func (cmd *CommandClause) Command(name, help string) *CommandClause {
 	clause := &CommandClause{
-		Command: func() *cobra.Command {
+		Cmd: func() *cobra.Command {
 			newCommand := &cobra.Command{Use: name, Short: help}
 			return newCommand
 		}(),
 		name: name,
 		App:  cmd.App,
 	}
-	cmd.AddCommand(clause.Command)
+	cmd.Cmd.AddCommand(clause.Cmd)
 	return clause
 }
 
 // Hidden hides the command in help texts.
 func (cmd *CommandClause) Hidden() *CommandClause {
-	cmd.Command.Hidden = true
+	cmd.Cmd.Hidden = true
 	return cmd
 }
 
 func (cmd *CommandClause) fullCommand() string {
-	if cmd.Use == cmd.Root().Use {
+	if cmd.Cmd.Use == cmd.Cmd.Root().Use {
 		return ""
 	}
-	out := []string{cmd.Use}
-	for p := cmd.Parent(); p != nil; p = p.Parent() {
-		if p.Use != cmd.Root().Use {
+	out := []string{cmd.Cmd.Use}
+	for p := cmd.Cmd.Parent(); p != nil; p = p.Parent() {
+		if p.Use != cmd.Cmd.Root().Use {
 			out = append([]string{p.Use}, out...)
 		}
 	}
@@ -333,14 +332,14 @@ func (cmd *CommandClause) fullCommand() string {
 }
 
 func (cmd *CommandClause) HelpLong(helpLong string) {
-	cmd.Long = helpLong
+	cmd.Cmd.Long = helpLong
 }
 
 func (cmd *CommandClause) Alias(alias string) {
-	if cmd.Aliases == nil {
-		cmd.Aliases = []string{alias}
+	if cmd.Cmd.Aliases == nil {
+		cmd.Cmd.Aliases = []string{alias}
 	} else {
-		cmd.Aliases = append(cmd.Aliases, alias)
+		cmd.Cmd.Aliases = append(cmd.Cmd.Aliases, alias)
 	}
 }
 
@@ -353,7 +352,7 @@ func (cmd *CommandClause) FlagRegister(name, help string) *Flag {
 	envVar := formatName(name, prefix, cmd.App.separator, cmd.App.delimiters...)
 
 	cmd.App.registerEnvVar(envVar)
-	flag := cmd.Flag(name)
+	flag := cmd.Cmd.Flag(name)
 	return (&Flag{
 		Flag:   flag,
 		app:    cmd.App,

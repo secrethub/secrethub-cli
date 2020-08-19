@@ -30,9 +30,9 @@ func NewOrgRmCommand(io ui.IO, newClient newClientFunc) *OrgRmCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgRmCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("rm", "Permanently delete an organization and all the repositories it owns.")
+	clause := r.Command("rm", "Permanently delete an organization and all the repositories it owns.")
 	clause.Alias("remove")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	command.BindAction(clause, []cli.ArgValue{&cmd.name}, cmd.Run)

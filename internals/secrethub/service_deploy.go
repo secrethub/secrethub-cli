@@ -19,6 +19,6 @@ func NewServiceDeployCommand(io ui.IO) *ServiceDeployCommand {
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *ServiceDeployCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("deploy", "Deploy a service account to a destination.")
+	clause := r.Command("deploy", "Deploy a service account to a destination.")
 	NewServiceDeployWinRmCommand(cmd.io).Register(clause)
 }

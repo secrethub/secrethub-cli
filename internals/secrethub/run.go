@@ -78,10 +78,10 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 		"The output is buffered to scan for secrets and can be adjusted using the masking-buffer-period flag. " +
 		"You should regard the masking as a best effort attempt and should always prevent secrets ending up on stdout and stderr in the first place."
 
-	clause := r.CreateCommand("run", helpShort)
+	clause := r.Command("run", helpShort)
 	clause.HelpLong(helpLong)
 	clause.Alias("exec")
-	clause.Args = cobra.MinimumNArgs(1)
+	clause.Cmd.Args = cobra.MinimumNArgs(1)
 	//clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.BoolVar(&cmd.noMasking, "no-masking", false, "Disable masking of secrets on stdout and stderr", true, false)
 	clause.BoolVar(&cmd.maskerOptions.DisableBuffer, "no-output-buffering", false, "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.", true, false)

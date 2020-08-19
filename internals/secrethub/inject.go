@@ -56,7 +56,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 // Register adds a CommandClause and it's args and flags to a cli.App.
 // Register adds args and flags.
 func (cmd *InjectCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("inject", "Inject secrets into a template.")
+	clause := r.Command("inject", "Inject secrets into a template.")
 	clause.BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
 		fmt.Sprintf(
@@ -66,9 +66,9 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause.StringVarP(&cmd.inFile, "in-file", "i", "", "The filename of a template file to inject.", true, false)
 	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the injected template to a file instead of stdout.", true, false)
 	clause.StringVar(&cmd.outFile, "file", "", "", true, false) // Alias of --out-file (for backwards compatibility)
-	clause.Flag("file").Hidden = true
+	clause.Cmd.Flag("file").Hidden = true
 	clause.Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.", true, false)
-	clause.Flag("file-mode").DefValue = "0600"
+	clause.Cmd.Flag("file-mode").DefValue = "0600"
 	clause.VarP(&cmd.templateVars, "var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod", true, false)
 	clause.StringVar(&cmd.templateVersion, "template-version", "auto", "Do not prompt when a template variable is missing and return an error instead.", true, false)
 	clause.BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.", true, false)

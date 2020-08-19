@@ -59,11 +59,11 @@ func NewServiceDeployWinRmCommand(io ui.IO) *ServiceDeployWinRmCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceDeployWinRmCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("winrm", "Read a service account configuration from stdin and deploy it to a running instance with WinRM. The instance needs to be reachable, have WinRM enabled, and have PowerShell installed.")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause := r.Command("winrm", "Read a service account configuration from stdin and deploy it to a running instance with WinRM. The instance needs to be reachable, have WinRM enabled, and have PowerShell installed.")
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("resource-uri", "Hostname, optional connection protocol and port of the host ([http[s]://]<host>[:<port>]). This defaults to https and port 5986.").Required().URLVar(&cmd.resourceURI)
 	clause.StringVar(&cmd.authType, "auth-type", "basic", "Authentication type (basic/cert)", true, false)
-	_ = clause.RegisterFlagCompletionFunc("auth-type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = clause.Cmd.RegisterFlagCompletionFunc("auth-type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"basic", "cert"}, cobra.ShellCompDirectiveDefault
 	})
 	clause.StringVar(&cmd.username, "username", "", "The username used for logging in when authentication type is basic. Is asked if not supplied.", true, false)

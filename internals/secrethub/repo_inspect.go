@@ -31,8 +31,8 @@ func NewRepoInspectCommand(io ui.IO, newClient newClientFunc) *RepoInspectComman
 
 // Register registers the command, args, and flags on the provided registerer.
 func (cmd *RepoInspectCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("inspect", "Show the details of a repository.")
-	clause.Args = cobra.ExactValidArgs(1)
+	clause := r.Command("inspect", "Show the details of a repository.")
+	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "Path to the repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)

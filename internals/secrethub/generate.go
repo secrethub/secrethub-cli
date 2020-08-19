@@ -63,20 +63,20 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("generate", "Generate a random secret.")
-	clause.Args = cobra.RangeArgs(1, 3)
+	clause := r.Command("generate", "Generate a random secret.")
+	clause.Cmd.Args = cobra.RangeArgs(1, 3)
 	//clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	clause.VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength), true, false) //.PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
-	clause.Flag("length").DefValue = strconv.Itoa(defaultLength)
+	clause.Cmd.Flag("length").DefValue = strconv.Itoa(defaultLength)
 	clause.Var(&cmd.mins, "min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constraints reduces the strength of the secret. When possible, avoid any constraints.", true, false)
 	clause.BoolVarP(&cmd.copyToClipboard, "clip", "c", false, "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".", true, false)
 	clause.Var(&cmd.charsetFlag, "charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list. Defaults to alphanumeric.", true, false) //Default("alphanumeric").HintOptions("all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable")
-	clause.Flag("charset").DefValue = "alphanumeric"
-	_ = clause.RegisterFlagCompletionFunc("charset", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	clause.Cmd.Flag("charset").DefValue = "alphanumeric"
+	_ = clause.Cmd.RegisterFlagCompletionFunc("charset", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable"}, cobra.ShellCompDirectiveDefault
 	})
 	clause.BoolVarP(&cmd.symbolsFlag, "symbols", "s", false, "Include symbols in secret.", true, false) //Short('s').Hidden().SetValue(&cmd.symbolsFlag)
-	clause.Flag("symbols").Hidden = true
+	clause.Cmd.Flag("symbols").Hidden = true
 	//clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 

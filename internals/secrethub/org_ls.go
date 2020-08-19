@@ -30,7 +30,7 @@ func NewOrgLsCommand(io ui.IO, newClient newClientFunc) *OrgLsCommand {
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgLsCommand) Register(r command.Registerer) {
-	clause := r.CreateCommand("ls", "List all organizations you are a member of.")
+	clause := r.Command("ls", "List all organizations you are a member of.")
 	clause.Alias("list")
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print organization names.", true, false)
 

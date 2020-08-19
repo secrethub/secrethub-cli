@@ -13,18 +13,7 @@ type Registerer interface {
 
 // BindAction binds a function to a command clause, so that
 // it is executed when the command is parsed.
-func BindAction(clause *cli.CommandClause, argumentRegister func(c *cobra.Command, args []string) error, fn func() error) {
-	if argumentRegister != nil {
-		clause.PreRunE = argumentRegister
-	}
-	if fn != nil {
-		clause.RunE = func(cmd *cobra.Command, args []string) error {
-			return fn()
-		}
-	}
-}
-
-func BindAction1(clause *cli.CommandClause, params []cli.ArgValue, fn func() error) {
+func BindAction(clause *cli.CommandClause, params []cli.ArgValue, fn func() error) {
 	if params != nil {
 		clause.PreRunE = func(cmd *cobra.Command, args []string) error {
 			return cli.ArgumentRegister(params, args)

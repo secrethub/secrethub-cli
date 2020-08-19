@@ -59,7 +59,7 @@ func (cmd *ReadCommand) Register(r command.Registerer) {
 	fileModeFlag := clause.VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.", true, false)
 	fileModeFlag.DefValue = "0600"
 
-	command.BindAction1(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.

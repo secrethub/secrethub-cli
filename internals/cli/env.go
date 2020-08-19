@@ -172,7 +172,7 @@ func (cmdCls *CommandClause) BoolVarP(reference *bool, name, shorthand string, d
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -184,7 +184,7 @@ func (cmdCls *CommandClause) IntVarP(reference *int, name, shorthand string, def
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -196,7 +196,7 @@ func (cmdCls *CommandClause) StringVarP(reference *string, name, shorthand strin
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -208,7 +208,7 @@ func (cmdCls *CommandClause) DurationVarP(reference *time.Duration, name, shorth
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -220,7 +220,7 @@ func (cmdCls *CommandClause) BoolVar(reference *bool, name string, def bool, usa
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -232,7 +232,7 @@ func (cmdCls *CommandClause) IntVar(reference *int, name string, def int, usage 
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -244,7 +244,7 @@ func (cmdCls *CommandClause) StringVar(reference *string, name string, def strin
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -256,7 +256,7 @@ func (cmdCls *CommandClause) DurationVar(reference *time.Duration, name string, 
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -268,7 +268,7 @@ func (cmdCls *CommandClause) VarP(reference pflag.Value, name string, shorthand 
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -280,7 +280,7 @@ func (cmdCls *CommandClause) Var(reference pflag.Value, name string, usage strin
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 }
 
@@ -293,7 +293,7 @@ func (cmdCls *CommandClause) VarPF(reference pflag.Value, name string, shorthand
 	}
 
 	if hasEnv {
-		cmdCls.FlagRegister(name, usage)
+		cmdCls.Flag(name)
 	}
 	return flag
 }
@@ -346,7 +346,7 @@ func (cmdCls *CommandClause) Alias(alias string) {
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
-func (cmdCls *CommandClause) FlagRegister(name, help string) *Flag {
+func (cmdCls *CommandClause) Flag(name string) *Flag {
 	fullCmd := strings.Replace(cmdCls.fullCommand(), " ", cmdCls.App.separator, -1)
 	prefix := formatName(fullCmd, cmdCls.App.name, cmdCls.App.separator, cmdCls.App.delimiters...)
 	envVar := formatName(name, prefix, cmdCls.App.separator, cmdCls.App.delimiters...)

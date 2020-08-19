@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -13,7 +14,7 @@ type EnvReadCommand struct {
 	io          ui.IO
 	newClient   newClientFunc
 	environment *environment
-	key         string
+	key         StringArgValue
 }
 
 // NewEnvReadCommand creates a new EnvReadCommand.
@@ -34,7 +35,7 @@ func (cmd *EnvReadCommand) Register(r command.Registerer) {
 
 	cmd.environment.register(clause)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.key}, cmd.Run)
 }
 
 // Run executes the command.
@@ -44,7 +45,7 @@ func (cmd *EnvReadCommand) Run() error {
 		return err
 	}
 
-	value, found := env[cmd.key]
+	value, found := env[cmd.key.param]
 	if !found {
 		return fmt.Errorf("no environment variable with that key is set")
 	}
@@ -58,12 +59,5 @@ func (cmd *EnvReadCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output(), res)
 
-	return nil
-}
-
-func (cmd *EnvReadCommand) argumentRegister(c *cobra.Command, args []string) error {
-	if len(args) != 0 {
-		cmd.key = args[0]
-	}
 	return nil
 }

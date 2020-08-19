@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -41,7 +42,7 @@ func (cmd *MkDirCommand) Register(r command.Registerer) {
 	//clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
 	clause.BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.", true, false)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.paths}, cmd.Run)
 }
 
 // Run executes the command.

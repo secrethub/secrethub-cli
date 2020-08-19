@@ -3,6 +3,7 @@ package secrethub
 import (
 	"errors"
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -14,7 +15,7 @@ import (
 type CredentialDisableCommand struct {
 	io          ui.IO
 	force       bool
-	fingerprint string
+	fingerprint StringArgValue
 	newClient   newClientFunc
 }
 
@@ -35,7 +36,7 @@ func (cmd *CredentialDisableCommand) Register(r command.Registerer) {
 	//clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.fingerprint}, cmd.Run)
 }
 
 // Run disables an existing credential.
@@ -46,17 +47,17 @@ func (cmd *CredentialDisableCommand) Run() error {
 	}
 
 	fingerprint := cmd.fingerprint
-	if fingerprint == "" {
+	if fingerprint.param == "" {
 		if cmd.force {
 			return errors.New("fingerprint argument must be set when using --force")
 		}
-		fingerprint, err = ui.AskAndValidate(cmd.io, "What is the fingerprint of the credential you want to disable? ", 3, api.ValidateShortCredentialFingerprint)
+		fingerprint.param, err = ui.AskAndValidate(cmd.io, "What is the fingerprint of the credential you want to disable? ", 3, api.ValidateShortCredentialFingerprint)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = api.ValidateShortCredentialFingerprint(fingerprint)
+	err = api.ValidateShortCredentialFingerprint(fingerprint.param)
 	if err != nil {
 		return err
 	}
@@ -76,19 +77,12 @@ func (cmd *CredentialDisableCommand) Run() error {
 		}
 	}
 
-	err = client.Credentials().Disable(fingerprint)
+	err = client.Credentials().Disable(fingerprint.param)
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintln(cmd.io.Output(), "Credential disabled.")
 
-	return nil
-}
-
-func (cmd *CredentialDisableCommand) argumentRegister(c *cobra.Command, args []string) error {
-	if len(args) != 0 {
-		cmd.fingerprint = args[0]
-	}
 	return nil
 }

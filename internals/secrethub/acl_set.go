@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -37,7 +38,7 @@ func (cmd *ACLSetCommand) Register(r command.Registerer) {
 	//clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path, &cmd.accountName, &cmd.permission}, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.

@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -79,24 +80,13 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause.IntVar(&cmd.maxResults, "max-results", defaultLimit, "Specify the number of entries to list. If maxResults < 0 all entries are displayed. If the output of the command is piped, maxResults defaults to 1000.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
 }
 
 // Run prints all audit events for the given repository or secret.
 func (cmd *AuditCommand) Run() error {
 	cmd.beforeRun()
 	return cmd.run()
-}
-
-func (cmd *AuditCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	if len(args) != 0 {
-		cmd.path, err = api.NewPath(args[0])
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // beforeRun configures the command using the flag values.

@@ -9,7 +9,7 @@ import (
 )
 
 type CompletionCommand struct {
-	shell  string
+	shell  StringArgValue
 	clause *cli.CommandClause
 }
 
@@ -26,11 +26,11 @@ func (cmd *CompletionCommand) Register(r command.Registerer) {
 	cmd.clause.DisableFlagsInUseLine = true
 	cmd.clause.ValidArgs = []string{"bash", "zsh", "fish", "powershell"}
 	cmd.clause.Args = cobra.ExactValidArgs(1)
-	command.BindAction(cmd.clause, cmd.argumentRegister, cmd.run)
+	command.BindAction(cmd.clause, []cli.ArgValue{&cmd.shell}, cmd.run)
 }
 
 func (cmd *CompletionCommand) run() error {
-	switch cmd.shell {
+	switch cmd.shell.param {
 	case "bash":
 		_ = cmd.clause.Root().GenBashCompletion(os.Stdout)
 	case "zsh":
@@ -43,7 +43,11 @@ func (cmd *CompletionCommand) run() error {
 	return nil
 }
 
-func (cmd *CompletionCommand) argumentRegister(_ *cobra.Command, args []string) error {
-	cmd.shell = args[0]
+type StringArgValue struct {
+	param string
+}
+
+func (s *StringArgValue) Set(replacer string) error {
+	s.param = replacer
 	return nil
 }

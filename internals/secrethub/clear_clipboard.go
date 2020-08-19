@@ -36,7 +36,7 @@ func (cmd *ClearClipboardCommand) Register(r command.Registerer) {
 	//clause.Arg("hash", "Hash from the secret to be cleared").Required().HexBytesVar(&cmd.hash)
 	clause.DurationVar(&cmd.timeout, "timeout", 0, "Time to wait before clearing in seconds", true, false)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, nil, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -79,8 +79,4 @@ func WriteClipboardAutoClear(data []byte, timeout time.Duration, clipper clip.Cl
 		"--timeout", timeout.String())
 
 	return err
-}
-
-func (cmd *ClearClipboardCommand) argumentRegister(c *cobra.Command, args []string) error {
-	return nil
 }

@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 	"strconv"
 	"strings"
@@ -39,8 +40,8 @@ type GenerateSecretCommand struct {
 	generator           randchar.Generator
 	io                  ui.IO
 	lengthFlag          intValue
-	firstArg            string
-	secondArg           string
+	firstArg            StringArgValue
+	secondArg           StringArgValue
 	lengthArg           intValue
 	charsetFlag         charsetValue
 	mins                minRuleValue
@@ -79,7 +80,7 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	//clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.firstArg, &cmd.secondArg, &cmd.lengthArg}, cmd.Run)
 }
 
 // before configures the command using the flag values.
@@ -109,21 +110,6 @@ func (cmd *GenerateSecretCommand) Run() error {
 		return err
 	}
 	return cmd.run()
-}
-
-func (cmd *GenerateSecretCommand) argumentRegister(c *cobra.Command, args []string) error {
-	cmd.firstArg = args[0]
-	if len(args) >= 2 {
-		cmd.secondArg = args[1]
-	}
-	if len(args) == 3 {
-		len, err := strconv.Atoi(args[2])
-		if err != nil {
-			return err
-		}
-		cmd.lengthArg = intValue{v: &len}
-	}
-	return nil
 }
 
 // run generates a new secret and writes to the output path.
@@ -189,16 +175,16 @@ func (cmd *GenerateSecretCommand) length() (int, error) {
 }
 
 func (cmd *GenerateSecretCommand) path() (string, error) {
-	if cmd.firstArg == "rand" {
-		return cmd.secondArg, api.ValidateSecretPath(cmd.secondArg)
+	if cmd.firstArg.param == "rand" {
+		return cmd.secondArg.param, api.ValidateSecretPath(cmd.secondArg.param)
 	}
-	if cmd.secondArg != "" {
+	if cmd.secondArg.param != "" {
 		return "", fmt.Errorf("unexpected %s", cmd.secondArg)
 	}
 	if cmd.lengthArg.IsSet() {
 		return "", fmt.Errorf("unexpected %d", cmd.lengthArg.Get())
 	}
-	return cmd.firstArg, api.ValidateSecretPath(cmd.firstArg)
+	return cmd.firstArg.param, api.ValidateSecretPath(cmd.firstArg.param)
 }
 
 func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {

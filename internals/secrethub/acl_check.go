@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"sort"
 	"text/tabwriter"
 
@@ -38,7 +39,7 @@ func (cmd *ACLCheckCommand) Register(r command.Registerer) {
 	//clause.Arg("dir-path", "The path of the directory to check the effective permission for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path, &cmd.accountName}, cmd.Run)
 }
 
 // Run prints the access level(s) on the given directory.
@@ -108,19 +109,4 @@ func (cmd *ACLCheckCommand) listLevels() ([]*api.AccessLevel, error) {
 		return levels, nil
 	}
 	return nil, listLevelsErr
-}
-
-func (cmd *ACLCheckCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewDirPath(args[0])
-	if err != nil {
-		return err
-	}
-	if len(args) == 2 {
-		cmd.accountName, err = api.NewAccountName(args[1])
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

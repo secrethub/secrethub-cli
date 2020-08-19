@@ -3,6 +3,7 @@ package secrethub
 import (
 	"errors"
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io"
 	"sort"
 	"text/tabwriter"
@@ -40,7 +41,7 @@ func (cmd *LsCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
 }
 
 // Run lists a repo, secret or namespace.
@@ -131,17 +132,6 @@ func (cmd *LsCommand) Run() error {
 	// Path should always be a namespace, repository, directory, secret or secret version.
 	// Therefore, this should never happen.
 	return errio.UnexpectedError(errors.New("invalid path argument"))
-}
-
-func (cmd *LsCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	if len(args) != 0 {
-		cmd.path, err = api.NewPath(args[0])
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // printVersions prints out secret versions in long or short format.

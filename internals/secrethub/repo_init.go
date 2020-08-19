@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -32,7 +33,7 @@ func (cmd *RepoInitCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
 }
 
 // Run creates a new repository.
@@ -51,14 +52,5 @@ func (cmd *RepoInitCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Create complete! The repository %s is now ready to use.\n", cmd.path.String())
 
-	return nil
-}
-
-func (cmd *RepoInitCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewRepoPath(args[0])
-	if err != nil {
-		return err
-	}
 	return nil
 }

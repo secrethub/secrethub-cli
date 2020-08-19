@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os/exec"
 	"runtime"
 	"text/tabwriter"
@@ -50,20 +51,6 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 	return createGCPLink(client, cmd.io, cmd.namespace.String(), cmd.projectID.String())
 }
 
-func (cmd *ServiceGCPLinkCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	err = api.ValidateOrgName(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.namespace = api.OrgName(args[0])
-	err = cmd.projectID.Set(args[1])
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("link", "Create a new link between a namespace and a GCP project to allow creating SecretHub service accounts for GCP Service Accounts in the GCP project.")
 	clause.Args = cobra.ExactValidArgs(2)
@@ -85,7 +72,7 @@ func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 		"Any reference to SecretHub should automatically disappear within a few minutes. " +
 		"If it does not, the access can safely be revoked manually.")
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.namespace, &cmd.projectID}, cmd.Run)
 }
 
 // ServiceGCPListLinksCommand lists all existing links between the given namespace and GCP projects
@@ -136,22 +123,13 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 	return nil
 }
 
-func (cmd *ServiceGCPListLinksCommand) argumentRegister(c *cobra.Command, args []string) error {
-	err := api.ValidateNamespace(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.namespace = api.Namespace(args[0])
-	return nil
-}
-
 func (cmd *ServiceGCPListLinksCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("list-links", "List all existing links between the given namespace and GCP projects.")
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().SetValue(&cmd.namespace)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.namespace}, cmd.Run)
 }
 
 // ServiceGCPDeleteLinkCommand deletes the link between a SecretHub namespace and a GCP project.
@@ -176,7 +154,7 @@ func (cmd *ServiceGCPDeleteLinkCommand) Register(r command.Registerer) {
 	//clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
 	//clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.namespace, &cmd.projectID}, cmd.Run)
 }
 
 func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
@@ -203,20 +181,6 @@ func (cmd *ServiceGCPDeleteLinkCommand) Run() error {
 	}
 
 	return client.IDPLinks().GCP().Delete(cmd.namespace.String(), cmd.projectID.String())
-}
-
-func (cmd *ServiceGCPDeleteLinkCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	err = api.ValidateNamespace(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.namespace = api.Namespace(args[0])
-	err = cmd.projectID.Set(args[1])
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 type gcpProjectID string

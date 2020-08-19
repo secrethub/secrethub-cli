@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -14,7 +15,7 @@ import (
 // RepoInviteCommand handles inviting a user to collaborate on a repository.
 type RepoInviteCommand struct {
 	path      api.RepoPath
-	username  string
+	username  cli.StringArgValue
 	force     bool
 	io        ui.IO
 	newClient newClientFunc
@@ -36,7 +37,7 @@ func (cmd *RepoInviteCommand) Register(r command.Registerer) {
 	//clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path, &cmd.username}, cmd.Run)
 }
 
 // Run invites the configured user to collaborate on the repo.
@@ -47,7 +48,7 @@ func (cmd *RepoInviteCommand) Run() error {
 	}
 
 	if !cmd.force {
-		user, err := client.Users().Get(cmd.username)
+		user, err := client.Users().Get(cmd.username.Param)
 		if err != nil {
 			return err
 		}
@@ -68,22 +69,12 @@ func (cmd *RepoInviteCommand) Run() error {
 	}
 	fmt.Fprintln(cmd.io.Output(), "Inviting user...")
 
-	_, err = client.Repos().Users().Invite(cmd.path.Value(), cmd.username)
+	_, err = client.Repos().Users().Invite(cmd.path.Value(), cmd.username.Param)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username, cmd.path)
+	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username.Param, cmd.path)
 
-	return nil
-}
-
-func (cmd *RepoInviteCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewRepoPath(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.username = args[1]
 	return nil
 }

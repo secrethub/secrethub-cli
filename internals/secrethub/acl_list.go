@@ -53,15 +53,6 @@ func (cmd *ACLListCommand) Run() error {
 	return cmd.run()
 }
 
-func (cmd *ACLListCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewDirPath(args[0])
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // beforeRun configures the command using the flag values.
 func (cmd *ACLListCommand) beforeRun() {
 	cmd.timeFormatter = NewTimeFormatter(cmd.useTimestamps)

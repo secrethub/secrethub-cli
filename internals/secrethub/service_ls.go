@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"strings"
 	"text/tabwriter"
 
@@ -68,7 +69,7 @@ func (cmd *ServiceLsCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.repoPath}, cmd.Run)
 }
 
 // Run lists all service accounts in a given repository.
@@ -115,15 +116,6 @@ outer:
 		}
 	}
 
-	return nil
-}
-
-func (cmd *ServiceLsCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.repoPath, err = api.NewRepoPath(args[0])
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

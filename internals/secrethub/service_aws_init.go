@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"sort"
 	"strings"
 	"sync"
@@ -153,15 +154,6 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 	return nil
 }
 
-func (cmd *ServiceAWSInitCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.repo, err = api.NewRepoPath(args[0])
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 	clause := r.CreateCommand("init", "Create a new service account that is tied to an AWS IAM role.")
@@ -187,7 +179,7 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 		"If no system-wide default for the AWS region is provided (e.g. with $AWS_REGION), the AWS-region where the KMS key resides should be explicitly provided to this command with the --region flag.",
 	)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.repo}, cmd.Run)
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {

@@ -35,7 +35,7 @@ func (cmd *RepoInspectCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "Path to the repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
 }
 
 // Run prints out the details of a repo.
@@ -67,15 +67,6 @@ func (cmd *RepoInspectCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output(), output)
 
-	return nil
-}
-
-func (cmd *RepoInspectCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewRepoPath(args[0])
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

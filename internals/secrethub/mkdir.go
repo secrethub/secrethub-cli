@@ -63,15 +63,6 @@ func (cmd *MkDirCommand) Run() error {
 	return nil
 }
 
-func (cmd *MkDirCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var list dirPathList
-	for _, arg := range args {
-		list = append(list, arg)
-	}
-	cmd.paths = list
-	return nil
-}
-
 // createDirectory validates the given path and creates a directory on it.
 func (cmd *MkDirCommand) createDirectory(client secrethub.ClientInterface, path string) error {
 	dirPath, err := api.NewDirPath(path)

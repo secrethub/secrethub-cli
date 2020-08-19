@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -14,7 +15,7 @@ import (
 // OrgInviteCommand handles inviting a user to an organization.
 type OrgInviteCommand struct {
 	orgName   api.OrgName
-	username  string
+	username  cli.StringArgValue
 	role      string
 	force     bool
 	io        ui.IO
@@ -38,14 +39,14 @@ func (cmd *OrgInviteCommand) Register(r command.Registerer) {
 	clause.StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.", true, false)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.orgName, &cmd.username}, cmd.Run)
 }
 
 // Run invites a user to an organization and gives them a certain role.
 func (cmd *OrgInviteCommand) Run() error {
 	if !cmd.force {
 		msg := fmt.Sprintf("Are you sure you want to invite %s to the %s organization?",
-			cmd.username,
+			cmd.username.Param,
 			cmd.orgName)
 
 		confirmed, err := ui.AskYesNo(cmd.io, msg, ui.DefaultNo)
@@ -66,22 +67,12 @@ func (cmd *OrgInviteCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output(), "Inviting user...")
 
-	resp, err := client.Orgs().Members().Invite(cmd.orgName.Value(), cmd.username, cmd.role)
+	resp, err := client.Orgs().Members().Invite(cmd.orgName.Value(), cmd.username.Param, cmd.role)
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)
 
-	return nil
-}
-
-func (cmd *OrgInviteCommand) argumentRegister(c *cobra.Command, args []string) error {
-	err := api.ValidateOrgName(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.orgName = api.OrgName(args[0])
-	cmd.username = args[1]
 	return nil
 }

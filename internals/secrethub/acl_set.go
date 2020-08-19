@@ -81,21 +81,3 @@ func (cmd *ACLSetCommand) Run() error {
 
 	return nil
 }
-
-func (cmd *ACLSetCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewDirPath(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.accountName, err = api.NewAccountName(args[1])
-	if err != nil {
-		return err
-	}
-	cmd.permission = api.PermissionNone
-	err = cmd.permission.Set(args[2])
-	if err != nil {
-		return err
-	}
-	return nil
-}

@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -45,7 +46,7 @@ func (cmd *RmCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.recursive, "recursive", "r", false, "Remove directories and their contents recursively.", true, false)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
 }
 
 // Run removes the resource at the given path.
@@ -94,15 +95,6 @@ func (cmd *RmCommand) Run() error {
 	}
 
 	return rmSecret(client, secretPath, cmd.force, cmd.io)
-}
-
-func (cmd *RmCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewPath(args[0])
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func rmSecretVersion(client secrethub.ClientInterface, secretPath api.SecretPath, force bool, io ui.IO) error {

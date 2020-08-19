@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"errors"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
@@ -36,7 +37,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				firstArg: "namespace/repo/secret",
+				firstArg: cli.StringArgValue{Param: "namespace/repo/secret"},
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
@@ -52,7 +53,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				firstArg:   "namespace/repo/secret",
+				firstArg:   cli.StringArgValue{Param: "namespace/repo/secret"},
 				lengthFlag: newIntValue(24),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
@@ -69,8 +70,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				firstArg:   "rand",
-				secondArg:  "namespace/repo/secret",
+				firstArg:   cli.StringArgValue{Param: "rand"},
+				secondArg:  cli.StringArgValue{Param: "namespace/repo/secret"},
 				lengthFlag: newIntValue(24),
 				lengthArg:  newIntValue(24),
 			},
@@ -82,8 +83,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				firstArg:  "rand",
-				secondArg: "namespace/repo/secret",
+				firstArg:  cli.StringArgValue{Param: "rand"},
+				secondArg: cli.StringArgValue{Param: "namespace/repo/secret"},
 				lengthArg: newIntValue(23),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
@@ -96,8 +97,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		},
 		"length arg 0": {
 			cmd: GenerateSecretCommand{
-				firstArg:  "rand",
-				secondArg: "namespace/repo/secret",
+				firstArg:  cli.StringArgValue{Param: "rand"},
+				secondArg: cli.StringArgValue{Param: "namespace/repo/secret"},
 				lengthArg: newIntValue(0),
 			},
 			err: ErrInvalidRandLength,
@@ -105,8 +106,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		},
 		"length arg negative": {
 			cmd: GenerateSecretCommand{
-				firstArg:  "rand",
-				secondArg: "namespace/repo/secret",
+				firstArg:  cli.StringArgValue{Param: "rand"},
+				secondArg: cli.StringArgValue{Param: "namespace/repo/secret"},
 				lengthArg: newIntValue(-1),
 			},
 			err: ErrInvalidRandLength,
@@ -115,7 +116,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		// The length arg is only for backwards compatibility of the `generate rand` command.
 		"length arg without rand": {
 			cmd: GenerateSecretCommand{
-				firstArg:  "namespace/repo/secret",
+				firstArg:  cli.StringArgValue{Param: "namespace/repo/secret"},
 				lengthArg: newIntValue(24),
 			},
 			err: errors.New("unexpected 24"),
@@ -123,8 +124,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		// The second arg should only be used to supply the path when the first arg is `rand` (backwards compatibility).
 		"second arg without rand": {
 			cmd: GenerateSecretCommand{
-				firstArg:  "namespace/repo/secret",
-				secondArg: "namespace/repo/secret2",
+				firstArg:  cli.StringArgValue{Param: "namespace/repo/secret"},
+				secondArg: cli.StringArgValue{Param: "namespace/repo/secret2"},
 			},
 			err: errors.New("unexpected namespace/repo/secret2"),
 		},
@@ -134,7 +135,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: nil,
 					Err: testErr,
 				},
-				firstArg: "namespace/repo/secret",
+				firstArg: cli.StringArgValue{Param: "namespace/repo/secret"},
 			},
 			err: testErr,
 		},
@@ -144,7 +145,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				firstArg: "namespace/repo/secret",
+				firstArg: cli.StringArgValue{Param: "namespace/repo/secret"},
 			},
 			clientCreationErr: testErr,
 			err:               testErr,
@@ -155,7 +156,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: []byte("random generated secret"),
 					Err: nil,
 				},
-				firstArg: "namespace/repo/secret",
+				firstArg: cli.StringArgValue{Param: "namespace/repo/secret"},
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return nil, testErr

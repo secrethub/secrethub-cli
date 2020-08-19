@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"bytes"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
@@ -27,7 +28,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"success, not a repo member": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringArgValue{Param: "dev1"},
 			},
 			promptIn: "dev1",
 			service: fakeclient.OrgMemberService{
@@ -46,7 +47,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"success, repo member": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringArgValue{Param: "dev1"},
 			},
 			promptIn: "dev1",
 			service: fakeclient.OrgMemberService{
@@ -99,7 +100,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"abort": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringArgValue{Param: "dev1"},
 			},
 			promptIn: "typo",
 			service: fakeclient.OrgMemberService{

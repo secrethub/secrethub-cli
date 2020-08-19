@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -122,7 +123,7 @@ func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause.Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.", true, false)
 	clause.Flag("file-mode").DefValue = "0440"
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.repo}, cmd.Run)
 }
 
 // givePermission gives the service permission on the repository as defined in the permission flag.
@@ -156,15 +157,6 @@ func givePermission(service *api.Service, repo api.RepoPath, permissionFlagValue
 		}
 	}
 
-	return nil
-}
-
-func (cmd *ServiceInitCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.repo, err = api.NewRepoPath(args[0])
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

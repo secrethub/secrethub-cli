@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -14,8 +15,8 @@ import (
 // OrgSetRoleCommand handles updating the role of an organization member.
 type OrgSetRoleCommand struct {
 	orgName   api.OrgName
-	username  string
-	role      string
+	username  cli.StringArgValue
+	role      cli.StringArgValue
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -36,7 +37,7 @@ func (cmd *OrgSetRoleCommand) Register(r command.Registerer) {
 	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 	//clause.Arg("role", "The role to assign to the user. Can be either `admin` or `member`.").Required().StringVar(&cmd.role)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.orgName, &cmd.username, &cmd.role}, cmd.Run)
 }
 
 // Run updates the role of an organization member.
@@ -48,23 +49,12 @@ func (cmd *OrgSetRoleCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Setting role...\n")
 
-	resp, err := client.Orgs().Members().Update(cmd.orgName.Value(), cmd.username, cmd.role)
+	resp, err := client.Orgs().Members().Update(cmd.orgName.Value(), cmd.username.Param, cmd.role.Param)
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintf(cmd.io.Output(), "Set complete! The user %s is %s of the %s organization.\n", resp.User.Username, resp.Role, cmd.orgName)
 
-	return nil
-}
-
-func (cmd *OrgSetRoleCommand) argumentRegister(c *cobra.Command, args []string) error {
-	err := api.ValidateOrgName(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.orgName = api.OrgName(args[0])
-	cmd.username = args[1]
-	cmd.role = args[2]
 	return nil
 }

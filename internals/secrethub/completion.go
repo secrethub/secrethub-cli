@@ -9,7 +9,7 @@ import (
 )
 
 type CompletionCommand struct {
-	shell  StringArgValue
+	shell  cli.StringArgValue
 	clause *cli.CommandClause
 }
 
@@ -30,7 +30,7 @@ func (cmd *CompletionCommand) Register(r command.Registerer) {
 }
 
 func (cmd *CompletionCommand) run() error {
-	switch cmd.shell.param {
+	switch cmd.shell.Param {
 	case "bash":
 		_ = cmd.clause.Root().GenBashCompletion(os.Stdout)
 	case "zsh":
@@ -40,14 +40,5 @@ func (cmd *CompletionCommand) run() error {
 	case "powershell":
 		_ = cmd.clause.Root().GenPowerShellCompletion(os.Stdout)
 	}
-	return nil
-}
-
-type StringArgValue struct {
-	param string
-}
-
-func (s *StringArgValue) Set(replacer string) error {
-	s.param = replacer
 	return nil
 }

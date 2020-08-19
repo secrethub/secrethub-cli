@@ -25,3 +25,16 @@ func BindAction(clause *cli.CommandClause, params []cli.ArgValue, fn func() erro
 		}
 	}
 }
+
+func BindActionArr(clause *cli.CommandClause, param cli.ArgArrValue, fn func() error) {
+	if param != nil {
+		clause.PreRunE = func(cmd *cobra.Command, args []string) error {
+			return param.Set(args)
+		}
+	}
+	if fn != nil {
+		clause.RunE = func(cmd *cobra.Command, args []string) error {
+			return fn()
+		}
+	}
+}

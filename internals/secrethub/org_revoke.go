@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io"
 	"text/tabwriter"
 
@@ -16,7 +17,7 @@ import (
 // OrgRevokeCommand handles revoking a member from an organization.
 type OrgRevokeCommand struct {
 	orgName   api.OrgName
-	username  string
+	username  cli.StringArgValue
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -36,7 +37,7 @@ func (cmd *OrgRevokeCommand) Register(r command.Registerer) {
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.orgName, &cmd.username}, cmd.Run)
 }
 
 // Run revokes an organization member.
@@ -49,7 +50,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 	opts := &api.RevokeOpts{
 		DryRun: true,
 	}
-	planned, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username, opts)
+	planned, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username.Param, opts)
 	if err != nil {
 		return err
 	}
@@ -63,7 +64,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 				"Flagged repositories will contain secrets flagged for rotation, "+
 				"failed repositories require a manual removal or access rule changes before proceeding and "+
 				"OK repos will not require rotation.\n\n",
-			cmd.username,
+			cmd.username.Param,
 			cmd.orgName,
 			len(planned.Repos),
 		)
@@ -82,7 +83,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 		fmt.Fprintf(
 			cmd.io.Output(),
 			"The user %s has no memberships to any of %s's repos and can be safely removed.\n\n",
-			cmd.username,
+			cmd.username.Param,
 			cmd.orgName,
 		)
 	}
@@ -90,7 +91,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 	confirmed, err := ui.ConfirmCaseInsensitive(
 		cmd.io,
 		"Please type in the username of the user to confirm and proceed with revocation",
-		cmd.username,
+		cmd.username.Param,
 	)
 	if err != nil {
 		return err
@@ -103,7 +104,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "\nRevoking user...\n")
 
-	revoked, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username, nil)
+	revoked, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username.Param, nil)
 	if err != nil {
 		return err
 	}
@@ -130,16 +131,6 @@ func (cmd *OrgRevokeCommand) Run() error {
 		fmt.Fprintln(cmd.io.Output(), "Revoke complete!")
 	}
 
-	return nil
-}
-
-func (cmd *OrgRevokeCommand) argumentRegister(c *cobra.Command, args []string) error {
-	err := api.ValidateOrgName(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.orgName = api.OrgName(args[0])
-	cmd.username = args[1]
 	return nil
 }
 

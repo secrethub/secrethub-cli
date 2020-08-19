@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -423,4 +424,36 @@ func ArgumentRegister(params []ArgValue, args []string) error {
 		}
 	}
 	return nil
+}
+
+type ArgArrValue interface {
+	Set([]string) error
+}
+
+type StringArgValue struct {
+	Param string
+}
+
+func (s *StringArgValue) Set(replacer string) error {
+	s.Param = replacer
+	return nil
+}
+
+type StringArrArgValue struct {
+	Param []string
+}
+
+func (s *StringArrArgValue) Set(replacer []string) error {
+	copy(s.Param, replacer)
+	return nil
+}
+
+type URLArgValue struct {
+	Param *url.URL
+}
+
+func (s *URLArgValue) Set(replacer string) error {
+	var err error
+	s.Param, err = url.Parse(replacer)
+	return err
 }

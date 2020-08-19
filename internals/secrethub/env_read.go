@@ -14,7 +14,7 @@ type EnvReadCommand struct {
 	io          ui.IO
 	newClient   newClientFunc
 	environment *environment
-	key         StringArgValue
+	key         cli.StringArgValue
 }
 
 // NewEnvReadCommand creates a new EnvReadCommand.
@@ -45,7 +45,7 @@ func (cmd *EnvReadCommand) Run() error {
 		return err
 	}
 
-	value, found := env[cmd.key.param]
+	value, found := env[cmd.key.Param]
 	if !found {
 		return fmt.Errorf("no environment variable with that key is set")
 	}

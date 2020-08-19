@@ -3,6 +3,7 @@ package secrethub
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 	"strings"
 	"time"
@@ -24,7 +25,7 @@ var (
 // RepoExportCommand exports a repo to a zip file.
 type RepoExportCommand struct {
 	path      api.RepoPath
-	zipName   string
+	zipName   cli.StringArgValue
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -44,17 +45,17 @@ func (cmd *RepoExportCommand) Register(r command.Registerer) {
 	//clause.Arg("repo-path", "The repository to export").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path, &cmd.zipName}, cmd.Run)
 }
 
 // Run exports a repo to a zip file
 func (cmd *RepoExportCommand) Run() error {
-	if cmd.zipName == "" {
+	if cmd.zipName.Param == "" {
 		// secrethub_export_repo_date_time.zip
-		cmd.zipName = fmt.Sprintf("%s_export_%s_%s.zip", ApplicationName, cmd.path.GetRepo(), time.Now().Format("20060102_150405"))
+		cmd.zipName.Param = fmt.Sprintf("%s_export_%s_%s.zip", ApplicationName, cmd.path.GetRepo(), time.Now().Format("20060102_150405"))
 	}
 
-	_, err := os.Stat(cmd.zipName)
+	_, err := os.Stat(cmd.zipName.Param)
 	if err == nil {
 		return ErrExportAlreadyExists
 	}
@@ -88,7 +89,7 @@ func (cmd *RepoExportCommand) Run() error {
 		return err
 	}
 
-	zipFile, err := os.Create(cmd.zipName)
+	zipFile, err := os.Create(cmd.zipName.Param)
 	if err != nil {
 		return err
 	}
@@ -140,17 +141,5 @@ func (cmd *RepoExportCommand) Run() error {
 		}
 	}
 
-	return nil
-}
-
-func (cmd *RepoExportCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewRepoPath(args[0])
-	if err != nil {
-		return err
-	}
-	if len(args) == 2 {
-		cmd.zipName = args[1]
-	}
 	return nil
 }

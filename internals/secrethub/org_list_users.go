@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"sort"
 	"text/tabwriter"
 
@@ -38,22 +39,13 @@ func (cmd *OrgListUsersCommand) Register(r command.Registerer) {
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.orgName}, cmd.Run)
 }
 
 // Run lists the users of an organization.
 func (cmd *OrgListUsersCommand) Run() error {
 	cmd.beforeRun()
 	return cmd.run()
-}
-
-func (cmd *OrgListUsersCommand) argumentRegister(c *cobra.Command, args []string) error {
-	err := api.ValidateOrgName(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.orgName = api.OrgName(args[0])
-	return nil
 }
 
 // beforeRun configures the command using the flag values.

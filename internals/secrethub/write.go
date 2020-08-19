@@ -3,6 +3,7 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io/ioutil"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
@@ -51,7 +52,7 @@ func (cmd *WriteCommand) Register(r command.Registerer) {
 	clause.BoolVar(&cmd.noTrim, "no-trim", false, "Do not trim leading and trailing whitespace in the secret.", true, false)
 	clause.StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.", true, false)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -132,14 +133,5 @@ func (cmd *WriteCommand) Run() error {
 		return err
 	}
 
-	return nil
-}
-
-func (cmd *WriteCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewSecretPath(args[0])
-	if err != nil {
-		return err
-	}
 	return nil
 }

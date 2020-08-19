@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"testing"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
@@ -39,7 +40,7 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 		"success force": {
 			cmd: RepoInviteCommand{
 				path:     "dev2/repo",
-				username: "dev1",
+				username: cli.StringArgValue{Param: "dev1"},
 				force:    true,
 			},
 			InviteFunc: func(path string, username string) (*api.RepoMember, error) {
@@ -52,7 +53,7 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 		"invite error": {
 			cmd: RepoInviteCommand{
 				path:     "dev2/repo",
-				username: "dev1",
+				username: cli.StringArgValue{Param: "dev1"},
 				force:    true,
 			},
 			InviteFunc: func(path string, username string) (*api.RepoMember, error) {

@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -52,7 +53,7 @@ const (
 type RunCommand struct {
 	io                   ui.IO
 	osEnv                []string
-	command              []string
+	command              cli.StringArrArgValue
 	environment          *environment
 	noMasking            bool
 	maskerOptions        masker.Options
@@ -87,7 +88,7 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.DurationVar(&cmd.maskerOptions.BufferDelay, "masking-buffer-period", time.Millisecond*50, "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.", true, false)
 	clause.BoolVar(&cmd.ignoreMissingSecrets, "ignore-missing-secrets", false, "Do not return an error when a secret does not exist and use an empty value instead.", true, false)
 	cmd.environment.register(clause)
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindActionArr(clause, &cmd.command, cmd.Run)
 }
 
 // Run reads files from the .secretsenv/<env-name> directory, sets them as environment variables and runs the given command.
@@ -99,8 +100,8 @@ func (cmd *RunCommand) Run() error {
 	}
 
 	// This makes sure commands encapsulated in quotes also work.
-	if len(cmd.command) == 1 {
-		cmd.command = strings.Split(cmd.command[0], " ")
+	if len(cmd.command.Param) == 1 {
+		cmd.command.Param = strings.Split(cmd.command.Param[0], " ")
 	}
 
 	sequences := make([][]byte, 0, len(secrets))
@@ -111,7 +112,7 @@ func (cmd *RunCommand) Run() error {
 	}
 	m := masker.New(sequences, &cmd.maskerOptions)
 
-	command := exec.Command(cmd.command[0], cmd.command[1:]...)
+	command := exec.Command(cmd.command.Param[0], cmd.command.Param[1:]...)
 	command.Env = environment
 	command.Stdin = os.Stdin
 	if cmd.noMasking {
@@ -173,11 +174,6 @@ func (cmd *RunCommand) Run() error {
 		return commandErr
 	}
 
-	return nil
-}
-
-func (cmd *RunCommand) argumentRegister(c *cobra.Command, args []string) error {
-	copy(cmd.command, args)
 	return nil
 }
 

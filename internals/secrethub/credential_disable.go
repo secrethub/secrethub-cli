@@ -15,7 +15,7 @@ import (
 type CredentialDisableCommand struct {
 	io          ui.IO
 	force       bool
-	fingerprint StringArgValue
+	fingerprint cli.StringArgValue
 	newClient   newClientFunc
 }
 
@@ -47,17 +47,17 @@ func (cmd *CredentialDisableCommand) Run() error {
 	}
 
 	fingerprint := cmd.fingerprint
-	if fingerprint.param == "" {
+	if fingerprint.Param == "" {
 		if cmd.force {
 			return errors.New("fingerprint argument must be set when using --force")
 		}
-		fingerprint.param, err = ui.AskAndValidate(cmd.io, "What is the fingerprint of the credential you want to disable? ", 3, api.ValidateShortCredentialFingerprint)
+		fingerprint.Param, err = ui.AskAndValidate(cmd.io, "What is the fingerprint of the credential you want to disable? ", 3, api.ValidateShortCredentialFingerprint)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = api.ValidateShortCredentialFingerprint(fingerprint.param)
+	err = api.ValidateShortCredentialFingerprint(fingerprint.Param)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 		}
 	}
 
-	err = client.Credentials().Disable(fingerprint.param)
+	err = client.Credentials().Disable(fingerprint.Param)
 	if err != nil {
 		return err
 	}

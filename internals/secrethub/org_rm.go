@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -34,7 +35,7 @@ func (cmd *OrgRmCommand) Register(r command.Registerer) {
 	clause.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.name}, cmd.Run)
 }
 
 // Run deletes an organization, prompting the user for confirmation.
@@ -72,14 +73,5 @@ func (cmd *OrgRmCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Delete complete! The organization %s has been permanently deleted.\n", cmd.name)
 
-	return nil
-}
-
-func (cmd *OrgRmCommand) argumentRegister(c *cobra.Command, args []string) error {
-	err := api.ValidateOrgName(args[0])
-	if err != nil {
-		return err
-	}
-	cmd.name = api.OrgName(args[0])
 	return nil
 }

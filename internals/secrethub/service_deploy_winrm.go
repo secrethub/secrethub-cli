@@ -3,8 +3,8 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"strconv"
 
@@ -39,7 +39,7 @@ var (
 
 // ServiceDeployWinRmCommand creates a service and installs the configuration using WinRM.
 type ServiceDeployWinRmCommand struct {
-	resourceURI *url.URL
+	resourceURI cli.URLArgValue
 	authType    string
 	username    string
 	password    string
@@ -73,7 +73,7 @@ func (cmd *ServiceDeployWinRmCommand) Register(r command.Registerer) {
 	clause.StringVar(&cmd.caCert, "ca-cert", "", "Path to CA certificate used to verify server TLS certificate.", true, false)
 	clause.BoolVar(&cmd.noVerify, "insecure-no-verify-cert", false, "Do not verify server TLS certificate (insecure).", true, false)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.resourceURI}, cmd.Run)
 }
 
 // Run creates a service and installs the configuration using WinRM.
@@ -81,8 +81,8 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	var err error
 
 	var port int
-	if cmd.resourceURI.Port() != "" {
-		port, err = strconv.Atoi(cmd.resourceURI.Port())
+	if cmd.resourceURI.Param.Port() != "" {
+		port, err = strconv.Atoi(cmd.resourceURI.Param.Port())
 		if err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 	// Retrieve the WinRM port, default to 5986.
 	if port == 0 {
-		if cmd.resourceURI.Scheme == "http" {
+		if cmd.resourceURI.Param.Scheme == "http" {
 			port = 5985
 		} else {
 			port = 5986
@@ -114,7 +114,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	skipVerifyCert := cmd.checkWinRMVerifyCert()
 
 	config := &winrm.Config{
-		Host: cmd.resourceURI.Hostname(),
+		Host: cmd.resourceURI.Param.Hostname(),
 		Port: port,
 
 		HTTPS: https,
@@ -205,31 +205,22 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	return nil
 }
 
-func (cmd *ServiceDeployWinRmCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	cmd.resourceURI, err = url.Parse(args[0])
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // checkWinRMTLS checks if the given schema corresponds to the given CLI flags.
 func (cmd *ServiceDeployWinRmCommand) checkWinRMTLS() (bool, error) {
-	if cmd.resourceURI.Scheme == "http" {
+	if cmd.resourceURI.Param.Scheme == "http" {
 		fmt.Fprintln(cmd.io.Output(), "WARNING: insecure no tls flag is set! We recommend to always use TLS.")
 		return false, nil
 	}
 
-	if cmd.resourceURI.Scheme == "https" {
+	if cmd.resourceURI.Param.Scheme == "https" {
 		return true, nil
 	}
 
-	if cmd.resourceURI.Scheme == "" {
+	if cmd.resourceURI.Param.Scheme == "" {
 		return true, nil
 	}
 
-	return true, ErrIncorrectWinRMScheme(cmd.resourceURI.Scheme)
+	return true, ErrIncorrectWinRMScheme(cmd.resourceURI.Param.Scheme)
 }
 
 // checkWinRMVerifyCert checks if the given schema corresponds to the given CLI flags.

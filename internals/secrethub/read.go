@@ -106,12 +106,3 @@ func (cmd *ReadCommand) Run() error {
 
 	return nil
 }
-
-func (cmd *ReadCommand) argumentRegister(_ *cobra.Command, args []string) error {
-	var err error
-	cmd.path, err = api.NewSecretPath(args[0])
-	if err != nil {
-		return err
-	}
-	return nil
-}

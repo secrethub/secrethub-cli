@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"sort"
 	"text/tabwriter"
 
@@ -39,25 +40,13 @@ func (cmd *RepoLSCommand) Register(r command.Registerer) {
 	//clause.Arg("workspace", "When supplied, results are limited to repositories in this workspace.").SetValue(&cmd.workspace)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.argumentRegister, cmd.Run)
+	command.BindAction(clause, []cli.ArgValue{&cmd.workspace}, cmd.Run)
 }
 
 // Run lists the repositories a user has access to.
 func (cmd *RepoLSCommand) Run() error {
 	cmd.beforeRun()
 	return cmd.run()
-}
-
-func (cmd *RepoLSCommand) argumentRegister(c *cobra.Command, args []string) error {
-	var err error
-	if len(args) != 0 {
-		err = api.ValidateNamespace(args[0])
-		if err != nil {
-			return err
-		}
-		cmd.workspace = api.Namespace(args[0])
-	}
-	return nil
 }
 
 // beforeRun configures the command using the flag values.

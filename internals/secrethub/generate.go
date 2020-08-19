@@ -40,8 +40,8 @@ type GenerateSecretCommand struct {
 	generator           randchar.Generator
 	io                  ui.IO
 	lengthFlag          intValue
-	firstArg            StringArgValue
-	secondArg           StringArgValue
+	firstArg            cli.StringArgValue
+	secondArg           cli.StringArgValue
 	lengthArg           intValue
 	charsetFlag         charsetValue
 	mins                minRuleValue
@@ -175,16 +175,16 @@ func (cmd *GenerateSecretCommand) length() (int, error) {
 }
 
 func (cmd *GenerateSecretCommand) path() (string, error) {
-	if cmd.firstArg.param == "rand" {
-		return cmd.secondArg.param, api.ValidateSecretPath(cmd.secondArg.param)
+	if cmd.firstArg.Param == "rand" {
+		return cmd.secondArg.Param, api.ValidateSecretPath(cmd.secondArg.Param)
 	}
-	if cmd.secondArg.param != "" {
-		return "", fmt.Errorf("unexpected %s", cmd.secondArg)
+	if cmd.secondArg.Param != "" {
+		return "", fmt.Errorf("unexpected %s", cmd.secondArg.Param)
 	}
 	if cmd.lengthArg.IsSet() {
 		return "", fmt.Errorf("unexpected %d", cmd.lengthArg.Get())
 	}
-	return cmd.firstArg.param, api.ValidateSecretPath(cmd.firstArg.param)
+	return cmd.firstArg.Param, api.ValidateSecretPath(cmd.firstArg.Param)
 }
 
 func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {

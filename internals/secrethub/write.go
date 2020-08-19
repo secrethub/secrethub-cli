@@ -3,9 +3,9 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io/ioutil"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"

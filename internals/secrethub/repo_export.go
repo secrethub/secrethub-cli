@@ -3,11 +3,11 @@ package secrethub
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"

@@ -23,7 +23,7 @@ func (f noColorFlag) init() {
 func RegisterColorFlag(app *cli.App) {
 	commandClause := cli.CommandClause{
 		Cmd: &app.Application,
-		App:     app,
+		App: app,
 	}
 	flag := noColorFlag(false)
 	commandClause.Var(&flag, "no-color", "Disable colored output.", true, true)

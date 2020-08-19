@@ -3,11 +3,11 @@ package secrethub
 import (
 	"errors"
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io"
 	"sort"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-go/internals/api"

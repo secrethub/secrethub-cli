@@ -2,9 +2,9 @@ package secrethub
 
 import (
 	"bytes"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"

@@ -45,7 +45,7 @@ type clientFactory struct {
 func (f *clientFactory) Register(app *cli.App) {
 	commandClause := cli.CommandClause{
 		Cmd: &app.Application,
-		App:     app,
+		App: app,
 	}
 	commandClause.VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.", true, true)
 	commandClause.StringVar(&f.identityProvider, "identity-provider", "key", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable. ", true, true)

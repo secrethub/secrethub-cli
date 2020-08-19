@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"errors"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,15 +10,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/secrethub/secrethub-go/internals/api/uuid"
-
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
-
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl/fakes"
 	generictpl "github.com/secrethub/secrethub-cli/internals/tpl"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/api/uuid"
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/fakeclient"

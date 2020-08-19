@@ -31,7 +31,7 @@ func (f mlockFlag) init() error {
 func RegisterMlockFlag(app *cli.App) {
 	commandClause := cli.CommandClause{
 		Cmd: &app.Application,
-		App:     app,
+		App: app,
 	}
 	flag := mlockFlag(false)
 	commandClause.Var(&flag, "mlock", "Enable memory locking", true, true)

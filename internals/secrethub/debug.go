@@ -10,7 +10,7 @@ import (
 func RegisterDebugFlag(app *cli.App, logger cli.Logger) {
 	commandClause := cli.CommandClause{
 		Cmd: &app.Application,
-		App:     app,
+		App: app,
 	}
 	flag := debugFlag{
 		logger: logger,

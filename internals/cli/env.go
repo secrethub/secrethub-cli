@@ -159,7 +159,7 @@ func (a *App) CheckStrictEnv() error {
 
 // CommandClause represents a command clause in a command0-line application.
 type CommandClause struct {
-	Cmd *cobra.Command
+	Cmd  *cobra.Command
 	name string
 	App  *App
 }

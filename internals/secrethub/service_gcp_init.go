@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"regexp"
 	"strings"
 	"sync"
@@ -18,6 +17,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/gcp"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 

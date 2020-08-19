@@ -3,13 +3,13 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io/ioutil"
 	"os"
 	"strconv"
 
 	"github.com/secrethub/secrethub-go/internals/errio"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-cli/internals/winrm"

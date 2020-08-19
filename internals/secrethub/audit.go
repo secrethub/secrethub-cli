@@ -2,24 +2,20 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io"
 
-	"github.com/secrethub/secrethub-go/internals/errio"
-
-	"github.com/secrethub/secrethub-cli/internals/secrethub/pager"
-
-	"golang.org/x/crypto/ssh/terminal"
-
-	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
-
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/pager"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/errio"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (

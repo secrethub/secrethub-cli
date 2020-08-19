@@ -56,7 +56,7 @@ func (store *credentialConfig) IsPassphraseSet() bool {
 func (store *credentialConfig) Register(app *cli.App) {
 	commandClause := cli.CommandClause{
 		Cmd: &app.Application,
-		App:     app,
+		App: app,
 	}
 	commandClause.Var(&store.configDir, "config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub", true, true)
 	commandClause.StringVar(&store.AccountCredential, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.", true, true)

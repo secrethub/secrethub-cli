@@ -410,3 +410,17 @@ func splitVar(prefix, separator, envVar string) (string, string, bool) {
 	prefix = fmt.Sprintf("%s%s", strings.ToUpper(prefix), separator)
 	return split[0], split[1], strings.HasPrefix(strings.ToUpper(split[0]), prefix)
 }
+
+type ArgValue interface {
+	Set(string) error
+}
+
+func ArgumentRegister(params []ArgValue, args []string) error {
+	for i, arg := range args {
+		err := params[i].Set(arg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

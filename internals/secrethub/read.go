@@ -10,7 +10,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
@@ -42,7 +41,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ReadCommand) Register(r command.Registerer) {
+func (cmd *ReadCommand) Register(r cli.Registerer) {
 	clause := r.Command("read", "Read a secret.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 
@@ -59,7 +58,8 @@ func (cmd *ReadCommand) Register(r command.Registerer) {
 	fileModeFlag := clause.VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.", true, false)
 	fileModeFlag.DefValue = "0600"
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run handles the command with the options as specified in the command.

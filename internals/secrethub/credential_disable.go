@@ -6,7 +6,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +28,7 @@ func NewCredentialDisableCommand(io ui.IO, newClient newClientFunc) *CredentialD
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *CredentialDisableCommand) Register(r command.Registerer) {
+func (cmd *CredentialDisableCommand) Register(r cli.Registerer) {
 	clause := r.Command("disable", "Disable a credential for usage on SecretHub.")
 	clause.Cmd.Args = cobra.MaximumNArgs(1)
 
@@ -36,7 +36,8 @@ func (cmd *CredentialDisableCommand) Register(r command.Registerer) {
 	//clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.fingerprint}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.fingerprint})
 }
 
 // Run disables an existing credential.

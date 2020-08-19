@@ -9,7 +9,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/spf13/cobra"
@@ -33,7 +33,7 @@ func NewLsCommand(io ui.IO, newClient newClientFunc) *LsCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *LsCommand) Register(r command.Registerer) {
+func (cmd *LsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "List contents of a path.")
 	clause.Alias("list")
 	clause.Cmd.Args = cobra.MaximumNArgs(1)
@@ -41,7 +41,8 @@ func (cmd *LsCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run lists a repo, secret or namespace.

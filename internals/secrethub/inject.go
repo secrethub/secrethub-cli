@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,7 +14,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/docker/go-units"
 )
@@ -55,7 +55,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 
 // Register adds a CommandClause and it's args and flags to a cli.App.
 // Register adds args and flags.
-func (cmd *InjectCommand) Register(r command.Registerer) {
+func (cmd *InjectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inject", "Inject secrets into a template.")
 	clause.BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
@@ -74,7 +74,8 @@ func (cmd *InjectCommand) Register(r command.Registerer) {
 	clause.BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.", true, false)
 	clause.BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.", true, false)
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run handles the command with the options as specified in the command.

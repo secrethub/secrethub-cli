@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
@@ -30,12 +29,13 @@ func NewRepoInspectCommand(io ui.IO, newClient newClientFunc) *RepoInspectComman
 }
 
 // Register registers the command, args, and flags on the provided registerer.
-func (cmd *RepoInspectCommand) Register(r command.Registerer) {
+func (cmd *RepoInspectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inspect", "Show the details of a repository.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "Path to the repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run prints out the details of a repo.

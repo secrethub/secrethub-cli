@@ -11,7 +11,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-cli/internals/winrm"
 	"github.com/spf13/cobra"
 )
@@ -58,7 +58,7 @@ func NewServiceDeployWinRmCommand(io ui.IO) *ServiceDeployWinRmCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceDeployWinRmCommand) Register(r command.Registerer) {
+func (cmd *ServiceDeployWinRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("winrm", "Read a service account configuration from stdin and deploy it to a running instance with WinRM. The instance needs to be reachable, have WinRM enabled, and have PowerShell installed.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("resource-uri", "Hostname, optional connection protocol and port of the host ([http[s]://]<host>[:<port>]). This defaults to https and port 5986.").Required().URLVar(&cmd.resourceURI)
@@ -73,7 +73,8 @@ func (cmd *ServiceDeployWinRmCommand) Register(r command.Registerer) {
 	clause.StringVar(&cmd.caCert, "ca-cert", "", "Path to CA certificate used to verify server TLS certificate.", true, false)
 	clause.BoolVar(&cmd.noVerify, "insecure-no-verify-cert", false, "Do not verify server TLS certificate (insecure).", true, false)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.resourceURI}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.resourceURI})
 }
 
 // Run creates a service and installs the configuration using WinRM.

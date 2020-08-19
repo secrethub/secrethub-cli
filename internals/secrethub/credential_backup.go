@@ -2,9 +2,10 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
@@ -23,10 +24,11 @@ func NewCredentialBackupCommand(io ui.IO, newClient newClientFunc) *CredentialBa
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *CredentialBackupCommand) Register(r command.Registerer) {
+func (cmd *CredentialBackupCommand) Register(r cli.Registerer) {
 	clause := r.Command("backup", "Create a backup code for restoring your account.")
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run creates a backup code for the currently authenticated account.

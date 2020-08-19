@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
@@ -28,12 +27,13 @@ func NewRepoInitCommand(io ui.IO, newClient newClientFunc) *RepoInitCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoInitCommand) Register(r command.Registerer) {
+func (cmd *RepoInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Initialize a new repository.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run creates a new repository.

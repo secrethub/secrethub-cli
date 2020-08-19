@@ -3,7 +3,7 @@ package secrethub
 import (
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/spf13/cobra"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -31,12 +31,13 @@ func NewInspectCommand(io ui.IO, newClient newClientFunc) *InspectCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *InspectCommand) Register(r command.Registerer) {
+func (cmd *InspectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inspect", "Print details of a resource.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo or secret-path", "Path to the repository or the secret to inspect "+repoPathPlaceHolder+" or "+secretPathOptionalVersionPlaceHolder).Required().SetValue(&cmd.path)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run inspects a repository or a secret

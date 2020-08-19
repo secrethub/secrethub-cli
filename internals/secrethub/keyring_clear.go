@@ -1,12 +1,11 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // KeyringClearCommand waits for the keyring item store to expire
@@ -20,13 +19,14 @@ func NewKeyringClearCommand() *KeyringClearCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *KeyringClearCommand) Register(r command.Registerer) {
+func (cmd *KeyringClearCommand) Register(r cli.Registerer) {
 	clause := r.Command("keyring-clear", "Clear the key passphrase from the keyring.").Hidden()
 
 	// Alias for backwards compatibility with old name of command.
 	clause.Alias("key-passphrase-clear")
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run waits for the keyringItem store to expire and clears it.

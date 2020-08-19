@@ -9,7 +9,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/spf13/cobra"
 )
@@ -36,13 +35,14 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *MkDirCommand) Register(r command.Registerer) {
+func (cmd *MkDirCommand) Register(r cli.Registerer) {
 	clause := r.Command("mkdir", "Create a new directory.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
 	clause.BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.", true, false)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.paths}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.paths})
 }
 
 // Run executes the command.

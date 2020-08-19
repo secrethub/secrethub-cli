@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/spf13/cobra"
@@ -61,7 +60,7 @@ func NewServiceGCPLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceLsCommand) Register(r command.Registerer) {
+func (cmd *ServiceLsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", cmd.help)
 	clause.Alias("list")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
@@ -69,7 +68,8 @@ func (cmd *ServiceLsCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.repoPath}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.repoPath})
 }
 
 // Run lists all service accounts in a given repository.

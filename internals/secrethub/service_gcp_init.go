@@ -19,7 +19,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
@@ -157,7 +156,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
+func (cmd *ServiceGCPInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account that is tied to a GCP Service Account.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
@@ -178,7 +177,8 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 		"To create a new service that uses the GCP identity provider, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore GCP application default credentials should be configured on this system. To achieve this, first install the Google Cloud SDK (https://cloud.google.com/sdk/docs/quickstarts) and then run `gcloud auth application-default login`.",
 	)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.repo}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.repo})
 }
 
 type gcpProjectOptionLister struct {

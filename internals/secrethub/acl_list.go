@@ -10,7 +10,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/spf13/cobra"
 )
@@ -35,7 +34,7 @@ func NewACLListCommand(io ui.IO, newClient newClientFunc) *ACLListCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ACLListCommand) Register(r command.Registerer) {
+func (cmd *ACLListCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "List access rules of a directory and its children.")
 	clause.Alias("list")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
@@ -44,7 +43,8 @@ func (cmd *ACLListCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.ancestors, "all", "a", false, "List all rules that apply on the directory, including rules on parent directories.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run prints access rules for the given directory.

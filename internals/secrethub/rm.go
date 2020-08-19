@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -38,7 +37,7 @@ func NewRmCommand(io ui.IO, newClient newClientFunc) *RmCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RmCommand) Register(r command.Registerer) {
+func (cmd *RmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Remove a directory, secret or version.")
 	clause.Alias("remove")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
@@ -46,7 +45,8 @@ func (cmd *RmCommand) Register(r command.Registerer) {
 	clause.BoolVarP(&cmd.recursive, "recursive", "r", false, "Remove directories and their contents recursively.", true, false)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run removes the resource at the given path.

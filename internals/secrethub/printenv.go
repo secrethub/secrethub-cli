@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // PrintEnvCommand prints out debug statements about all environment variables.
@@ -35,9 +34,10 @@ func (cmd *PrintEnvCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *PrintEnvCommand) Register(r command.Registerer) {
+func (cmd *PrintEnvCommand) Register(r cli.Registerer) {
 	clause := r.Command("printenv", "Print environment variables.")
 	clause.BoolVarP(&cmd.verbose, "verbose", "v", false, "Show all possible environment variables.", true, false)
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }

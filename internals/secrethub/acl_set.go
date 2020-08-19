@@ -5,7 +5,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/spf13/cobra"
 )
@@ -30,7 +30,7 @@ func NewACLSetCommand(io ui.IO, newClient newClientFunc) *ACLSetCommand {
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
 // Register adds args and flags.
-func (cmd *ACLSetCommand) Register(r command.Registerer) {
+func (cmd *ACLSetCommand) Register(r cli.Registerer) {
 	clause := r.Command("set", "Set access rule for an user or service on a path.")
 	clause.Cmd.Args = cobra.ExactValidArgs(3)
 	//clause.Arg("dir-path", "The path of the directory to set the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
@@ -38,7 +38,8 @@ func (cmd *ACLSetCommand) Register(r command.Registerer) {
 	//clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path, &cmd.accountName, &cmd.permission}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path, &cmd.accountName, &cmd.permission})
 }
 
 // Run handles the command with the options as specified in the command.

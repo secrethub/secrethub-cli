@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/spf13/cobra"
 )
 
@@ -21,12 +21,13 @@ func NewCompletionCommand() *CompletionCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *CompletionCommand) Register(r command.Registerer) {
+func (cmd *CompletionCommand) Register(r cli.Registerer) {
 	cmd.clause = r.Command("completion", "Generate completion script").Hidden()
 	cmd.clause.Cmd.DisableFlagsInUseLine = true
 	cmd.clause.Cmd.ValidArgs = []string{"bash", "zsh", "fish", "powershell"}
 	cmd.clause.Cmd.Args = cobra.ExactValidArgs(1)
-	command.BindAction(cmd.clause, []cli.ArgValue{&cmd.shell}, cmd.run)
+	cmd.clause.BindAction(cmd.run)
+	cmd.clause.BindArguments([]cli.ArgValue{&cmd.shell})
 }
 
 func (cmd *CompletionCommand) run() error {

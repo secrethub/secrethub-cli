@@ -6,7 +6,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-cli/internals/secrethub/pager"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -58,7 +58,7 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *AuditCommand) Register(r command.Registerer) {
+func (cmd *AuditCommand) Register(r cli.Registerer) {
 	defaultLimit := -1
 	if cmd.io.IsOutputPiped() {
 		defaultLimit = pipedOutputLineLimit
@@ -76,7 +76,8 @@ func (cmd *AuditCommand) Register(r command.Registerer) {
 	clause.IntVar(&cmd.maxResults, "max-results", defaultLimit, "Specify the number of entries to list. If maxResults < 0 all entries are displayed. If the output of the command is piped, maxResults defaults to 1000.", true, false)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run prints all audit events for the given repository or secret.

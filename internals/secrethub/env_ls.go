@@ -2,9 +2,9 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // EnvListCommand is a command to list all environment variable keys set in the process of `secrethub run`.
@@ -22,14 +22,15 @@ func NewEnvListCommand(io ui.IO, newClient newClientFunc) *EnvListCommand {
 }
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
-func (cmd *EnvListCommand) Register(r command.Registerer) {
+func (cmd *EnvListCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "[BETA] List environment variable names that will be populated with secrets.")
 	clause.HelpLong("This command is hidden because it is still in beta. Future versions may break.")
 	clause.Alias("list")
 
 	cmd.environment.register(clause)
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run executes the command.

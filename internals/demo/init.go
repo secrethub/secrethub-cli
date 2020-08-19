@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -32,7 +32,7 @@ func NewInitCommand(io ui.IO, newClient newClientFunc) *InitCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *InitCommand) Register(r command.Registerer) {
+func (cmd *InitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create the secrets necessary to connect with the demo application.")
 	clause.HelpLong("demo init creates a repository with the username and password needed to connect to the demo API.")
 

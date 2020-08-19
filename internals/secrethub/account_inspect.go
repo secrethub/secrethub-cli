@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -27,10 +26,11 @@ func NewAccountInspectCommand(io ui.IO, newClient newClientFunc) *AccountInspect
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *AccountInspectCommand) Register(r command.Registerer) {
+func (cmd *AccountInspectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inspect", "Show the details of your SecretHub account.")
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run handles the command with the options as specified in the command.

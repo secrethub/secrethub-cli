@@ -2,9 +2,9 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -27,7 +27,7 @@ func NewOrgInitCommand(io ui.IO, newClient newClientFunc) *OrgInitCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgInitCommand) Register(r command.Registerer) {
+func (cmd *OrgInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Initialize a new organization account.")
 	clause.Var(&cmd.name, "name", "The name you would like to use for your organization. If not set, you will be asked for it.", true, false)
 	clause.StringVar(&cmd.description, "description", "", "A description (max 144 chars) for your organization so others will recognize it. If not set, you will be asked for it.", true, false)
@@ -37,7 +37,8 @@ func (cmd *OrgInitCommand) Register(r command.Registerer) {
 	clause.Cmd.Flag("desc").Hidden = true
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run creates an organization.

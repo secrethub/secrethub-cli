@@ -8,7 +8,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/spf13/cobra"
@@ -43,7 +42,7 @@ func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *WriteCommand) Register(r command.Registerer) {
+func (cmd *WriteCommand) Register(r cli.Registerer) {
 	clause := r.Command("write", "Write a secret.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
@@ -52,7 +51,8 @@ func (cmd *WriteCommand) Register(r command.Registerer) {
 	clause.BoolVar(&cmd.noTrim, "no-trim", false, "Do not trim leading and trailing whitespace in the secret.", true, false)
 	clause.StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.", true, false)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // Run handles the command with the options as specified in the command.

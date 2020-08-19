@@ -5,7 +5,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,7 @@ func NewEnvReadCommand(io ui.IO, newClient newClientFunc) *EnvReadCommand {
 }
 
 // Register adds a CommandClause and it's args and flags to a Registerer.
-func (cmd *EnvReadCommand) Register(r command.Registerer) {
+func (cmd *EnvReadCommand) Register(r cli.Registerer) {
 	clause := r.Command("read", "[BETA] Read the value of a single environment variable.")
 	clause.HelpLong("This command is hidden because it is still in beta. Future versions may break.")
 	clause.Cmd.Args = cobra.MaximumNArgs(1)
@@ -35,7 +35,8 @@ func (cmd *EnvReadCommand) Register(r command.Registerer) {
 
 	cmd.environment.register(clause)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.key}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.key})
 }
 
 // Run executes the command.

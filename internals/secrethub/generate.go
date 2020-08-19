@@ -10,7 +10,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -62,7 +61,7 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
+func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 	clause := r.Command("generate", "Generate a random secret.")
 	clause.Cmd.Args = cobra.RangeArgs(1, 3)
 	//clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
@@ -80,7 +79,8 @@ func (cmd *GenerateSecretCommand) Register(r command.Registerer) {
 	//clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
 	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.firstArg, &cmd.secondArg, &cmd.lengthArg}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.firstArg, &cmd.secondArg, &cmd.lengthArg})
 }
 
 // before configures the command using the flag values.

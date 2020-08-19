@@ -3,12 +3,13 @@ package secrethub
 import (
 	"errors"
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
@@ -37,12 +38,13 @@ func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentia
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *InitCommand) Register(r command.Registerer) {
+func (cmd *InitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Initialize the SecretHub client for first use on this device.")
 	clause.StringVar(&cmd.backupCode, "backup-code", "", "The backup code used to restore an existing account to this device.", true, false)
 	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 type InitMode int

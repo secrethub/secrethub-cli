@@ -1,8 +1,8 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // ConfigCommand handles operations on the SecretHub configuration.
@@ -20,7 +20,7 @@ func NewConfigCommand(io ui.IO, store CredentialConfig) *ConfigCommand {
 }
 
 // Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *ConfigCommand) Register(r command.Registerer) {
+func (cmd *ConfigCommand) Register(r cli.Registerer) {
 	clause := r.Command("config", "Manage your local configuration.")
 	NewConfigUpdatePassphraseCommand(cmd.io, cmd.credentialStore).Register(clause)
 	NewConfigUpgradeCommand().Register(clause)

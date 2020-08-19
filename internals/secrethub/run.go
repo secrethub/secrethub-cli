@@ -18,7 +18,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/spf13/cobra"
 )
 
@@ -72,7 +72,7 @@ func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RunCommand) Register(r command.Registerer) {
+func (cmd *RunCommand) Register(r cli.Registerer) {
 	const helpShort = "Pass secrets as environment variables to a process."
 	const helpLong = "To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are automatically masked by replacing them with \"" + maskString + "\". " +
 		"The output is buffered to scan for secrets and can be adjusted using the masking-buffer-period flag. " +
@@ -88,7 +88,8 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause.DurationVar(&cmd.maskerOptions.BufferDelay, "masking-buffer-period", time.Millisecond*50, "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.", true, false)
 	clause.BoolVar(&cmd.ignoreMissingSecrets, "ignore-missing-secrets", false, "Do not return an error when a secret does not exist and use an empty value instead.", true, false)
 	cmd.environment.register(clause)
-	command.BindActionArr(clause, &cmd.command, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArgumentsArr(&cmd.command)
 }
 
 // Run reads files from the .secretsenv/<env-name> directory, sets them as environment variables and runs the given command.

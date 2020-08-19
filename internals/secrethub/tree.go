@@ -7,7 +7,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/spf13/cobra"
@@ -48,7 +47,7 @@ func (cmd *TreeCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *TreeCommand) Register(r command.Registerer) {
+func (cmd *TreeCommand) Register(r cli.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
@@ -60,7 +59,8 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 
 	clause.Cmd.Flag("noreport").Hidden = true
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.path}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.path})
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.

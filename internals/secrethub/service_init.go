@@ -11,7 +11,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -105,7 +104,7 @@ func (cmd *ServiceInitCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceInitCommand) Register(r command.Registerer) {
+func (cmd *ServiceInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
@@ -123,7 +122,8 @@ func (cmd *ServiceInitCommand) Register(r command.Registerer) {
 	clause.Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.", true, false)
 	clause.Cmd.Flag("file-mode").DefValue = "0440"
 
-	command.BindAction(clause, []cli.ArgValue{&cmd.repo}, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.ArgValue{&cmd.repo})
 }
 
 // givePermission gives the service permission on the repository as defined in the permission flag.

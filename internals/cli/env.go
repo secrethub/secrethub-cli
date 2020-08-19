@@ -164,198 +164,198 @@ type CommandClause struct {
 	App  *App
 }
 
-func (cmd *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().BoolVarP(reference, name, shorthand, def, usage)
+		cmdCls.Cmd.PersistentFlags().BoolVarP(reference, name, shorthand, def, usage)
 	} else {
-		cmd.Cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
+		cmdCls.Cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().IntVarP(reference, name, shorthand, def, usage)
+		cmdCls.Cmd.PersistentFlags().IntVarP(reference, name, shorthand, def, usage)
 	} else {
-		cmd.Cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
+		cmdCls.Cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().StringVarP(reference, name, shorthand, def, usage)
+		cmdCls.Cmd.PersistentFlags().StringVarP(reference, name, shorthand, def, usage)
 	} else {
-		cmd.Cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
+		cmdCls.Cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().DurationVarP(reference, name, shorthand, def, usage)
+		cmdCls.Cmd.PersistentFlags().DurationVarP(reference, name, shorthand, def, usage)
 	} else {
-		cmd.Cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
+		cmdCls.Cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) BoolVar(reference *bool, name string, def bool, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) BoolVar(reference *bool, name string, def bool, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().BoolVar(reference, name, def, usage)
+		cmdCls.Cmd.PersistentFlags().BoolVar(reference, name, def, usage)
 	} else {
-		cmd.Cmd.Flags().BoolVar(reference, name, def, usage)
+		cmdCls.Cmd.Flags().BoolVar(reference, name, def, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) IntVar(reference *int, name string, def int, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) IntVar(reference *int, name string, def int, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().IntVar(reference, name, def, usage)
+		cmdCls.Cmd.PersistentFlags().IntVar(reference, name, def, usage)
 	} else {
-		cmd.Cmd.Flags().IntVar(reference, name, def, usage)
+		cmdCls.Cmd.Flags().IntVar(reference, name, def, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) StringVar(reference *string, name string, def string, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) StringVar(reference *string, name string, def string, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().StringVar(reference, name, def, usage)
+		cmdCls.Cmd.PersistentFlags().StringVar(reference, name, def, usage)
 	} else {
-		cmd.Cmd.Flags().StringVar(reference, name, def, usage)
+		cmdCls.Cmd.Flags().StringVar(reference, name, def, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().DurationVar(reference, name, def, usage)
+		cmdCls.Cmd.PersistentFlags().DurationVar(reference, name, def, usage)
 	} else {
-		cmd.Cmd.Flags().DurationVar(reference, name, def, usage)
+		cmdCls.Cmd.Flags().DurationVar(reference, name, def, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().VarP(reference, name, shorthand, usage)
+		cmdCls.Cmd.PersistentFlags().VarP(reference, name, shorthand, usage)
 	} else {
-		cmd.Cmd.Flags().VarP(reference, name, shorthand, usage)
+		cmdCls.Cmd.Flags().VarP(reference, name, shorthand, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) Var(reference pflag.Value, name string, usage string, hasEnv bool, persistent bool) {
+func (cmdCls *CommandClause) Var(reference pflag.Value, name string, usage string, hasEnv bool, persistent bool) {
 	if persistent {
-		cmd.Cmd.PersistentFlags().Var(reference, name, usage)
+		cmdCls.Cmd.PersistentFlags().Var(reference, name, usage)
 	} else {
-		cmd.Cmd.Flags().Var(reference, name, usage)
+		cmdCls.Cmd.Flags().Var(reference, name, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 }
 
-func (cmd *CommandClause) VarPF(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) *pflag.Flag {
+func (cmdCls *CommandClause) VarPF(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) *pflag.Flag {
 	var flag *pflag.Flag
 	if persistent {
-		flag = cmd.Cmd.PersistentFlags().VarPF(reference, name, shorthand, usage)
+		flag = cmdCls.Cmd.PersistentFlags().VarPF(reference, name, shorthand, usage)
 	} else {
-		flag = cmd.Cmd.Flags().VarPF(reference, name, shorthand, usage)
+		flag = cmdCls.Cmd.Flags().VarPF(reference, name, shorthand, usage)
 	}
 
 	if hasEnv {
-		cmd.FlagRegister(name, usage)
+		cmdCls.FlagRegister(name, usage)
 	}
 	return flag
 }
 
 // Command adds a new subcommand to this command.
-func (cmd *CommandClause) Command(name, help string) *CommandClause {
+func (cmdCls *CommandClause) Command(name, help string) *CommandClause {
 	clause := &CommandClause{
 		Cmd: func() *cobra.Command {
 			newCommand := &cobra.Command{Use: name, Short: help}
 			return newCommand
 		}(),
 		name: name,
-		App:  cmd.App,
+		App:  cmdCls.App,
 	}
-	cmd.Cmd.AddCommand(clause.Cmd)
+	cmdCls.Cmd.AddCommand(clause.Cmd)
 	return clause
 }
 
 // Hidden hides the command in help texts.
-func (cmd *CommandClause) Hidden() *CommandClause {
-	cmd.Cmd.Hidden = true
-	return cmd
+func (cmdCls *CommandClause) Hidden() *CommandClause {
+	cmdCls.Cmd.Hidden = true
+	return cmdCls
 }
 
-func (cmd *CommandClause) fullCommand() string {
-	if cmd.Cmd.Use == cmd.Cmd.Root().Use {
+func (cmdCls *CommandClause) fullCommand() string {
+	if cmdCls.Cmd.Use == cmdCls.Cmd.Root().Use {
 		return ""
 	}
-	out := []string{cmd.Cmd.Use}
-	for p := cmd.Cmd.Parent(); p != nil; p = p.Parent() {
-		if p.Use != cmd.Cmd.Root().Use {
+	out := []string{cmdCls.Cmd.Use}
+	for p := cmdCls.Cmd.Parent(); p != nil; p = p.Parent() {
+		if p.Use != cmdCls.Cmd.Root().Use {
 			out = append([]string{p.Use}, out...)
 		}
 	}
 	return strings.Join(out, " ")
 }
 
-func (cmd *CommandClause) HelpLong(helpLong string) {
-	cmd.Cmd.Long = helpLong
+func (cmdCls *CommandClause) HelpLong(helpLong string) {
+	cmdCls.Cmd.Long = helpLong
 }
 
-func (cmd *CommandClause) Alias(alias string) {
-	if cmd.Cmd.Aliases == nil {
-		cmd.Cmd.Aliases = []string{alias}
+func (cmdCls *CommandClause) Alias(alias string) {
+	if cmdCls.Cmd.Aliases == nil {
+		cmdCls.Cmd.Aliases = []string{alias}
 	} else {
-		cmd.Cmd.Aliases = append(cmd.Cmd.Aliases, alias)
+		cmdCls.Cmd.Aliases = append(cmdCls.Cmd.Aliases, alias)
 	}
 }
 
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
-func (cmd *CommandClause) FlagRegister(name, help string) *Flag {
-	fullCmd := strings.Replace(cmd.fullCommand(), " ", cmd.App.separator, -1)
-	prefix := formatName(fullCmd, cmd.App.name, cmd.App.separator, cmd.App.delimiters...)
-	envVar := formatName(name, prefix, cmd.App.separator, cmd.App.delimiters...)
+func (cmdCls *CommandClause) FlagRegister(name, help string) *Flag {
+	fullCmd := strings.Replace(cmdCls.fullCommand(), " ", cmdCls.App.separator, -1)
+	prefix := formatName(fullCmd, cmdCls.App.name, cmdCls.App.separator, cmdCls.App.delimiters...)
+	envVar := formatName(name, prefix, cmdCls.App.separator, cmdCls.App.delimiters...)
 
-	cmd.App.registerEnvVar(envVar)
-	flag := cmd.Cmd.Flag(name)
+	cmdCls.App.registerEnvVar(envVar)
+	flag := cmdCls.Cmd.Flag(name)
 	return (&Flag{
 		Flag:   flag,
-		app:    cmd.App,
+		app:    cmdCls.App,
 		envVar: envVar,
 	}).Envar(envVar)
 }
@@ -455,4 +455,35 @@ func (s *URLArgValue) Set(replacer string) error {
 	var err error
 	s.Param, err = url.Parse(replacer)
 	return err
+}
+
+// Registerer allows others to register commands on it.
+type Registerer interface {
+	Command(cmd string, help string) *CommandClause
+}
+
+// BindAction binds a function to a command clause, so that
+// it is executed when the command is parsed.
+func (cmdCls *CommandClause) BindArguments(params []ArgValue) {
+	if params != nil {
+		cmdCls.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			return ArgumentRegister(params, args)
+		}
+	}
+}
+
+func (cmdCls *CommandClause) BindAction(fn func() error) {
+	if fn != nil {
+		cmdCls.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
+			return fn()
+		}
+	}
+}
+
+func (cmdCls *CommandClause) BindArgumentsArr(param ArgArrValue) {
+	if param != nil {
+		cmdCls.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			return param.Set(args)
+		}
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
@@ -38,7 +39,8 @@ func (cmd *InitCommand) Register(r cli.Registerer) {
 
 	clause.VarPF(&cmd.repo, "repo", "", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.", true, false)
 
-	command.BindAction(clause, nil, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run handles the command with the options as specified in the command.

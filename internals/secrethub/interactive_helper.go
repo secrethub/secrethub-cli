@@ -41,6 +41,11 @@ func openEditor(editor, path string, secretPaths []string) (map[string]string, e
 		return nil, err
 	}
 
+	err = os.Remove(fpath)
+	if err != nil {
+		return nil, err
+	}
+
 	return buildMap(string(reading)), nil
 }
 
@@ -64,4 +69,12 @@ func buildMap(input string) map[string]string {
 	}
 
 	return locationsMap
+}
+
+func getMapKeys(stringMap map[string]string) []string {
+	keys := make([]string, 0, len(stringMap))
+	for k := range stringMap {
+		keys = append(keys, k)
+	}
+	return keys
 }

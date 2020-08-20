@@ -64,7 +64,7 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		}
 	}
 
-	for key, value := range envVar {
+	for key := range envVar {
 		exists, err := client.Secrets().Exists(locationsMap[key])
 		if err != nil {
 			return err
@@ -82,6 +82,9 @@ func (cmd *ImportDotEnvCommand) Run() error {
 				return nil
 			}
 		}
+	}
+
+	for key, value := range envVar {
 		_, err = client.Secrets().Write(locationsMap[key], []byte(value))
 		if err != nil {
 			return err

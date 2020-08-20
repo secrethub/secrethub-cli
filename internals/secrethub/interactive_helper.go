@@ -51,9 +51,10 @@ func openEditor(editor, path string, secretPaths []string) (map[string]string, e
 
 func buildFile(path string, secretPaths []string) string {
 	output := "Choose the paths to where your secrets will be written:\n"
+
 	for _, secretPath := range secretPaths {
-		output += fmt.Sprintf("%s%s%s%s%s\n", secretPath, " => ",
-			path, "/", strings.ToLower(secretPath))
+		output += fmt.Sprintf("%s => %s/%s\n", secretPath,
+			path, strings.ToLower(secretPath))
 	}
 	return output
 }
@@ -62,17 +63,18 @@ func buildMap(input string) map[string]string {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	scanner.Scan()
 	locationsMap := make(map[string]string)
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		split := strings.Split(line, "=>")
 		locationsMap[strings.TrimSpace(split[0])] = strings.TrimSpace(split[1])
 	}
-
 	return locationsMap
 }
 
 func getMapKeys(stringMap map[string]string) []string {
 	keys := make([]string, 0, len(stringMap))
+
 	for k := range stringMap {
 		keys = append(keys, k)
 	}

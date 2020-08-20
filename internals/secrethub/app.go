@@ -186,6 +186,7 @@ func (app *App) registerCommands() {
 	NewAuditCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewInjectCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewRunCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
+	NewImportCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewPrintEnvCommand(app.cli, app.io).Register(app.cli)
 
 	// Hidden commands

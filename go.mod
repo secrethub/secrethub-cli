@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.25.49
 	github.com/docker/go-units v0.3.3
 	github.com/fatih/color v1.7.0
+	github.com/joho/godotenv v1.3.0
 	github.com/masterzen/winrm v0.0.0-20190308153735-1d17eaf15943
 	github.com/mattn/go-colorable v0.1.1
 	github.com/mattn/go-isatty v0.0.7
@@ -20,11 +21,9 @@ require (
 	github.com/secrethub/secrethub-go v0.30.0
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200501052902-10377860bb8e
 	golang.org/x/text v0.3.2
 	google.golang.org/api v0.26.0
-	google.golang.org/genproto v0.0.0-20200430143042-b979b6f78d84
 	gopkg.in/yaml.v2 v2.2.2
 	gotest.tools v2.2.0+incompatible
 )

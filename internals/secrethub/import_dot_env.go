@@ -71,7 +71,7 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		}
 		if exists {
 			confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A secret at location %s already exists. "+
-				"This import process will overwrite this secret. Do you wish to contine?", locationsMap[key]), ui.DefaultNo)
+				"This import process will overwrite this secret. Do you wish to continue?", locationsMap[key]), ui.DefaultNo)
 
 			if err != nil {
 				return err

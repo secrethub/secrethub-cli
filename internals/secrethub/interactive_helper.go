@@ -37,6 +37,10 @@ func openEditor(editor, path string, secretPaths []string) (map[string]string, e
 	}
 
 	reading, err := ioutil.ReadFile(fpath)
+	if err != nil {
+		return nil, err
+	}
+
 	return buildMap(string(reading)), nil
 }
 

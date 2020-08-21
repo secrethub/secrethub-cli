@@ -16,6 +16,7 @@ type ImportDotEnvCommand struct {
 	io          ui.IO
 	path        api.DirPath
 	interactive bool
+	force       bool
 	dotenv      string
 	editor      string
 	newClient   newClientFunc
@@ -36,6 +37,7 @@ func (cmd *ImportDotEnvCommand) Register(r command.Registerer) {
 	clause.Flag("interactive", "Interactive mode. Edit the paths to where the secrets should be written.").Short('i').BoolVar(&cmd.interactive)
 	clause.Flag("env-file", "The location of the .env file. Defaults to `.env`.").Default(".env").ExistingFileVar(&cmd.dotenv)
 	clause.Flag("editor", "The editor where you will define your secret paths. Only has effect in interactive mode.").Default("nano").HintOptions("vim", "nano").StringVar(&cmd.editor)
+	registerForceFlag(clause).BoolVar(&cmd.force)
 	command.BindAction(clause, cmd.Run)
 }
 
@@ -64,22 +66,24 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		}
 	}
 
-	for key := range envVar {
-		exists, err := client.Secrets().Exists(locationsMap[key])
-		if err != nil {
-			return err
-		}
-		if exists {
-			confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A secret at location %s already exists. "+
-				"This import process will overwrite this secret. Do you wish to continue?", locationsMap[key]), ui.DefaultNo)
-
+	if !cmd.force {
+		for key := range envVar {
+			exists, err := client.Secrets().Exists(locationsMap[key])
 			if err != nil {
 				return err
 			}
+			if exists {
+				confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A secret at location %s already exists. "+
+					"This import process will overwrite this secret. Do you wish to continue?", locationsMap[key]), ui.DefaultNo)
 
-			if !confirmed {
-				fmt.Fprintln(cmd.io.Output(), "Aborting.")
-				return nil
+				if err != nil {
+					return err
+				}
+
+				if !confirmed {
+					fmt.Fprintln(cmd.io.Output(), "Aborting.")
+					return nil
+				}
 			}
 		}
 	}
@@ -96,19 +100,36 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		return err
 	}
 
-	if err = generateSecretHubEnv(locationsMap); err != nil {
+	if err = generateSecretHubEnv(locationsMap, cmd.force, cmd.io); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func generateSecretHubEnv(locationsMap map[string]string) error {
+func generateSecretHubEnv(locationsMap map[string]string, force bool, io ui.IO) error {
 	output := "# Now .env secrets exist in the following SecretHub locations:\n"
 	for key, value := range locationsMap {
 		output += fmt.Sprintf("%s=secrethub://%s\n", key, value)
 	}
 	fpath := "secrethub.env"
+
+	fileExists := fileExists(fpath)
+
+	if fileExists && !force {
+		confirmed, err := ui.AskYesNo(io, "A `secrethub.env` file already exists "+
+			"at this location. This process will overwrite it. Do you wish to continue?", ui.DefaultNo)
+
+		if err != nil {
+			return err
+		}
+
+		if !confirmed {
+			fmt.Fprintln(io.Output(), "Aborting.")
+			return nil
+		}
+	}
+
 	f, err := os.Create(fpath)
 	if err != nil {
 		return err
@@ -117,5 +138,19 @@ func generateSecretHubEnv(locationsMap map[string]string) error {
 	if err != nil {
 		return err
 	}
+
+	_, err = fmt.Fprintf(io.Output(), "The `secrethub.env` file has been successfully created.")
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func fileExists(file string) bool {
+	info, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

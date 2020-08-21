@@ -39,7 +39,7 @@ func NewSetCommand(io ui.IO, newClient newClientFunc) *SetCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *SetCommand) Register(r cli.Registerer) {
 	clause := r.Command("set", "Set the secrets in your local environment. This reads and parses the secrets.yml file in the current working directory.").Hidden()
-	clause.StringVarP(&cmd.in, "in", "i", "secrets.yml", "The path to a secrets.yml file to read", true, false)
+	clause.Flags().StringVarP(&cmd.in, "in", "i", "secrets.yml", "The path to a secrets.yml file to read")
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments(nil)

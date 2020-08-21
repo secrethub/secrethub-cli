@@ -45,17 +45,17 @@ func (cmd *ReadCommand) Register(r cli.Registerer) {
 	clause := r.Command("read", "Read a secret.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 
-	clause.BoolVarP(&cmd.useClipboard,
+	clause.Flags().BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
-		), true, false,
+		),
 	)
-	clause.StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.", true, false)
-	clause.BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret", true, false)
+	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.")
+	clause.Flags().BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret")
 
-	fileModeFlag := clause.VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.", true, false)
+	fileModeFlag := clause.Flags().VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
 	fileModeFlag.DefValue = "0600"
 
 	clause.BindAction(cmd.Run)

@@ -34,7 +34,7 @@ func (cmd *ClearClipboardCommand) Register(r cli.Registerer) {
 	clause := r.Command("clipboard-clear", "Removes secret from clipboard.").Hidden()
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("hash", "Hash from the secret to be cleared").Required().HexBytesVar(&cmd.hash)
-	clause.DurationVar(&cmd.timeout, "timeout", 0, "Time to wait before clearing in seconds", true, false)
+	clause.Flags().DurationVar(&cmd.timeout, "timeout", 0, "Time to wait before clearing in seconds")
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments(nil)

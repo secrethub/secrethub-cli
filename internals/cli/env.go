@@ -220,12 +220,12 @@ func (f *FlagSet) VarPF(reference pflag.Value, name string, shorthand string, us
 	return flag
 }
 
-func (cmdCls *CommandClause) Flags() *FlagSet {
-	return &FlagSet{FlagSet: cmdCls.Cmd.Flags(), cmd: cmdCls}
+func (c *CommandClause) Flags() *FlagSet {
+	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
 }
 
-func (cmdCls *CommandClause) PersistentFlags() *FlagSet {
-	return &FlagSet{FlagSet: cmdCls.Cmd.Flags(), cmd: cmdCls}
+func (c *CommandClause) PersistentFlags() *FlagSet {
+	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
 }
 
 type FlagSet struct {
@@ -234,63 +234,63 @@ type FlagSet struct {
 }
 
 // Command adds a new subcommand to this command.
-func (cmdCls *CommandClause) Command(name, help string) *CommandClause {
+func (c *CommandClause) Command(name, help string) *CommandClause {
 	clause := &CommandClause{
 		Cmd: func() *cobra.Command {
 			newCommand := &cobra.Command{Use: name, Short: help}
 			return newCommand
 		}(),
 		name: name,
-		App:  cmdCls.App,
+		App:  c.App,
 	}
-	cmdCls.Cmd.AddCommand(clause.Cmd)
+	c.Cmd.AddCommand(clause.Cmd)
 	return clause
 }
 
 // Hidden hides the command in help texts.
-func (cmdCls *CommandClause) Hidden() *CommandClause {
-	cmdCls.Cmd.Hidden = true
-	return cmdCls
+func (c *CommandClause) Hidden() *CommandClause {
+	c.Cmd.Hidden = true
+	return c
 }
 
-func (cmdCls *CommandClause) fullCommand() string {
-	if cmdCls.Cmd.Use == cmdCls.Cmd.Root().Use {
+func (c *CommandClause) fullCommand() string {
+	if c.Cmd.Use == c.Cmd.Root().Use {
 		return ""
 	}
-	out := []string{cmdCls.Cmd.Use}
-	for p := cmdCls.Cmd.Parent(); p != nil; p = p.Parent() {
-		if p.Use != cmdCls.Cmd.Root().Use {
+	out := []string{c.Cmd.Use}
+	for p := c.Cmd.Parent(); p != nil; p = p.Parent() {
+		if p.Use != c.Cmd.Root().Use {
 			out = append([]string{p.Use}, out...)
 		}
 	}
 	return strings.Join(out, " ")
 }
 
-func (cmdCls *CommandClause) HelpLong(helpLong string) {
-	cmdCls.Cmd.Long = helpLong
+func (c *CommandClause) HelpLong(helpLong string) {
+	c.Cmd.Long = helpLong
 }
 
-func (cmdCls *CommandClause) Alias(alias string) {
-	if cmdCls.Cmd.Aliases == nil {
-		cmdCls.Cmd.Aliases = []string{alias}
+func (c *CommandClause) Alias(alias string) {
+	if c.Cmd.Aliases == nil {
+		c.Cmd.Aliases = []string{alias}
 	} else {
-		cmdCls.Cmd.Aliases = append(cmdCls.Cmd.Aliases, alias)
+		c.Cmd.Aliases = append(c.Cmd.Aliases, alias)
 	}
 }
 
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
-func (cmdCls *CommandClause) Flag(name string) *Flag {
-	fullCmd := strings.Replace(cmdCls.fullCommand(), " ", cmdCls.App.separator, -1)
-	prefix := formatName(fullCmd, cmdCls.App.name, cmdCls.App.separator, cmdCls.App.delimiters...)
-	envVar := formatName(name, prefix, cmdCls.App.separator, cmdCls.App.delimiters...)
+func (c *CommandClause) Flag(name string) *Flag {
+	fullCmd := strings.Replace(c.fullCommand(), " ", c.App.separator, -1)
+	prefix := formatName(fullCmd, c.App.name, c.App.separator, c.App.delimiters...)
+	envVar := formatName(name, prefix, c.App.separator, c.App.delimiters...)
 
-	cmdCls.App.registerEnvVar(envVar)
-	flag := cmdCls.Cmd.Flag(name)
+	c.App.registerEnvVar(envVar)
+	flag := c.Cmd.Flag(name)
 	return (&Flag{
 		Flag:   flag,
-		app:    cmdCls.App,
+		app:    c.App,
 		envVar: envVar,
 	}).Envar(envVar)
 }
@@ -407,25 +407,25 @@ type Registerer interface {
 
 // BindAction binds a function to a command clause, so that
 // it is executed when the command is parsed.
-func (cmdCls *CommandClause) BindArguments(params []ArgValue) {
+func (c *CommandClause) BindArguments(params []ArgValue) {
 	if params != nil {
-		cmdCls.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 			return ArgumentRegister(params, args)
 		}
 	}
 }
 
-func (cmdCls *CommandClause) BindAction(fn func() error) {
+func (c *CommandClause) BindAction(fn func() error) {
 	if fn != nil {
-		cmdCls.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 			return fn()
 		}
 	}
 }
 
-func (cmdCls *CommandClause) BindArgumentsArr(param ArgArrValue) {
+func (c *CommandClause) BindArgumentsArr(param ArgArrValue) {
 	if param != nil {
-		cmdCls.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 			return param.Set(args)
 		}
 	}

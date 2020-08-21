@@ -316,6 +316,14 @@ func (f *Flag) Envar(name string) *Flag {
 	return f
 }
 
+func (f *Flag) NoEnvar() *Flag {
+	if f.envVar != "" {
+		f.app.unregisterEnvVar(f.envVar)
+	}
+	f.envVar = ""
+	return f
+}
+
 // formatName takes a name and converts it to an uppercased name,
 // joined by the given separator and prefixed with the given prefix.
 func formatName(name, prefix, separator string, delimiters ...string) string {

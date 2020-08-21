@@ -164,119 +164,73 @@ type CommandClause struct {
 	App  *App
 }
 
-func (cmdCls *CommandClause) BoolVarP(reference *bool, name, shorthand string, def bool, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().BoolVarP(reference, name, shorthand, def, usage)
-	} else {
-		cmdCls.Cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
-	}
-	cmdCls.Flag(name)
-
+func (f *FlagSet) BoolVarP(reference *bool, name, shorthand string, def bool, usage string) *Flag {
+	f.FlagSet.BoolVarP(reference, name, shorthand, def, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().IntVarP(reference, name, shorthand, def, usage)
-	} else {
-		cmdCls.Cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
-	}
-	cmdCls.Flag(name)
-
+func (f *FlagSet) IntVarP(reference *int, name, shorthand string, def int, usage string) *Flag {
+	f.FlagSet.IntVarP(reference, name, shorthand, def, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().StringVarP(reference, name, shorthand, def, usage)
-	} else {
-		cmdCls.Cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
-	}
-
-	cmdCls.Flag(name)
+func (f *FlagSet) StringVarP(reference *string, name, shorthand string, def string, usage string) *Flag {
+	f.FlagSet.StringVarP(reference, name, shorthand, def, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().DurationVarP(reference, name, shorthand, def, usage)
-	} else {
-		cmdCls.Cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
-	}
-
-	cmdCls.Flag(name)
+func (f *FlagSet) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string) *Flag {
+	f.FlagSet.DurationVarP(reference, name, shorthand, def, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) BoolVar(reference *bool, name string, def bool, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().BoolVar(reference, name, def, usage)
-	} else {
-		cmdCls.Cmd.Flags().BoolVar(reference, name, def, usage)
-	}
-
-	cmdCls.Flag(name)
-
+func (f *FlagSet) BoolVar(reference *bool, name string, def bool, usage string) *Flag {
+	f.FlagSet.BoolVar(reference, name, def, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) IntVar(reference *int, name string, def int, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().IntVar(reference, name, def, usage)
-	} else {
-		cmdCls.Cmd.Flags().IntVar(reference, name, def, usage)
-	}
-
-	cmdCls.Flag(name)
-
+func (f *FlagSet) IntVar(reference *int, name string, def int, usage string) *Flag {
+	f.FlagSet.IntVar(reference, name, def, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) StringVar(reference *string, name string, def string, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().StringVar(reference, name, def, usage)
-	} else {
-		cmdCls.Cmd.Flags().StringVar(reference, name, def, usage)
-	}
-	cmdCls.Flag(name)
-
+func (f *FlagSet) StringVar(reference *string, name string, def string, usage string) *Flag {
+	f.FlagSet.StringVar(reference, name, def, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().DurationVar(reference, name, def, usage)
-	} else {
-		cmdCls.Cmd.Flags().DurationVar(reference, name, def, usage)
-	}
-	cmdCls.Flag(name)
-
+func (f *FlagSet) DurationVar(reference *time.Duration, name string, def time.Duration, usage string) *Flag {
+	f.FlagSet.DurationVar(reference, name, def, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().VarP(reference, name, shorthand, usage)
-	} else {
-		cmdCls.Cmd.Flags().VarP(reference, name, shorthand, usage)
-	}
-
-	cmdCls.Flag(name)
+func (f *FlagSet) VarP(reference pflag.Value, name string, shorthand string, usage string) *Flag {
+	f.FlagSet.VarP(reference, name, shorthand, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) Var(reference pflag.Value, name string, usage string, hasEnv bool, persistent bool) {
-	if persistent {
-		cmdCls.Cmd.PersistentFlags().Var(reference, name, usage)
-	} else {
-		cmdCls.Cmd.Flags().Var(reference, name, usage)
-	}
-
-	cmdCls.Flag(name)
-
+func (f *FlagSet) Var(reference pflag.Value, name string, usage string) *Flag {
+	f.FlagSet.Var(reference, name, usage)
+	return f.cmd.Flag(name)
 }
 
-func (cmdCls *CommandClause) VarPF(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) *pflag.Flag {
-	var flag *pflag.Flag
-	if persistent {
-		flag = cmdCls.Cmd.PersistentFlags().VarPF(reference, name, shorthand, usage)
-	} else {
-		flag = cmdCls.Cmd.Flags().VarPF(reference, name, shorthand, usage)
-	}
-
-	cmdCls.Flag(name)
+func (f *FlagSet) VarPF(reference pflag.Value, name string, shorthand string, usage string) *pflag.Flag {
+	flag := f.FlagSet.VarPF(reference, name, shorthand, usage)
+	f.cmd.Flag(name)
 	return flag
+}
+
+func (cmdCls *CommandClause) Flags() *FlagSet {
+	return &FlagSet{FlagSet: cmdCls.Cmd.Flags(), cmd: cmdCls}
+}
+
+func (cmdCls *CommandClause) PersistentFlags() *FlagSet {
+	return &FlagSet{FlagSet: cmdCls.Cmd.Flags(), cmd: cmdCls}
+}
+
+type FlagSet struct {
+	*pflag.FlagSet
+	cmd *CommandClause
 }
 
 // Command adds a new subcommand to this command.

@@ -170,10 +170,8 @@ func (cmdCls *CommandClause) BoolVarP(reference *bool, name, shorthand string, d
 	} else {
 		cmdCls.Cmd.Flags().BoolVarP(reference, name, shorthand, def, usage)
 	}
+	cmdCls.Flag(name)
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
 }
 
 func (cmdCls *CommandClause) IntVarP(reference *int, name, shorthand string, def int, usage string, hasEnv bool, persistent bool) {
@@ -182,10 +180,8 @@ func (cmdCls *CommandClause) IntVarP(reference *int, name, shorthand string, def
 	} else {
 		cmdCls.Cmd.Flags().IntVarP(reference, name, shorthand, def, usage)
 	}
+	cmdCls.Flag(name)
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
 }
 
 func (cmdCls *CommandClause) StringVarP(reference *string, name, shorthand string, def string, usage string, hasEnv bool, persistent bool) {
@@ -195,9 +191,7 @@ func (cmdCls *CommandClause) StringVarP(reference *string, name, shorthand strin
 		cmdCls.Cmd.Flags().StringVarP(reference, name, shorthand, def, usage)
 	}
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
+	cmdCls.Flag(name)
 }
 
 func (cmdCls *CommandClause) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string, hasEnv bool, persistent bool) {
@@ -207,9 +201,7 @@ func (cmdCls *CommandClause) DurationVarP(reference *time.Duration, name, shorth
 		cmdCls.Cmd.Flags().DurationVarP(reference, name, shorthand, def, usage)
 	}
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
+	cmdCls.Flag(name)
 }
 
 func (cmdCls *CommandClause) BoolVar(reference *bool, name string, def bool, usage string, hasEnv bool, persistent bool) {
@@ -219,9 +211,8 @@ func (cmdCls *CommandClause) BoolVar(reference *bool, name string, def bool, usa
 		cmdCls.Cmd.Flags().BoolVar(reference, name, def, usage)
 	}
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
+	cmdCls.Flag(name)
+
 }
 
 func (cmdCls *CommandClause) IntVar(reference *int, name string, def int, usage string, hasEnv bool, persistent bool) {
@@ -231,9 +222,8 @@ func (cmdCls *CommandClause) IntVar(reference *int, name string, def int, usage 
 		cmdCls.Cmd.Flags().IntVar(reference, name, def, usage)
 	}
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
+	cmdCls.Flag(name)
+
 }
 
 func (cmdCls *CommandClause) StringVar(reference *string, name string, def string, usage string, hasEnv bool, persistent bool) {
@@ -242,10 +232,8 @@ func (cmdCls *CommandClause) StringVar(reference *string, name string, def strin
 	} else {
 		cmdCls.Cmd.Flags().StringVar(reference, name, def, usage)
 	}
+	cmdCls.Flag(name)
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
 }
 
 func (cmdCls *CommandClause) DurationVar(reference *time.Duration, name string, def time.Duration, usage string, hasEnv bool, persistent bool) {
@@ -254,10 +242,8 @@ func (cmdCls *CommandClause) DurationVar(reference *time.Duration, name string, 
 	} else {
 		cmdCls.Cmd.Flags().DurationVar(reference, name, def, usage)
 	}
+	cmdCls.Flag(name)
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
 }
 
 func (cmdCls *CommandClause) VarP(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) {
@@ -267,9 +253,7 @@ func (cmdCls *CommandClause) VarP(reference pflag.Value, name string, shorthand 
 		cmdCls.Cmd.Flags().VarP(reference, name, shorthand, usage)
 	}
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
+	cmdCls.Flag(name)
 }
 
 func (cmdCls *CommandClause) Var(reference pflag.Value, name string, usage string, hasEnv bool, persistent bool) {
@@ -279,9 +263,8 @@ func (cmdCls *CommandClause) Var(reference pflag.Value, name string, usage strin
 		cmdCls.Cmd.Flags().Var(reference, name, usage)
 	}
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
+	cmdCls.Flag(name)
+
 }
 
 func (cmdCls *CommandClause) VarPF(reference pflag.Value, name string, shorthand string, usage string, hasEnv bool, persistent bool) *pflag.Flag {
@@ -292,9 +275,7 @@ func (cmdCls *CommandClause) VarPF(reference pflag.Value, name string, shorthand
 		flag = cmdCls.Cmd.Flags().VarPF(reference, name, shorthand, usage)
 	}
 
-	if hasEnv {
-		cmdCls.Flag(name)
-	}
+	cmdCls.Flag(name)
 	return flag
 }
 

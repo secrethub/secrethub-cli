@@ -81,7 +81,10 @@ func (cmd *ImportDotEnvCommand) Run() error {
 				}
 
 				if !confirmed {
-					fmt.Fprintln(cmd.io.Output(), "Aborting.")
+					_, err = fmt.Fprintln(cmd.io.Output(), "Aborting.")
+					if err != nil {
+						return err
+					}
 					return nil
 				}
 			}
@@ -125,7 +128,10 @@ func generateSecretHubEnv(locationsMap map[string]string, force bool, io ui.IO) 
 		}
 
 		if !confirmed {
-			fmt.Fprintln(io.Output(), "Aborting.")
+			_, err = fmt.Fprintln(io.Output(), "Aborting.")
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 	}

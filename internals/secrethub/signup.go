@@ -2,9 +2,9 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 

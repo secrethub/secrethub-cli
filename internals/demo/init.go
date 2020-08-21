@@ -5,10 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/secrethub/secrethub-cli/internals/cli"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -37,7 +36,7 @@ func (cmd *InitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create the secrets necessary to connect with the demo application.")
 	clause.HelpLong("demo init creates a repository with the username and password needed to connect to the demo API.")
 
-	clause.VarPF(&cmd.repo, "repo", "", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.", true, false)
+	clause.Flags().VarPF(&cmd.repo, "repo", "", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.")
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments(nil)

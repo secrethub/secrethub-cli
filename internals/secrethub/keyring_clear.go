@@ -1,11 +1,12 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/secrethub/secrethub-cli/internals/cli"
 )
 
 // KeyringClearCommand waits for the keyring item store to expire

@@ -3,14 +3,14 @@ package secrethub
 import (
 	"errors"
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"os"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-
 	"github.com/secrethub/secrethub-go/internals/errio"
+
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )

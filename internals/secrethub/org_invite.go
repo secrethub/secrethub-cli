@@ -35,7 +35,7 @@ func (cmd *OrgInviteCommand) Register(r cli.Registerer) {
 	clause.Cmd.Args = cobra.ExactValidArgs(2)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user to invite").Required().StringVar(&cmd.username)
-	clause.StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.", true, false)
+	clause.Flags().StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.")
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)

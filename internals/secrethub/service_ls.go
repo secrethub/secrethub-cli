@@ -65,7 +65,7 @@ func (cmd *ServiceLsCommand) Register(r cli.Registerer) {
 	clause.Alias("list")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "The path to the repository to list services for").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repoPath)
-	clause.BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.", true, false)
+	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)

@@ -62,16 +62,16 @@ func (cmd *ServiceDeployWinRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("winrm", "Read a service account configuration from stdin and deploy it to a running instance with WinRM. The instance needs to be reachable, have WinRM enabled, and have PowerShell installed.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("resource-uri", "Hostname, optional connection protocol and port of the host ([http[s]://]<host>[:<port>]). This defaults to https and port 5986.").Required().URLVar(&cmd.resourceURI)
-	clause.StringVar(&cmd.authType, "auth-type", "basic", "Authentication type (basic/cert)", true, false)
+	clause.Flags().StringVar(&cmd.authType, "auth-type", "basic", "Authentication type (basic/cert)")
 	_ = clause.Cmd.RegisterFlagCompletionFunc("auth-type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"basic", "cert"}, cobra.ShellCompDirectiveDefault
 	})
-	clause.StringVar(&cmd.username, "username", "", "The username used for logging in when authentication type is basic. Is asked if not supplied.", true, false)
-	clause.StringVar(&cmd.password, "password", "", "The password used for logging in when authentication type is basic. Is asked if not supplied.", true, false)
-	clause.StringVar(&cmd.clientCert, "client-cert", "", "Path to client certificate used for certificate authentication.", true, false)
-	clause.StringVar(&cmd.clientKey, "client-key", "", "Path to client key used for certificate authentication.", true, false)
-	clause.StringVar(&cmd.caCert, "ca-cert", "", "Path to CA certificate used to verify server TLS certificate.", true, false)
-	clause.BoolVar(&cmd.noVerify, "insecure-no-verify-cert", false, "Do not verify server TLS certificate (insecure).", true, false)
+	clause.Flags().StringVar(&cmd.username, "username", "", "The username used for logging in when authentication type is basic. Is asked if not supplied.")
+	clause.Flags().StringVar(&cmd.password, "password", "", "The password used for logging in when authentication type is basic. Is asked if not supplied.")
+	clause.Flags().StringVar(&cmd.clientCert, "client-cert", "", "Path to client certificate used for certificate authentication.")
+	clause.Flags().StringVar(&cmd.clientKey, "client-key", "", "Path to client key used for certificate authentication.")
+	clause.Flags().StringVar(&cmd.caCert, "ca-cert", "", "Path to CA certificate used to verify server TLS certificate.")
+	clause.Flags().BoolVar(&cmd.noVerify, "insecure-no-verify-cert", false, "Do not verify server TLS certificate (insecure).")
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.ArgValue{&cmd.resourceURI})

@@ -26,7 +26,7 @@ func RegisterColorFlag(app *cli.App) {
 		App: app,
 	}
 	flag := noColorFlag(false)
-	commandClause.Var(&flag, "no-color", "Disable colored output.", true, true)
+	commandClause.PersistentFlags().Var(&flag, "no-color", "Disable colored output.")
 }
 
 // String implements the flag.Value interface.

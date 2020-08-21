@@ -39,7 +39,7 @@ func (cmd *MkDirCommand) Register(r cli.Registerer) {
 	clause := r.Command("mkdir", "Create a new directory.")
 	clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
-	clause.BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.", true, false)
+	clause.Flags().BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.")
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.ArgValue{&cmd.paths})

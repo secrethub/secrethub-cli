@@ -34,7 +34,7 @@ func RegisterMlockFlag(app *cli.App) {
 		App: app,
 	}
 	flag := mlockFlag(false)
-	commandClause.Var(&flag, "mlock", "Enable memory locking", true, true)
+	commandClause.PersistentFlags().Var(&flag, "mlock", "Enable memory locking")
 }
 
 // String implements the flag.Value interface.

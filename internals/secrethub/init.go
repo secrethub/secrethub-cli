@@ -143,7 +143,7 @@ func (cmd *InitCommand) Run() error {
 		var passphrase string
 		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 			var err error
-			passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+			passphrase, err = askCredentialPassphrase(cmd.io)
 			if err != nil {
 				return err
 			}

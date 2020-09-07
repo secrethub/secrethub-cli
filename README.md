@@ -21,10 +21,6 @@ The SecretHub CLI provides the command-line interface to interact with the Secre
 
 > [SecretHub][secrethub] is a secret management tool that works for every engineer. Securely provision passwords and keys throughout your entire stack with just a few lines of code.
 
-## Get started
-
-[Set up SecretHub on your machine](https://signup.secrethub.io/) to quickly get up and running :rocket:
-
 ## Usage
 
 Below you can find a selection of some of the most-used SecretHub commands. Run `secrethub --help` or the [CLI reference docs][cli-reference-docs] for a complete list of all commands.

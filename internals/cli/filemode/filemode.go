@@ -47,7 +47,7 @@ func (m *FileMode) Set(value string) error {
 
 // String implements the flag.Value interface.
 func (m FileMode) String() string {
-	return m.FileMode().String()
+	return fmt.Sprintf("%#o", m.FileMode().Perm())
 }
 
 // FileMode returns the file mode as an os.FileMode.

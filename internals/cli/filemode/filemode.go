@@ -2,6 +2,7 @@
 package filemode
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 

@@ -2,7 +2,6 @@
 package filemode
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -48,7 +47,7 @@ func (m *FileMode) Set(value string) error {
 
 // String implements the flag.Value interface.
 func (m FileMode) String() string {
-	return fmt.Sprint(m)
+	return m.FileMode().String()
 }
 
 // FileMode returns the file mode as an os.FileMode.

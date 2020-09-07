@@ -6,8 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/secrethub/secrethub-go/internals/api"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -98,7 +96,6 @@ func (cmd *InitCommand) Run() error {
 		option, err := ui.Choose(cmd.io, "How do you want to initialize your SecretHub account on this device?",
 			[]string{
 				"Signup for a new account",
-				"Use a setup code to set up an account created on the SecretHub website",
 				"Use a backup code to recover an existing account",
 			}, 3)
 		if err != nil {
@@ -109,8 +106,6 @@ func (cmd *InitCommand) Run() error {
 		case 0:
 			mode = InitModeSignup
 		case 1:
-			mode = InitModeSetupCode
-		case 2:
 			mode = InitModeBackupCode
 		}
 	}
@@ -127,13 +122,6 @@ func (cmd *InitCommand) Run() error {
 		return signupCommand.Run()
 	case InitModeSetupCode:
 		setupCode := cmd.setupCode
-		if setupCode == "" {
-			var err error
-			setupCode, err = ui.AskAndValidate(cmd.io, "What is your setup code?\n", 3, api.ValidateSetupCode)
-			if err != nil {
-				return err
-			}
-		}
 
 		fmt.Fprintf(cmd.io.Output(), credentialCreationMessage, credentialPath)
 

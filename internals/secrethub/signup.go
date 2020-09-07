@@ -52,7 +52,7 @@ func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore Credent
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *SignUpCommand) Register(r command.Registerer) {
-	clause := r.Command("signup", "Create a free personal developer account.")
+	clause := r.Command("signup", "Create a free personal developer account.").Hidden()
 	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
 	clause.Flag("full-name", "Your full name.").StringVar(&cmd.fullName)
 	clause.Flag("email", "Your (work) email address we will use for all correspondence.").StringVar(&cmd.email)

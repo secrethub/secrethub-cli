@@ -6,8 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/secrethub/secrethub-go/internals/api"
-
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -128,11 +126,8 @@ func (cmd *InitCommand) Run() error {
 	case InitModeSetupCode:
 		setupCode := cmd.setupCode
 		if setupCode == "" {
-			var err error
-			setupCode, err = ui.AskAndValidate(cmd.io, "What is your setup code?\n", 3, api.ValidateSetupCode)
-			if err != nil {
-				return err
-			}
+			fmt.Fprintln(cmd.io.Output(), "If you have signed up on https://signup.secrethub.io, just copy the provided `secrethub init` command to get your CLI set up.")
+			return nil
 		}
 
 		fmt.Fprintf(cmd.io.Output(), credentialCreationMessage, credentialPath)

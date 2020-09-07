@@ -79,6 +79,8 @@ func NewApp() *App {
 	io := ui.NewUserIO()
 	store := NewCredentialConfig(io)
 	help := "The SecretHub command-line interface is a unified tool to manage your infrastructure secrets with SecretHub.\n\n" +
+		"If you do not yet have a SecretHub account, go here to create one:\n\n" +
+		"  https://signup.secrethub.io/\n\n" +
 		"For a step-by-step introduction, check out:\n\n" +
 		"  https://secrethub.io/docs/getting-started/\n\n" +
 		"To get help, see:\n\n" +

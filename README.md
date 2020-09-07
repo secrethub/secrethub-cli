@@ -4,7 +4,7 @@
 <br/>
 
 <p align="center">
-  <a href="https://secrethub.io/docs/start/getting-started/"><img alt="Get Started" src="https://secrethub.io/img/buttons/github/get-started.png?v1" height="28" /></a>
+  <a href="https://signup.secrethub.io/"><img alt="Get Started" src="https://secrethub.io/img/buttons/github/get-started.png?v1" height="28" /></a>
   <a href="https://secrethub.io/docs/reference/cli/"><img alt="View Docs" src="https://secrethub.io/img/buttons/github/view-docs.png?v2" height="28" /></a>
 </p>
 <br/>
@@ -20,10 +20,6 @@
 The SecretHub CLI provides the command-line interface to interact with the SecretHub API.
 
 > [SecretHub][secrethub] is a secret management tool that works for every engineer. Securely provision passwords and keys throughout your entire stack with just a few lines of code.
-
-## Get started
-
-Follow the [Getting Started Guide][getting-started] to quickly get up and running with SecretHub :rocket:
 
 ## Usage
 

@@ -97,17 +97,22 @@ func (cmd *InitCommand) Run() error {
 		}
 		option, err := ui.Choose(cmd.io, "How do you want to initialize your SecretHub account on this device?",
 			[]string{
+				"I do not yet have a SecretHub account",
 				"Use a setup code to set up an account created on the SecretHub website",
 				"Use a backup code to recover an existing account",
 			}, 3)
 		if err != nil {
 			return err
 		}
+		fmt.Fprintln(cmd.io.Output())
 
 		switch option {
 		case 0:
-			mode = InitModeSetupCode
+			fmt.Fprintln(cmd.io.Output(), "Go to https://signup.secrethub.io/ and follow the steps to create an account and get it set up on this machine.")
+			return nil
 		case 1:
+			mode = InitModeSetupCode
+		case 2:
 			mode = InitModeBackupCode
 		}
 	}

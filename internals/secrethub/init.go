@@ -97,7 +97,7 @@ func (cmd *InitCommand) Run() error {
 		}
 		option, err := ui.Choose(cmd.io, "How do you want to initialize your SecretHub account on this device?",
 			[]string{
-				"I do not yet have a SecretHub account",
+				"Create a new SecretHub account",
 				"Use a setup code to set up an account created on the SecretHub website",
 				"Use a backup code to recover an existing account",
 			}, 3)

@@ -18,9 +18,9 @@ func TestSecretsDirEnv(t *testing.T) {
 	secretUUID2 := uuid.New()
 
 	cases := map[string]struct {
-		newClient      newClientFunc
-		expectedValues []string
-		err            error
+		newClient             newClientFunc
+		expectedValues        []string
+		expectedCollisionName string
 	}{
 		"success": {
 			newClient: func() (secrethub.ClientInterface, error) {
@@ -114,11 +114,7 @@ func TestSecretsDirEnv(t *testing.T) {
 					},
 				}, nil
 			},
-			err: errNameCollision{
-				name:       "FOO_BAR",
-				firstPath:  "namespace/repo/foo/bar",
-				secondPath: "namespace/repo/foo_bar",
-			},
+			expectedCollisionName: "FOO_BAR",
 		},
 	}
 
@@ -126,14 +122,16 @@ func TestSecretsDirEnv(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			source := newSecretsDirEnv(tc.newClient, dirPath)
 			secrets, err := source.env()
-			if tc.err != nil {
-				assert.Equal(t, err, tc.err)
+			if tc.expectedCollisionName != "" {
+				collisionErr, ok := err.(errNameCollision)
+				assert.Equal(t, ok, true)
+				assert.Equal(t, collisionErr.name, tc.expectedCollisionName)
 			} else {
 				assert.OK(t, err)
 				assert.Equal(t, len(secrets), len(tc.expectedValues))
 				for _, name := range tc.expectedValues {
 					if _, ok := secrets[name]; !ok {
-						t.Errorf("expected but not found env var with name: %s", name)
+						t.Errorf("expected butaa not  found env var with name: %s", name)
 					}
 				}
 			}

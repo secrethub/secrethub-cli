@@ -7,6 +7,7 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -25,12 +26,12 @@ func TestServiceInitCommand_Run(t *testing.T) {
 		cmd             ServiceInitCommand
 		serviceService  fakeclient.ServiceService
 		setFunc         func(path string, permission string, accountName string) (*api.AccessRule, error)
-		expectedPerm    *api.AccessRule
 		newClientErr    error
+		fileErr         error
+		expectedErr     error
 		expectedFileOut []byte
 		expectedOut     string
-		fileErr         error
-		err             error
+		expectedPerm    *api.AccessRule
 	}{
 		"success": {
 			cmd: ServiceInitCommand{
@@ -73,7 +74,8 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			err: ErrCannotWrite("path/test.txt", "open path/test.txt: no such file or directory"),
+			fileErr:     ErrCannotWrite("path/test.txt", "open path/test.txt: no such file or directory"),
+			expectedErr: ErrCannotWrite("path/test.txt", "open path/test.txt: no such file or directory"),
 		},
 		"give 1 permission": {
 			cmd: ServiceInitCommand{
@@ -143,7 +145,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			setFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
 				return &api.AccessRule{}, testErr
 			},
-			err: testErr,
+			expectedErr: testErr,
 		},
 		"fail permission and revoke": {
 			cmd: ServiceInitCommand{
@@ -164,7 +166,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			setFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
 				return &api.AccessRule{}, testErr
 			},
-			err: fmt.Errorf("revoke has failed"),
+			expectedErr: fmt.Errorf("revoke has failed"),
 		},
 		"fail no key created": {
 			cmd: ServiceInitCommand{
@@ -175,24 +177,24 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					return &api.Service{}, nil
 				},
 			},
-			err: fmt.Errorf("key has not yet been generated created. Use KeyCreator before calling Export()"),
+			expectedErr: fmt.Errorf("key has not yet been generated created. Use KeyCreator before calling Export()"),
 		},
 		"init fail file exists": {
 			cmd: ServiceInitCommand{
 				file: "test.txt",
 			},
-			err: ErrFileAlreadyExists,
+			expectedErr: ErrFileAlreadyExists,
 		},
 		"init fail flags conflict": {
 			cmd: ServiceInitCommand{
 				clip: true,
 				file: "test.txt",
 			},
-			err: ErrFlagsConflict("--clip and --file"),
+			expectedErr: ErrFlagsConflict("--clip and --file"),
 		},
 		"new client error": {
 			newClientErr: testErr,
-			err:          testErr,
+			expectedErr:  testErr,
 		},
 		"service init error": {
 			serviceService: fakeclient.ServiceService{
@@ -200,7 +202,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					return nil, testErr
 				},
 			},
-			err: testErr,
+			expectedErr: testErr,
 		},
 	}
 
@@ -222,7 +224,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 							return returnedPerm, err
 						},
 					},
-				}, tc.err
+				}, tc.expectedErr
 			}
 			tc.cmd.writeFileFunc = func(filename string, data []byte, perm os.FileMode) error {
 				if tc.fileErr == nil {
@@ -235,7 +237,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			err := tc.cmd.Run()
 
 			// Assert
-			assert.Equal(t, err, tc.err)
+			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, perm, tc.expectedPerm)
 			assert.Equal(t, testIO.Out.String(), tc.expectedOut)
 			assert.Equal(t, fileOut, tc.expectedFileOut)

@@ -29,13 +29,13 @@ func TestACLListCommand_run(t *testing.T) {
 		argPath      api.DirPath
 		argDepth     int
 		argAncestors bool
-		out          string
-		err          error
+		expectedOut  string
+		expectedErr  error
 	}{
 		"client creation error": {
 			cmd:          ACLListCommand{},
 			newClientErr: testError,
-			err:          testError,
+			expectedErr:  testError,
 		},
 		"client error": {
 			cmd: ACLListCommand{},
@@ -44,7 +44,7 @@ func TestACLListCommand_run(t *testing.T) {
 					return nil, testError
 				},
 			},
-			err: testError,
+			expectedErr: testError,
 		},
 		"0 access rules": {
 			cmd: ACLListCommand{},
@@ -58,7 +58,7 @@ func TestACLListCommand_run(t *testing.T) {
 					return nil, nil
 				},
 			},
-			out: "PATH    PERMISSIONS    LAST EDITED    ACCOUNT\n",
+			expectedOut: "PATH    PERMISSIONS    LAST EDITED    ACCOUNT\n",
 		},
 		"args": {
 			cmd: ACLListCommand{
@@ -79,7 +79,7 @@ func TestACLListCommand_run(t *testing.T) {
 			argPath:      api.DirPath("namespace/repo/dir"),
 			argDepth:     1,
 			argAncestors: true,
-			out:          "PATH    PERMISSIONS    LAST EDITED    ACCOUNT\n",
+			expectedOut:  "PATH    PERMISSIONS    LAST EDITED    ACCOUNT\n",
 		},
 		"success": {
 			cmd: ACLListCommand{
@@ -139,7 +139,7 @@ func TestACLListCommand_run(t *testing.T) {
 					}, nil
 				},
 			},
-			out: "PATH                  PERMISSIONS    LAST EDITED    ACCOUNT\n" +
+			expectedOut: "PATH                  PERMISSIONS    LAST EDITED    ACCOUNT\n" +
 				"namespace/repo        write          1 hour ago     another dev\n" +
 				"namespace/repo        read           1 hour ago     developer\n" +
 				"namespace/repo/dir    admin          1 hour ago     developer\n",
@@ -169,7 +169,7 @@ func TestACLListCommand_run(t *testing.T) {
 					return nil, testError
 				},
 			},
-			err: testError,
+			expectedErr: testError,
 		},
 	}
 
@@ -190,8 +190,8 @@ func TestACLListCommand_run(t *testing.T) {
 			err := tc.cmd.run()
 
 			// Assert
-			assert.Equal(t, err, tc.err)
-			assert.Equal(t, testIO.Out.String(), tc.out)
+			assert.Equal(t, err, tc.expectedErr)
+			assert.Equal(t, testIO.Out.String(), tc.expectedOut)
 		})
 	}
 }

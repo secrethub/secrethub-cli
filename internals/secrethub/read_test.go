@@ -8,6 +8,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
 	"github.com/secrethub/secrethub-go/internals/errio"
@@ -23,12 +24,12 @@ func TestReadCommand_Run(t *testing.T) {
 		cmd             ReadCommand
 		newClientErr    error
 		secretVersion   api.SecretVersion
+		fileErr         error
 		serviceErr      error
 		expectedClip    []byte
 		expectedFileOut []byte
 		expectedOut     string
-		fileErr         error
-		err             error
+		expectedErr     error
 	}{
 		"success read": {
 			cmd: ReadCommand{
@@ -70,7 +71,7 @@ func TestReadCommand_Run(t *testing.T) {
 			fileErr:       testErr,
 			secretVersion: api.SecretVersion{Data: testSecret},
 			expectedOut:   "",
-			err:           ErrCannotWrite("/fail/read.txt", testErr.Error()),
+			expectedErr:   ErrCannotWrite("/fail/read.txt", testErr.Error()),
 		},
 		"new client error": {
 			cmd: ReadCommand{
@@ -78,7 +79,7 @@ func TestReadCommand_Run(t *testing.T) {
 			},
 			secretVersion: api.SecretVersion{Data: testSecret},
 			newClientErr:  testErr,
-			err:           testErr,
+			expectedErr:   testErr,
 		},
 		"read error": {
 			cmd: ReadCommand{
@@ -86,7 +87,7 @@ func TestReadCommand_Run(t *testing.T) {
 			},
 			secretVersion: api.SecretVersion{Data: testSecret},
 			serviceErr:    testErr,
-			err:           testErr,
+			expectedErr:   testErr,
 		},
 	}
 
@@ -120,7 +121,7 @@ func TestReadCommand_Run(t *testing.T) {
 			clip, clipErr := tc.cmd.clipper.ReadAll()
 
 			// Assert
-			assert.Equal(t, err, tc.err)
+			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, testIO.Out.String(), tc.expectedOut)
 			assert.OK(t, clipErr)
 			assert.Equal(t, clip, tc.expectedClip)

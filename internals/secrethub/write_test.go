@@ -21,35 +21,35 @@ func TestWriteCommand_Run(t *testing.T) {
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {
-		cmd            WriteCommand
-		writeFunc      func(path string, data []byte) (*api.SecretVersion, error)
-		in             string
-		piped          bool
-		promptIn       string
-		promptOut      string
-		promptErr      error
-		passwordIn     string
-		newClientError error
-		passwordErr    error
-		readErr        error
-		err            error
-		path           api.SecretPath
-		data           []byte
-		out            string
+		cmd               WriteCommand
+		writeFunc         func(path string, data []byte) (*api.SecretVersion, error)
+		in                string
+		piped             bool
+		promptIn          string
+		promptErr         error
+		passwordIn        string
+		newClientError    error
+		passwordErr       error
+		readErr           error
+		expectedPath      api.SecretPath
+		expectedData      []byte
+		expectedPromptOut string
+		expectedOut       string
+		expectedErr       error
 	}{
 		"path with version": {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret:1",
 			},
-			err: errCannotWriteToVersion,
+			expectedErr: errCannotWriteToVersion,
 		},
 		"empty secret piped": {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret",
 			},
-			in:    "",
-			piped: true,
-			err:   errEmptySecret,
+			in:          "",
+			piped:       true,
+			expectedErr: errEmptySecret,
 		},
 		"write success piped": {
 			cmd: WriteCommand{
@@ -62,10 +62,10 @@ func TestWriteCommand_Run(t *testing.T) {
 					Version: 1,
 				}, nil
 			},
-			err:  nil,
-			path: "namespace/repo/secret",
-			data: []byte("secret value"),
-			out:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
+			expectedErr:  nil,
+			expectedPath: "namespace/repo/secret",
+			expectedData: []byte("secret value"),
+			expectedOut:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
 		},
 		"client error": {
 			cmd: WriteCommand{
@@ -76,19 +76,19 @@ func TestWriteCommand_Run(t *testing.T) {
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return nil, secrethub.ErrEmptySecret
 			},
-			err:  secrethub.ErrEmptySecret,
-			path: "namespace/repo/secret",
-			data: []byte("secret value"),
-			out:  "Writing secret value...\n",
+			expectedErr:  secrethub.ErrEmptySecret,
+			expectedPath: "namespace/repo/secret",
+			expectedData: []byte("secret value"),
+			expectedOut:  "Writing secret value...\n",
 		},
 		"write space no-trim": {
 			cmd: WriteCommand{
 				path:   "namespace/repo/secret",
 				noTrim: true,
 			},
-			in:    " ",
-			piped: true,
-			err:   errEmptySecret,
+			in:          " ",
+			piped:       true,
+			expectedErr: errEmptySecret,
 		},
 		"write secret prefixed with a space, trim": {
 			cmd: WriteCommand{
@@ -102,10 +102,10 @@ func TestWriteCommand_Run(t *testing.T) {
 					Version: 1,
 				}, nil
 			},
-			err:  nil,
-			path: "namespace/repo/secret",
-			data: []byte("secret value"),
-			out:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
+			expectedErr:  nil,
+			expectedPath: "namespace/repo/secret",
+			expectedData: []byte("secret value"),
+			expectedOut:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
 		},
 		"write secret prefixed with a space, no-trim": {
 			cmd: WriteCommand{
@@ -119,49 +119,49 @@ func TestWriteCommand_Run(t *testing.T) {
 					Version: 1,
 				}, nil
 			},
-			err:  nil,
-			path: "namespace/repo/secret",
-			data: []byte(" secret value"),
-			out:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
+			expectedErr:  nil,
+			expectedPath: "namespace/repo/secret",
+			expectedData: []byte(" secret value"),
+			expectedOut:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
 		},
 		"ask secret success": {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret",
 			},
-			passwordIn: "asked secret value",
-			promptOut:  "Please type in the value of the secret, followed by an [ENTER]:\n",
+			passwordIn:        "asked secret value",
+			expectedPromptOut: "Please type in the value of the secret, followed by an [ENTER]:\n",
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{
 					Version: 1,
 				}, nil
 			},
-			err:  nil,
-			path: "namespace/repo/secret",
-			data: []byte("asked secret value"),
-			out:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
+			expectedErr:  nil,
+			expectedPath: "namespace/repo/secret",
+			expectedData: []byte("asked secret value"),
+			expectedOut:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
 		},
 		"ask secret prompt error": {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret",
 			},
-			promptErr: testErr,
-			err:       testErr,
+			promptErr:   testErr,
+			expectedErr: testErr,
 		},
 		"ask secret read password error": {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret",
 			},
-			promptOut:   "Please type in the value of the secret, followed by an [ENTER]:",
-			passwordErr: testErr,
-			err:         ui.ErrReadInput(testErr),
+			expectedPromptOut: "Please type in the value of the secret, followed by an [ENTER]:",
+			passwordErr:       testErr,
+			expectedErr:       ui.ErrReadInput(testErr),
 		},
 		"piped read error": {
 			cmd: WriteCommand{
 				path: "namespace/repo/secret",
 			},
-			readErr: testErr,
-			piped:   true,
-			err:     ui.ErrReadInput(testErr),
+			readErr:     testErr,
+			piped:       true,
+			expectedErr: ui.ErrReadInput(testErr),
 		},
 		"from clipboard": {
 			cmd: WriteCommand{
@@ -174,10 +174,10 @@ func TestWriteCommand_Run(t *testing.T) {
 					Version: 1,
 				}, nil
 			},
-			err:  nil,
-			path: "namespace/repo/secret",
-			data: []byte("clipped secret value"),
-			out:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
+			expectedErr:  nil,
+			expectedPath: "namespace/repo/secret",
+			expectedData: []byte("clipped secret value"),
+			expectedOut:  "Writing secret value...\nWrite complete! The given value has been written to namespace/repo/secret:1\n",
 		},
 		"from clipboard error": {
 			cmd: WriteCommand{
@@ -185,27 +185,27 @@ func TestWriteCommand_Run(t *testing.T) {
 				useClipboard: true,
 				clipper:      fakeclip.NewWithErr(clip.ErrCannotRead("read error"), nil),
 			},
-			err: clip.ErrCannotRead("read error"),
+			expectedErr: clip.ErrCannotRead("read error"),
 		},
 		"clip and in-file": {
 			cmd: WriteCommand{
 				inFile:       "file",
 				useClipboard: true,
 			},
-			err: errClipAndInFile,
+			expectedErr: errClipAndInFile,
 		},
 		"multiline and clip": {
 			cmd: WriteCommand{
 				multiline:    true,
 				useClipboard: true,
 			},
-			err: errMultilineWithNonInteractiveFlag,
+			expectedErr: errMultilineWithNonInteractiveFlag,
 		},
 		"cannot open file": {
 			cmd: WriteCommand{
 				inFile: "filename",
 			},
-			err: ErrReadFile("filename", errors.New("open filename: no such file or directory")),
+			expectedErr: ErrReadFile("filename", errors.New("open filename: no such file or directory")),
 		},
 		"client creation error": {
 			cmd: WriteCommand{
@@ -213,17 +213,17 @@ func TestWriteCommand_Run(t *testing.T) {
 			},
 			in:             "secret value",
 			piped:          true,
-			err:            testErr,
+			expectedErr:    testErr,
 			newClientError: testErr,
-			out:            "Writing secret value...\n",
+			expectedOut:    "Writing secret value...\n",
 		},
 		"empty multiline": {
 			cmd: WriteCommand{
 				path:      "namespace/repo/secret",
 				multiline: true,
 			},
-			promptOut: "Please type in the value of the secret, followed by [CTRL-D]:\n\n",
-			err:       errEmptySecret,
+			expectedPromptOut: "Please type in the value of the secret, followed by [CTRL-D]:\n\n",
+			expectedErr:       errEmptySecret,
 		},
 	}
 
@@ -259,11 +259,11 @@ func TestWriteCommand_Run(t *testing.T) {
 			err := tc.cmd.Run()
 
 			// Assert
-			assert.Equal(t, err, tc.err)
-			assert.Equal(t, argPath, tc.path)
-			assert.Equal(t, argData, tc.data)
-			assert.Equal(t, io.PromptOut.String(), tc.promptOut)
-			assert.Equal(t, io.Out.String(), tc.out)
+			assert.Equal(t, err, tc.expectedErr)
+			assert.Equal(t, argPath, tc.expectedPath)
+			assert.Equal(t, argData, tc.expectedData)
+			assert.Equal(t, io.PromptOut.String(), tc.expectedPromptOut)
+			assert.Equal(t, io.Out.String(), tc.expectedOut)
 		})
 	}
 }

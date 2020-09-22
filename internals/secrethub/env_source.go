@@ -24,13 +24,12 @@ import (
 )
 
 type errNameCollision struct {
-	name       string
-	firstPath  string
-	secondPath string
+	name  string
+	paths [2]string
 }
 
 func (e errNameCollision) Error() string {
-	return fmt.Sprintf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", e.firstPath, e.secondPath, e.name)
+	return fmt.Sprintf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", e.paths[0], e.paths[1], e.name)
 }
 
 type environment struct {
@@ -225,9 +224,11 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 		envVarName := s.envVarName(path)
 		if prevPath, found := paths[envVarName]; found {
 			return nil, errNameCollision{
-				name:       envVarName,
-				firstPath:  prevPath,
-				secondPath: path,
+				name: envVarName,
+				paths: [2]string{
+					prevPath,
+					path,
+				},
 			}
 		}
 		paths[envVarName] = path

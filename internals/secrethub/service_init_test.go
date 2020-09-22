@@ -27,7 +27,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 		serviceService  fakeclient.ServiceService
 		setFunc         func(path string, permission string, accountName string) (*api.AccessRule, error)
 		newClientErr    error
-		fileErr         error
+		writeFileErr    error
 		expectedErr     error
 		expectedFileOut []byte
 		expectedOut     string
@@ -66,6 +66,8 @@ func TestServiceInitCommand_Run(t *testing.T) {
 			cmd: ServiceInitCommand{
 				repo:       api.RepoPath("test/repo"),
 				credential: keyCreator,
+				file:       "path/test.txt",
+				fileMode:   filemode.New(os.ModePerm),
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
@@ -74,8 +76,8 @@ func TestServiceInitCommand_Run(t *testing.T) {
 					}, nil
 				},
 			},
-			fileErr:     ErrCannotWrite("path/test.txt", "open path/test.txt: no such file or directory"),
-			expectedErr: ErrCannotWrite("path/test.txt", "open path/test.txt: no such file or directory"),
+			writeFileErr: fmt.Errorf("open path/test.txt: no such file or directory"),
+			expectedErr:  ErrCannotWrite("path/test.txt", "open path/test.txt: no such file or directory"),
 		},
 		"give 1 permission": {
 			cmd: ServiceInitCommand{
@@ -143,7 +145,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				},
 			},
 			setFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
-				return &api.AccessRule{}, testErr
+				return nil, testErr
 			},
 			expectedErr: testErr,
 		},
@@ -164,13 +166,14 @@ func TestServiceInitCommand_Run(t *testing.T) {
 				},
 			},
 			setFunc: func(path string, permission string, accountName string) (*api.AccessRule, error) {
-				return &api.AccessRule{}, testErr
+				return nil, testErr
 			},
 			expectedErr: fmt.Errorf("revoke has failed"),
 		},
 		"fail no key created": {
 			cmd: ServiceInitCommand{
-				repo: api.RepoPath("test/repo"),
+				repo:       api.RepoPath("test/repo"),
+				credential: credentials.CreateKey(),
 			},
 			serviceService: fakeclient.ServiceService{
 				CreateFunc: func(path string, description string, credentialCreator credentials.Creator) (*api.Service, error) {
@@ -181,7 +184,7 @@ func TestServiceInitCommand_Run(t *testing.T) {
 		},
 		"init fail file exists": {
 			cmd: ServiceInitCommand{
-				file: "test.txt",
+				file: "service_init_test.go",
 			},
 			expectedErr: ErrFileAlreadyExists,
 		},
@@ -224,13 +227,13 @@ func TestServiceInitCommand_Run(t *testing.T) {
 							return returnedPerm, err
 						},
 					},
-				}, tc.expectedErr
+				}, tc.newClientErr
 			}
 			tc.cmd.writeFileFunc = func(filename string, data []byte, perm os.FileMode) error {
-				if tc.fileErr == nil {
+				if tc.writeFileErr == nil {
 					fileOut = data
 				}
-				return tc.fileErr
+				return tc.writeFileErr
 			}
 
 			// Run

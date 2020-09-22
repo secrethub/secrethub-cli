@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://secrethub.io/img/github-banner.png?v2" alt="SecretHub" width="400">
+  <img src="https://secrethub.io/img/github-banner.png?v4" alt="SecretHub" width="400">
 </p>
 <br/>
 
@@ -14,12 +14,12 @@
 [![GoDoc](https://godoc.org/github.com/secrethub/secrethub-cli?status.svg)][godoc]
 [![CircleCI](https://circleci.com/gh/secrethub/secrethub-cli.svg?style=shield)][circle-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
-[![Version]( https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
+[![Version](https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)][discord]
 
 The SecretHub CLI provides the command-line interface to interact with the SecretHub API.
 
-> [SecretHub][secrethub] is a secret management tool that works for every engineer. Securely provision passwords and keys throughout your entire stack with just a few lines of code.
+> [SecretHub][secrethub] is a secrets management tool that works for every engineer. Securely provision passwords and keys throughout your entire stack with just a few lines of code.
 
 ## Usage
 

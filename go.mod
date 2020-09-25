@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.25.49
 	github.com/docker/go-units v0.3.3
 	github.com/fatih/color v1.7.0
+	github.com/joho/godotenv v1.3.0
 	github.com/masterzen/winrm v0.0.0-20190308153735-1d17eaf15943
 	github.com/mattn/go-colorable v0.1.1
 	github.com/mattn/go-isatty v0.0.7

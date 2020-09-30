@@ -10,3 +10,6 @@
 - Simon Barendse [@simonbarendse](https://github.com/simonbarendse)
 - Valerio Barrila [@ninjatux](https://github.com/ninjatux)
 - Floris van der Grinten [@florisvdg](https://github.com/florisvdg)
+- Márton Soos [@Marton6](https://github.com/marton6)
+- Eduard Filip [@edif2008](https://github.com/edif2008)
+- Horia Culea [@hculea](https://github.com/hculea)

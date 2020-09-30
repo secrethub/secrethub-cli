@@ -176,6 +176,10 @@ github.com/secrethub/secrethub-go v0.29.1-0.20200703150346-411544a71e9d h1:tADIt
 github.com/secrethub/secrethub-go v0.29.1-0.20200703150346-411544a71e9d/go.mod h1:tDeBtyjfFQX3UqgaZfY+H4dYkcGfiVzrwLDf0XtfOrw=
 github.com/secrethub/secrethub-go v0.29.1-0.20200707154958-5e5602145597 h1:uC9ODMKaqBo1k8fxmFSWGkLr05TgEd3t4mHqJ8Jo9Gc=
 github.com/secrethub/secrethub-go v0.29.1-0.20200707154958-5e5602145597/go.mod h1:tDeBtyjfFQX3UqgaZfY+H4dYkcGfiVzrwLDf0XtfOrw=
+github.com/secrethub/secrethub-go v0.29.1-0.20200728110331-9d7b31301226 h1:hmgCOXLCF0KX8rLUgBfxjFJn0qY7bdMmnygH6BPPzH8=
+github.com/secrethub/secrethub-go v0.29.1-0.20200728110331-9d7b31301226 h1:hmgCOXLCF0KX8rLUgBfxjFJn0qY7bdMmnygH6BPPzH8=
+github.com/secrethub/secrethub-go v0.29.1-0.20200728110331-9d7b31301226/go.mod h1:tDeBtyjfFQX3UqgaZfY+H4dYkcGfiVzrwLDf0XtfOrw=
+github.com/secrethub/secrethub-go v0.29.1-0.20200728110331-9d7b31301226/go.mod h1:tDeBtyjfFQX3UqgaZfY+H4dYkcGfiVzrwLDf0XtfOrw=
 github.com/secrethub/secrethub-go v0.30.0 h1:Nh1twPDwPbYQj/cYc1NG+j7sv76LZiXLPovyV83tZj0=
 github.com/secrethub/secrethub-go v0.30.0/go.mod h1:tDeBtyjfFQX3UqgaZfY+H4dYkcGfiVzrwLDf0XtfOrw=
 github.com/secrethub/secrethub-go v0.31.0 h1:0KoG0KHBOa5knkvf3K0f6sKuPSQ5VGPXLD4ttC9Eul8=

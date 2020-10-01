@@ -247,6 +247,8 @@ func (s *secretsDirEnv) envVarName(path string) string {
 	envVarName := strings.TrimPrefix(path, s.dirPath)
 	envVarName = strings.TrimPrefix(envVarName, "/")
 	envVarName = strings.ReplaceAll(envVarName, "/", "_")
+	envVarName = strings.ReplaceAll(envVarName, "-", "_")
+	envVarName = strings.ReplaceAll(envVarName, ".", "_")
 	envVarName = strings.ToUpper(envVarName)
 	return envVarName
 }

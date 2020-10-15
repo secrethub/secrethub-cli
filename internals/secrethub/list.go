@@ -3,7 +3,6 @@ package secrethub
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"sort"
 	"text/tabwriter"
@@ -13,7 +12,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // LsCommand lists a repo, secret or namespace.

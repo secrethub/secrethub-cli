@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"text/tabwriter"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // RepoRevokeCommand handles revoking an account access to a repository.

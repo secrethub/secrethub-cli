@@ -2,17 +2,15 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"sort"
 	"text/tabwriter"
-
-	"github.com/secrethub/secrethub-go/pkg/secretpath"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//// "github.com/spf13/cobra"
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
+	"github.com/spf13/cobra"
 )
 
 // ACLCheckCommand prints the access level(s) on a given directory.

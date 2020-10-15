@@ -3,13 +3,12 @@ package secrethub
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // CredentialDisableCommand is a command that allows to disable an existing credential.

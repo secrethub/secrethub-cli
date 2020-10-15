@@ -2,14 +2,13 @@ package secrethub
 
 import (
 	"encoding/hex"
-	"github.com/spf13/cobra"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
 
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
 )
 

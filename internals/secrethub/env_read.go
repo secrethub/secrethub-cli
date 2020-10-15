@@ -2,11 +2,10 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // EnvReadCommand is a command to read the value of a single environment variable.

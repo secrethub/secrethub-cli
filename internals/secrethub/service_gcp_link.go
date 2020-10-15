@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os/exec"
 	"runtime"
 	"text/tabwriter"
@@ -15,7 +14,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // ServiceGCPLinkCommand create a new link between a SecretHub namespace and a GCP project.

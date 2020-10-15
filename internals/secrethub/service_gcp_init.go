@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"regexp"
 	"strings"
 	"sync"
@@ -23,7 +22,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // ServiceGCPInitCommand initializes a service for GCP.

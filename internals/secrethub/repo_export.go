@@ -3,7 +3,6 @@ package secrethub
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
 	"time"
@@ -13,7 +12,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // Error

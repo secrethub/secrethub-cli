@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 
 	"github.com/docker/go-units"
-	//// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // ReadCommand is a command to read a secret.

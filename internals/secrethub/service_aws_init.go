@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"sort"
 	"strings"
 	"sync"
@@ -22,7 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/sts"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // Errors

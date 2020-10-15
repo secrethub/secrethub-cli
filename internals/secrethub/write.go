@@ -3,7 +3,6 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
@@ -11,7 +10,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 var (

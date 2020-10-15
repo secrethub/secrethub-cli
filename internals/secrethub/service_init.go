@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -16,7 +15,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
-	// "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.

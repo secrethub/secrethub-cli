@@ -66,7 +66,7 @@ func (cmd *AccountInitCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil)
+	clause.BindArguments(nil, nil)
 }
 
 // Run creates a credential for this CLI and an account key for the credential.

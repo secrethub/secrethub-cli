@@ -30,7 +30,7 @@ func (cmd *AccountInspectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inspect", "Show the details of your SecretHub account.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil)
+	clause.BindArguments(nil, nil)
 }
 
 // Run handles the command with the options as specified in the command.

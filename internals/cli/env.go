@@ -408,9 +408,12 @@ type Registerer interface {
 
 // BindAction binds a function to a command clause, so that
 // it is executed when the command is parsed.
-func (c *CommandClause) BindArguments(params []ArgValue) {
+func (c *CommandClause) BindArguments(params []ArgValue, argNames []string) {
 	if params != nil {
 		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			if len(args) < len(argNames) {
+				return fmt.Errorf("required argument '%s' not provided", argNames[len(args)])
+			}
 			return ArgumentRegister(params, args)
 		}
 	}

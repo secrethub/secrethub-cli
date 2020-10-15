@@ -30,7 +30,7 @@ func (cmd *EnvListCommand) Register(r cli.Registerer) {
 	cmd.environment.register(clause)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil)
+	clause.BindArguments(nil, nil)
 }
 
 // Run executes the command.

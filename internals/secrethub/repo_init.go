@@ -32,7 +32,7 @@ func (cmd *RepoInitCommand) Register(r cli.Registerer) {
 	//clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path})
+	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"repo-path"})
 }
 
 // Run creates a new repository.

@@ -43,7 +43,7 @@ func (cmd *ACLListCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path})
+	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"path"})
 }
 
 // Run prints access rules for the given directory.

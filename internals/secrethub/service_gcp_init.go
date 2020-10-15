@@ -177,7 +177,7 @@ func (cmd *ServiceGCPInitCommand) Register(r cli.Registerer) {
 	)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.repo})
+	clause.BindArguments([]cli.ArgValue{&cmd.repo}, []string{"repo"})
 }
 
 type gcpProjectOptionLister struct {

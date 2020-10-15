@@ -53,7 +53,7 @@ func (cmd *SignUpCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil)
+	clause.BindArguments(nil, nil)
 }
 
 // Run signs up a new user and configures his account for use on this machine.

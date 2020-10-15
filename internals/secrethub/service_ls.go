@@ -69,7 +69,7 @@ func (cmd *ServiceLsCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.repoPath})
+	clause.BindArguments([]cli.ArgValue{&cmd.repoPath}, []string{"repo-path"})
 }
 
 // Run lists all service accounts in a given repository.

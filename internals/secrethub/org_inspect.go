@@ -34,7 +34,7 @@ func (cmd *OrgInspectCommand) Register(r cli.Registerer) {
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.name})
+	clause.BindArguments([]cli.ArgValue{&cmd.name}, []string{"org-name"})
 }
 
 // Run prints out the details of an organization.

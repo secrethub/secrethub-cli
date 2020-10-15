@@ -41,7 +41,7 @@ func (cmd *SetCommand) Register(r cli.Registerer) {
 	clause.Flags().StringVarP(&cmd.in, "in", "i", "secrets.yml", "The path to a secrets.yml file to read")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil)
+	clause.BindArguments(nil, nil)
 }
 
 // Run parses a secret spec file and presents secrets on the system.

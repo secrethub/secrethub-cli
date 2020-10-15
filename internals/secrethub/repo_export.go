@@ -44,7 +44,7 @@ func (cmd *RepoExportCommand) Register(r cli.Registerer) {
 	//clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path, &cmd.zipName})
+	clause.BindArguments([]cli.ArgValue{&cmd.path, &cmd.zipName}, []string{"repo-path"})
 }
 
 // Run exports a repo to a zip file

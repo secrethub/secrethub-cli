@@ -52,7 +52,7 @@ func (cmd *WriteCommand) Register(r cli.Registerer) {
 	clause.Flags().StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path})
+	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"secret-path"})
 }
 
 // Run handles the command with the options as specified in the command.

@@ -28,7 +28,7 @@ func (cmd *CompletionCommand) Register(r cli.Registerer) {
 	cmd.clause.Cmd.ValidArgs = []string{"bash", "zsh", "fish", "powershell"}
 	cmd.clause.Cmd.Args = cobra.ExactValidArgs(1)
 	cmd.clause.BindAction(cmd.run)
-	cmd.clause.BindArguments([]cli.ArgValue{&cmd.shell})
+	cmd.clause.BindArguments([]cli.ArgValue{&cmd.shell}, []string{"shell"})
 }
 
 func (cmd *CompletionCommand) run() error {

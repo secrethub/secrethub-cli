@@ -74,7 +74,7 @@ func (cmd *InjectCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil)
+	clause.BindArguments(nil, nil)
 }
 
 // Run handles the command with the options as specified in the command.

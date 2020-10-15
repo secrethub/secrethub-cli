@@ -60,7 +60,7 @@ func (cmd *TreeCommand) Register(r cli.Registerer) {
 	clause.Flag("noreport").Hidden = true
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path})
+	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"dir-path"})
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.

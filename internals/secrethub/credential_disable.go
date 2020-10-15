@@ -37,7 +37,7 @@ func (cmd *CredentialDisableCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.fingerprint})
+	clause.BindArguments([]cli.ArgValue{&cmd.fingerprint}, nil)
 }
 
 // Run disables an existing credential.

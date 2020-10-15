@@ -16,7 +16,7 @@ func NewConfigUpgradeCommand() *ConfigUpgradeCommand {
 func (cmd *ConfigUpgradeCommand) Register(r cli.Registerer) {
 	clause := r.Command("upgrade", "Upgrade your .secrethub configuration directory. This can be useful to migrate to a newer version of the configuration files.").Hidden()
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil)
+	clause.BindArguments(nil, nil)
 }
 
 func (cmd *ConfigUpgradeCommand) Run() error {

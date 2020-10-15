@@ -38,7 +38,7 @@ func (cmd *OrgListUsersCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.orgName})
+	clause.BindArguments([]cli.ArgValue{&cmd.orgName}, []string{"org-name"})
 }
 
 // Run lists the users of an organization.

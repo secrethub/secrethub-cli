@@ -29,7 +29,7 @@ func (cmd *AccountEmailVerifyCommand) Register(r cli.Registerer) {
 		"Once received, click the link in the verification email to verify your email address.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil)
+	clause.BindArguments(nil, nil)
 }
 
 // Run handles the command with the options as specified in the command.

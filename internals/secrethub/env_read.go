@@ -35,7 +35,7 @@ func (cmd *EnvReadCommand) Register(r cli.Registerer) {
 	cmd.environment.register(clause)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.key})
+	clause.BindArguments([]cli.ArgValue{&cmd.key}, nil)
 }
 
 // Run executes the command.

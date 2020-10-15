@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -30,7 +31,7 @@ func NewOrgRmCommand(io ui.IO, newClient newClientFunc) *OrgRmCommand {
 func (cmd *OrgRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Permanently delete an organization and all the repositories it owns.")
 	clause.Alias("remove")
-	// clause.Cmd.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	clause.BindAction(cmd.Run)

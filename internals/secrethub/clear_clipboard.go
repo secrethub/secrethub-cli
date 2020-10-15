@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"encoding/hex"
+	"github.com/spf13/cobra"
 	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
@@ -32,12 +33,12 @@ func NewClearClipboardCommand() *ClearClipboardCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ClearClipboardCommand) Register(r cli.Registerer) {
 	clause := r.Command("clipboard-clear", "Removes secret from clipboard.").Hidden()
-	// clause.Cmd.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("hash", "Hash from the secret to be cleared").Required().HexBytesVar(&cmd.hash)
 	clause.Flags().DurationVar(&cmd.timeout, "timeout", 0, "Time to wait before clearing in seconds")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments([]cli.ArgValue{}, []string{"hash"})
 }
 
 // Run handles the command with the options as specified in the command.

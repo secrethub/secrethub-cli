@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"time"
 
@@ -43,7 +44,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ReadCommand) Register(r cli.Registerer) {
 	clause := r.Command("read", "Read a secret.")
-	//// clause.Cmd.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 
 	clause.Flags().BoolVarP(&cmd.useClipboard,
 		"clip", "c", false,

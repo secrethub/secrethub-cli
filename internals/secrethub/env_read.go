@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -29,7 +30,7 @@ func NewEnvReadCommand(io ui.IO, newClient newClientFunc) *EnvReadCommand {
 func (cmd *EnvReadCommand) Register(r cli.Registerer) {
 	clause := r.Command("read", "[BETA] Read the value of a single environment variable.")
 	clause.HelpLong("This command is hidden because it is still in beta. Future versions may break.")
-	// // clause.Cmd.Args = cobra.MaximumNArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("key", "the key of the environment variable to read").StringVar(&cmd.key)
 
 	cmd.environment.register(clause)

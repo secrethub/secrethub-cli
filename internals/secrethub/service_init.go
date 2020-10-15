@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -106,7 +107,7 @@ func (cmd *ServiceInitCommand) Run() error {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account.")
-	// clause.Cmd.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flags().StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it.")
 	clause.Flags().StringVar(&cmd.description, "descr", "", "")

@@ -3,6 +3,7 @@ package secrethub
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -30,7 +31,7 @@ func NewCredentialDisableCommand(io ui.IO, newClient newClientFunc) *CredentialD
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *CredentialDisableCommand) Register(r cli.Registerer) {
 	clause := r.Command("disable", "Disable a credential for usage on SecretHub.")
-	// clause.Cmd.Args = cobra.MaximumNArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 
 	//fingerprintHelp := fmt.Sprintf("Fingerprint of the credential to disable. At least the first %d characters must be entered.", api.ShortCredentialFingerprintMinimumLength)
 	//clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)

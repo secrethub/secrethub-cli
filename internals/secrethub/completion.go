@@ -26,7 +26,7 @@ func (cmd *CompletionCommand) Register(r cli.Registerer) {
 	cmd.clause = r.Command("completion", "Generate completion script").Hidden()
 	cmd.clause.Cmd.DisableFlagsInUseLine = true
 	cmd.clause.Cmd.ValidArgs = []string{"bash", "zsh", "fish", "powershell"}
-	cmd.clause.Cmd.Args = cobra.ExactValidArgs(1)
+	cmd.clause.Cmd.Args = cobra.MaximumNArgs(1)
 	cmd.clause.BindAction(cmd.run)
 	cmd.clause.BindArguments([]cli.ArgValue{&cmd.shell}, []string{"shell"})
 }

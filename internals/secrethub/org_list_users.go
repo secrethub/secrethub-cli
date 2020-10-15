@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"sort"
 	"text/tabwriter"
 
@@ -33,7 +34,7 @@ func NewOrgListUsersCommand(io ui.IO, newClient newClientFunc) *OrgListUsersComm
 func (cmd *OrgListUsersCommand) Register(r cli.Registerer) {
 	clause := r.Command("list-users", "List all members of an organization.")
 	clause.Alias("list-members")
-	// clause.Cmd.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 

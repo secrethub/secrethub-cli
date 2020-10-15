@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
@@ -40,7 +41,7 @@ func NewRmCommand(io ui.IO, newClient newClientFunc) *RmCommand {
 func (cmd *RmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Remove a directory, secret or version.")
 	clause.Alias("remove")
-	// clause.Cmd.Args = cobra.ExactValidArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
 	clause.Flags().BoolVarP(&cmd.recursive, "recursive", "r", false, "Remove directories and their contents recursively.")
 	registerForceFlag(clause, &cmd.force)

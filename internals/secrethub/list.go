@@ -3,6 +3,7 @@ package secrethub
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/cobra"
 	"io"
 	"sort"
 	"text/tabwriter"
@@ -36,7 +37,7 @@ func NewLsCommand(io ui.IO, newClient newClientFunc) *LsCommand {
 func (cmd *LsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "List contents of a path.")
 	clause.Alias("list")
-	// clause.Cmd.Args = cobra.MaximumNArgs(1)
+	clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("path", "The path to list contents of").SetValue(&cmd.path)
 	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)

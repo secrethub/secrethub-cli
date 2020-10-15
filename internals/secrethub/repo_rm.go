@@ -8,7 +8,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 // RepoRmCommand handles removing a repo.
@@ -30,7 +30,7 @@ func NewRepoRmCommand(io ui.IO, newClient newClientFunc) *RepoRmCommand {
 func (cmd *RepoRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Permanently delete a repository.")
 	clause.Alias("remove")
-	clause.Cmd.Args = cobra.ExactValidArgs(1)
+	// clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "The repository to delete").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BindAction(cmd.Run)

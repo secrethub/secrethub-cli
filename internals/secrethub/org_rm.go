@@ -8,7 +8,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 // OrgRmCommand deletes an organization, prompting the user for confirmation.
@@ -31,7 +31,7 @@ func NewOrgRmCommand(io ui.IO, newClient newClientFunc) *OrgRmCommand {
 func (cmd *OrgRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Permanently delete an organization and all the repositories it owns.")
 	clause.Alias("remove")
-	clause.Cmd.Args = cobra.ExactValidArgs(1)
+	// clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	clause.BindAction(cmd.Run)

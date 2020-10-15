@@ -8,7 +8,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 // RepoInspectCommand handles printing out the details of a repo in a JSON format.
@@ -31,7 +31,7 @@ func NewRepoInspectCommand(io ui.IO, newClient newClientFunc) *RepoInspectComman
 // Register registers the command, args, and flags on the provided registerer.
 func (cmd *RepoInspectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inspect", "Show the details of a repository.")
-	clause.Cmd.Args = cobra.ExactValidArgs(1)
+	// clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "Path to the repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BindAction(cmd.Run)

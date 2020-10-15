@@ -15,7 +15,7 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.
@@ -106,7 +106,7 @@ func (cmd *ServiceInitCommand) Run() error {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account.")
-	clause.Cmd.Args = cobra.ExactValidArgs(1)
+	// clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flags().StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it.")
 	clause.Flags().StringVar(&cmd.description, "descr", "", "")

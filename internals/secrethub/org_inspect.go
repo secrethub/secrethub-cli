@@ -8,7 +8,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 // OrgInspectCommand handles printing out the details of an organization in a JSON format.
@@ -31,7 +31,7 @@ func NewOrgInspectCommand(io ui.IO, newClient newClientFunc) *OrgInspectCommand 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgInspectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inspect", "Show the details of an organization.")
-	clause.Cmd.Args = cobra.ExactValidArgs(1)
+	// clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	clause.BindAction(cmd.Run)

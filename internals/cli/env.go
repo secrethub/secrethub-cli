@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"io"
 	"net/url"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 

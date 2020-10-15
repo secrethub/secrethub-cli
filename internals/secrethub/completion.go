@@ -1,11 +1,12 @@
 package secrethub
 
 import (
+	"github.com/spf13/cobra"
 	"os"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 type CompletionCommand struct {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 // RepoInitCommand handles creating new repositories.
@@ -29,7 +29,7 @@ func NewRepoInitCommand(io ui.IO, newClient newClientFunc) *RepoInitCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Initialize a new repository.")
-	clause.Cmd.Args = cobra.ExactValidArgs(1)
+	// clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BindAction(cmd.Run)

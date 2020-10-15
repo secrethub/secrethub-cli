@@ -9,7 +9,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 // ServiceLsCommand lists all service accounts in a given repository.
@@ -63,7 +63,7 @@ func NewServiceGCPLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 func (cmd *ServiceLsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", cmd.help)
 	clause.Alias("list")
-	clause.Cmd.Args = cobra.ExactValidArgs(1)
+	// clause.Cmd.Args = cobra.ExactValidArgs(1)
 	//clause.Arg("repo-path", "The path to the repository to list services for").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repoPath)
 	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)

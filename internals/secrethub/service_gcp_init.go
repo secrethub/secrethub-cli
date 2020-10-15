@@ -22,7 +22,6 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
-
 	// "github.com/spf13/cobra"
 )
 

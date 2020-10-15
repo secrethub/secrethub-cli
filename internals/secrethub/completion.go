@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
-
 	// "github.com/spf13/cobra"
 )
 

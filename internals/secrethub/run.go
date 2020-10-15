@@ -18,7 +18,6 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-
 	// "github.com/spf13/cobra"
 )
 

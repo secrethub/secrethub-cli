@@ -27,7 +27,4 @@ func (cmd *AccountCommand) Register(r cli.Registerer) {
 	NewAccountInspectCommand(cmd.io, cmd.newClient).Register(clause)
 	NewAccountInitCommand(cmd.io, cmd.newClient, cmd.credentialStore).Register(clause)
 	NewAccountEmailVerifyCommand(cmd.io, cmd.newClient).Register(clause)
-	//command.BindAction(clause, nil, func() error {
-	//	return nil
-	//})
 }

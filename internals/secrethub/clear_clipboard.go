@@ -2,9 +2,9 @@ package secrethub
 
 import (
 	"encoding/hex"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
 

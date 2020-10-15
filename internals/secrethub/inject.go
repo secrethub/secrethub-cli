@@ -2,18 +2,17 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/docker/go-units"
 )

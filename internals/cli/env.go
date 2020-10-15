@@ -2,13 +2,14 @@ package cli
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"net/url"
 	"os"
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/spf13/cobra"
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/spf13/pflag"

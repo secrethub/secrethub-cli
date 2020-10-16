@@ -489,9 +489,9 @@ func TestRunCommand_Run(t *testing.T) {
 			command: RunCommand{
 				command: cli.StringArrArgValue{Param: []string{"echo", "test"}},
 				environment: &environment{
-					envar: MapValue{map[string]string{
+					envar: map[string]string{
 						"missing": "path/to/unexisting/secret",
-					}},
+					},
 					osStat: osStatNotExist,
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -514,9 +514,9 @@ func TestRunCommand_Run(t *testing.T) {
 				command: cli.StringArrArgValue{Param: []string{"echo", "test"}},
 				environment: &environment{
 					osStat: osStatNotExist,
-					envar: MapValue{map[string]string{
+					envar: map[string]string{
 						"missing": "path/to/unexisting/secret",
-					}},
+					},
 				},
 				io: fakeui.NewIO(t),
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -538,9 +538,9 @@ func TestRunCommand_Run(t *testing.T) {
 			command: RunCommand{
 				command: cli.StringArrArgValue{Param: []string{"echo", "test"}},
 				environment: &environment{
-					envar: MapValue{map[string]string{
+					envar: map[string]string{
 						"missing": "path/to/unexisting/secret",
-					}},
+					},
 					osStat: osStatNotExist,
 				},
 				io: fakeui.NewIO(t),
@@ -564,10 +564,10 @@ func TestRunCommand_Run(t *testing.T) {
 				environment: &environment{
 					osStat:  osStatNotExist,
 					envFile: "secrethub.env",
-					templateVars: MapValue{map[string]string{
+					templateVars: map[string]string{
 						"0foo": "value",
-					}},
-					envar: MapValue{map[string]string{}},
+					},
+					envar: map[string]string{},
 				},
 			},
 			err: ErrInvalidTemplateVar("0foo"),
@@ -577,10 +577,10 @@ func TestRunCommand_Run(t *testing.T) {
 				environment: &environment{
 					osStat:  osStatNotExist,
 					envFile: "secrethub.env",
-					templateVars: MapValue{map[string]string{
+					templateVars: map[string]string{
 						"foo@bar": "value",
-					}},
-					envar: MapValue{map[string]string{}},
+					},
+					envar: map[string]string{},
 				},
 			},
 			err: ErrInvalidTemplateVar("foo@bar"),
@@ -750,9 +750,9 @@ func TestRunCommand_environment(t *testing.T) {
 					osStat:   osStatFunc("secrethub.env", nil),
 					readFile: readFileFunc("secrethub.env", "TEST=aaa"),
 					envFile:  "secrethub.env",
-					envar: MapValue{map[string]string{
+					envar: map[string]string{
 						"TEST": "test/test/test",
-					}},
+					},
 					templateVersion: "2",
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -991,9 +991,9 @@ func TestRunCommand_environment(t *testing.T) {
 					osStat:   osStatFunc("secrethub.env", nil),
 					envFile:  "secrethub.env",
 					readFile: readFileFunc("secrethub.env", ""),
-					envar: MapValue{map[string]string{
+					envar: map[string]string{
 						"TEST": "test/test/test",
-					}},
+					},
 					templateVersion: "2",
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -1067,7 +1067,7 @@ func TestRunCommand_environment(t *testing.T) {
 					readFile:                     readFileFunc("secrethub.env", "TEST = {{ test/$variable/test }}"),
 					dontPromptMissingTemplateVar: true,
 					templateVersion:              "2",
-					templateVars:                 MapValue{map[string]string{"variable": "test"}},
+					templateVars:                 map[string]string{"variable": "test"},
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
@@ -1092,7 +1092,7 @@ func TestRunCommand_environment(t *testing.T) {
 					readFile:                     readFileFunc("secrethub.env", "TEST=$variable"),
 					dontPromptMissingTemplateVar: true,
 					templateVersion:              "2",
-					templateVars:                 MapValue{map[string]string{"variable": "foo"}},
+					templateVars:                 map[string]string{"variable": "foo"},
 				},
 				osEnv: []string{"SECRETHUB_VAR_VARIABLE=bar"},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -1179,9 +1179,9 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 					osStat:   osStatOnlySecretHubEnv,
 					readFile: readFileWithContent(""),
 					envFile:  "secrethub.env",
-					envar: MapValue{map[string]string{
+					envar: map[string]string{
 						"TEST": "test/test/test",
-					}},
+					},
 					templateVersion: "2",
 				},
 				newClient: func() (secrethub.ClientInterface, error) {
@@ -1206,9 +1206,9 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 					osStat:   osStatOnlySecretHubEnv,
 					envFile:  "secrethub.env",
 					readFile: readFileWithContent(""),
-					envar: MapValue{map[string]string{
+					envar: map[string]string{
 						"TEST": "test/test/test",
-					}},
+					},
 					templateVersion: "2",
 				},
 				newClient: func() (secrethub.ClientInterface, error) {

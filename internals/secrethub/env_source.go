@@ -39,9 +39,9 @@ type environment struct {
 	osEnv                        []string
 	readFile                     func(filename string) ([]byte, error)
 	osStat                       func(filename string) (os.FileInfo, error)
-	envar                        MapValue
+	envar                        map[string]string
 	envFile                      string
-	templateVars                 MapValue
+	templateVars                 map[string]string
 	templateVersion              string
 	dontPromptMissingTemplateVar bool
 	secretsDir                   string
@@ -55,17 +55,17 @@ func newEnvironment(io ui.IO, newClient newClientFunc) *environment {
 		osEnv:        os.Environ(),
 		readFile:     ioutil.ReadFile,
 		osStat:       os.Stat,
-		templateVars: MapValue{stringMap: make(map[string]string)},
-		envar:        MapValue{stringMap: make(map[string]string)},
+		templateVars: make(map[string]string),
+		envar:        make(map[string]string),
 	}
 }
 
 func (env *environment) register(clause *cli.CommandClause) {
-	clause.Flags().VarP(&env.envar, "envar", "e", "Source an environment variable from a secret at a given path with `NAME=<path>`")
+	clause.Flags().StringToStringVarP(&env.envar, "envar", "e", nil, "Source an environment variable from a secret at a given path with `NAME=<path>`")
 	clause.Flags().StringVar(&env.envFile, "env-file", "", "The path to a file with environment variable mappings of the form `NAME=value`. Template syntax can be used to inject secrets.")
 	clause.Flags().StringVar(&env.envFile, "template", "", "")
 	clause.Cmd.Flag("template").Hidden = true
-	clause.Flags().VarP(&env.templateVars, "var", "v", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
+	clause.Flags().StringToStringVarP(&env.templateVars, "var", "v", nil, "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
 	clause.Flags().StringVar(&env.templateVersion, "template-version", "auto", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.")
 	_ = clause.Cmd.RegisterFlagCompletionFunc("template-version", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"v1", "v2", "latest", "auto"}, cobra.ShellCompDirectiveDefault
@@ -112,7 +112,7 @@ func (env *environment) env() (map[string]value, error) {
 	}
 
 	if env.envFile != "" {
-		templateVariableReader, err := newVariableReader(osEnvMap, env.templateVars.stringMap)
+		templateVariableReader, err := newVariableReader(osEnvMap, env.templateVars)
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +144,7 @@ func (env *environment) env() (map[string]value, error) {
 
 	// --envar flag
 	// TODO: Validate the flags when parsing by implementing the Flag interface for EnvFlags.
-	flagEnv, err := NewEnvFlags(env.envar.stringMap)
+	flagEnv, err := NewEnvFlags(env.envar)
 	if err != nil {
 		return nil, err
 	}
@@ -671,27 +671,4 @@ func (o *osEnv) env() (map[string]value, error) {
 		res[name] = newPlaintextValue(value)
 	}
 	return res, nil
-}
-
-type MapValue struct {
-	stringMap map[string]string
-}
-
-func (m MapValue) String() string {
-	textRepresentation := ""
-	for k, v := range m.stringMap {
-		textRepresentation += k + "=" + v + ";"
-	}
-	return textRepresentation
-}
-
-//TODO treat the case when the array does not contain exactly 2 elements
-func (m MapValue) Set(s string) error {
-	arr := strings.Split(s, "=")
-	m.stringMap[arr[0]] = arr[1]
-	return nil
-}
-
-func (m MapValue) Type() string {
-	return "mapValue"
 }

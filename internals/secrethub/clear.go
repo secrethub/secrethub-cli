@@ -30,7 +30,7 @@ func (cmd *ClearCommand) Register(r cli.Registerer) {
 	clause.Flags().StringVarP(&cmd.in, "in", "i", "secrets.yml", "The path to a secrets.yml file to read")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }
 
 // Run clears the secrets from the system.

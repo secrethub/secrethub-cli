@@ -74,7 +74,7 @@ func (cmd *ServiceDeployWinRmCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVar(&cmd.noVerify, "insecure-no-verify-cert", false, "Do not verify server TLS certificate (insecure).")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.resourceURI}, []string{"resource-uri"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.resourceURI, Name: "resource-uri", Required: true}})
 }
 
 // Run creates a service and installs the configuration using WinRM.

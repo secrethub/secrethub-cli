@@ -41,7 +41,7 @@ func (cmd *MkDirCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.paths}, []string{"path"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.paths, Name: "path", Required: true}})
 }
 
 // Run executes the command.

@@ -36,7 +36,9 @@ func (cmd *OrgSetRoleCommand) Register(r cli.Registerer) {
 	//clause.Arg("role", "The role to assign to the user. Can be either `admin` or `member`.").Required().StringVar(&cmd.role)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.orgName, &cmd.username, &cmd.role}, []string{"org-name", "username", "role"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.orgName, Name: "org-name", Required: true},
+		{Store: &cmd.username, Name: "username", Required: true},
+		{Store: &cmd.role, Name: "role", Required: true}})
 }
 
 // Run updates the role of an organization member.

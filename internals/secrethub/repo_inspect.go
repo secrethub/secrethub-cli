@@ -34,7 +34,7 @@ func (cmd *RepoInspectCommand) Register(r cli.Registerer) {
 	//clause.Arg("repo-path", "Path to the repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"repo-path"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "repo-path", Required: true}})
 }
 
 // Run prints out the details of a repo.

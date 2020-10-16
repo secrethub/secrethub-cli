@@ -35,7 +35,7 @@ func (cmd *CredentialListCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }
 
 // Run lists all the currently authenticated account's credentials.

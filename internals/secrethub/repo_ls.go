@@ -40,7 +40,7 @@ func (cmd *RepoLSCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.workspace}, nil)
+	clause.BindArguments([]cli.Argument{{Store: &cmd.workspace, Name: "workspace", Required: false}})
 }
 
 // Run lists the repositories a user has access to.

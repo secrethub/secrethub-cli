@@ -28,7 +28,7 @@ func (cmd *CredentialBackupCommand) Register(r cli.Registerer) {
 	clause := r.Command("backup", "Create a backup code for restoring your account.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }
 
 // Run creates a backup code for the currently authenticated account.

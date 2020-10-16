@@ -179,7 +179,7 @@ func (cmd *ServiceAWSInitCommand) Register(r cli.Registerer) {
 	)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.repo}, []string{"repo"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.repo, Name: "repo", Required: true}})
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {

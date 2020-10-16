@@ -37,7 +37,7 @@ func (cmd *ClearClipboardCommand) Register(r cli.Registerer) {
 	clause.Flags().DurationVar(&cmd.timeout, "timeout", 0, "Time to wait before clearing in seconds")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.hash}, []string{"hash"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.hash, Name: "hash", Required: true}})
 }
 
 // Run handles the command with the options as specified in the command.

@@ -36,7 +36,7 @@ func (cmd *OrgLsCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }
 
 // Run lists all organizations a user is a member of.

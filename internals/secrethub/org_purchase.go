@@ -24,7 +24,7 @@ func (cmd *OrgPurchaseCommand) Register(r cli.Registerer) {
 	clause := r.Command("purchase", "Purchase a SecretHub subscription.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }
 
 // Run prints instructions on purchasing a SecretHub subscription.

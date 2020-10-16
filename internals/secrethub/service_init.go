@@ -126,7 +126,7 @@ func (cmd *ServiceInitCommand) Register(r cli.Registerer) {
 	clause.Cmd.Flag("file-mode").DefValue = "0440"
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.repo}, []string{"repo"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.repo, Name: "repo", Required: true}})
 }
 
 // givePermission gives the service permission on the repository as defined in the permission flag.

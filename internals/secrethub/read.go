@@ -62,7 +62,7 @@ func (cmd *ReadCommand) Register(r cli.Registerer) {
 	fileModeFlag.DefValue = "0600"
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"path"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true}})
 }
 
 // Run handles the command with the options as specified in the command.

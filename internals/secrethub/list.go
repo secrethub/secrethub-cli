@@ -42,7 +42,7 @@ func (cmd *LsCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path}, nil)
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: false}})
 }
 
 // Run lists a repo, secret or namespace.

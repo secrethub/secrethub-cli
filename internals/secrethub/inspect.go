@@ -38,7 +38,7 @@ func (cmd *InspectCommand) Register(r cli.Registerer) {
 	//clause.Arg("repo or secret-path", "Path to the repository or the secret to inspect "+repoPathPlaceHolder+" or "+secretPathOptionalVersionPlaceHolder).Required().SetValue(&cmd.path)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"path"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true}})
 }
 
 // Run inspects a repository or a secret

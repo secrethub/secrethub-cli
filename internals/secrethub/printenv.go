@@ -39,5 +39,5 @@ func (cmd *PrintEnvCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVarP(&cmd.verbose, "verbose", "v", false, "Show all possible environment variables.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }

@@ -27,7 +27,7 @@ func (cmd *ConfigUpdatePassphraseCommand) Register(r cli.Registerer) {
 	clause := r.Command("update-passphrase", "Update the passphrase of your local key credential file.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }
 
 // Run upgrades the configuration in the profile directory to the new version.

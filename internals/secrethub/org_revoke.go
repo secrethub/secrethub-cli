@@ -36,7 +36,8 @@ func (cmd *OrgRevokeCommand) Register(r cli.Registerer) {
 	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.orgName, &cmd.username}, []string{"org-name", "username"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.orgName, Name: "org-name", Required: true},
+		{Store: &cmd.username, Name: "username", Required: true}})
 }
 
 // Run revokes an organization member.

@@ -38,7 +38,8 @@ func (cmd *OrgInviteCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.orgName, &cmd.username}, []string{"org-name", "username"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.orgName, Name: "org-name", Required: true},
+		{Store: &cmd.username, Name: "username", Required: true}})
 }
 
 // Run invites a user to an organization and gives them a certain role.

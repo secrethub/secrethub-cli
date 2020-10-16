@@ -27,7 +27,7 @@ func (cmd *KeyringClearCommand) Register(r cli.Registerer) {
 	clause.Alias("key-passphrase-clear")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }
 
 // Run waits for the keyringItem store to expire and clears it.

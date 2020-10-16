@@ -46,7 +46,7 @@ func (cmd *RmCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"path"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true}})
 }
 
 // Run removes the resource at the given path.

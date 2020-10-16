@@ -355,13 +355,19 @@ func splitVar(prefix, separator, envVar string) (string, string, bool) {
 	return split[0], split[1], strings.HasPrefix(strings.ToUpper(split[0]), prefix)
 }
 
+type Argument struct {
+	Store    ArgValue
+	Name     string
+	Required bool
+}
+
 type ArgValue interface {
 	Set(string) error
 }
 
-func ArgumentRegister(params []ArgValue, args []string) error {
+func ArgumentRegister(params []Argument, args []string) error {
 	for i, arg := range args {
-		err := params[i].Set(arg)
+		err := params[i].Store.Set(arg)
 		if err != nil {
 			return err
 		}
@@ -417,15 +423,28 @@ type Registerer interface {
 
 // BindAction binds a function to a command clause, so that
 // it is executed when the command is parsed.
-func (c *CommandClause) BindArguments(params []ArgValue, argNames []string) {
+func (c *CommandClause) BindArguments(params []Argument) {
 	if params != nil {
 		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			if len(args) < len(argNames) {
-				return fmt.Errorf("required argument '%s' not provided", argNames[len(args)])
+			if len(args) < getRequired(params) {
+				return fmt.Errorf("required argument '%s' not provided", params[len(args)].Name)
+			}
+			if len(args) > len(params) {
+				return fmt.Errorf("too many arguments")
 			}
 			return ArgumentRegister(params, args)
 		}
 	}
+}
+
+func getRequired(params []Argument) int {
+	required := 0
+	for _, arg := range params {
+		if arg.Required {
+			required++
+		}
+	}
+	return required
 }
 
 func (c *CommandClause) BindAction(fn func() error) {

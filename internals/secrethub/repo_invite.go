@@ -36,7 +36,8 @@ func (cmd *RepoInviteCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path, &cmd.username}, []string{"repo-path", "username"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "repo-path", Required: true},
+		{Store: &cmd.username, Name: "username", Required: true}})
 }
 
 // Run invites the configured user to collaborate on the repo.

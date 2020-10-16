@@ -80,7 +80,9 @@ func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.firstArg, &cmd.secondArg, &cmd.lengthArg}, []string{"secret-path"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.firstArg, Name: "secret-path", Required: true},
+		{Store: &cmd.secondArg, Name: "rand-command", Required: false},
+		{Store: &cmd.lengthArg, Name: "length", Required: false}})
 }
 
 // before configures the command using the flag values.

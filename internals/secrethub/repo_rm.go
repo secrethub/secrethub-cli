@@ -33,7 +33,7 @@ func (cmd *RepoRmCommand) Register(r cli.Registerer) {
 	//clause.Arg("repo-path", "The repository to delete").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path}, []string{"path"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true}})
 }
 
 // Run removes the repository.

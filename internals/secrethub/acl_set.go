@@ -39,7 +39,9 @@ func (cmd *ACLSetCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path, &cmd.accountName, &cmd.permission}, []string{"path", "account-name", "permission"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true},
+		{Store: &cmd.accountName, Name: "account-name", Required: true},
+		{Store: &cmd.permission, Name: "permission", Required: true}})
 }
 
 // Run handles the command with the options as specified in the command.

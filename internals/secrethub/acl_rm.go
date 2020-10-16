@@ -37,7 +37,8 @@ func (cmd *ACLRmCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path, &cmd.accountName}, []string{"path", "account-name"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true},
+		{Store: &cmd.accountName, Name: "account-name", Required: true}})
 }
 
 // Run removes the access rule.

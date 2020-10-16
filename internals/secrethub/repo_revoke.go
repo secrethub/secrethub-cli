@@ -38,7 +38,8 @@ func (cmd *RepoRevokeCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path, &cmd.accountName}, []string{"repo-path", "account-name"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "repo-path", Required: true},
+		{Store: &cmd.accountName, Name: "account-name", Required: true}})
 }
 
 // Run removes and revokes access to an account from a repo if possible.

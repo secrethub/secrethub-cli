@@ -37,7 +37,8 @@ func (cmd *ACLCheckCommand) Register(r cli.Registerer) {
 	//clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.path, &cmd.accountName}, []string{"path"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true},
+		{Store: &cmd.accountName, Name: "account-name", Required: false}})
 }
 
 // Run prints the access level(s) on the given directory.

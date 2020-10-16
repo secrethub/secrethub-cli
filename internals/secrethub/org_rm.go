@@ -34,7 +34,7 @@ func (cmd *OrgRmCommand) Register(r cli.Registerer) {
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.name}, []string{"org-name"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.name, Name: "org-name", Required: true}})
 }
 
 // Run deletes an organization, prompting the user for confirmation.

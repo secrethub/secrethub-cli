@@ -73,7 +73,8 @@ func (cmd *ServiceGCPLinkCommand) Register(r cli.Registerer) {
 		"If it does not, the access can safely be revoked manually.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.namespace, &cmd.projectID}, []string{"namespace", "project-id"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.namespace, Name: "namespace", Required: true},
+		{Store: &cmd.projectID, Name: "project-id", Required: true}})
 }
 
 // ServiceGCPListLinksCommand lists all existing links between the given namespace and GCP projects
@@ -131,7 +132,7 @@ func (cmd *ServiceGCPListLinksCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.namespace}, []string{"namespace"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.namespace, Name: "namespace", Required: true}})
 }
 
 // ServiceGCPDeleteLinkCommand deletes the link between a SecretHub namespace and a GCP project.
@@ -157,7 +158,8 @@ func (cmd *ServiceGCPDeleteLinkCommand) Register(r cli.Registerer) {
 	//clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{&cmd.namespace, &cmd.projectID}, []string{"namespace", "project-id"})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.namespace, Name: "namespace", Required: true},
+		{Store: &cmd.projectID, Name: "project-id", Required: true}})
 }
 
 func (cmd *ServiceGCPDeleteLinkCommand) Run() error {

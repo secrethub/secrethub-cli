@@ -378,8 +378,14 @@ func ArgumentRegister(params []Argument, args []string) error {
 	return nil
 }
 
-type ArgArrValue interface {
-	Set([]string) error
+func ArgumentArrRegister(params []Argument, args []string) error {
+	for _, arg := range args {
+		err := params[0].Store.Set(arg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type StringArgValue struct {
@@ -395,8 +401,8 @@ type StringArrArgValue struct {
 	Param []string
 }
 
-func (s *StringArrArgValue) Set(replacer []string) error {
-	copy(s.Param, replacer)
+func (s *StringArrArgValue) Set(replacer string) error {
+	s.Param = append(s.Param, replacer)
 	return nil
 }
 
@@ -424,7 +430,7 @@ type Registerer interface {
 	Command(cmd string, help string) *CommandClause
 }
 
-// BindAction binds a function to a command clause, so that
+// BindArguments binds a function to a command clause, so that
 // it is executed when the command is parsed.
 func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
@@ -434,6 +440,20 @@ func (c *CommandClause) BindArguments(params []Argument) {
 				return err
 			}
 			return ArgumentRegister(params, args)
+		}
+	}
+}
+
+// BindArgumentsArr binds a function to a command clause, so that
+// it is executed when the command is parsed.
+func (c *CommandClause) BindArgumentsArr(params []Argument) {
+	c.Args = params
+	if params != nil {
+		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			if len(args) <= 0 {
+				return c.argumentError(args)
+			}
+			return ArgumentArrRegister(params, args)
 		}
 	}
 }
@@ -452,14 +472,6 @@ func (c *CommandClause) BindAction(fn func() error) {
 	if fn != nil {
 		c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
 			return fn()
-		}
-	}
-}
-
-func (c *CommandClause) BindArgumentsArr(param ArgArrValue) {
-	if param != nil {
-		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			return param.Set(args)
 		}
 	}
 }

@@ -3,7 +3,7 @@ package cli
 import "fmt"
 
 func (c *CommandClause) argumentError(args []string) error {
-	if len(args) > getRequired(c.Args) && len(args) < len(c.Args) {
+	if len(args) >= getRequired(c.Args) && len(args) <= len(c.Args) {
 		return nil
 	}
 	errorText, minimum, maximum := "", getRequired(c.Args), len(c.Args)

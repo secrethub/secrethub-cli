@@ -88,7 +88,7 @@ func (cmd *RunCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVar(&cmd.ignoreMissingSecrets, "ignore-missing-secrets", false, "Do not return an error when a secret does not exist and use an empty value instead.")
 	cmd.environment.register(clause)
 	clause.BindAction(cmd.Run)
-	clause.BindArgumentsArr(&cmd.command)
+	clause.BindArgumentsArr([]cli.Argument{{Store: &cmd.command, Name: "command", Required: true}})
 }
 
 // Run reads files from the .secretsenv/<env-name> directory, sets them as environment variables and runs the given command.

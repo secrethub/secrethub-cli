@@ -39,7 +39,7 @@ func (cmd *InitCommand) Register(r cli.Registerer) {
 	clause.Flags().VarPF(&cmd.repo, "repo", "", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments(nil, nil)
+	clause.BindArguments(nil)
 }
 
 // Run handles the command with the options as specified in the command.

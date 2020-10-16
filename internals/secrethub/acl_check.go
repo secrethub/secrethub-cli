@@ -10,7 +10,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secretpath"
-	"github.com/spf13/cobra"
+	//"github.com/spf13/cobra"
 )
 
 // ACLCheckCommand prints the access level(s) on a given directory.
@@ -32,7 +32,7 @@ func NewACLCheckCommand(io ui.IO, newClient newClientFunc) *ACLCheckCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ACLCheckCommand) Register(r cli.Registerer) {
 	clause := r.Command("check", "Checks the effective permission of accounts on a path.")
-	clause.Cmd.Args = cobra.MaximumNArgs(2)
+	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("dir-path", "The path of the directory to check the effective permission for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
 

@@ -10,7 +10,7 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
-	"github.com/spf13/cobra"
+	//"github.com/spf13/cobra"
 )
 
 // ACLListCommand prints access rules for the given directory.
@@ -36,7 +36,7 @@ func NewACLListCommand(io ui.IO, newClient newClientFunc) *ACLListCommand {
 func (cmd *ACLListCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "List access rules of a directory and its children.")
 	clause.Alias("list")
-	clause.Cmd.Args = cobra.MaximumNArgs(1)
+	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("dir-path", "The path of the directory to list the access rules for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flags().IntVarP(&cmd.depth, "depth", "d", -1, "The maximum depth to which the rules of child directories should be displayed. Defaults to -1 (no limit).")
 	clause.Flags().BoolVarP(&cmd.ancestors, "all", "a", false, "List all rules that apply on the directory, including rules on parent directories.")

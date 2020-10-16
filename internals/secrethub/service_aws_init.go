@@ -21,7 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/spf13/cobra"
+	//"github.com/spf13/cobra"
 )
 
 // Errors
@@ -156,7 +156,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceAWSInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account that is tied to an AWS IAM role.")
-	clause.Cmd.Args = cobra.MaximumNArgs(1)
+	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flags().StringVar(&cmd.kmsKeyID, "kms-key", "", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.")
 	clause.Flags().StringVar(&cmd.role, "role", "", "The role name or ARN of the IAM role that should have access to this service account.")

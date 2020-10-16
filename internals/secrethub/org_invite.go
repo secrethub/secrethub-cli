@@ -7,7 +7,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/spf13/cobra"
+	//"github.com/spf13/cobra"
 )
 
 // OrgInviteCommand handles inviting a user to an organization.
@@ -31,7 +31,7 @@ func NewOrgInviteCommand(io ui.IO, newClient newClientFunc) *OrgInviteCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgInviteCommand) Register(r cli.Registerer) {
 	clause := r.Command("invite", "Invite a user to join an organization.")
-	clause.Cmd.Args = cobra.MaximumNArgs(2)
+	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user to invite").Required().StringVar(&cmd.username)
 	clause.Flags().StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.")

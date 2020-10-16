@@ -7,7 +7,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/spf13/cobra"
+	//"github.com/spf13/cobra"
 )
 
 // ACLRmCommand handles removing an access rule.
@@ -31,7 +31,7 @@ func NewACLRmCommand(io ui.IO, newClient newClientFunc) *ACLRmCommand {
 func (cmd *ACLRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Remove an account's access rules on a given directory. Although the server will deny the account access afterwards, note that removing an access rule does not actually revoke an account and does NOT trigger secret rotation.")
 	clause.Alias("remove")
-	clause.Cmd.Args = cobra.MaximumNArgs(2)
+	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("dir-path", "The path of the directory to remove the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "The account name (username or service name) whose rule to remove").Required().SetValue(&cmd.accountName)
 	registerForceFlag(clause, &cmd.force)

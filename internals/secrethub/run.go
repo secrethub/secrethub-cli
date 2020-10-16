@@ -80,7 +80,7 @@ func (cmd *RunCommand) Register(r cli.Registerer) {
 	clause := r.Command("run", helpShort)
 	clause.HelpLong(helpLong)
 	clause.Alias("exec")
-	//clause.Cmd.Args = cobra.MinimumNArgs(1)
+	////clause.Cmd.Args = cobra.MinimumNArgs(1)
 	//clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flags().BoolVar(&cmd.noMasking, "no-masking", false, "Disable masking of secrets on stdout and stderr")
 	clause.Flags().BoolVar(&cmd.maskerOptions.DisableBuffer, "no-output-buffering", false, "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.")

@@ -34,7 +34,7 @@ func NewRepoLSCommand(io ui.IO, newClient newClientFunc) *RepoLSCommand {
 func (cmd *RepoLSCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "List all repositories you have access to.")
 	clause.Alias("list")
-	//// clause.Cmd.Args = cobra.MaximumNArgs(1)
+	//// //clause.Cmd.Args = cobra.MaximumNArgs(1)
 	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.")
 	//clause.Arg("workspace", "When supplied, results are limited to repositories in this workspace.").SetValue(&cmd.workspace)
 	registerTimestampFlag(clause, &cmd.useTimestamps)

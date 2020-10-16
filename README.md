@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="https://secrethub.io/img/github-banner.png?v2" alt="SecretHub" width="400">
+  <img src="https://secrethub.io/img/github-banner.png?v4" alt="SecretHub" width="400">
 </p>
 <br/>
 
 <p align="center">
-  <a href="https://secrethub.io/docs/start/getting-started/"><img alt="Get Started" src="https://secrethub.io/img/buttons/github/get-started.png?v1" height="28" /></a>
+  <a href="https://signup.secrethub.io/"><img alt="Get Started" src="https://secrethub.io/img/buttons/github/get-started.png?v1" height="28" /></a>
   <a href="https://secrethub.io/docs/reference/cli/"><img alt="View Docs" src="https://secrethub.io/img/buttons/github/view-docs.png?v2" height="28" /></a>
 </p>
 <br/>
@@ -14,16 +14,12 @@
 [![GoDoc](https://godoc.org/github.com/secrethub/secrethub-cli?status.svg)][godoc]
 [![CircleCI](https://circleci.com/gh/secrethub/secrethub-cli.svg?style=shield)][circle-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
-[![Version]( https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
+[![Version](https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)][discord]
 
 The SecretHub CLI provides the command-line interface to interact with the SecretHub API.
 
-> [SecretHub][secrethub] is a secret management tool that works for every engineer. Securely provision passwords and keys throughout your entire stack with just a few lines of code.
-
-## Get started
-
-Follow the [Getting Started Guide][getting-started] to quickly get up and running with SecretHub :rocket:
+> [SecretHub][secrethub] is a secrets management tool that works for every engineer. Securely provision passwords and keys throughout your entire stack with just a few lines of code.
 
 ## Usage
 

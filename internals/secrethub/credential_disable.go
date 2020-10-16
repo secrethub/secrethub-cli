@@ -68,7 +68,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 			"This process can currently not be reversed.")
 
 	if !cmd.force {
-		ok, err := ui.AskYesNo(cmd.io, fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s?", fingerprint), ui.DefaultNo)
+		ok, err := ui.AskYesNo(cmd.io, fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s?", fingerprint.Param), ui.DefaultNo)
 		if err != nil {
 			return err
 		}

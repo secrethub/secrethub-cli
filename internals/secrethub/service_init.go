@@ -20,23 +20,27 @@ import (
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.
 type ServiceInitCommand struct {
-	clip        bool
-	description string
-	file        string
-	fileMode    filemode.FileMode
-	repo        api.RepoPath
-	permission  string
-	clipper     clip.Clipper
-	io          ui.IO
-	newClient   newClientFunc
+	clip          bool
+	description   string
+	file          string
+	fileMode      filemode.FileMode
+	repo          api.RepoPath
+	credential    *credentials.KeyCreator
+	permission    string
+	clipper       clip.Clipper
+	io            ui.IO
+	newClient     newClientFunc
+	writeFileFunc func(filename string, data []byte, perm os.FileMode) error
 }
 
 // NewServiceInitCommand creates a new ServiceInitCommand.
 func NewServiceInitCommand(io ui.IO, newClient newClientFunc) *ServiceInitCommand {
 	return &ServiceInitCommand{
-		clipper:   clip.NewClipboard(),
-		io:        io,
-		newClient: newClient,
+		clipper:       clip.NewClipboard(),
+		io:            io,
+		newClient:     newClient,
+		writeFileFunc: ioutil.WriteFile,
+		credential:    credentials.CreateKey(),
 	}
 }
 
@@ -60,8 +64,7 @@ func (cmd *ServiceInitCommand) Run() error {
 		return err
 	}
 
-	credential := credentials.CreateKey()
-	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credential)
+	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, cmd.credential)
 	if err != nil {
 		return err
 	}
@@ -72,7 +75,7 @@ func (cmd *ServiceInitCommand) Run() error {
 			return err
 		}
 	}
-	out, err := credential.Export()
+	out, err := cmd.credential.Export()
 	if err != nil {
 		return err
 	}
@@ -85,7 +88,7 @@ func (cmd *ServiceInitCommand) Run() error {
 
 		fmt.Fprintf(cmd.io.Output(), "Copied account configuration for %s to clipboard. It will be cleared after 45 seconds.\n", service.ServiceID)
 	} else if cmd.file != "" {
-		err = ioutil.WriteFile(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
+		err = cmd.writeFileFunc(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.file, err)
 		}

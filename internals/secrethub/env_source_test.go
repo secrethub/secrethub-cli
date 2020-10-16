@@ -1,6 +1,7 @@
 package secrethub
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -18,9 +19,9 @@ func TestSecretsDirEnv(t *testing.T) {
 	secretUUID2 := uuid.New()
 
 	cases := map[string]struct {
-		newClient      newClientFunc
-		expectedValues []string
-		err            error
+		newClient          newClientFunc
+		expectedValues     []string
+		expectedCollission *errNameCollision
 	}{
 		"success": {
 			newClient: func() (secrethub.ClientInterface, error) {
@@ -114,10 +115,12 @@ func TestSecretsDirEnv(t *testing.T) {
 					},
 				}, nil
 			},
-			err: errNameCollision{
-				name:       "FOO_BAR",
-				firstPath:  "namespace/repo/foo/bar",
-				secondPath: "namespace/repo/foo_bar",
+			expectedCollission: &errNameCollision{
+				name: "FOO_BAR",
+				paths: [2]string{
+					"namespace/repo/foo/bar",
+					"namespace/repo/foo_bar",
+				},
 			},
 		},
 	}
@@ -126,8 +129,17 @@ func TestSecretsDirEnv(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			source := newSecretsDirEnv(tc.newClient, dirPath)
 			secrets, err := source.env()
-			if tc.err != nil {
-				assert.Equal(t, err, tc.err)
+			if tc.expectedCollission != nil {
+				collisionErr, ok := err.(errNameCollision)
+				assert.Equal(t, ok, true)
+				assert.Equal(t, collisionErr.name, tc.expectedCollission.name)
+
+				gotPaths := collisionErr.paths[:]
+				expectedPaths := tc.expectedCollission.paths[:]
+				sort.Strings(gotPaths)
+				sort.Strings(expectedPaths)
+
+				assert.Equal(t, gotPaths, expectedPaths)
 			} else {
 				assert.OK(t, err)
 				assert.Equal(t, len(secrets), len(tc.expectedValues))

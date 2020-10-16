@@ -17,23 +17,24 @@ import (
 
 // InitCommand configures the user's SecretHub account for use on this machine.
 type InitCommand struct {
-	backupCode                  string
-	force                       bool
-	io                          ui.IO
-	newClient                   newClientFunc
-	newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error)
-	credentialStore             CredentialConfig
-	progressPrinter             progress.Printer
+	backupCode               string
+	setupCode                string
+	force                    bool
+	io                       ui.IO
+	newUnauthenticatedClient newClientFunc
+	newClientWithCredentials func(credentials.Provider) (secrethub.ClientInterface, error)
+	credentialStore          CredentialConfig
+	progressPrinter          progress.Printer
 }
 
 // NewInitCommand creates a new InitCommand.
-func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentials func(credentials.Provider) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
+func NewInitCommand(io ui.IO, newUnauthenticatedClient newClientFunc, newClientWithCredentials func(credentials.Provider) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
 	return &InitCommand{
-		io:                          io,
-		newClient:                   newClient,
-		newClientWithoutCredentials: newClientWithoutCredentials,
-		credentialStore:             credentialStore,
-		progressPrinter:             progress.NewPrinter(io.Output(), 500*time.Millisecond),
+		io:                       io,
+		newUnauthenticatedClient: newUnauthenticatedClient,
+		newClientWithCredentials: newClientWithCredentials,
+		credentialStore:          credentialStore,
+		progressPrinter:          progress.NewPrinter(io.Output(), 500*time.Millisecond),
 	}
 }
 
@@ -41,6 +42,7 @@ func NewInitCommand(io ui.IO, newClient newClientFunc, newClientWithoutCredentia
 func (cmd *InitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Initialize the SecretHub client for first use on this device.")
 	clause.Flags().StringVar(&cmd.backupCode, "backup-code", "", "The backup code used to restore an existing account to this device.")
+	clause.Flags().StringVar(&cmd.setupCode, "setup-code", "", "The setup code used to configure the CLI to use an account created on the website.")
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
@@ -52,11 +54,16 @@ type InitMode int
 const (
 	InitModeSignup InitMode = iota + 1
 	InitModeBackupCode
+	InitModeSetupCode
 )
 
 // Run configures the user's SecretHub account for use on this machine.
 // If an account was already configured, the user is prompted for confirmation to overwrite it.
 func (cmd *InitCommand) Run() error {
+	if cmd.setupCode != "" && cmd.backupCode != "" {
+		return ErrFlagsConflict("--backup-code and --setup-code")
+	}
+
 	credentialPath := cmd.credentialStore.ConfigDir().Credential().Path()
 
 	if cmd.credentialStore.ConfigDir().Credential().Exists() && !cmd.force {
@@ -78,7 +85,9 @@ func (cmd *InitCommand) Run() error {
 	}
 
 	var mode InitMode
-	if cmd.backupCode != "" {
+	if cmd.setupCode != "" {
+		mode = InitModeSetupCode
+	} else if cmd.backupCode != "" {
 		mode = InitModeBackupCode
 	}
 
@@ -88,16 +97,18 @@ func (cmd *InitCommand) Run() error {
 		}
 		option, err := ui.Choose(cmd.io, "How do you want to initialize your SecretHub account on this device?",
 			[]string{
-				"Signup for a new account",
+				"Sign up for a new account",
 				"Use a backup code to recover an existing account",
 			}, 3)
 		if err != nil {
 			return err
 		}
+		fmt.Fprintln(cmd.io.Output())
 
 		switch option {
 		case 0:
-			mode = InitModeSignup
+			fmt.Fprintln(cmd.io.Output(), "Go to https://signup.secrethub.io/ and follow the steps to create an account and get it set up on this machine.")
+			return nil
 		case 1:
 			mode = InitModeBackupCode
 		}
@@ -107,12 +118,83 @@ func (cmd *InitCommand) Run() error {
 	case InitModeSignup:
 		signupCommand := SignUpCommand{
 			io:              cmd.io,
-			newClient:       cmd.newClient,
+			newClient:       cmd.newUnauthenticatedClient,
 			credentialStore: cmd.credentialStore,
 			progressPrinter: cmd.progressPrinter,
 			force:           cmd.force,
 		}
 		return signupCommand.Run()
+	case InitModeSetupCode:
+		setupCode := cmd.setupCode
+
+		fmt.Fprintf(cmd.io.Output(), credentialCreationMessage, credentialPath)
+
+		// Only prompt for a passphrase when the user hasn't used --force.
+		// Otherwise, we assume the passphrase was intentionally not
+		// configured to output a plaintext credential.
+		var passphrase string
+		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
+			var err error
+			passphrase, err = askCredentialPassphrase(cmd.io)
+			if err != nil {
+				return err
+			}
+		}
+
+		deviceName, err := promptForDeviceName(cmd.io)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprint(cmd.io.Output(), "Setting up your account...")
+		cmd.progressPrinter.Start()
+
+		client, err := cmd.newClientWithCredentials(credentials.NewSetupCode(setupCode))
+		if err != nil {
+			cmd.progressPrinter.Stop()
+			return err
+		}
+
+		credential := credentials.CreateKey()
+		_, err = client.Credentials().Create(credential, deviceName)
+		if err != nil {
+			cmd.progressPrinter.Stop()
+			return err
+		}
+
+		err = writeNewCredential(credential, passphrase, cmd.credentialStore.ConfigDir().Credential())
+		if err != nil {
+			cmd.progressPrinter.Stop()
+			return err
+		}
+
+		client, err = cmd.newClientWithCredentials(credential)
+		if err != nil {
+			cmd.progressPrinter.Stop()
+			return err
+		}
+
+		me, err := client.Me().GetUser()
+		if err != nil {
+			cmd.progressPrinter.Stop()
+			return err
+		}
+
+		secretPath, err := createStartRepo(client, me.Username, me.FullName)
+		if err != nil {
+			cmd.progressPrinter.Stop()
+			return err
+		}
+		cmd.progressPrinter.Stop()
+		fmt.Fprint(cmd.io.Output(), "Created your account.\n\n")
+
+		err = createWorkspace(client, cmd.io, "", "", cmd.progressPrinter)
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(cmd.io.Output(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
+		return nil
 	case InitModeBackupCode:
 		backupCode := cmd.backupCode
 
@@ -124,7 +206,7 @@ func (cmd *InitCommand) Run() error {
 			}
 		}
 
-		client, err := cmd.newClientWithoutCredentials(credentials.UseBackupCode(backupCode))
+		client, err := cmd.newClientWithCredentials(credentials.UseBackupCode(backupCode))
 		if err != nil {
 			return err
 		}
@@ -148,19 +230,9 @@ func (cmd *InitCommand) Run() error {
 			return nil
 		}
 
-		deviceName := ""
-		question := "What is the name of this device?"
-		hostName, err := os.Hostname()
-		if err == nil {
-			deviceName, err = ui.AskWithDefault(cmd.io, question, hostName)
-			if err != nil {
-				return err
-			}
-		} else {
-			deviceName, err = ui.Ask(cmd.io, question)
-			if err != nil {
-				return err
-			}
+		deviceName, err := promptForDeviceName(cmd.io)
+		if err != nil {
+			return err
 		}
 
 		// Only prompt for a passphrase when the user hasn't used --force.
@@ -169,7 +241,7 @@ func (cmd *InitCommand) Run() error {
 		var passphrase string
 		if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 			var err error
-			passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+			passphrase, err = askCredentialPassphrase(cmd.io)
 			if err != nil {
 				return err
 			}
@@ -198,4 +270,22 @@ func (cmd *InitCommand) Run() error {
 	default:
 		return errors.New("invalid option")
 	}
+}
+
+func promptForDeviceName(io ui.IO) (string, error) {
+	deviceName := ""
+	question := "What is the name of this device?"
+	hostName, err := os.Hostname()
+	if err == nil {
+		deviceName, err = ui.AskWithDefault(io, question, hostName)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		deviceName, err = ui.Ask(io, question)
+		if err != nil {
+			return "", err
+		}
+	}
+	return deviceName, nil
 }

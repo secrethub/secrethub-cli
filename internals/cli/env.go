@@ -430,11 +430,8 @@ func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
 	if params != nil {
 		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			if len(args) < getRequired(params) {
-				return fmt.Errorf("required argument '%s' not provided", params[len(args)].Name)
-			}
-			if len(args) > len(params) {
-				return fmt.Errorf("too many arguments")
+			if err := c.argumentError(args); err != nil {
+				return err
 			}
 			return ArgumentRegister(params, args)
 		}

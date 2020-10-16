@@ -401,6 +401,15 @@ func (s *URLArgValue) Set(replacer string) error {
 	return err
 }
 
+type ByteValue struct {
+	Param []byte
+}
+
+func (s *ByteValue) Set(replacer string) error {
+	s.Param = []byte(replacer)
+	return nil
+}
+
 // Registerer allows others to register commands on it.
 type Registerer interface {
 	Command(cmd string, help string) *CommandClause

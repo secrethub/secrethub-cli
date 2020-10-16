@@ -18,7 +18,7 @@ const defaultClearClipboardAfter = 45 * time.Second
 // ClearClipboardCommand is a command to clear the contents of the clipboard after some time passed.
 type ClearClipboardCommand struct {
 	clipper clip.Clipper
-	hash    []byte
+	hash    cli.ByteValue
 	timeout time.Duration
 }
 
@@ -37,7 +37,7 @@ func (cmd *ClearClipboardCommand) Register(r cli.Registerer) {
 	clause.Flags().DurationVar(&cmd.timeout, "timeout", 0, "Time to wait before clearing in seconds")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.ArgValue{}, []string{"hash"})
+	clause.BindArguments([]cli.ArgValue{&cmd.hash}, []string{"hash"})
 }
 
 // Run handles the command with the options as specified in the command.
@@ -51,7 +51,7 @@ func (cmd *ClearClipboardCommand) Run() error {
 		return err
 	}
 
-	err = bcrypt.CompareHashAndPassword(cmd.hash, read)
+	err = bcrypt.CompareHashAndPassword(cmd.hash.Param, read)
 	if err != nil {
 		return nil
 	}

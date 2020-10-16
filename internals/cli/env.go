@@ -163,6 +163,7 @@ type CommandClause struct {
 	Cmd  *cobra.Command
 	name string
 	App  *App
+	Args []Argument
 }
 
 func (f *FlagSet) BoolVarP(reference *bool, name, shorthand string, def bool, usage string) *Flag {
@@ -356,9 +357,11 @@ func splitVar(prefix, separator, envVar string) (string, string, bool) {
 }
 
 type Argument struct {
-	Store    ArgValue
-	Name     string
-	Required bool
+	Store       ArgValue
+	Name        string
+	Required    bool
+	Placeholder string
+	Description string
 }
 
 type ArgValue interface {
@@ -424,6 +427,7 @@ type Registerer interface {
 // BindAction binds a function to a command clause, so that
 // it is executed when the command is parsed.
 func (c *CommandClause) BindArguments(params []Argument) {
+	c.Args = params
 	if params != nil {
 		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 			if len(args) < getRequired(params) {

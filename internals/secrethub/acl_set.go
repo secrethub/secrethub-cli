@@ -31,7 +31,7 @@ func NewACLSetCommand(io ui.IO, newClient newClientFunc) *ACLSetCommand {
 // Register adds a CommandClause and it's args and flags to a Registerer.
 // Register adds args and flags.
 func (cmd *ACLSetCommand) Register(r cli.Registerer) {
-	clause := r.Command("set", "Set access rule for an user or service on a path.")
+	clause := r.Command("set", "Set access rule for a user or service on a path.")
 	//clause.Cmd.Args = cobra.MaximumNArgs(3)
 	//clause.Arg("dir-path", "The path of the directory to set the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "The account name (username or service name) to set the access rule for").Required().SetValue(&cmd.accountName)
@@ -39,7 +39,7 @@ func (cmd *ACLSetCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true},
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "dir-path", Required: true},
 		{Store: &cmd.accountName, Name: "account-name", Required: true},
 		{Store: &cmd.permission, Name: "permission", Required: true}})
 }

@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
+
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
@@ -17,6 +21,10 @@ import (
 var (
 	ErrLocalAccountFound = errMain.Code("local_account_found").Error("found a local account configuration. To overwrite it, run the same command with the --force or -f flag.")
 )
+
+const credentialCreationMessage = "An account credential will be generated and stored at %s. " +
+	"Losing this credential means you lose the ability to decrypt your secrets. " +
+	"So keep it safe.\n"
 
 // SignUpCommand signs up a new user and configures his account for use on this machine.
 type SignUpCommand struct {
@@ -44,7 +52,7 @@ func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore Credent
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *SignUpCommand) Register(r command.Registerer) {
-	clause := r.Command("signup", "Create a free personal developer account.")
+	clause := r.Command("signup", "Create a free personal developer account.").Hidden()
 	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
 	clause.Flag("full-name", "Your full name.").StringVar(&cmd.fullName)
 	clause.Flag("email", "Your (work) email address we will use for all correspondence.").StringVar(&cmd.email)
@@ -116,13 +124,7 @@ func (cmd *SignUpCommand) Run() error {
 		}
 	}
 
-	fmt.Fprintf(
-		cmd.io.Output(),
-		"An account credential will be generated and stored at %s. "+
-			"Losing this credential means you lose the ability to decrypt your secrets. "+
-			"So keep it safe.\n",
-		credentialPath,
-	)
+	fmt.Fprintf(cmd.io.Output(), credentialCreationMessage, credentialPath)
 
 	// Only prompt for a passphrase when the user hasn't used --force.
 	// Otherwise, we assume the passphrase was intentionally not
@@ -130,7 +132,7 @@ func (cmd *SignUpCommand) Run() error {
 	var passphrase string
 	if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
 		var err error
-		passphrase, err = ui.AskPassphrase(cmd.io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
+		passphrase, err = askCredentialPassphrase(cmd.io)
 		if err != nil {
 			return err
 		}
@@ -150,36 +152,13 @@ func (cmd *SignUpCommand) Run() error {
 		return err
 	}
 
-	exportKey := credential.Key
-	if passphrase != "" {
-		exportKey = exportKey.Passphrase(credentials.PassphraseFromString(passphrase))
-	}
-
-	encodedCredential, err := credential.Export()
-	if err != nil {
-		cmd.progressPrinter.Stop()
-		return err
-	}
-	err = cmd.credentialStore.ConfigDir().Credential().Write(encodedCredential)
+	err = writeNewCredential(credential, passphrase, cmd.credentialStore.ConfigDir().Credential())
 	if err != nil {
 		cmd.progressPrinter.Stop()
 		return err
 	}
 
-	// create a start repository and write a fist secret to it, so that
-	// the user can start by reading their first secret.
-	// This is intended to smoothen onboarding.
-	repoPath := secretpath.Join(cmd.username, "start")
-	_, err = client.Repos().Create(secretpath.Join(repoPath))
-	if err != nil {
-		cmd.progressPrinter.Stop()
-		return err
-	}
-
-	secretPath := secretpath.Join(repoPath, "hello")
-	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", cmd.fullName, secretPath)
-
-	_, err = client.Secrets().Write(secretPath, []byte(message))
+	secretPath, err := createStartRepo(client, cmd.username, cmd.fullName)
 	if err != nil {
 		cmd.progressPrinter.Stop()
 		return err
@@ -188,44 +167,95 @@ func (cmd *SignUpCommand) Run() error {
 	cmd.progressPrinter.Stop()
 	fmt.Fprint(cmd.io.Output(), "Created your account.\n\n")
 
-	createWorkspace := cmd.org != ""
-	if !createWorkspace {
-		createWorkspace, err = ui.AskYesNo(cmd.io, "Do you want to create a shared workspace for your team?", ui.DefaultYes)
-		if err != nil {
-			return err
-		}
-		fmt.Fprintln(cmd.io.Output())
-		if !createWorkspace {
-			fmt.Fprint(cmd.io.Output(), "You can create a shared workspace later using `secrethub org init`.\n\n")
-		}
+	err = createWorkspace(client, cmd.io, cmd.org, cmd.orgDescription, cmd.progressPrinter)
+	if err != nil {
+		return err
 	}
-	if createWorkspace {
-		if cmd.org == "" {
-			cmd.org, err = ui.AskAndValidate(cmd.io, "Workspace name (e.g. your company name): ", 2, api.ValidateOrgName)
-			if err != nil {
-				return err
-			}
-		}
-		if cmd.orgDescription == "" {
-			cmd.orgDescription, err = ui.AskAndValidate(cmd.io, "A description (max 144 chars) for your team workspace so others will recognize it:\n", 2, api.ValidateOrgDescription)
-			if err != nil {
-				return err
-			}
-		}
-		fmt.Fprint(cmd.io.Output(), "Creating your shared workspace...")
-		cmd.progressPrinter.Start()
 
-		_, err := client.Orgs().Create(cmd.org, cmd.orgDescription)
-		cmd.progressPrinter.Stop()
-		if err == api.ErrOrgAlreadyExists {
-			fmt.Fprintf(cmd.io.Output(), "The workspace %s already exists. If it is your organization, ask a colleague to invite you to the workspace. You can also create a new one using `secrethub org init`.\n", cmd.org)
-		} else if err != nil {
-			return err
-		} else {
-			fmt.Fprint(cmd.io.Output(), "Created your shared workspace.\n\n")
-		}
-	}
 	fmt.Fprintf(cmd.io.Output(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
 
 	return nil
+}
+
+// createStartRepo creates a start repository and writes a fist secret to it, so that
+// the user can start by reading their first secret. It returns the secret's path.
+// This is intended to smoothen onboarding.
+func createStartRepo(client secrethub.ClientInterface, username string, fullName string) (string, error) {
+	repoPath := secretpath.Join(username, "start")
+	_, err := client.Repos().Create(secretpath.Join(repoPath))
+	if err != nil {
+		return "", err
+	}
+
+	secretPath := secretpath.Join(repoPath, "hello")
+	message := fmt.Sprintf("Welcome %s! This is your first secret. To write a new version of this secret, run:\n\n    secrethub write %s", fullName, secretPath)
+
+	_, err = client.Secrets().Write(secretPath, []byte(message))
+	if err != nil {
+		return "", err
+	}
+	return secretPath, nil
+}
+
+// createWorkspace creates a new org with the given name and description.
+func createWorkspace(client secrethub.ClientInterface, io ui.IO, org string, orgDescription string, progressPrinter progress.Printer) error {
+	if org == "" {
+		createWorkspace, err := ui.AskYesNo(io, "Do you want to create a shared workspace for your team?", ui.DefaultYes)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(io.Output())
+		if !createWorkspace {
+			fmt.Fprint(io.Output(), "You can create a shared workspace later using `secrethub org init`.\n\n")
+			return nil
+		}
+	}
+
+	var err error
+	if org == "" {
+		org, err = ui.AskAndValidate(io, "Workspace name (e.g. your company name): ", 2, api.ValidateOrgName)
+		if err != nil {
+			return err
+		}
+	}
+	if orgDescription == "" {
+		orgDescription, err = ui.AskAndValidate(io, "A description (max 144 chars) for your team workspace so others will recognize it:\n", 2, api.ValidateOrgDescription)
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Fprint(io.Output(), "Creating your shared workspace...")
+	progressPrinter.Start()
+
+	_, err = client.Orgs().Create(org, orgDescription)
+	progressPrinter.Stop()
+	if err == api.ErrOrgAlreadyExists {
+		fmt.Fprintf(io.Output(), "The workspace %s already exists. If it is your organization, ask a colleague to invite you to the workspace. You can also create a new one using `secrethub org init`.\n", org)
+	} else if err != nil {
+		return err
+	} else {
+		fmt.Fprint(io.Output(), "Created your shared workspace.\n\n")
+	}
+	return nil
+}
+
+// writeCredential writes the given credential to the configuration directory.
+func writeNewCredential(credential *credentials.KeyCreator, passphrase string, credentialFile *configdir.CredentialFile) error {
+	exportKey := credential.Key
+	if passphrase != "" {
+		exportKey = exportKey.Passphrase(credentials.PassphraseFromString(passphrase))
+	}
+
+	encodedCredential, err := credential.Export()
+	if err != nil {
+		return err
+	}
+
+	return credentialFile.Write(encodedCredential)
+}
+
+// askCredentialPassphrase prompts the user for a passphrase to protect the local credential.
+func askCredentialPassphrase(io ui.IO) (string, error) {
+	return ui.AskPassphrase(io, "Please enter a passphrase to protect your local credential (leave empty for no passphrase): ", "Enter the same passphrase again: ", 3)
 }

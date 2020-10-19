@@ -24,13 +24,12 @@ import (
 )
 
 type errNameCollision struct {
-	name       string
-	firstPath  string
-	secondPath string
+	name  string
+	paths [2]string
 }
 
 func (e errNameCollision) Error() string {
-	return fmt.Sprintf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", e.firstPath, e.secondPath, e.name)
+	return fmt.Sprintf("secrets at path %s and %s map to the same environment variable: %s. Rename one of the secrets or source them in a different way", e.paths[0], e.paths[1], e.name)
 }
 
 type environment struct {
@@ -67,7 +66,7 @@ func (env *environment) register(clause *cli.CommandClause) {
 	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&env.templateVars)
 	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&env.templateVersion)
 	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&env.dontPromptMissingTemplateVar)
-	clause.Flag("secrets-dir", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.").StringVar(&env.secretsDir)
+	clause.Flag("secrets-dir", "Recursively load all secrets from a directory into environment variables. Names of the environment variables are derived from the path of the secret: all `/`, '-' and '.' are replaced with `_` and the name is uppercased.").StringVar(&env.secretsDir)
 	clause.Flag("env", "The name of the environment prepared by the set command (default is `default`)").Default("default").Hidden().StringVar(&env.secretsEnvDir)
 }
 
@@ -225,9 +224,11 @@ func (s *secretsDirEnv) env() (map[string]value, error) {
 		envVarName := s.envVarName(path)
 		if prevPath, found := paths[envVarName]; found {
 			return nil, errNameCollision{
-				name:       envVarName,
-				firstPath:  prevPath,
-				secondPath: path,
+				name: envVarName,
+				paths: [2]string{
+					prevPath,
+					path,
+				},
 			}
 		}
 		paths[envVarName] = path
@@ -246,6 +247,8 @@ func (s *secretsDirEnv) envVarName(path string) string {
 	envVarName := strings.TrimPrefix(path, s.dirPath)
 	envVarName = strings.TrimPrefix(envVarName, "/")
 	envVarName = strings.ReplaceAll(envVarName, "/", "_")
+	envVarName = strings.ReplaceAll(envVarName, "-", "_")
+	envVarName = strings.ReplaceAll(envVarName, ".", "_")
 	envVarName = strings.ToUpper(envVarName)
 	return envVarName
 }

@@ -67,7 +67,7 @@ func (pr *passphraseReader) Read() ([]byte, error) {
 }
 
 // NewPassphraseReader constructs a new PassphraseReader using values in the CLI.
-func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassphraseTTL time.Duration) credentials.Reader {
+func NewPassphraseReader(io ui.IO, credentialPassphrase string, credentialPassphraseTTL time.Duration) credentials.PassphraseReader {
 	ttl := credentialPassphraseTTL
 	cleaner := NewKeyringCleaner()
 	keyring := NewKeyring()

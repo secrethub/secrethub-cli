@@ -181,7 +181,7 @@ func (cmd *InitCommand) Run() error {
 
 		exportKey := credential.Key
 		if passphrase != "" {
-			exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
+			exportKey = exportKey.Passphrase(credentials.PassphraseFromString(passphrase))
 		}
 
 		exportedKey, err := exportKey.Export()

@@ -63,7 +63,7 @@ func (cmd *ConfigUpdatePassphraseCommand) Run() error {
 		return err
 	}
 	if passphrase != "" {
-		credential = credential.Passphrase(credentials.FromString(passphrase))
+		credential = credential.Passphrase(credentials.PassphraseFromString(passphrase))
 	}
 	exportedCredential, err := credential.Export()
 	if err != nil {

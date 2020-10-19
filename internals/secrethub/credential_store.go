@@ -20,7 +20,7 @@ type CredentialConfig interface {
 	Provider() credentials.Provider
 	Import() (credentials.Key, error)
 	ConfigDir() configdir.Dir
-	PassphraseReader() credentials.Reader
+	PassphraseReader() credentials.PassphraseReader
 
 	Register(FlagRegisterer)
 }
@@ -61,14 +61,14 @@ func (store *credentialConfig) Register(r FlagRegisterer) {
 // When a credential is set, that credential is returned,
 // otherwise the credential is read from the configured file.
 func (store *credentialConfig) Provider() credentials.Provider {
-	return credentials.UseKey(store.getCredentialReader()).Passphrase(store.PassphraseReader())
+	return credentials.UseKey(store.getKeyReader(), credentials.KeyDecoderWithPassphrase(store.PassphraseReader()))
 }
 
 func (store *credentialConfig) Import() (credentials.Key, error) {
-	return credentials.ImportKey(store.getCredentialReader(), store.PassphraseReader())
+	return store.getKeyReader().Read(credentials.KeyDecoderWithPassphrase(store.PassphraseReader()))
 }
 
-func (store *credentialConfig) getCredentialReader() credentials.Reader {
+func (store *credentialConfig) getKeyReader() credentials.KeyReader {
 	if store.AccountCredential != "" {
 		return credentials.FromString(store.AccountCredential)
 	}
@@ -76,6 +76,6 @@ func (store *credentialConfig) getCredentialReader() credentials.Reader {
 }
 
 // PassphraseReader returns a PassphraseReader configured by the flags.
-func (store *credentialConfig) PassphraseReader() credentials.Reader {
+func (store *credentialConfig) PassphraseReader() credentials.PassphraseReader {
 	return NewPassphraseReader(store.io, store.credentialPassphrase, store.CredentialPassphraseCacheTTL)
 }

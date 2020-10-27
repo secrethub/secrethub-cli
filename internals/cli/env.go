@@ -15,6 +15,31 @@ import (
 	"github.com/spf13/pflag"
 )
 
+const UsageTemplate = `Usage:{{if .Runnable}}
+  {{CustomUseLine}}{{end}}{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
+
+Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
+
 var (
 	// DefaultEnvSeparator defines how to join env var names.
 	DefaultEnvSeparator = "_"
@@ -434,6 +459,7 @@ type Registerer interface {
 // it is executed when the command is parsed.
 func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
+	c.Cmd.SetUsageTemplate(setCustomTemplate(c.Cmd, c.Args))
 	if params != nil {
 		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 			if err := c.argumentError(args); err != nil {
@@ -474,4 +500,48 @@ func (c *CommandClause) BindAction(fn func() error) {
 			return fn()
 		}
 	}
+}
+
+func setCustomTemplate(c *cobra.Command, args []Argument) string {
+	template := `Usage:{{if .Runnable}}
+  `
+	var useLine string
+	if c.HasParent() {
+		useLine = c.Parent().CommandPath() + " " + c.Use
+	} else {
+		useLine = c.Use
+	}
+
+	if c.HasAvailableFlags() && !strings.Contains(useLine, "[flags]") {
+		useLine += " [flags]"
+	}
+
+	for _, arg := range args {
+		useLine += " <" + arg.Name + ">"
+	}
+
+	template += useLine + `{{end}}{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
+
+Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
+	return template
 }

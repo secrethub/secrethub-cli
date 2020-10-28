@@ -39,9 +39,10 @@ func (cmd *ACLSetCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "dir-path", Required: true},
-		{Store: &cmd.accountName, Name: "account-name", Required: true},
-		{Store: &cmd.permission, Name: "permission", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.path, Name: "dir-path", Placeholder: dirPathPlaceHolder, Required: true, Description: "The path of the directory to set the access rule for."},
+		{Store: &cmd.accountName, Name: "account-name", Required: true, Description: "The account name (username or service name) to set the access rule for."},
+		{Store: &cmd.permission, Name: "permission", Required: true, Description: "The permission to set in the access rule."}})
 }
 
 // Run handles the command with the options as specified in the command.

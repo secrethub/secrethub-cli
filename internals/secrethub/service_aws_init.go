@@ -159,7 +159,7 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 	clause.Flag("kms-key", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
 	clause.Flag("role", "The role name or ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)
 	clause.Flag("region", "The AWS region that should be used for KMS.").StringVar(&cmd.region)
-	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
+	clause.Flag("description", "A description for the service so others will recognize it. Defaults `AWS role <role-name>`.").StringVar(&cmd.description)
 	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
 	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)

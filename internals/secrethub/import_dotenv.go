@@ -115,6 +115,9 @@ func openEditor(input string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	_, err = tmpFile.WriteString(input)
 	if err != nil {
@@ -142,11 +145,6 @@ func openEditor(input string) (string, error) {
 	}
 
 	out, err := ioutil.ReadFile(tmpFile.Name())
-	if err != nil {
-		return "", err
-	}
-
-	err = os.Remove(tmpFile.Name())
 	if err != nil {
 		return "", err
 	}

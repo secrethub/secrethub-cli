@@ -43,9 +43,6 @@ func (cmd *ImportDotEnvCommand) Register(r command.Registerer) {
 }
 
 func (cmd *ImportDotEnvCommand) Run() error {
-	var envVar map[string]string
-	locationsMap := make(map[string]string)
-
 	envVar, err := godotenv.Read(cmd.dotenvFile)
 	if err != nil {
 		return err
@@ -56,11 +53,13 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		return err
 	}
 
+	locationsMap := make(map[string]string)
 	if cmd.interactive {
-		locationsMap, err = openEditor(cmd.path.Value(), getMapKeys(envVar))
+		mappingString, err := openEditor(buildFile(cmd.path.Value(), getMapKeys(envVar)))
 		if err != nil {
 			return err
 		}
+		locationsMap = buildMap(mappingString)
 	} else {
 		for key := range envVar {
 			locationsMap[key] = cmd.path.Value() + "/" + strings.ToLower(key)
@@ -107,16 +106,20 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	return nil
 }
 
-func openEditor(path string, secretPaths []string) (map[string]string, error) {
+// openEditor opens an editor with the provided input as contents,
+// lets the user edit those contents with the editor and returns
+// the edited contents.
+// Note that this functions is blocking for user input.
+func openEditor(input string) (string, error) {
 	fpath := os.TempDir() + "secretPaths.txt"
 	f, err := os.Create(fpath)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	_, err = f.WriteString(buildFile(path, secretPaths))
+	_, err = f.WriteString(input)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	editor := os.Getenv("EDITOR")
@@ -132,24 +135,24 @@ func openEditor(path string, secretPaths []string) (map[string]string, error) {
 
 	err = cmd.Start()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	err = cmd.Wait()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	reading, err := ioutil.ReadFile(fpath)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	err = os.Remove(fpath)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return buildMap(string(reading)), nil
+	return string(reading), nil
 }
 
 func buildFile(path string, secretPaths []string) string {

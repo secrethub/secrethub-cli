@@ -58,6 +58,7 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	for key := range envVar {
 		locationsMap[key] = secretpath.Join(cmd.path.Value(), strings.ToLower(key))
 	}
+
 	if cmd.interactive {
 		mappingString, err := openEditor(buildFile(locationsMap))
 		if err != nil {

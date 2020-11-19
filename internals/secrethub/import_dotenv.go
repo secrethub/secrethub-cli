@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"golang.org/x/sync/errgroup"
 
@@ -73,26 +74,44 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	}
 
 	if !cmd.force {
+		alreadyExist := make(map[string]struct{})
+		var m sync.Mutex
+		errGroup, _ := errgroup.WithContext(context.Background())
 		for _, path := range locationsMap {
-			exists, err := client.Secrets().Exists(path)
-			if err != nil {
-				return err
-			}
-			if exists {
-				confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A secret at location %s already exists. "+
-					"This import process will overwrite this secret. Do you wish to continue?", path), ui.DefaultNo)
-
-				if err != nil {
-					return err
-				}
-
-				if !confirmed {
-					_, err = fmt.Fprintln(cmd.io.Output(), "Aborting.")
+			errGroup.Go(func(path string) func() error {
+				return func() error {
+					exists, err := client.Secrets().Exists(path)
 					if err != nil {
 						return err
 					}
+					if exists {
+						m.Lock()
+						alreadyExist[path] = struct{}{}
+						m.Unlock()
+					}
 					return nil
 				}
+			}(path))
+		}
+		err = errGroup.Wait()
+		if err != nil {
+			return err
+		}
+
+		for path := range alreadyExist {
+			confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A secret at location %s already exists. "+
+				"This import process will overwrite this secret. Do you wish to continue?", path), ui.DefaultNo)
+
+			if err != nil {
+				return err
+			}
+
+			if !confirmed {
+				_, err = fmt.Fprintln(cmd.io.Output(), "Aborting.")
+				if err != nil {
+					return err
+				}
+				return nil
 			}
 		}
 	}

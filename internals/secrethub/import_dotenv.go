@@ -68,14 +68,14 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	}
 
 	if !cmd.force {
-		for key := range envVar {
-			exists, err := client.Secrets().Exists(locationsMap[key])
+		for _, path := range locationsMap {
+			exists, err := client.Secrets().Exists(path)
 			if err != nil {
 				return err
 			}
 			if exists {
 				confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A secret at location %s already exists. "+
-					"This import process will overwrite this secret. Do you wish to continue?", locationsMap[key]), ui.DefaultNo)
+					"This import process will overwrite this secret. Do you wish to continue?", path), ui.DefaultNo)
 
 				if err != nil {
 					return err
@@ -92,15 +92,18 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		}
 	}
 
-	for key, value := range envVar {
-		secretPath := locationsMap[key]
+	for envVarKey, secretPath := range locationsMap {
+		envVarValue, ok := envVar[envVarKey]
+		if !ok {
+			return fmt.Errorf("key not found in .env file: %s", envVarKey)
+		}
 
 		err = client.Dirs().CreateAll(secretpath.Parent(secretPath))
 		if err != nil {
 			return fmt.Errorf("creating parent directories for %s: %s", secretPath, err)
 		}
 
-		_, err = client.Secrets().Write(secretPath, []byte(value))
+		_, err = client.Secrets().Write(secretPath, []byte(envVarValue))
 		if err != nil {
 			return err
 		}

@@ -21,6 +21,7 @@ require (
 	github.com/secrethub/secrethub-go v0.30.0
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	golang.org/x/sys v0.0.0-20200501052902-10377860bb8e
 	golang.org/x/text v0.3.2
 	google.golang.org/api v0.26.0

@@ -2,17 +2,22 @@ package secrethub
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/joho/godotenv"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secretpath"
+
+	"github.com/joho/godotenv"
 )
 
 // ImportDotEnvCommand handles the migration of secrets from .env files to SecretHub.
@@ -92,21 +97,32 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		}
 	}
 
+	errGroup, _ := errgroup.WithContext(context.Background())
 	for envVarKey, secretPath := range locationsMap {
-		envVarValue, ok := envVar[envVarKey]
-		if !ok {
-			return fmt.Errorf("key not found in .env file: %s", envVarKey)
-		}
+		errGroup.Go(func(envVarKey, secretPath string) func() error {
+			return func() error {
+				envVarValue, ok := envVar[envVarKey]
+				if !ok {
+					return fmt.Errorf("key not found in .env file: %s", envVarKey)
+				}
 
-		err = client.Dirs().CreateAll(secretpath.Parent(secretPath))
-		if err != nil {
-			return fmt.Errorf("creating parent directories for %s: %s", secretPath, err)
-		}
+				err = client.Dirs().CreateAll(secretpath.Parent(secretPath))
+				if err != nil {
+					return fmt.Errorf("creating parent directories for %s: %s", secretPath, err)
+				}
 
-		_, err = client.Secrets().Write(secretPath, []byte(envVarValue))
-		if err != nil {
-			return err
-		}
+				_, err = client.Secrets().Write(secretPath, []byte(envVarValue))
+				if err != nil {
+					return err
+				}
+
+				return nil
+			}
+		}(envVarKey, secretPath))
+	}
+	err = errGroup.Wait()
+	if err != nil {
+		return err
 	}
 
 	_, err = fmt.Fprintf(cmd.io.Output(), "Transfer complete! The secrets have been written to %s.\n", cmd.path.String())

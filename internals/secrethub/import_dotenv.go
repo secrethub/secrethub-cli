@@ -32,7 +32,7 @@ func NewImportDotEnvCommand(io ui.IO, newClient newClientFunc) *ImportDotEnvComm
 
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *ImportDotEnvCommand) Register(r command.Registerer) {
-	clause := r.Command("dot-env", "Import secrets from `.env` files. Outputs a `secrethub.env` file, containing references to your secrets in SecretHub.")
+	clause := r.Command("dotenv", "Import secrets from `.env` files. Outputs a `secrethub.env` file, containing references to your secrets in SecretHub.")
 	clause.Arg("dir-path", "The path to where to write the new secrets").PlaceHolder(dirPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("interactive", "Interactive mode. Edit the paths to where the secrets should be written.").Short('i').BoolVar(&cmd.interactive)
 	clause.Flag("env-file", "The location of the .env file. Defaults to `.env`.").Default(".env").ExistingFileVar(&cmd.dotenv)

@@ -54,16 +54,15 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	}
 
 	locationsMap := make(map[string]string)
+	for key := range envVar {
+		locationsMap[key] = cmd.path.Value() + "/" + strings.ToLower(key)
+	}
 	if cmd.interactive {
-		mappingString, err := openEditor(buildFile(cmd.path.Value(), getMapKeys(envVar)))
+		mappingString, err := openEditor(buildFile(locationsMap))
 		if err != nil {
 			return err
 		}
 		locationsMap = buildMap(mappingString)
-	} else {
-		for key := range envVar {
-			locationsMap[key] = cmd.path.Value() + "/" + strings.ToLower(key)
-		}
 	}
 
 	if !cmd.force {
@@ -152,12 +151,11 @@ func openEditor(input string) (string, error) {
 	return string(out), nil
 }
 
-func buildFile(path string, secretPaths []string) string {
+func buildFile(locationsMap map[string]string) string {
 	output := "Choose the paths to where your secrets will be written:\n"
 
-	for _, secretPath := range secretPaths {
-		output += fmt.Sprintf("%s => %s/%s\n", secretPath,
-			path, strings.ToLower(secretPath))
+	for envVarKey, secretPath := range locationsMap {
+		output += fmt.Sprintf("%s => %s\n", envVarKey, secretPath)
 	}
 	return output
 }
@@ -173,13 +171,4 @@ func buildMap(input string) map[string]string {
 		locationsMap[strings.TrimSpace(split[0])] = strings.TrimSpace(split[1])
 	}
 	return locationsMap
-}
-
-func getMapKeys(stringMap map[string]string) []string {
-	keys := make([]string, 0, len(stringMap))
-
-	for k := range stringMap {
-		keys = append(keys, k)
-	}
-	return keys
 }

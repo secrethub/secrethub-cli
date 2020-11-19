@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -101,60 +100,5 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		return err
 	}
 
-	if err = generateSecretHubEnv(locationsMap, cmd.force, cmd.io); err != nil {
-		return err
-	}
-
 	return nil
-}
-
-func generateSecretHubEnv(locationsMap map[string]string, force bool, io ui.IO) error {
-	output := "# Now .env secrets exist in the following SecretHub locations:\n"
-	for key, value := range locationsMap {
-		output += fmt.Sprintf("%s=secrethub://%s\n", key, value)
-	}
-	fpath := "secrethub.env"
-
-	fileExists := fileExists(fpath)
-
-	if fileExists && !force {
-		confirmed, err := ui.AskYesNo(io, "A `secrethub.env` file already exists "+
-			"at this location. This process will overwrite it. Do you wish to continue?", ui.DefaultNo)
-
-		if err != nil {
-			return err
-		}
-
-		if !confirmed {
-			_, err = fmt.Fprintln(io.Output(), "Aborting.")
-			if err != nil {
-				return err
-			}
-			return nil
-		}
-	}
-
-	f, err := os.Create(fpath)
-	if err != nil {
-		return err
-	}
-	_, err = f.WriteString(output)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintf(io.Output(), "The `secrethub.env` file has been successfully created.")
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func fileExists(file string) bool {
-	info, err := os.Stat(file)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
 }

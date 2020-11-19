@@ -93,7 +93,14 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	}
 
 	for key, value := range envVar {
-		_, err = client.Secrets().Write(locationsMap[key], []byte(value))
+		secretPath := locationsMap[key]
+
+		err = client.Dirs().CreateAll(secretpath.Parent(secretPath))
+		if err != nil {
+			return fmt.Errorf("creating parent directories for %s: %s", secretPath, err)
+		}
+
+		_, err = client.Secrets().Write(secretPath, []byte(value))
 		if err != nil {
 			return err
 		}

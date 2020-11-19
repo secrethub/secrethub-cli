@@ -12,6 +12,7 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
 
 // ImportDotEnvCommand handles the migration of secrets from .env files to SecretHub.
@@ -55,7 +56,7 @@ func (cmd *ImportDotEnvCommand) Run() error {
 
 	locationsMap := make(map[string]string)
 	for key := range envVar {
-		locationsMap[key] = cmd.path.Value() + "/" + strings.ToLower(key)
+		locationsMap[key] = secretpath.Join(cmd.path.Value(), strings.ToLower(key))
 	}
 	if cmd.interactive {
 		mappingString, err := openEditor(buildFile(locationsMap))

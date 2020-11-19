@@ -18,7 +18,6 @@ type ImportDotEnvCommand struct {
 	interactive bool
 	force       bool
 	dotenvFile  string
-	editor      string
 	newClient   newClientFunc
 }
 
@@ -36,7 +35,6 @@ func (cmd *ImportDotEnvCommand) Register(r command.Registerer) {
 	clause.Arg("dir-path", "path to a directory on SecretHub in which to store the imported secrets").PlaceHolder(dirPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flag("interactive", "Interactive mode. Edit the paths to where the secrets should be written.").Short('i').BoolVar(&cmd.interactive)
 	clause.Flag("env-file", "The location of the .env file. Defaults to `.env`.").Default(".env").ExistingFileVar(&cmd.dotenvFile)
-	clause.Flag("editor", "The editor where you will define your secret paths. Only has effect in interactive mode.").Default("nano").HintOptions("vim", "nano").StringVar(&cmd.editor)
 	registerForceFlag(clause).BoolVar(&cmd.force)
 	command.BindAction(clause, cmd.Run)
 }
@@ -56,7 +54,7 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	}
 
 	if cmd.interactive {
-		locationsMap, err = openEditor(cmd.editor, cmd.path.Value(), getMapKeys(envVar))
+		locationsMap, err = openEditor(cmd.path.Value(), getMapKeys(envVar))
 		if err != nil {
 			return err
 		}

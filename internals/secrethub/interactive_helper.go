@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func openEditor(editor, path string, secretPaths []string) (map[string]string, error) {
+func openEditor(path string, secretPaths []string) (map[string]string, error) {
 	fpath := os.TempDir() + "secretPaths.txt"
 	f, err := os.Create(fpath)
 	if err != nil {
@@ -19,6 +19,11 @@ func openEditor(editor, path string, secretPaths []string) (map[string]string, e
 	_, err = f.WriteString(buildFile(path, secretPaths))
 	if err != nil {
 		return nil, err
+	}
+
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "editor"
 	}
 
 	cmd := exec.Command(editor, fpath)

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -112,13 +111,12 @@ func (cmd *ImportDotEnvCommand) Run() error {
 // the edited contents.
 // Note that this functions is blocking for user input.
 func openEditor(input string) (string, error) {
-	fpath := filepath.Join(os.TempDir(), "secretPaths.txt")
-	f, err := os.Create(fpath)
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "secrethub-")
 	if err != nil {
 		return "", err
 	}
 
-	_, err = f.WriteString(input)
+	_, err = tmpFile.WriteString(input)
 	if err != nil {
 		return "", err
 	}
@@ -128,7 +126,7 @@ func openEditor(input string) (string, error) {
 		editor = "editor"
 	}
 
-	cmd := exec.Command(editor, fpath)
+	cmd := exec.Command(editor, tmpFile.Name())
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -143,17 +141,17 @@ func openEditor(input string) (string, error) {
 		return "", err
 	}
 
-	reading, err := ioutil.ReadFile(fpath)
+	out, err := ioutil.ReadFile(tmpFile.Name())
 	if err != nil {
 		return "", err
 	}
 
-	err = os.Remove(fpath)
+	err = os.Remove(tmpFile.Name())
 	if err != nil {
 		return "", err
 	}
 
-	return string(reading), nil
+	return string(out), nil
 }
 
 func buildFile(path string, secretPaths []string) string {

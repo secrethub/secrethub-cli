@@ -44,7 +44,6 @@ func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *WriteCommand) Register(r cli.Registerer) {
 	clause := r.Command("write", "Write a secret.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flags().BoolVarP(&cmd.useClipboard, "clip", "c", false, "Use clipboard content as input.")
 	clause.Flags().BoolVarP(&cmd.multiline, "multiline", "m", false, "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.")
@@ -52,7 +51,7 @@ func (cmd *WriteCommand) Register(r cli.Registerer) {
 	clause.Flags().StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "secret-path", Required: true}})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "secret-path", Required: true, Placeholder: secretPathPlaceHolder, Description: "The path to the secret."}})
 }
 
 // Run handles the command with the options as specified in the command.

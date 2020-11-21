@@ -53,7 +53,6 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 
 func (cmd *ServiceGCPLinkCommand) Register(r cli.Registerer) {
 	clause := r.Command("link", "Create a new link between a namespace and a GCP project to allow creating SecretHub service accounts for GCP Service Accounts in the GCP project.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("namespace", "The SecretHub namespace to link.").Required().SetValue(&cmd.namespace)
 	//clause.Arg("project-id", "The GCP project to link the namespace to.").Required().SetValue(&cmd.projectID)
 
@@ -73,8 +72,10 @@ func (cmd *ServiceGCPLinkCommand) Register(r cli.Registerer) {
 		"If it does not, the access can safely be revoked manually.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.namespace, Name: "namespace", Required: true},
-		{Store: &cmd.projectID, Name: "project-id", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.namespace, Name: "namespace", Required: true, Description: "The SecretHub namespace to link."},
+		{Store: &cmd.projectID, Name: "project-id", Required: true, Description: "The GCP project to link the namespace to."},
+	})
 }
 
 // ServiceGCPListLinksCommand lists all existing links between the given namespace and GCP projects
@@ -127,12 +128,11 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 
 func (cmd *ServiceGCPListLinksCommand) Register(r cli.Registerer) {
 	clause := r.Command("list-links", "List all existing links between the given namespace and GCP projects.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().SetValue(&cmd.namespace)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.namespace, Name: "namespace", Required: true}})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.namespace, Name: "namespace", Required: true, Description: "The namespace for which to list all existing links to GCP projects."}})
 }
 
 // ServiceGCPDeleteLinkCommand deletes the link between a SecretHub namespace and a GCP project.
@@ -153,13 +153,14 @@ func NewServiceGCPDeleteLinkCommand(io ui.IO, newClient newClientFunc) *ServiceG
 func (cmd *ServiceGCPDeleteLinkCommand) Register(r cli.Registerer) {
 	clause := r.Command("delete-link", "Delete the link between a SecretHub namespace and a GCP project.")
 	clause.HelpLong("After deleting the link you cannot create new GCP service accounts in the specified namespace and GCP project anymore. Exisiting service accounts will keep on working.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
 	//clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.namespace, Name: "namespace", Required: true},
-		{Store: &cmd.projectID, Name: "project-id", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.namespace, Name: "namespace", Required: true, Description: "The SecretHub namespace to delete the link from."},
+		{Store: &cmd.projectID, Name: "project-id", Required: true, Description: "The GCP project to delete the link to."},
+	})
 }
 
 func (cmd *ServiceGCPDeleteLinkCommand) Run() error {

@@ -63,13 +63,12 @@ func NewServiceGCPLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 func (cmd *ServiceLsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", cmd.help)
 	clause.Alias("list")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("repo-path", "The path to the repository to list services for").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repoPath)
 	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.repoPath, Name: "repo-path", Required: true}})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.repoPath, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The path to the repository to list services for"}})
 }
 
 // Run lists all service accounts in a given repository.

@@ -30,15 +30,16 @@ func NewOrgSetRoleCommand(io ui.IO, newClient newClientFunc) *OrgSetRoleCommand 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgSetRoleCommand) Register(r cli.Registerer) {
 	clause := r.Command("set-role", "Set a user's organization role.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(3)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 	//clause.Arg("role", "The role to assign to the user. Can be either `admin` or `member`.").Required().StringVar(&cmd.role)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.orgName, Name: "org-name", Required: true},
-		{Store: &cmd.username, Name: "username", Required: true},
-		{Store: &cmd.role, Name: "role", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
+		{Store: &cmd.username, Name: "username", Required: true, Description: "The username of the user."},
+		{Store: &cmd.role, Name: "role", Required: true, Description: "The role to assign to the user. Can be either `admin` or `member`."},
+	})
 }
 
 // Run updates the role of an organization member.

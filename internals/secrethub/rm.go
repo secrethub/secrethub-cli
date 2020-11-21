@@ -40,13 +40,12 @@ func NewRmCommand(io ui.IO, newClient newClientFunc) *RmCommand {
 func (cmd *RmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Remove a directory, secret or version.")
 	clause.Alias("remove")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
 	clause.Flags().BoolVarP(&cmd.recursive, "recursive", "r", false, "Remove directories and their contents recursively.")
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true}})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true, Placeholder: "<namespace>/<repo>[/<path>]", Description: "The path to the resource to remove."}})
 }
 
 // Run removes the resource at the given path.

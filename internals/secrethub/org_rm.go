@@ -30,11 +30,10 @@ func NewOrgRmCommand(io ui.IO, newClient newClientFunc) *OrgRmCommand {
 func (cmd *OrgRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Permanently delete an organization and all the repositories it owns.")
 	clause.Alias("remove")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.name, Name: "org-name", Required: true}})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.name, Name: "org-name", Required: true, Description: "The organization name."}})
 }
 
 // Run deletes an organization, prompting the user for confirmation.

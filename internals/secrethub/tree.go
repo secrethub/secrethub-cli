@@ -49,7 +49,6 @@ func (cmd *TreeCommand) Run() error {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *TreeCommand) Register(r cli.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.Flags().BoolVarP(&cmd.fullPaths, "full-paths", "f", false, "Print the full path of each directory and secret.")
@@ -60,7 +59,7 @@ func (cmd *TreeCommand) Register(r cli.Registerer) {
 	clause.Flag("noreport").Hidden = true
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "dir-path", Required: true}})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path to to show contents for."}})
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.

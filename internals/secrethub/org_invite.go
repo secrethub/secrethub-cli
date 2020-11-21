@@ -31,15 +31,16 @@ func NewOrgInviteCommand(io ui.IO, newClient newClientFunc) *OrgInviteCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgInviteCommand) Register(r cli.Registerer) {
 	clause := r.Command("invite", "Invite a user to join an organization.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user to invite").Required().StringVar(&cmd.username)
 	clause.Flags().StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.")
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.orgName, Name: "org-name", Required: true},
-		{Store: &cmd.username, Name: "username", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
+		{Store: &cmd.username, Name: "username", Required: true, Description: "The username of the user to invite."},
+	})
 }
 
 // Run invites a user to an organization and gives them a certain role.

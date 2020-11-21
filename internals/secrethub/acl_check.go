@@ -32,13 +32,14 @@ func NewACLCheckCommand(io ui.IO, newClient newClientFunc) *ACLCheckCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ACLCheckCommand) Register(r cli.Registerer) {
 	clause := r.Command("check", "Checks the effective permission of accounts on a path.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("dir-path", "The path of the directory to check the effective permission for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true},
-		{Store: &cmd.accountName, Name: "account-name", Required: false}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to check the effective permission for."},
+		{Store: &cmd.accountName, Name: "account-name", Required: false, Description: "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out."},
+	})
 }
 
 // Run prints the access level(s) on the given directory.

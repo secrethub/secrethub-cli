@@ -37,8 +37,10 @@ func (cmd *ACLRmCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true},
-		{Store: &cmd.accountName, Name: "account-name", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to remove the access rule for."},
+		{Store: &cmd.accountName, Name: "account-name", Required: true, Description: "The account name (username or service name) whose rule to remove."},
+	})
 }
 
 // Run removes the access rule.

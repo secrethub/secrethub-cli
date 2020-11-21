@@ -33,12 +33,13 @@ func NewOrgListUsersCommand(io ui.IO, newClient newClientFunc) *OrgListUsersComm
 func (cmd *OrgListUsersCommand) Register(r cli.Registerer) {
 	clause := r.Command("list-users", "List all members of an organization.")
 	clause.Alias("list-members")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.orgName, Name: "org-name", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
+	})
 }
 
 // Run lists the users of an organization.

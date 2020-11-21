@@ -29,13 +29,14 @@ func NewEnvReadCommand(io ui.IO, newClient newClientFunc) *EnvReadCommand {
 func (cmd *EnvReadCommand) Register(r cli.Registerer) {
 	clause := r.Command("read", "[BETA] Read the value of a single environment variable.")
 	clause.HelpLong("This command is hidden because it is still in beta. Future versions may break.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("key", "the key of the environment variable to read").StringVar(&cmd.key)
 
 	cmd.environment.register(clause)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.key, Name: "key", Required: false}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.key, Name: "key", Required: false, Description: "the key of the environment variable to read."},
+	})
 }
 
 // Run executes the command.

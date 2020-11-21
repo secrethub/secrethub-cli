@@ -29,11 +29,10 @@ func NewRepoRmCommand(io ui.IO, newClient newClientFunc) *RepoRmCommand {
 func (cmd *RepoRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Permanently delete a repository.")
 	clause.Alias("remove")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
 	//clause.Arg("repo-path", "The repository to delete").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true}})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to delete"}})
 }
 
 // Run removes the repository.

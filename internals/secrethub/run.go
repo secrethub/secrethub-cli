@@ -80,7 +80,6 @@ func (cmd *RunCommand) Register(r cli.Registerer) {
 	clause := r.Command("run", helpShort)
 	clause.HelpLong(helpLong)
 	clause.Alias("exec")
-	////clause.Cmd.Args = cobra.MinimumNArgs(1)
 	//clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
 	clause.Flags().BoolVar(&cmd.noMasking, "no-masking", false, "Disable masking of secrets on stdout and stderr")
 	clause.Flags().BoolVar(&cmd.maskerOptions.DisableBuffer, "no-output-buffering", false, "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.")
@@ -88,7 +87,7 @@ func (cmd *RunCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVar(&cmd.ignoreMissingSecrets, "ignore-missing-secrets", false, "Do not return an error when a secret does not exist and use an empty value instead.")
 	cmd.environment.register(clause)
 	clause.BindAction(cmd.Run)
-	clause.BindArgumentsArr([]cli.Argument{{Store: &cmd.command, Name: "command", Required: true}})
+	clause.BindArgumentsArr([]cli.Argument{{Store: &cmd.command, Name: "command", Required: true, Description: "The command to execute"}})
 }
 
 // Run reads files from the .secretsenv/<env-name> directory, sets them as environment variables and runs the given command.

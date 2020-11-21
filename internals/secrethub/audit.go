@@ -77,7 +77,9 @@ func (cmd *AuditCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: false}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.path, Name: "path", Required: false, Description: "Path to the repository or the secret to audit " + repoPathPlaceHolder + " or " + secretPathPlaceHolder},
+	})
 }
 
 // Run prints all audit events for the given repository or secret.

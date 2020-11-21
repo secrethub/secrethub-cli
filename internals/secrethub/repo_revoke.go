@@ -32,14 +32,15 @@ func NewRepoRevokeCommand(io ui.IO, newClient newClientFunc) *RepoRevokeCommand 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoRevokeCommand) Register(r cli.Registerer) {
 	clause := r.Command("revoke", "Revoke an account's access to a repository. A list of secrets that should be rotated will be printed out.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("repo-path", "The repository to revoke the account from").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("account-name", "The account name (username or service name) to revoke access for").Required().SetValue(&cmd.accountName)
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "repo-path", Required: true},
-		{Store: &cmd.accountName, Name: "account-name", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to revoke the account from."},
+		{Store: &cmd.accountName, Name: "account-name", Required: true, Description: "username or service name."},
+	})
 }
 
 // Run removes and revokes access to an account from a repo if possible.

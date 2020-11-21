@@ -30,14 +30,15 @@ func NewRepoInviteCommand(io ui.IO, newClient newClientFunc) *RepoInviteCommand 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoInviteCommand) Register(r cli.Registerer) {
 	clause := r.Command("invite", "Invite a user to collaborate on a repository.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(2)
 	//clause.Arg("repo-path", "The repository to invite the user to").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 	//clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "repo-path", Required: true},
-		{Store: &cmd.username, Name: "username", Required: true}})
+	clause.BindArguments([]cli.Argument{
+		{Store: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to invite the user to."},
+		{Store: &cmd.username, Name: "username", Required: true, Description: "Username of the user."},
+	})
 }
 
 // Run invites the configured user to collaborate on the repo.

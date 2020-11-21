@@ -22,7 +22,7 @@ func (f noColorFlag) init() {
 // RegisterColorFlag registers a color flag that configures whether colored output is used.
 func RegisterColorFlag(app *cli.App) {
 	commandClause := cli.CommandClause{
-		Cmd: &app.Application,
+		Cmd: app.Cmd,
 		App: app,
 	}
 	flag := noColorFlag(false)

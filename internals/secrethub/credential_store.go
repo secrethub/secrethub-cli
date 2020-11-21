@@ -55,7 +55,7 @@ func (store *credentialConfig) IsPassphraseSet() bool {
 // Register registers the flags for configuring the store on the provided Registerer.
 func (store *credentialConfig) Register(app *cli.App) {
 	commandClause := cli.CommandClause{
-		Cmd: &app.Application,
+		Cmd: app.Cmd,
 		App: app,
 	}
 	commandClause.PersistentFlags().Var(&store.configDir, "config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub")

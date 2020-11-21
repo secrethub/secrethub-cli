@@ -62,7 +62,7 @@ func (cmd *ReadCommand) Register(r cli.Registerer) {
 	fileModeFlag.DefValue = "0600"
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Placeholder: secretPathOptionalVersionPlaceHolder, Required: true}})
+	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Placeholder: secretPathOptionalVersionPlaceHolder, Required: true, Description: "The path to the secret."}})
 }
 
 // Run handles the command with the options as specified in the command.

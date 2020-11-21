@@ -68,7 +68,6 @@ func (a *App) Command(name, help string) *CommandClause {
 			fmt.Println(err)
 		}
 	})
-	//clause.Cmd.SetHelpTemplate(setCustomTemplate(clause.Cmd, clause.Args))
 	return clause
 }
 
@@ -272,7 +271,6 @@ func (c *CommandClause) Command(name, help string) *CommandClause {
 			fmt.Println(err)
 		}
 	})
-	//clause.Cmd.SetUsageTemplate(setCustomTemplate(clause.Cmd, c.Args))
 	c.Cmd.AddCommand(clause.Cmd)
 	return clause
 }
@@ -462,12 +460,6 @@ type Registerer interface {
 // it is executed when the command is parsed.
 func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
-	//c.Cmd.SetHelpTemplate(setCustomTemplate(c.Cmd, c.Args))
-	//c.Cmd.SetUsageTemplate(UsageTemplate)
-	//c.Cmd.SetHelpTemplate(HelpTemplate)
-	//c.Cmd.SetUsageFunc(func(command *cobra.Command) error {
-	//	return test(os.Stdout, UsageTemplate, c)
-	//})
 	if params != nil {
 		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 			if err := c.argumentError(args); err != nil {
@@ -482,12 +474,6 @@ func (c *CommandClause) BindArguments(params []Argument) {
 // it is executed when the command is parsed.
 func (c *CommandClause) BindArgumentsArr(params []Argument) {
 	c.Args = params
-	//c.Cmd.SetHelpTemplate(setCustomTemplate(c.Cmd, c.Args))
-	//c.Cmd.SetUsageTemplate(UsageTemplate)
-	//c.Cmd.SetUsageFunc(func(command *cobra.Command) error {
-	//	return test(os.Stdout, UsageTemplate, c)
-	//})
-	//c.Cmd.SetHelpTemplate(HelpTemplate)
 	if params != nil {
 		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
@@ -515,87 +501,3 @@ func (c *CommandClause) BindAction(fn func() error) {
 		}
 	}
 }
-
-//func setCustomTemplate(c *cobra.Command, args []Argument) string {
-//	template := `
-//Usage:{{if .Runnable}}
-//  `
-//	var useLine string
-//	if c.HasParent() {
-//		useLine = c.Parent().CommandPath() + " " + c.Use
-//	} else {
-//		useLine = c.Use
-//	}
-//
-//	if c.HasAvailableFlags() && !strings.Contains(useLine, "[flags]") {
-//		useLine += " [flags]"
-//	}
-//
-//	for _, arg := range args {
-//		if arg.Placeholder != "" {
-//			useLine += " " + arg.Placeholder
-//		} else {
-//			useLine += " <" + arg.Name + ">"
-//		}
-//	}
-//
-//	template += useLine + `{{end}}{{if .HasAvailableSubCommands}}
-//  {{.CommandPath}} [command]{{end}}
-//
-//{{with (or .Long .Short)}}{{. | trimTrailingWhitespaces}}{{end}}{{if gt (len .Aliases) 0}}
-//
-//Aliases:
-//  {{.NameAndAliases}}{{end}}{{if .HasExample}}
-//
-//Examples:
-//{{.Example}}{{end}}{{if .HasAvailableSubCommands}}
-//
-//Available Commands:{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
-//  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
-//
-//Flags:
-//{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
-//
-//Global Flags:
-//{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
-//
-//Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
-//  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
-//
-//Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
-//`
-//	if len(args) != 0 {
-//		buf := new(bytes.Buffer)
-//		lines := make([]string, 0, len(args))
-//		maxlen := 0
-//
-//		fmt.Fprintln(buf, "\nArguments:")
-//		for _, arg := range args {
-//			line := "  "
-//			if arg.Placeholder != "" {
-//				line += arg.Placeholder
-//			} else {
-//				line += "<" + arg.Name + ">"
-//			}
-//
-//			line += "\x00"
-//			if len(line) > maxlen {
-//				maxlen = len(line)
-//			}
-//
-//			line += arg.Description
-//			lines = append(lines, line)
-//		}
-//
-//		for _, line := range lines {
-//			sidx := strings.Index(line, "\x00")
-//			spacing := strings.Repeat(" ", maxlen-sidx)
-//			// maxlen + 2 comes from + 1 for the \x00 and + 1 for the (deliberate) off-by-one in maxlen-sidx
-//			fmt.Fprintln(buf, line[:sidx], spacing, strings.Replace(line[sidx+1:], "\n", "\n"+strings.Repeat(" ", maxlen+2), -1))
-//		}
-//
-//		template += buf.String()
-//	}
-//
-//	return template
-//}

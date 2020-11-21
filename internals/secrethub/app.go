@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"strings"
 
@@ -10,6 +9,8 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/errio"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
+
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -209,55 +210,3 @@ func (app *App) registerCommands() {
 
 	//demo.NewCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 }
-
-var usageTemplate = `Usage:
-{{if not .HasSubCommands}} {{useLine .}}{{end}}
-{{- if .HasSubCommands}}  {{ .CommandPath}}{{- if .HasAvailableFlags}} [flags]{{end}} [command]{{end}}
-
-{{if ne .Long ""}}{{ .Long | trim }}{{ else }}{{ .Short | trim }}{{end}}
-{{- if gt (len .Aliases) 0}}
-
-Aliases:
-{{.NameAndAliases}}
-{{- end}}
-{{- if .HasExample}}
-Examples:
-{{ .Example }}
-{{- end}}
-{{- if hasManagementSubCommands . }}
-
-Management Commands:
-{{- range managementSubCommands . }}
-  {{rpad (decoratedName .) (add .NamePadding 1)}}{{.Short}}
-{{- end}}
-{{- end}}
-{{- if hasSubCommands .}}
-
-Commands:
-{{- range operationSubCommands . }}
-  {{rpad .Name .NamePadding }} {{.Short}}
-{{- end}}
-{{- end}}
-{{- if .HasAvailableLocalFlags}}
-
-Flags:
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}
-{{- end}}
-{{- if .HasAvailableInheritedFlags}}
-
-Global Flags:
-{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}
-{{- end}}
-{{- if hasArgs .}}
-
-Arguments:
-{{argUsages}}
-{{- end}}
-{{- if .HasAvailableSubCommands}}
-
-Use "{{.CommandPath}} [command] --help" for more information about a command.
-{{- end}}
-`
-
-var helpTemplate = `
-{{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}`

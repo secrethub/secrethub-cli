@@ -123,6 +123,7 @@ func (cmd *ServiceInitCommand) Register(r cli.Registerer) {
 	clause.Flags().StringVar(&cmd.file, "out-file", "", "Write the service account configuration to a file instead of stdout.")
 	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.")
 	clause.Cmd.Flag("file-mode").DefValue = "0440"
+	clause.Cmd.Flag("file-mode").NoOptDefVal = "0440"
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{{Store: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})

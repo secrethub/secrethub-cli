@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"fmt"
+	"github.com/spf13/pflag"
 	"io"
 	"strings"
 	"text/template"
@@ -26,7 +27,7 @@ var templateFuncs = template.FuncMap{
 	"useLine":                  useLine,
 	"hasArgs":                  hasArgs,
 	"argUsages":                argUsages,
-	"isApp":                    isApp,
+	"flagUsages":				flagUsages,
 }
 
 // Tmpl executes the given template text on data, writing the result to w.
@@ -45,15 +46,6 @@ func rpad(s string, padding int) string {
 
 func trimRightSpace(s string) string {
 	return strings.TrimRightFunc(s, unicode.IsSpace)
-}
-
-func isApp(c interface{}) bool {
-	switch c.(type) {
-	case *App:
-		return false
-	default:
-		return true
-	}
 }
 
 func hasSubCommands(cmd *cobra.Command) bool {
@@ -148,6 +140,68 @@ func useLine(c *cobra.Command, args []Argument) string {
 	return useLine
 }
 
+func flagUsages(c *CommandClause) string {
+	flagSet := c.Flags()
+	buf := new(bytes.Buffer)
+
+	lines := make([]string, 0, flagSet.NFlag())
+
+	maxlen := 0
+
+	flagSet.VisitAll(func(f *pflag.Flag) {
+		if f.Hidden {
+			return
+		}
+
+		line := ""
+		if f.Shorthand != "" && f.ShorthandDeprecated == "" {
+			line = fmt.Sprintf("  -%s, --%s", f.Shorthand, f.Name)
+		} else {
+			line = fmt.Sprintf("      --%s", f.Name)
+		}
+		if f.NoOptDefVal != "" {
+			switch f.Value.Type() {
+			case "string":
+				line += fmt.Sprintf("[=\"%s\"]", f.NoOptDefVal)
+			case "bool":
+				if f.NoOptDefVal != "true" {
+					line += fmt.Sprintf("[=%s]", f.NoOptDefVal)
+				}
+			case "count":
+				if f.NoOptDefVal != "+1" {
+					line += fmt.Sprintf("[=%s]", f.NoOptDefVal)
+				}
+			default:
+				line += fmt.Sprintf("[=%s]", f.NoOptDefVal)
+			}
+		}
+
+		_, usage := pflag.UnquoteUsage(f)
+		// This special character will be replaced with spacing once the
+		// correct alignment is calculated
+		line += "\x00"
+		if len(line) > maxlen {
+			maxlen = len(line)
+		}
+		line += usage
+
+		if c.Flag(f.Name).envVar != "" && f.Name != "help"{
+			line += " ($" + c.Flag(f.Name).envVar + ")"
+		}
+
+		lines = append(lines, line)
+	})
+
+	for _, line := range lines {
+		sidx := strings.Index(line, "\x00")
+		spacing := strings.Repeat(" ", maxlen-sidx)
+		// maxlen + 2 comes from + 1 for the \x00 and + 1 for the (deliberate) off-by-one in maxlen-sidx
+		fmt.Fprintln(buf, line[:sidx], spacing, strings.Replace(line[sidx+1:], "\n", "\n"+strings.Repeat(" ", maxlen+2), -1))
+	}
+
+	return buf.String()
+}
+
 var UsageTemplate = `Usage:
 {{if not .Cmd.HasSubCommands}} {{(useLine .Cmd .Args)}}{{end}}
 {{- if .Cmd.HasSubCommands}}  {{ .Cmd.CommandPath}}{{- if .Cmd.HasAvailableFlags}} [flags]{{end}} [command]{{end}}
@@ -179,19 +233,18 @@ Commands:
 {{- if .Cmd.HasAvailableLocalFlags}}
 
 Flags:
-{{.Cmd.LocalFlags.FlagUsages | trimTrailingWhitespaces}}
+{{flagUsages . | trimTrailingWhitespaces}}
 {{- end}}
 {{- if .Cmd.HasAvailableInheritedFlags}}
 
 Global Flags:
-{{.Cmd.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}
+{{flagUsages .Cmd.InheritedFlags | trimTrailingWhitespaces}}
 {{- end}}
-{{- if isApp .}}
 {{- if hasArgs .Args}}
 
 Arguments:
 {{argUsages .Args}}
-{{- end}}{{- end}}
+{{- end}}
 {{- if .Cmd.HasAvailableSubCommands}}
 
 Use "{{.Cmd.CommandPath}} [command] --help" for more information about a command.

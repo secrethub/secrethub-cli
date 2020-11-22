@@ -99,15 +99,20 @@ func NewApp() *App {
 		logger:          cli.NewLogger(),
 	}
 
+	commandClause := &cli.CommandClause{
+		Cmd: app.cli.Cmd,
+		App: app.cli,
+	}
+
 	app.cli.Cmd.SetUsageFunc(func(command *cobra.Command) error {
-		err := cli.Tmpl(os.Stdout, cli.UsageTemplate, app.cli)
+		err := cli.Tmpl(os.Stdout, cli.UsageTemplate, commandClause)
 		if err != nil {
 			fmt.Println(err)
 		}
 		return err
 	})
 	app.cli.Cmd.SetHelpFunc(func(command *cobra.Command, i []string) {
-		err := cli.Tmpl(os.Stdout, cli.HelpTemplate, app.cli)
+		err := cli.Tmpl(os.Stdout, cli.HelpTemplate, commandClause)
 		if err != nil {
 			fmt.Println(err)
 		}

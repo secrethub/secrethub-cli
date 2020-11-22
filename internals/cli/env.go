@@ -180,81 +180,6 @@ type CommandClause struct {
 	Args []Argument
 }
 
-func (f *FlagSet) BoolVarP(reference *bool, name, shorthand string, def bool, usage string) *Flag {
-	f.FlagSet.BoolVarP(reference, name, shorthand, def, usage)
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) IntVarP(reference *int, name, shorthand string, def int, usage string) *Flag {
-	f.FlagSet.IntVarP(reference, name, shorthand, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = strconv.Itoa(def)
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) StringVarP(reference *string, name, shorthand string, def string, usage string) *Flag {
-	f.FlagSet.StringVarP(reference, name, shorthand, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = def
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string) *Flag {
-	f.FlagSet.DurationVarP(reference, name, shorthand, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = def.String()
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) BoolVar(reference *bool, name string, def bool, usage string) *Flag {
-	f.FlagSet.BoolVar(reference, name, def, usage)
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) IntVar(reference *int, name string, def int, usage string) *Flag {
-	f.FlagSet.IntVar(reference, name, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = strconv.Itoa(def)
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) StringVar(reference *string, name string, def string, usage string) *Flag {
-	f.FlagSet.StringVar(reference, name, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = def
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) DurationVar(reference *time.Duration, name string, def time.Duration, usage string) *Flag {
-	f.FlagSet.DurationVar(reference, name, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = def.String()
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) VarP(reference pflag.Value, name string, shorthand string, usage string) *Flag {
-	f.FlagSet.VarP(reference, name, shorthand, usage)
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) Var(reference pflag.Value, name string, usage string) *Flag {
-	f.FlagSet.Var(reference, name, usage)
-	return f.cmd.Flag(name)
-}
-
-func (f *FlagSet) VarPF(reference pflag.Value, name string, shorthand string, usage string) *pflag.Flag {
-	flag := f.FlagSet.VarPF(reference, name, shorthand, usage)
-	f.cmd.Flag(name)
-	return flag
-}
-
-func (c *CommandClause) Flags() *FlagSet {
-	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
-}
-
-func (c *CommandClause) PersistentFlags() *FlagSet {
-	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
-}
-
-type FlagSet struct {
-	*pflag.FlagSet
-	cmd *CommandClause
-}
-
 // Command adds a new subcommand to this command.
 func (c *CommandClause) Command(name, help string) *CommandClause {
 	clause := &CommandClause{
@@ -328,6 +253,117 @@ func (c *CommandClause) Flag(name string) *Flag {
 		app:    c.App,
 		envVar: envVar,
 	}).Envar(envVar)
+}
+
+func (c *CommandClause) Flags() *FlagSet {
+	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
+}
+
+func (c *CommandClause) PersistentFlags() *FlagSet {
+	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
+}
+
+// BindArguments binds a function to a command clause, so that
+// it is executed when the command is parsed.
+func (c *CommandClause) BindArguments(params []Argument) {
+	c.Args = params
+	if params != nil {
+		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			if err := c.argumentError(args); err != nil {
+				return err
+			}
+			return ArgumentRegister(params, args)
+		}
+	}
+}
+
+// BindArgumentsArr binds a function to a command clause, so that
+// it is executed when the command is parsed.
+func (c *CommandClause) BindArgumentsArr(params []Argument) {
+	c.Args = params
+	if params != nil {
+		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			if len(args) <= 0 {
+				return c.argumentError(args)
+			}
+			return ArgumentArrRegister(params, args)
+		}
+	}
+}
+
+func (c *CommandClause) BindAction(fn func() error) {
+	if fn != nil {
+		c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
+			return fn()
+		}
+	}
+}
+
+type FlagSet struct {
+	*pflag.FlagSet
+	cmd *CommandClause
+}
+
+func (f *FlagSet) BoolVarP(reference *bool, name, shorthand string, def bool, usage string) *Flag {
+	f.FlagSet.BoolVarP(reference, name, shorthand, def, usage)
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) IntVarP(reference *int, name, shorthand string, def int, usage string) *Flag {
+	f.FlagSet.IntVarP(reference, name, shorthand, def, usage)
+	f.cmd.Flag(name).NoOptDefVal = strconv.Itoa(def)
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) StringVarP(reference *string, name, shorthand string, def string, usage string) *Flag {
+	f.FlagSet.StringVarP(reference, name, shorthand, def, usage)
+	f.cmd.Flag(name).NoOptDefVal = def
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string) *Flag {
+	f.FlagSet.DurationVarP(reference, name, shorthand, def, usage)
+	f.cmd.Flag(name).NoOptDefVal = def.String()
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) BoolVar(reference *bool, name string, def bool, usage string) *Flag {
+	f.FlagSet.BoolVar(reference, name, def, usage)
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) IntVar(reference *int, name string, def int, usage string) *Flag {
+	f.FlagSet.IntVar(reference, name, def, usage)
+	f.cmd.Flag(name).NoOptDefVal = strconv.Itoa(def)
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) StringVar(reference *string, name string, def string, usage string) *Flag {
+	f.FlagSet.StringVar(reference, name, def, usage)
+	f.cmd.Flag(name).NoOptDefVal = def
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) DurationVar(reference *time.Duration, name string, def time.Duration, usage string) *Flag {
+	f.FlagSet.DurationVar(reference, name, def, usage)
+	f.cmd.Flag(name).NoOptDefVal = def.String()
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) VarP(reference pflag.Value, name string, shorthand string, usage string) *Flag {
+	f.FlagSet.VarP(reference, name, shorthand, usage)
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) Var(reference pflag.Value, name string, usage string) *Flag {
+	f.FlagSet.Var(reference, name, usage)
+	return f.cmd.Flag(name)
+}
+
+func (f *FlagSet) VarPF(reference pflag.Value, name string, shorthand string, usage string) *pflag.Flag {
+	flag := f.FlagSet.VarPF(reference, name, shorthand, usage)
+	f.cmd.Flag(name)
+	return flag
 }
 
 // Flag represents a command-line flag.
@@ -463,34 +499,6 @@ type Registerer interface {
 	Command(cmd string, help string) *CommandClause
 }
 
-// BindArguments binds a function to a command clause, so that
-// it is executed when the command is parsed.
-func (c *CommandClause) BindArguments(params []Argument) {
-	c.Args = params
-	if params != nil {
-		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			if err := c.argumentError(args); err != nil {
-				return err
-			}
-			return ArgumentRegister(params, args)
-		}
-	}
-}
-
-// BindArgumentsArr binds a function to a command clause, so that
-// it is executed when the command is parsed.
-func (c *CommandClause) BindArgumentsArr(params []Argument) {
-	c.Args = params
-	if params != nil {
-		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			if len(args) <= 0 {
-				return c.argumentError(args)
-			}
-			return ArgumentArrRegister(params, args)
-		}
-	}
-}
-
 func getRequired(params []Argument) int {
 	required := 0
 	for _, arg := range params {
@@ -499,12 +507,4 @@ func getRequired(params []Argument) int {
 		}
 	}
 	return required
-}
-
-func (c *CommandClause) BindAction(fn func() error) {
-	if fn != nil {
-		c.Cmd.RunE = func(cmd *cobra.Command, args []string) error {
-			return fn()
-		}
-	}
 }

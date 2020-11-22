@@ -3,13 +3,13 @@ package cli
 import (
 	"bytes"
 	"fmt"
-	"github.com/spf13/pflag"
 	"io"
 	"strings"
 	"text/template"
 	"unicode"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var templateFuncs = template.FuncMap{
@@ -27,7 +27,7 @@ var templateFuncs = template.FuncMap{
 	"useLine":                  useLine,
 	"hasArgs":                  hasArgs,
 	"argUsages":                argUsages,
-	"flagUsages":				flagUsages,
+	"flagUsages":               flagUsages,
 }
 
 // Tmpl executes the given template text on data, writing the result to w.
@@ -185,7 +185,7 @@ func flagUsages(c *CommandClause) string {
 		}
 		line += usage
 
-		if c.Flag(f.Name).envVar != "" && f.Name != "help"{
+		if c.Flag(f.Name).envVar != "" && f.Name != "help" {
 			line += " ($" + c.Flag(f.Name).envVar + ")"
 		}
 

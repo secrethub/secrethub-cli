@@ -160,7 +160,7 @@ func (cmd *ServiceGCPInitCommand) Register(r cli.Registerer) {
 	//clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
 	clause.Flags().StringVar(&cmd.kmsKeyResourceID, "kms-key", "", "The Resource ID of the KMS-key to be used for encrypting the service's account key.")
 	clause.Flags().StringVar(&cmd.serviceAccountEmail, "service-account-email", "", "The email of the GCP Service Account that should have access to this service account.")
-	clause.Flags().StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.")
+	clause.Flags().StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it. Defaults to `GCP Service Account <service-account-email>`")
 	clause.Flags().StringVar(&cmd.description, "descr", "", "")
 	clause.Flags().StringVar(&cmd.description, "desc", "", "")
 	clause.Cmd.Flag("desc").Hidden = true

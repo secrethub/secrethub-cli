@@ -213,6 +213,7 @@ Aliases:
   {{.Cmd.NameAndAliases}}
 {{- end}}
 {{- if .Cmd.HasExample}}
+
 Examples:
 {{ .Cmd.Example }}
 {{- end}}

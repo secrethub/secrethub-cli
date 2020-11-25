@@ -114,9 +114,23 @@ func (cmd *ImportDotEnvCommand) Run() error {
 			return err
 		}
 
-		for path := range alreadyExist {
-			confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A secret at location %s already exists. "+
-				"This import process will overwrite this secret. Do you wish to continue?", path), ui.DefaultNo)
+		if len(alreadyExist) > 0 {
+			_, promptOut, err := cmd.io.Prompts()
+			if err != nil {
+				errMessage := "secrets already exist at the following locations: "
+				for location := range alreadyExist {
+					errMessage += location + ", "
+				}
+				errMessage = errMessage[:len(errMessage)-2]
+				return fmt.Errorf(errMessage)
+			}
+
+			fmt.Fprintln(promptOut, "secrets already exist at the following locations:")
+			for location := range alreadyExist {
+				fmt.Fprintln(promptOut, location)
+			}
+
+			confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("This import process will overwrite these secrets. Do you wish to continue?"), ui.DefaultNo)
 
 			if err != nil {
 				return err

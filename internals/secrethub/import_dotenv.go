@@ -219,7 +219,7 @@ func buildMap(input string) map[string]string {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if !strings.HasPrefix(strings.TrimSpace(line), "#") {
-			split := strings.Split(line, "=>")
+			split := strings.SplitN(line, "=>",2)
 			locationsMap[strings.TrimSpace(split[0])] = strings.TrimSpace(split[1])
 		}
 	}

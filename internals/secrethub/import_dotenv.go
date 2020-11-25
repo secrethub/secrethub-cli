@@ -204,7 +204,7 @@ func openEditor(input string) (string, error) {
 }
 
 func buildFile(locationsMap map[string]string) string {
-	output := "Choose the paths to where your secrets will be written:\n"
+	output := "# Choose the paths to where your secrets will be written:\n"
 
 	for envVarKey, secretPath := range locationsMap {
 		output += fmt.Sprintf("%s => %s\n", envVarKey, secretPath)
@@ -214,13 +214,14 @@ func buildFile(locationsMap map[string]string) string {
 
 func buildMap(input string) map[string]string {
 	scanner := bufio.NewScanner(strings.NewReader(input))
-	scanner.Scan()
 	locationsMap := make(map[string]string)
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		split := strings.Split(line, "=>")
-		locationsMap[strings.TrimSpace(split[0])] = strings.TrimSpace(split[1])
+		if !strings.HasPrefix(strings.TrimSpace(line), "#") {
+			split := strings.Split(line, "=>")
+			locationsMap[strings.TrimSpace(split[0])] = strings.TrimSpace(split[1])
+		}
 	}
 	return locationsMap
 }

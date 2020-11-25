@@ -60,9 +60,14 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		return err
 	}
 
-	locationsMap := make(map[string]string)
-	for key := range envVar {
-		locationsMap[key] = secretpath.Join(cmd.path.Value(), strings.ToLower(key))
+	keys := make([]string, 0, len(envVar))
+	for k := range envVar {
+		keys = append(keys, k)
+	}
+	unPrefixedLocationsMap := envkeysToPaths(keys)
+	locationsMap := make(map[string]string, len(unPrefixedLocationsMap))
+	for key, path := range unPrefixedLocationsMap {
+		locationsMap[key] = secretpath.Join(cmd.path.Value(), path)
 	}
 
 	if cmd.interactive {
@@ -218,4 +223,67 @@ func buildMap(input string) map[string]string {
 		locationsMap[strings.TrimSpace(split[0])] = strings.TrimSpace(split[1])
 	}
 	return locationsMap
+}
+
+type envKeyToPath struct {
+	key  string
+	tail []string
+}
+
+// envkeysToPaths maps environment variable keys to paths on SecretHub in
+// which to store the secrets the corresponding environment variables
+// contain.
+// See Test_envkeysToPaths for examples on how envkeysToPaths maps the keys
+// to paths.
+func envkeysToPaths(envkeys []string) map[string]string {
+	keys := make([]envKeyToPath, len(envkeys))
+	for i, envkey := range envkeys {
+		keys[i] = envKeyToPath{
+			key:  envkey,
+			tail: strings.Split(strings.ToLower(envkey), "_"),
+		}
+	}
+	res, _ := splittedEnvKeysToPaths(keys)
+	return res
+}
+
+func splittedEnvKeysToPaths(keys []envKeyToPath) (map[string]string, bool) {
+	byHeads := make(map[string][]envKeyToPath)
+	for _, key := range keys {
+		if len(key.tail) == 0 {
+			// If there's no tail, that means one key is completely equal to part of another key.
+			// e.g. STRIPE_API, STRIPE_API_KEY
+			// In this edge-case we create secrets "api" and "api-key" and we don't create a directory called "api".
+			res := make(map[string]string, len(keys))
+			for _, key = range keys {
+				res[key.key] = strings.Join(key.tail, "-")
+			}
+			return res, true
+		}
+		byHeads[key.tail[0]] = append(byHeads[key.tail[0]], envKeyToPath{key: key.key, tail: key.tail[1:]})
+	}
+
+	res := make(map[string]string)
+	for head, keys := range byHeads {
+		if len(keys) > 1 {
+			paths, oneDir := splittedEnvKeysToPaths(keys)
+			for key, path := range paths {
+				if oneDir {
+					res[key] = head
+					if path != "" {
+						// If all secrets starting with this prefix are already in a single directory,
+						// we don't want to put that directory into another directory, but instead use
+						// a longer name for that directory. For example, we don't want MY_APP prefix
+						// to convert to my/app/ directories, but to one single my-app directory.
+						res[key] += "-" + path
+					}
+				} else {
+					res[key] = secretpath.Join(head, path)
+				}
+			}
+		} else {
+			res[keys[0].key] = strings.Join(append([]string{head}, keys[0].tail...), "-")
+		}
+	}
+	return res, len(byHeads) == 1
 }

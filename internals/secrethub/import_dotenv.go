@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"text/tabwriter"
 
 	"golang.org/x/sync/errgroup"
 
@@ -219,9 +220,12 @@ func (e editor) Write(in []byte) (int, error) {
 func buildFile(locationsMap map[string]string, w io.Writer) {
 	_, _ = fmt.Fprintln(w, "# Choose the paths to where your secrets will be written:")
 
+	tabWriter := tabwriter.NewWriter(w, 0, 2, 2, ' ', 0)
+
 	for envVarKey, secretPath := range locationsMap {
-		_, _ = fmt.Fprintf(w, "%s => %s\n", envVarKey, secretPath)
+		_, _ = fmt.Fprintf(tabWriter, "%s\t=>\t%s\n", envVarKey, secretPath)
 	}
+	_ = tabWriter.Flush()
 }
 
 func buildMap(input io.Reader) (map[string]string, error) {

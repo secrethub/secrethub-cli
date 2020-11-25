@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -71,11 +72,17 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	}
 
 	if cmd.interactive {
-		mappingString, err := openEditor(buildFile(locationsMap))
+		editor, err := newEditor()
 		if err != nil {
 			return err
 		}
-		locationsMap, err = buildMap(mappingString)
+		buildFile(locationsMap, editor)
+		edited, err := editor.openAndWait()
+		if err != nil {
+			return err
+		}
+
+		locationsMap, err = buildMap(edited)
 		if err != nil {
 			return err
 		}
@@ -160,63 +167,65 @@ func (cmd *ImportDotEnvCommand) Run() error {
 	return nil
 }
 
-// openEditor opens an editor with the provided input as contents,
-// lets the user edit those contents with the editor and returns
-// the edited contents.
-// Note that this functions is blocking for user input.
-func openEditor(input string) (string, error) {
+type editor struct {
+	file *os.File
+}
+
+func newEditor() (editor, error) {
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "secrethub-")
 	if err != nil {
-		return "", err
+		return editor{}, nil
 	}
-	defer func() {
-		_ = os.Remove(tmpFile.Name())
-	}()
+	return editor{
+		file: tmpFile,
+	}, nil
+}
 
-	_, err = tmpFile.WriteString(input)
-	if err != nil {
-		return "", err
-	}
+// openAndWait opens the editors file in an editor and waits
+// for the user to exit the editor.
+// It returns a reader to read the edited contents of the file.
+func (e editor) openAndWait() (io.Reader, error) {
+	defer func() {
+		_ = os.Remove(e.file.Name())
+	}()
 
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "editor"
 	}
 
-	cmd := exec.Command(editor, tmpFile.Name())
+	cmd := exec.Command(editor, e.file.Name())
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err = cmd.Start()
+	err := cmd.Start()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	err = cmd.Wait()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	out, err := ioutil.ReadFile(tmpFile.Name())
-	if err != nil {
-		return "", err
-	}
-
-	return string(out), nil
+	return os.Open(e.file.Name())
 }
 
-func buildFile(locationsMap map[string]string) string {
-	output := "# Choose the paths to where your secrets will be written:\n"
+func (e editor) Write(in []byte) (int, error) {
+	return e.file.Write(in)
+}
+
+func buildFile(locationsMap map[string]string, w io.Writer) {
+	_, _ = fmt.Fprintln(w, "# Choose the paths to where your secrets will be written:")
 
 	for envVarKey, secretPath := range locationsMap {
-		output += fmt.Sprintf("%s => %s\n", envVarKey, secretPath)
+		_, _ = fmt.Fprintf(w, "%s => %s\n", envVarKey, secretPath)
 	}
-	return output
 }
 
-func buildMap(input string) (map[string]string, error) {
-	scanner := bufio.NewScanner(strings.NewReader(input))
+func buildMap(input io.Reader) (map[string]string, error) {
+	scanner := bufio.NewScanner(input)
 	locationsMap := make(map[string]string)
 
 	i := 0

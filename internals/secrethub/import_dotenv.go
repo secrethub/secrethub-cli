@@ -75,7 +75,10 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		if err != nil {
 			return err
 		}
-		locationsMap = buildMap(mappingString)
+		locationsMap, err = buildMap(mappingString)
+		if err != nil {
+			return err
+		}
 	}
 
 	if !cmd.force {
@@ -212,18 +215,26 @@ func buildFile(locationsMap map[string]string) string {
 	return output
 }
 
-func buildMap(input string) map[string]string {
+func buildMap(input string) (map[string]string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	locationsMap := make(map[string]string)
 
+	i := 0
 	for scanner.Scan() {
+		i++
 		line := scanner.Text()
 		if !strings.HasPrefix(strings.TrimSpace(line), "#") {
-			split := strings.SplitN(line, "=>",2)
+			split := strings.SplitN(line, "=>", 2)
+			if len(split) != 2 {
+				if strings.Contains(line, "=>") {
+					return nil, fmt.Errorf("could not parse prompt at line %d: '=>' should be followed by a secret path", i)
+				}
+				return nil, fmt.Errorf("could not parse prompt at line %d: missing '=>'", i)
+			}
 			locationsMap[strings.TrimSpace(split[0])] = strings.TrimSpace(split[1])
 		}
 	}
-	return locationsMap
+	return locationsMap, nil
 }
 
 type envKeyToPath struct {

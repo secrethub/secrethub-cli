@@ -73,11 +73,12 @@ func printTree(t *api.Tree, w io.Writer, fullPaths bool, path string, showReport
 	name := colorizeByStatus(t.RootDir.Status, rootDirName)
 	fmt.Fprintf(w, "%s\n", name)
 
+	prevPath := ""
 	if fullPaths {
-		printDirContentsRecursively(t.RootDir, "", w, path, fullPaths, indentation)
-	} else {
-		printDirContentsRecursively(t.RootDir, "", w, "", fullPaths, indentation)
+		prevPath = path
 	}
+	printDirContentsRecursively(t.RootDir, "", w, prevPath, fullPaths, indentation)
+
 	if showReport {
 		fmt.Fprintf(w,
 			"\n%s, %s\n",

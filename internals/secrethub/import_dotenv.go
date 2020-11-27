@@ -232,14 +232,20 @@ func (e editor) Write(in []byte) (int, error) {
 }
 
 func buildFile(locationsMap map[string]string, w io.Writer) {
-	_, _ = fmt.Fprintln(w, "# Choose the paths to where your secrets will be written:")
-
 	tabWriter := tabwriter.NewWriter(w, 0, 2, 2, ' ', 0)
 
 	for envVarKey, secretPath := range locationsMap {
 		_, _ = fmt.Fprintf(tabWriter, "%s\t=>\t%s\n", envVarKey, secretPath)
 	}
 	_ = tabWriter.Flush()
+
+	_, _ = fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "# Environment variables on the left will be stored in SecretHub at the given path on the right.")
+	_, _ = fmt.Fprintln(w, "# You can remove or comment out lines for environment variables you do not want to import.")
+	_, _ = fmt.Fprintln(w, "# You can change the path where the secrets are stored for the variables you want to keep.")
+	_, _ = fmt.Fprintln(w, "# For example, you can group variables in a directory.")
+	_, _ = fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "# When everything is to your liking, you can save the file and exit the editor to continue.")
 }
 
 func buildMap(input io.Reader) (map[string]string, error) {

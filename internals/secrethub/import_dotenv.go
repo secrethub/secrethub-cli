@@ -240,7 +240,7 @@ func buildFile(locationsMap map[string]string, w io.Writer) {
 	_ = tabWriter.Flush()
 
 	_, _ = fmt.Fprintln(w)
-	_, _ = fmt.Fprintln(w, "# Environment variables on the left will be stored in SecretHub at the given path on the right.")
+	_, _ = fmt.Fprintln(w, "# Environment variables on the left of '=>' will be stored in SecretHub at the given path on the right.")
 	_, _ = fmt.Fprintln(w, "# You can remove or comment out lines for environment variables you do not want to import.")
 	_, _ = fmt.Fprintln(w, "# You can change the path where the secrets are stored for the variables you want to keep.")
 	_, _ = fmt.Fprintln(w, "# For example, you can group variables in a directory.")

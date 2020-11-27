@@ -250,7 +250,8 @@ func buildMap(input io.Reader) (map[string]string, error) {
 	for scanner.Scan() {
 		i++
 		line := scanner.Text()
-		if !strings.HasPrefix(strings.TrimSpace(line), "#") {
+		line = strings.TrimSpace(line)
+		if !strings.HasPrefix(line, "#") && line != "" {
 			split := strings.SplitN(line, "=>", 2)
 			if len(split) != 2 {
 				if strings.Contains(line, "=>") {

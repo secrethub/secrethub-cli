@@ -174,10 +174,22 @@ func (cmd *ImportDotEnvCommand) Run() error {
 		return err
 	}
 
-	_, err = fmt.Fprintf(cmd.io.Output(), "Transfer complete! The secrets have been written to %s.\n", cmd.path.String())
+	_, err = fmt.Fprintf(cmd.io.Output(), "Transfer complete! The secrets have been written to %s:\n", cmd.path.String())
 	if err != nil {
 		return err
 	}
+
+	_, err = fmt.Fprintln(cmd.io.Output())
+	if err != nil {
+		return err
+	}
+
+	tree, err := client.Dirs().GetTree(cmd.path.Value(), -1, false)
+	if err != nil {
+		return err
+	}
+
+	printTree(tree, cmd.io.Output(), false, cmd.path.Value(), false, true)
 
 	return nil
 }

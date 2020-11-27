@@ -60,22 +60,25 @@ func (cmd *TreeCommand) Register(r command.Registerer) {
 
 // printTree recursively prints the tree's contents in a tree-like structure.
 func (cmd *TreeCommand) printTree(t *api.Tree, w io.Writer) {
+	printTree(t, w, cmd.fullPaths, cmd.path.Value(), !cmd.noReport, !cmd.noIndentation)
+}
 
+func printTree(t *api.Tree, w io.Writer, fullPaths bool, path string, showReport bool, indentation bool) {
 	rootDirName := func() string {
-		if cmd.fullPaths {
-			return cmd.path.Value() + "/"
+		if fullPaths {
+			return path + "/"
 		}
 		return t.RootDir.Name + "/"
 	}()
 	name := colorizeByStatus(t.RootDir.Status, rootDirName)
 	fmt.Fprintf(w, "%s\n", name)
 
-	if cmd.fullPaths {
-		cmd.printDirContentsRecursively(t.RootDir, "", w, cmd.path.Value())
+	if fullPaths {
+		printDirContentsRecursively(t.RootDir, "", w, path, fullPaths, indentation)
 	} else {
-		cmd.printDirContentsRecursively(t.RootDir, "", w, "")
+		printDirContentsRecursively(t.RootDir, "", w, "", fullPaths, indentation)
 	}
-	if !cmd.noReport {
+	if showReport {
 		fmt.Fprintf(w,
 			"\n%s, %s\n",
 			pluralize("directory", "directories", t.DirCount()),
@@ -86,14 +89,14 @@ func (cmd *TreeCommand) printTree(t *api.Tree, w io.Writer) {
 
 // printDirContentsRecursively is a recursive function that prints the directory's contents
 // in a tree-like structure, subdirs first followed by secrets.
-func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer, prevPath string) {
+func printDirContentsRecursively(dir *api.Dir, prefix string, w io.Writer, prevPath string, fullPaths bool, indentation bool) {
 
 	sort.Sort(api.SortDirByName(dir.SubDirs))
 	sort.Sort(api.SortSecretByName(dir.Secrets))
 
 	total := len(dir.SubDirs) + len(dir.Secrets)
 
-	if cmd.fullPaths {
+	if fullPaths {
 		prevPath += "/"
 	} else {
 		prevPath = ""
@@ -103,32 +106,32 @@ func (cmd *TreeCommand) printDirContentsRecursively(dir *api.Dir, prefix string,
 	for _, sub := range dir.SubDirs {
 
 		name := sub.Name
-		if cmd.fullPaths {
+		if fullPaths {
 			name = prevPath + name
 		}
 		colorName := colorizeByStatus(sub.Status, name+"/")
 
-		if cmd.noIndentation {
+		if !indentation {
 			fmt.Fprintf(w, "%s\n", colorName)
-			cmd.printDirContentsRecursively(sub, prefix, w, name)
+			printDirContentsRecursively(sub, prefix, w, name, fullPaths, indentation)
 		} else if i == total-1 {
 			fmt.Fprintf(w, "%s└── %s\n", prefix, colorName)
-			cmd.printDirContentsRecursively(sub, prefix+"    ", w, name)
+			printDirContentsRecursively(sub, prefix+"    ", w, name, fullPaths, indentation)
 		} else {
 			fmt.Fprintf(w, "%s├── %s\n", prefix, colorName)
-			cmd.printDirContentsRecursively(sub, prefix+"│   ", w, name)
+			printDirContentsRecursively(sub, prefix+"│   ", w, name, fullPaths, indentation)
 		}
 		i++
 	}
 
 	for _, secret := range dir.Secrets {
 		name := secret.Name
-		if cmd.fullPaths {
+		if fullPaths {
 			name = prevPath + name
 		}
 		colorName := colorizeByStatus(secret.Status, name)
 
-		if cmd.noIndentation {
+		if !indentation {
 			fmt.Fprintf(w, "%s\n", colorName)
 		} else if i == total-1 {
 			fmt.Fprintf(w, "%s└── %s\n", prefix, colorName)

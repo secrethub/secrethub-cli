@@ -66,11 +66,10 @@ func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 	//clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	clause.Flags().VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret. Defaults to "+strconv.Itoa(defaultLength)) //.PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Cmd.Flag("length").DefValue = strconv.Itoa(defaultLength)
-	clause.Cmd.Flag("length").NoOptDefVal = strconv.Itoa(defaultLength)
 	clause.Flags().Var(&cmd.mins, "min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constraints reduces the strength of the secret. When possible, avoid any constraints.")
 	clause.Flags().BoolVarP(&cmd.copyToClipboard, "clip", "c", false, "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".")
+	cmd.charsetFlag.Set("alphanumeric")
 	clause.Flags().Var(&cmd.charsetFlag, "charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list. Defaults to alphanumeric.") //Default("alphanumeric").HintOptions("all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable")
-	clause.Cmd.Flag("charset").DefValue = "alphanumeric"
 	_ = clause.Cmd.RegisterFlagCompletionFunc("charset", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable"}, cobra.ShellCompDirectiveDefault
 	})
@@ -82,8 +81,8 @@ func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
 		{Store: &cmd.firstArg, Name: "secret-path", Required: true, Placeholder: secretPathPlaceHolder, Description: "The path to write the generated secret to."},
-		{Store: &cmd.secondArg, Name: "rand-command", Required: false},
-		{Store: &cmd.lengthArg, Name: "length", Required: false},
+		{Store: &cmd.secondArg, Name: "rand-command", Required: false, Hidden: true},
+		{Store: &cmd.lengthArg, Name: "length", Required: false, Hidden: true},
 	})
 }
 

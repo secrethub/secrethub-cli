@@ -312,18 +312,21 @@ func (f *FlagSet) BoolVarP(reference *bool, name, shorthand string, def bool, us
 func (f *FlagSet) IntVarP(reference *int, name, shorthand string, def int, usage string) *Flag {
 	f.FlagSet.IntVarP(reference, name, shorthand, def, usage)
 	f.cmd.Flag(name).NoOptDefVal = strconv.Itoa(def)
+	f.cmd.Flag(name).DefValue = strconv.Itoa(def)
 	return f.cmd.Flag(name)
 }
 
 func (f *FlagSet) StringVarP(reference *string, name, shorthand string, def string, usage string) *Flag {
 	f.FlagSet.StringVarP(reference, name, shorthand, def, usage)
 	f.cmd.Flag(name).NoOptDefVal = def
+	f.cmd.Flag(name).DefValue = def
 	return f.cmd.Flag(name)
 }
 
 func (f *FlagSet) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string) *Flag {
 	f.FlagSet.DurationVarP(reference, name, shorthand, def, usage)
 	f.cmd.Flag(name).NoOptDefVal = def.String()
+	f.cmd.Flag(name).DefValue = def.String()
 	return f.cmd.Flag(name)
 }
 
@@ -335,18 +338,21 @@ func (f *FlagSet) BoolVar(reference *bool, name string, def bool, usage string) 
 func (f *FlagSet) IntVar(reference *int, name string, def int, usage string) *Flag {
 	f.FlagSet.IntVar(reference, name, def, usage)
 	f.cmd.Flag(name).NoOptDefVal = strconv.Itoa(def)
+	f.cmd.Flag(name).DefValue = strconv.Itoa(def)
 	return f.cmd.Flag(name)
 }
 
 func (f *FlagSet) StringVar(reference *string, name string, def string, usage string) *Flag {
 	f.FlagSet.StringVar(reference, name, def, usage)
 	f.cmd.Flag(name).NoOptDefVal = def
+	f.cmd.Flag(name).DefValue = def
 	return f.cmd.Flag(name)
 }
 
 func (f *FlagSet) DurationVar(reference *time.Duration, name string, def time.Duration, usage string) *Flag {
 	f.FlagSet.DurationVar(reference, name, def, usage)
 	f.cmd.Flag(name).NoOptDefVal = def.String()
+	f.cmd.Flag(name).DefValue = def.String()
 	return f.cmd.Flag(name)
 }
 
@@ -357,6 +363,7 @@ func (f *FlagSet) VarP(reference pflag.Value, name string, shorthand string, usa
 
 func (f *FlagSet) Var(reference pflag.Value, name string, usage string) *Flag {
 	f.FlagSet.Var(reference, name, usage)
+	f.cmd.Flag(name).DefValue = reference.String()
 	return f.cmd.Flag(name)
 }
 
@@ -383,7 +390,9 @@ func (f *Flag) Envar(name string) *Flag {
 	}
 	f.app.registerEnvVar(name)
 	f.envVar = name
-	f.Flag.DefValue = os.Getenv(f.envVar)
+	if os.Getenv(f.envVar) != "" {
+		f.Flag.DefValue = os.Getenv(f.envVar)
+	}
 	return f
 }
 
@@ -431,6 +440,7 @@ type Argument struct {
 	Required    bool
 	Placeholder string
 	Description string
+	Hidden 		bool
 }
 
 type ArgValue interface {

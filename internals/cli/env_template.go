@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"text/template"
 	"unicode"
@@ -90,6 +91,9 @@ func argUsages(args []Argument) string {
 	maxlen := 0
 
 	for _, arg := range args {
+		if arg.Hidden {
+			continue
+		}
 		line := "  "
 		if arg.Placeholder != "" {
 			line += arg.Placeholder
@@ -130,6 +134,9 @@ func useLine(c *cobra.Command, args []Argument) string {
 	}
 
 	for _, arg := range args {
+		if arg.Hidden {
+			continue
+		}
 		if arg.Placeholder != "" {
 			useLine += " " + arg.Placeholder
 		} else {
@@ -140,8 +147,11 @@ func useLine(c *cobra.Command, args []Argument) string {
 	return useLine
 }
 
-func flagUsages(c *CommandClause) string {
-	flagSet := c.Flags()
+func flagUsages(c CommandClause, isGlobal bool) string {
+	flagSet := c.Cmd.Flags()
+	if isGlobal {
+		flagSet = c.Cmd.InheritedFlags()
+	}
 	buf := new(bytes.Buffer)
 
 	lines := make([]string, 0, flagSet.NFlag())
@@ -159,22 +169,12 @@ func flagUsages(c *CommandClause) string {
 		} else {
 			line = fmt.Sprintf("      --%s", f.Name)
 		}
-		if f.NoOptDefVal != "" {
-			switch f.Value.Type() {
-			case "string":
-				line += fmt.Sprintf("[=\"%s\"]", f.NoOptDefVal)
-			case "bool":
-				if f.NoOptDefVal != "true" {
-					line += fmt.Sprintf("[=%s]", f.NoOptDefVal)
-				}
-			case "count":
-				if f.NoOptDefVal != "+1" {
-					line += fmt.Sprintf("[=%s]", f.NoOptDefVal)
-				}
-			default:
-				line += fmt.Sprintf("[=%s]", f.NoOptDefVal)
-			}
-		}
+
+		// TODO: Decide whether we want to put the type as well. If not, remove lines.
+		//varname, usage := pflag.UnquoteUsage(f)
+		//if varname != "" {
+		//	line += " " + varname
+		//}
 
 		_, usage := pflag.UnquoteUsage(f)
 		// This special character will be replaced with spacing once the
@@ -184,6 +184,13 @@ func flagUsages(c *CommandClause) string {
 			maxlen = len(line)
 		}
 		line += usage
+		if !defaultIsZeroValue(f) {
+			if f.Value.Type() == "string" {
+				line += fmt.Sprintf(" (default %q)", f.DefValue)
+			} else {
+				line += fmt.Sprintf(" (default %s)", f.DefValue)
+			}
+		}
 
 		if c.Flag(f.Name).envVar != "" && f.Name != "help" {
 			line += " ($" + c.Flag(f.Name).envVar + ")"
@@ -200,6 +207,40 @@ func flagUsages(c *CommandClause) string {
 	}
 
 	return buf.String()
+}
+
+func defaultIsZeroValue(f *pflag.Flag) bool {
+	switch reflect.TypeOf(f.Value.Type()).String() {
+	case "boolFlag":
+		return f.DefValue == "false"
+	case "durationValue":
+		// Beginning in Go 1.7, duration zero values are "0s"
+		return f.DefValue == "0" || f.DefValue == "0s"
+	case "intValue", "int8Value", "int32Value", "int64Value", "uintValue", "uint8Value", "uint16Value", "uint32Value", "uint64Value", "countValue", "float32Value", "float64Value":
+		return f.DefValue == "0"
+	case "stringValue":
+		return f.DefValue == ""
+	case "ipValue", "ipMaskValue", "ipNetValue":
+		return f.DefValue == "<nil>"
+	case "intSliceValue", "stringSliceValue", "stringArrayValue":
+		return f.DefValue == "[]"
+	case "urlValue", "ConfigDir":
+		return f.DefValue == ""
+	case "debugFlag", "noColorFlag", "mlockFlag":
+		return f.DefValue == "false"
+	default:
+		switch f.Value.String() {
+		case "false":
+			return true
+		case "<nil>":
+			return true
+		case "":
+			return true
+		case "0":
+			return true
+		}
+		return false
+	}
 }
 
 var UsageTemplate = `Usage:
@@ -234,12 +275,12 @@ Commands:
 {{- if .Cmd.HasAvailableLocalFlags}}
 
 Flags:
-{{flagUsages . | trimTrailingWhitespaces}}
+{{flagUsages . false | trimTrailingWhitespaces}}
 {{- end}}
 {{- if .Cmd.HasAvailableInheritedFlags}}
 
 Global Flags:
-{{flagUsages .Cmd.InheritedFlags | trimTrailingWhitespaces}}
+{{flagUsages . true | trimTrailingWhitespaces}}
 {{- end}}
 {{- if hasArgs .Args}}
 

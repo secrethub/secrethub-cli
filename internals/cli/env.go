@@ -325,8 +325,8 @@ func (f *FlagSet) StringVarP(reference *string, name, shorthand string, def stri
 
 func (f *FlagSet) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string) *Flag {
 	f.FlagSet.DurationVarP(reference, name, shorthand, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = def.String()
-	f.cmd.Flag(name).DefValue = def.String()
+	f.cmd.Flag(name).NoOptDefVal = shortDur(reference)
+	f.cmd.Flag(name).DefValue = shortDur(reference)
 	return f.cmd.Flag(name)
 }
 
@@ -351,8 +351,8 @@ func (f *FlagSet) StringVar(reference *string, name string, def string, usage st
 
 func (f *FlagSet) DurationVar(reference *time.Duration, name string, def time.Duration, usage string) *Flag {
 	f.FlagSet.DurationVar(reference, name, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = def.String()
-	f.cmd.Flag(name).DefValue = def.String()
+	f.cmd.Flag(name).NoOptDefVal = shortDur(reference)
+	f.cmd.Flag(name).DefValue = shortDur(reference)
 	return f.cmd.Flag(name)
 }
 
@@ -440,7 +440,7 @@ type Argument struct {
 	Required    bool
 	Placeholder string
 	Description string
-	Hidden 		bool
+	Hidden      bool
 }
 
 type ArgValue interface {
@@ -517,4 +517,15 @@ func getRequired(params []Argument) int {
 		}
 	}
 	return required
+}
+
+func shortDur(d *time.Duration) string {
+	s := d.String()
+	if strings.HasSuffix(s, "m0s") {
+		s = s[:len(s)-2]
+	}
+	if strings.HasSuffix(s, "h0m") {
+		s = s[:len(s)-2]
+	}
+	return s
 }

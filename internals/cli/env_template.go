@@ -170,19 +170,18 @@ func flagUsages(c CommandClause, isGlobal bool) string {
 		}
 
 		// TODO: Decide whether we want to put the type as well. If not, remove lines.
-		//varname, usage := pflag.UnquoteUsage(f)
+		//varname, _ := pflag.UnquoteUsage(f)
 		//if varname != "" {
 		//	line += " " + varname
 		//}
 
-		_, usage := pflag.UnquoteUsage(f)
 		// This special character will be replaced with spacing once the
 		// correct alignment is calculated
 		line += "\x00"
 		if len(line) > maxlen {
 			maxlen = len(line)
 		}
-		line += usage
+		line += f.Usage
 		if !defaultIsZeroValue(f) {
 			if f.Value.Type() == "string" {
 				line += fmt.Sprintf(" (default %q)", f.DefValue)
@@ -210,7 +209,7 @@ func flagUsages(c CommandClause, isGlobal bool) string {
 
 func defaultIsZeroValue(f *pflag.Flag) bool {
 	switch f.Value.Type() {
-	case "boolFlag":
+	case "boolFlag", "debugFlag", "noColorFlag", "mlockFlag":
 		return f.DefValue == "false"
 	case "durationValue":
 		// Beginning in Go 1.7, duration zero values are "0s"
@@ -225,8 +224,6 @@ func defaultIsZeroValue(f *pflag.Flag) bool {
 		return f.DefValue == "[]"
 	case "urlValue", "ConfigDir":
 		return f.DefValue == ""
-	case "debugFlag", "noColorFlag", "mlockFlag":
-		return f.DefValue == "false"
 	default:
 		switch f.Value.String() {
 		case "false":

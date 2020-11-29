@@ -136,7 +136,10 @@ func (cmd *InjectCommand) Run() error {
 			return err
 		}
 
-		fmt.Fprintln(cmd.io.Output(), fmt.Sprintf("Copied injected template to clipboard. It will be cleared after %s.", units.HumanDuration(cmd.clearClipboardAfter)))
+		_, err = fmt.Fprintf(cmd.io.Output(), "Copied injected template to clipboard. It will be cleared after %s.\n", units.HumanDuration(cmd.clearClipboardAfter))
+		if err != nil {
+			return err
+		}
 	} else if cmd.outFile != "" {
 		_, err := os.Stat(cmd.outFile)
 		if err == nil && !cmd.force {

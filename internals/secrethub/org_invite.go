@@ -33,7 +33,7 @@ func (cmd *OrgInviteCommand) Register(r cli.Registerer) {
 	clause := r.Command("invite", "Invite a user to join an organization.")
 	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
 	//clause.Arg("username", "The username of the user to invite").Required().StringVar(&cmd.username)
-	clause.Flags().StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.")
+	clause.Flags().StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`.")
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)

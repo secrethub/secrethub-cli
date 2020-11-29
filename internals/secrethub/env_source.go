@@ -72,7 +72,7 @@ func (env *environment) register(clause *cli.CommandClause) {
 	})
 	clause.Flags().BoolVar(&env.dontPromptMissingTemplateVar, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.")
 	clause.Flags().StringVar(&env.secretsDir, "secrets-dir", "", "Recursively include all secrets from a directory. Environment variable names are derived from the path of the secret: `/` are replaced with `_` and the name is uppercased.")
-	clause.Flags().StringVar(&env.secretsEnvDir, "env", "default", "The name of the environment prepared by the set command (default is `default`)")
+	clause.Flags().StringVar(&env.secretsEnvDir, "env", "default", "The name of the environment prepared by the set command.")
 	clause.Cmd.Flag("env").Hidden = true
 }
 

@@ -57,9 +57,8 @@ func (cmd *ReadCommand) Register(r cli.Registerer) {
 	)
 	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.")
 	clause.Flags().BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret")
-
-	fileModeFlag := clause.Flags().VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.")
-	fileModeFlag.DefValue = "0600"
+	cmd.fileMode = filemode.New(0600)
+	clause.Flags().VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. It is ignored without the --out-file flag.")
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Placeholder: secretPathOptionalVersionPlaceHolder, Required: true, Description: "The path to the secret."}})

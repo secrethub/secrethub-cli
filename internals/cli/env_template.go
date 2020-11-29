@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"reflect"
 	"strings"
 	"text/template"
 	"unicode"
@@ -210,7 +209,7 @@ func flagUsages(c CommandClause, isGlobal bool) string {
 }
 
 func defaultIsZeroValue(f *pflag.Flag) bool {
-	switch reflect.TypeOf(f.Value.Type()).String() {
+	switch f.Value.Type() {
 	case "boolFlag":
 		return f.DefValue == "false"
 	case "durationValue":
@@ -218,7 +217,7 @@ func defaultIsZeroValue(f *pflag.Flag) bool {
 		return f.DefValue == "0" || f.DefValue == "0s"
 	case "intValue", "int8Value", "int32Value", "int64Value", "uintValue", "uint8Value", "uint16Value", "uint32Value", "uint64Value", "countValue", "float32Value", "float64Value":
 		return f.DefValue == "0"
-	case "stringValue":
+	case "stringValue", "charsetValue":
 		return f.DefValue == ""
 	case "ipValue", "ipMaskValue", "ipNetValue":
 		return f.DefValue == "<nil>"
@@ -237,6 +236,11 @@ func defaultIsZeroValue(f *pflag.Flag) bool {
 		case "":
 			return true
 		case "0":
+			return true
+		case "[]":
+			return true
+		}
+		if f.Changed {
 			return true
 		}
 		return false

@@ -28,6 +28,7 @@ var templateFuncs = template.FuncMap{
 	"hasArgs":                  hasArgs,
 	"argUsages":                argUsages,
 	"flagUsages":               flagUsages,
+	"numFlags":                 numFlags,
 }
 
 // Tmpl executes the given template text on data, writing the result to w.
@@ -244,6 +245,14 @@ func defaultIsZeroValue(f *pflag.Flag) bool {
 	}
 }
 
+func numFlags(flagSet pflag.FlagSet) int {
+	num := 0
+	flagSet.VisitAll(func(flag *pflag.Flag) {
+		num++
+	})
+	return num
+}
+
 var UsageTemplate = `Usage:
 {{if not .Cmd.HasSubCommands}} {{(useLine .Cmd .Args)}}{{end}}
 {{- if .Cmd.HasSubCommands}}  {{ .Cmd.CommandPath}}{{- if .Cmd.HasAvailableFlags}} [flags]{{end}} [command]{{end}}
@@ -273,7 +282,7 @@ Commands:
   {{rpad .Name .NamePadding }} {{.Short}}
 {{- end}}
 {{- end}}
-{{- if .Cmd.HasAvailableLocalFlags}}
+{{- if or (not .Cmd.HasSubCommands) (gt (numFlags .Cmd.Flags) 1)}}
 
 Flags:
 {{flagUsages . false | trimTrailingWhitespaces}}

@@ -22,6 +22,6 @@ func NewConfigCommand(io ui.IO, store CredentialConfig) *ConfigCommand {
 // Register registers the command and its sub-commands on the provided Registerer.
 func (cmd *ConfigCommand) Register(r command.Registerer) {
 	clause := r.Command("config", "Manage your local configuration.").Hidden()
-	NewConfigUpdatePassphraseCommand(cmd.io, cmd.credentialStore).Register(clause)
+	NewCredentialUpdatePassphraseCommand(cmd.io, cmd.credentialStore).Register(clause)
 	NewConfigUpgradeCommand().Register(clause)
 }

@@ -1,8 +1,9 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"time"
+
+	"github.com/secrethub/secrethub-cli/internals/cli"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
@@ -78,9 +79,8 @@ func (store *credentialConfig) getCredentialReader() credentials.Reader {
 	}
 	if store.credentialFlag.HasEnvarValue() {
 		return credentials.FromEnv("SECRETHUB_CREDENTIAL")
-	} else {
-		return credentials.FromString(store.AccountCredential)
 	}
+	return credentials.FromString(store.AccountCredential)
 }
 
 // PassphraseReader returns a PassphraseReader configured by the flags.

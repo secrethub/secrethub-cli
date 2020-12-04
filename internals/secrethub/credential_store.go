@@ -51,6 +51,7 @@ func (store *credentialConfig) IsPassphraseSet() bool {
 }
 
 // Register registers the flags for configuring the store on the provided Registerer.
+// The environment variables of these flags are also checked on the client, but checking them here allows us to fail fast.
 func (store *credentialConfig) Register(r FlagRegisterer) {
 	r.Flag("config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub").Default("").PlaceHolder("CONFIG-DIR").SetValue(&store.configDir)
 	store.credentialFlag = r.Flag("credential", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.")

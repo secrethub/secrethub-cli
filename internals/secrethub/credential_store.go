@@ -36,8 +36,7 @@ func NewCredentialConfig(io ui.IO) CredentialConfig {
 
 type credentialConfig struct {
 	configDir                    ConfigDir
-	AccountCredential            string
-	credentialFlag               *cli.Flag
+	credentialReader             *flagCredentialReader
 	credentialPassphrase         string
 	CredentialPassphraseCacheTTL time.Duration
 	io                           ui.IO
@@ -55,8 +54,7 @@ func (store *credentialConfig) IsPassphraseSet() bool {
 // The environment variables of these flags are also checked on the client, but checking them here allows us to fail fast.
 func (store *credentialConfig) Register(r FlagRegisterer) {
 	r.Flag("config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub").Default("").PlaceHolder("CONFIG-DIR").SetValue(&store.configDir)
-	store.credentialFlag = r.Flag("credential", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.")
-	store.credentialFlag.StringVar(&store.AccountCredential)
+	store.credentialReader = credentialReader(r.Flag("credential", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory."))
 	r.Flag("p", "").Short('p').Hidden().NoEnvar().StringVar(&store.credentialPassphrase) // Shorthand -p is deprecated. Use --credential-passphrase instead.
 	r.Flag("credential-passphrase", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.").StringVar(&store.credentialPassphrase)
 	r.Flag("credential-passphrase-cache-ttl", "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.").Default("5m").DurationVar(&store.CredentialPassphraseCacheTTL)
@@ -74,16 +72,38 @@ func (store *credentialConfig) Import() (credentials.Key, error) {
 }
 
 func (store *credentialConfig) getCredentialReader() credentials.Reader {
-	if store.AccountCredential == "" {
+	if store.credentialReader.value == "" {
 		return store.configDir.Credential()
 	}
-	if store.credentialFlag.HasEnvarValue() {
-		return credentials.FromEnv("SECRETHUB_CREDENTIAL")
-	}
-	return credentials.FromString(store.AccountCredential)
+	return store.credentialReader
 }
 
 // PassphraseReader returns a PassphraseReader configured by the flags.
 func (store *credentialConfig) PassphraseReader() credentials.Reader {
 	return NewPassphraseReader(store.io, store.credentialPassphrase, store.CredentialPassphraseCacheTTL)
+}
+
+// credentialReader returns a credential reader and source that reads from the given flag (and its corresponding env var).
+func credentialReader(flag *cli.Flag) *flagCredentialReader {
+	reader := flagCredentialReader{Flag: flag}
+	flag.StringVar(&reader.value)
+	flag.IsSetByUser(&reader.setByUser)
+	return &reader
+}
+
+type flagCredentialReader struct {
+	*cli.Flag
+	value     string
+	setByUser bool
+}
+
+func (f *flagCredentialReader) Read() ([]byte, error) {
+	return []byte(f.value), nil
+}
+
+func (f *flagCredentialReader) Source() string {
+	if f.HasEnvarValue() && !f.setByUser {
+		return "$SECRETHUB_CREDENTIAL"
+	}
+	return "--credential"
 }

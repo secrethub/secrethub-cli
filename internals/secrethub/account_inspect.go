@@ -40,38 +40,84 @@ func (cmd *AccountInspectCommand) Run() error {
 		return err
 	}
 
-	user, err := client.Users().Me()
+	account, err := client.Accounts().Me()
 	if err != nil {
 		return err
 	}
-
-	output, err := cli.PrettyJSON(newOutputUser(user, cmd.timeFormatter))
-	if err != nil {
-		return err
+	var output string
+	if account.AccountType == "user" {
+		user, err := client.Users().Me()
+		if err != nil {
+			return err
+		}
+		output, err = cli.PrettyJSON(newOutputUser(user, cmd.timeFormatter))
+		if err != nil {
+			return err
+		}
+	} else if account.AccountType == "service" {
+		service, err := client.Services().Get(account.Name.String())
+		if err != nil {
+			return err
+		}
+		output, err = cli.PrettyJSON(newOutputService(service, account, cmd.timeFormatter))
+		if err != nil {
+			return err
+		}
 	}
-
 	fmt.Fprintln(cmd.io.Output(), output)
 
 	return nil
 }
 
+// outputAccount contains the fields common in both outputUser and outputService
+type outputAccount struct {
+	AccountType      string
+	AccountName      string
+	PublicAccountKey []byte `json:",omitempty"`
+}
+
 // outputUser is a user friendly JSON representation of a user account.
 type outputUser struct {
-	Username         string
-	FullName         string
-	Email            string `json:",omitempty"`
-	EmailVerified    bool   `json:",omitempty"`
-	CreatedAt        string `json:",omitempty"`
-	PublicAccountKey []byte `json:",omitempty"`
+	Username      string
+	FullName      string
+	Email         string `json:",omitempty"`
+	EmailVerified bool   `json:",omitempty"`
+	CreatedAt     string `json:",omitempty"`
+	outputAccount
 }
 
 func newOutputUser(user *api.User, timeFormatter TimeFormatter) *outputUser {
 	return &outputUser{
-		Username:         user.Username,
-		FullName:         user.FullName,
-		Email:            user.Email,
-		EmailVerified:    user.EmailVerified,
-		CreatedAt:        timeFormatter.Format(user.CreatedAt.Local()),
-		PublicAccountKey: user.PublicKey,
+		Username:      user.Username,
+		FullName:      user.FullName,
+		Email:         user.Email,
+		EmailVerified: user.EmailVerified,
+		CreatedAt:     timeFormatter.Format(user.CreatedAt.Local()),
+		outputAccount: outputAccount{
+			AccountType:      "user",
+			AccountName:      user.Username,
+			PublicAccountKey: user.PublicKey,
+		},
+	}
+}
+
+// outputService is a user friendly JSON representation of a service account.
+type outputService struct {
+	Description string
+	CreatedBy   string
+	CreatedAt   string `json:",omitempty"`
+	outputAccount
+}
+
+func newOutputService(service *api.Service, account *api.Account, timeFormatter TimeFormatter) *outputService {
+	return &outputService{
+		Description: service.Description,
+		CreatedBy:   service.CreatedBy.String(),
+		CreatedAt:   timeFormatter.Format(service.CreatedAt.Local()),
+		outputAccount: outputAccount{
+			AccountType:      "service",
+			AccountName:      service.ServiceID,
+			PublicAccountKey: account.PublicKey,
+		},
 	}
 }

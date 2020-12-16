@@ -10,6 +10,9 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
+const accountTypeUser string = "user"
+const accountTypeService string = "service"
+
 // AccountInspectCommand is a command to inspect account details.
 type AccountInspectCommand struct {
 	io            ui.IO
@@ -45,7 +48,7 @@ func (cmd *AccountInspectCommand) Run() error {
 		return err
 	}
 	var output string
-	if account.AccountType == "user" {
+	if account.AccountType == accountTypeUser {
 		user, err := client.Users().Me()
 		if err != nil {
 			return err
@@ -54,7 +57,7 @@ func (cmd *AccountInspectCommand) Run() error {
 		if err != nil {
 			return err
 		}
-	} else if account.AccountType == "service" {
+	} else if account.AccountType == accountTypeService {
 		service, err := client.Services().Get(account.Name.String())
 		if err != nil {
 			return err
@@ -94,7 +97,7 @@ func newOutputUser(user *api.User, timeFormatter TimeFormatter) *outputUser {
 		EmailVerified: user.EmailVerified,
 		CreatedAt:     timeFormatter.Format(user.CreatedAt.Local()),
 		outputAccount: outputAccount{
-			AccountType:      "user",
+			AccountType:      accountTypeUser,
 			AccountName:      user.Username,
 			PublicAccountKey: user.PublicKey,
 		},
@@ -115,7 +118,7 @@ func newOutputService(service *api.Service, account *api.Account, timeFormatter 
 		CreatedBy:   service.CreatedBy.String(),
 		CreatedAt:   timeFormatter.Format(service.CreatedAt.Local()),
 		outputAccount: outputAccount{
-			AccountType:      "service",
+			AccountType:      accountTypeService,
 			AccountName:      service.ServiceID,
 			PublicAccountKey: account.PublicKey,
 		},

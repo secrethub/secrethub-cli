@@ -60,7 +60,6 @@ func (store *credentialConfig) Register(app *cli.App) {
 	}
 	commandClause.PersistentFlags().Var(&store.configDir, "config-dir", "The absolute path to a custom configuration directory.")
 	commandClause.PersistentFlags().StringVar(&store.AccountCredential, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.")
-	//TODO NoEnvVar
 	commandClause.PersistentFlags().StringVarP(&store.credentialPassphrase, "p", "p", "", "").NoEnvar() // Shorthand -p is deprecated. Use --credential-passphrase instead.
 	commandClause.Cmd.Flag("p").Hidden = true
 	commandClause.PersistentFlags().StringVar(&store.credentialPassphrase, "credential-passphrase", "", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.")

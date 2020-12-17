@@ -19,7 +19,7 @@ func NewOrgPurchaseCommand(io ui.IO) *OrgPurchaseCommand {
 	}
 }
 
-// Registeclause.Cmd.Rootters the command, arguments and flags on the provided Registerer.
+// Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgPurchaseCommand) Register(r cli.Registerer) {
 	clause := r.Command("purchase", "Purchase a SecretHub subscription.")
 

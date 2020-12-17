@@ -39,8 +39,6 @@ func NewRepoExportCommand(io ui.IO, newClient newClientFunc) *RepoExportCommand 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *RepoExportCommand) Register(r cli.Registerer) {
 	clause := r.Command("export", "Export the repository to a zip file.")
-	//clause.Arg("repo-path", "The repository to export").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
-	//clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{

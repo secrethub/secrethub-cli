@@ -36,7 +36,6 @@ func NewLsCommand(io ui.IO, newClient newClientFunc) *LsCommand {
 func (cmd *LsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "List contents of a path.")
 	clause.Alias("list")
-	//clause.Arg("path", "The path to list contents of").SetValue(&cmd.path)
 	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print paths.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 

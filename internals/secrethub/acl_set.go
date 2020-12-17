@@ -32,9 +32,6 @@ func NewACLSetCommand(io ui.IO, newClient newClientFunc) *ACLSetCommand {
 // Register adds args and flags.
 func (cmd *ACLSetCommand) Register(r cli.Registerer) {
 	clause := r.Command("set", "Set access rule for a user or service on a path.")
-	//clause.Arg("dir-path", "The path of the directory to set the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
-	//clause.Arg("account-name", "The account name (username or service name) to set the access rule for").Required().SetValue(&cmd.accountName)
-	//clause.Arg("permission", "The permission to set in the access rule.").Required().SetValue(&cmd.permission)
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)

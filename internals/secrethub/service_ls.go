@@ -63,7 +63,6 @@ func NewServiceGCPLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 func (cmd *ServiceLsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", cmd.help)
 	clause.Alias("list")
-	//clause.Arg("repo-path", "The path to the repository to list services for").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repoPath)
 	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.")
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 

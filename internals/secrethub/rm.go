@@ -40,7 +40,6 @@ func NewRmCommand(io ui.IO, newClient newClientFunc) *RmCommand {
 func (cmd *RmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Remove a directory, secret or version.")
 	clause.Alias("remove")
-	//clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
 	clause.Flags().BoolVarP(&cmd.recursive, "recursive", "r", false, "Remove directories and their contents recursively.")
 	registerForceFlag(clause, &cmd.force)
 

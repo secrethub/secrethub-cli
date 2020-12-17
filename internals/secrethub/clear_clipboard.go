@@ -32,7 +32,6 @@ func NewClearClipboardCommand() *ClearClipboardCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ClearClipboardCommand) Register(r cli.Registerer) {
 	clause := r.Command("clipboard-clear", "Removes secret from clipboard.").Hidden()
-	//clause.Arg("hash", "Hash from the secret to be cleared").Required().HexBytesVar(&cmd.hash)
 	clause.Flags().DurationVar(&cmd.timeout, "timeout", 0, "Time to wait before clearing in seconds")
 
 	clause.BindAction(cmd.Run)

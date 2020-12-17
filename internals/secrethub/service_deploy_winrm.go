@@ -60,7 +60,6 @@ func NewServiceDeployWinRmCommand(io ui.IO) *ServiceDeployWinRmCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *ServiceDeployWinRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("winrm", "Read a service account configuration from stdin and deploy it to a running instance with WinRM. The instance needs to be reachable, have WinRM enabled, and have PowerShell installed.")
-	//clause.Arg("resource-uri", "Hostname, optional connection protocol and port of the host ([http[s]://]<host>[:<port>]). This defaults to https and port 5986.").Required().URLVar(&cmd.resourceURI)
 	clause.Flags().StringVar(&cmd.authType, "auth-type", "basic", "Authentication type (basic/cert)")
 	_ = clause.Cmd.RegisterFlagCompletionFunc("auth-type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"basic", "cert"}, cobra.ShellCompDirectiveDefault

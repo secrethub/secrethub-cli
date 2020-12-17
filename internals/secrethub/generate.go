@@ -63,7 +63,6 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 	clause := r.Command("generate", "Generate a random secret.")
-	//clause.Arg("secret-path", "The path to write the generated secret to").Required().PlaceHolder(secretPathPlaceHolder).StringVar(&cmd.firstArg)
 	_ = cmd.lengthFlag.Set(strconv.Itoa(defaultLength))
 	clause.Flags().VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret.") //.PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
 	clause.Cmd.Flag("length").DefValue = strconv.Itoa(defaultLength)
@@ -77,8 +76,6 @@ func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 	})
 	clause.Flags().BoolVarP(&cmd.symbolsFlag, "symbols", "s", false, "Include symbols in secret.") //Short('s').Hidden().SetValue(&cmd.symbolsFlag)
 	clause.Cmd.Flag("symbols").Hidden = true
-	//clause.Arg("rand-command", "").Hidden().StringVar(&cmd.secondArg)
-	//clause.Arg("length", "").Hidden().SetValue(&cmd.lengthArg)
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{

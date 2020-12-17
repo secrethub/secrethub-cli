@@ -30,7 +30,6 @@ func NewOrgRmCommand(io ui.IO, newClient newClientFunc) *OrgRmCommand {
 func (cmd *OrgRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Permanently delete an organization and all the repositories it owns.")
 	clause.Alias("remove")
-	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{{Store: &cmd.name, Name: "org-name", Required: true, Description: "The organization name."}})

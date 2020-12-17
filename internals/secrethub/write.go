@@ -44,7 +44,6 @@ func NewWriteCommand(io ui.IO, newClient newClientFunc) *WriteCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *WriteCommand) Register(r cli.Registerer) {
 	clause := r.Command("write", "Write a secret.")
-	//clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flags().BoolVarP(&cmd.useClipboard, "clip", "c", false, "Use clipboard content as input.")
 	clause.Flags().BoolVarP(&cmd.multiline, "multiline", "m", false, "Prompt for multiple lines of input, until an EOF is reached. On Linux/Mac, press CTRL-D to end input. On Windows, press CTRL-Z and then ENTER to end input.")
 	clause.Flags().BoolVar(&cmd.noTrim, "no-trim", false, "Do not trim leading and trailing whitespace in the secret.")

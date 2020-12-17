@@ -30,9 +30,6 @@ func NewOrgSetRoleCommand(io ui.IO, newClient newClientFunc) *OrgSetRoleCommand 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *OrgSetRoleCommand) Register(r cli.Registerer) {
 	clause := r.Command("set-role", "Set a user's organization role.")
-	//clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
-	//clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
-	//clause.Arg("role", "The role to assign to the user. Can be either `admin` or `member`.").Required().StringVar(&cmd.role)
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{

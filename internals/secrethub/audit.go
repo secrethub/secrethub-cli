@@ -65,8 +65,6 @@ func (cmd *AuditCommand) Register(r cli.Registerer) {
 	}
 
 	clause := r.Command("audit", "Show the audit log.")
-	//clause.Cmd.Args = cobra.MaximumNArgs(1)
-	//clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
 	clause.Flags().IntVar(&cmd.perPage, "per-page", 20, "Number of audit events shown per page")
 	clause.Cmd.Flag("per-page").Hidden = true
 	clause.Flags().StringVar(&cmd.format, "output-format", "table", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.")

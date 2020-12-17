@@ -49,7 +49,6 @@ func (cmd *TreeCommand) Run() error {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *TreeCommand) Register(r cli.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
-	//clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
 	clause.Flags().BoolVarP(&cmd.fullPaths, "full-paths", "f", false, "Print the full path of each directory and secret.")
 	clause.Flags().BoolVarP(&cmd.noIndentation, "no-indentation", "i", false, "Do not use the standard indentation.")

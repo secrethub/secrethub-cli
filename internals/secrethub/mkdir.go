@@ -36,7 +36,6 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *MkDirCommand) Register(r cli.Registerer) {
 	clause := r.Command("mkdir", "Create a new directory.")
-	//clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
 	clause.Flags().BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.")
 
 	clause.BindAction(cmd.Run)

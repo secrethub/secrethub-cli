@@ -32,7 +32,6 @@ func (cmd *CredentialDisableCommand) Register(r cli.Registerer) {
 	clause := r.Command("disable", "Disable a credential for usage on SecretHub.")
 
 	fingerprintHelp := fmt.Sprintf("Fingerprint of the credential to disable. At least the first %d characters must be entered.", api.ShortCredentialFingerprintMinimumLength)
-	//clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)

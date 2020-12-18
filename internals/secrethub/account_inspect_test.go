@@ -1,6 +1,8 @@
 package secrethub
 
 import (
+	"errors"
+	"github.com/secrethub/secrethub-go/internals/api/uuid"
 	"testing"
 	"time"
 
@@ -24,10 +26,17 @@ func TestAccountInspect(t *testing.T) {
 		err error
 		out string
 	}{
-		"success": {
+		"success user": {
 			cmd: AccountInspectCommand{
 				newClient: func() (secrethub.ClientInterface, error) {
 					return &fakeclient.Client{
+						AccountService: &fakeclient.AccountService{
+							MeFunc: func() (*api.Account, error) {
+								return &api.Account{
+									AccountType: accountTypeUser,
+								}, nil
+							},
+						},
 						UserService: &fakeclient.UserService{
 							MeFunc: func() (*api.User, error) {
 								return &api.User{
@@ -53,6 +62,51 @@ func TestAccountInspect(t *testing.T) {
     "Email": "dev1@keylocker.eu",
     "EmailVerified": true,
     "CreatedAt": "2018-07-30T10:49:18Z",
+    "AccountType": "user",
+    "AccountName": "dev1",
+    "PublicAccountKey": "YWJjZGU="
+}
+`,
+		},
+		"success service": {
+			cmd: AccountInspectCommand{
+				newClient: func() (secrethub.ClientInterface, error) {
+					return &fakeclient.Client{
+						AccountService: &fakeclient.AccountService{
+							MeFunc: func() (*api.Account, error) {
+								return &api.Account{
+									AccountType: accountTypeService,
+									Name:        "dev1",
+									PublicKey:   []byte("abcde"),
+								}, nil
+							},
+						},
+						ServiceService: &fakeclient.ServiceService{
+							GetFunc: func(id string) (*api.Service, error) {
+								if id == "dev1" {
+									return &api.Service{
+										ServiceID:   "s-abcdefghijkl",
+										Description: "Test description.",
+										CreatedBy:   uuid.UUID{},
+										CreatedAt:   time.Date(2020, 12, 12, 12, 12, 12, 0, time.UTC),
+									}, nil
+								}
+								return nil, errors.New(`expected id to be "dev1"`)
+							},
+						},
+					}, nil
+				},
+				timeFormatter: &fakes.TimeFormatter{
+					Response: "2018-07-30T10:49:18Z",
+				},
+			},
+			err: nil,
+			out: `{
+    "Description": "Test description.",
+    "CreatedBy": "00000000-0000-0000-0000-000000000000",
+    "CreatedAt": "2018-07-30T10:49:18Z",
+    "AccountType": "service",
+    "AccountName": "s-abcdefghijkl",
     "PublicAccountKey": "YWJjZGU="
 }
 `,
@@ -61,6 +115,13 @@ func TestAccountInspect(t *testing.T) {
 			cmd: AccountInspectCommand{
 				newClient: func() (secrethub.ClientInterface, error) {
 					return fakeclient.Client{
+						AccountService: &fakeclient.AccountService{
+							MeFunc: func() (*api.Account, error) {
+								return &api.Account{
+									AccountType: accountTypeUser,
+								}, nil
+							},
+						},
 						UserService: &fakeclient.UserService{
 							MeFunc: func() (*api.User, error) {
 								return nil, api.ErrSignatureNotVerified

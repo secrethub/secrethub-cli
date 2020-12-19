@@ -467,31 +467,31 @@ func ArgumentArrRegister(params []Argument, args []string) error {
 	return nil
 }
 
-type StringArgValue struct {
+type StringValue struct {
 	Param string
 }
 
-func (s *StringArgValue) Set(replacer string) error {
+func (s *StringValue) Set(replacer string) error {
 	s.Param = replacer
 	return nil
 }
 
-type StringArrArgValue struct {
+type StringArrValue struct {
 	Param []string
 }
 
-func (s *StringArrArgValue) Set(replacer string) error {
+func (s *StringArrValue) Set(replacer string) error {
 	s.Param = append(s.Param, replacer)
 	return nil
 }
 
-type URLArgValue struct {
-	Param *url.URL
+type URLValue struct {
+	*url.URL
 }
 
-func (s *URLArgValue) Set(replacer string) error {
+func (s *URLValue) Set(replacer string) error {
 	var err error
-	s.Param, err = url.Parse(replacer)
+	s.URL, err = url.Parse(replacer)
 	return err
 }
 

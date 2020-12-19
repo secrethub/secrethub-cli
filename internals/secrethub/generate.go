@@ -39,8 +39,8 @@ type GenerateSecretCommand struct {
 	generator           randchar.Generator
 	io                  ui.IO
 	lengthFlag          intValue
-	firstArg            cli.StringArgValue
-	secondArg           cli.StringArgValue
+	firstArg            cli.StringValue
+	secondArg           cli.StringValue
 	lengthArg           intValue
 	charsetFlag         charsetValue
 	mins                minRuleValue

@@ -13,7 +13,7 @@ type EnvReadCommand struct {
 	io          ui.IO
 	newClient   newClientFunc
 	environment *environment
-	key         cli.StringArgValue
+	key         cli.StringValue
 }
 
 // NewEnvReadCommand creates a new EnvReadCommand.

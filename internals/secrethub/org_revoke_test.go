@@ -28,7 +28,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"success, not a repo member": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: cli.StringArgValue{Param: "dev1"},
+				username: cli.StringValue{Param: "dev1"},
 			},
 			promptIn: "dev1",
 			service: fakeclient.OrgMemberService{
@@ -47,7 +47,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"success, repo member": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: cli.StringArgValue{Param: "dev1"},
+				username: cli.StringValue{Param: "dev1"},
 			},
 			promptIn: "dev1",
 			service: fakeclient.OrgMemberService{
@@ -100,7 +100,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"abort": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: cli.StringArgValue{Param: "dev1"},
+				username: cli.StringValue{Param: "dev1"},
 			},
 			promptIn: "typo",
 			service: fakeclient.OrgMemberService{

@@ -13,7 +13,7 @@ import (
 // RepoInviteCommand handles inviting a user to collaborate on a repository.
 type RepoInviteCommand struct {
 	path      api.RepoPath
-	username  cli.StringArgValue
+	username  cli.StringValue
 	force     bool
 	io        ui.IO
 	newClient newClientFunc

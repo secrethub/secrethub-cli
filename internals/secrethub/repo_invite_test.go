@@ -40,7 +40,7 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 		"success force": {
 			cmd: RepoInviteCommand{
 				path:     "dev2/repo",
-				username: cli.StringArgValue{Param: "dev1"},
+				username: cli.StringValue{Param: "dev1"},
 				force:    true,
 			},
 			InviteFunc: func(path string, username string) (*api.RepoMember, error) {
@@ -53,7 +53,7 @@ func TestRepoInviteCommand_Run(t *testing.T) {
 		"invite error": {
 			cmd: RepoInviteCommand{
 				path:     "dev2/repo",
-				username: cli.StringArgValue{Param: "dev1"},
+				username: cli.StringValue{Param: "dev1"},
 				force:    true,
 			},
 			InviteFunc: func(path string, username string) (*api.RepoMember, error) {

@@ -159,9 +159,9 @@ func (cmd *ServiceGCPInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account that is tied to a GCP Service Account.")
 	clause.Flags().StringVar(&cmd.kmsKeyResourceID, "kms-key", "", "The Resource ID of the KMS-key to be used for encrypting the service's account key.")
 	clause.Flags().StringVar(&cmd.serviceAccountEmail, "service-account-email", "", "The email of the GCP Service Account that should have access to this service account.")
-	clause.Flags().StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it. Defaults to `GCP Service Account <service-account-email>`")
-	clause.Flags().StringVar(&cmd.description, "descr", "", "")
-	clause.Flags().StringVar(&cmd.description, "desc", "", "")
+	clause.Flags().StringVar(&cmd.description, "description", "GCP Service Account <service-account-email>", "A description for the service so others will recognize it.")
+	clause.Flags().StringVar(&cmd.description, "descr", "GCP Service Account <service-account-email>", "")
+	clause.Flags().StringVar(&cmd.description, "desc", "GCP Service Account <service-account-email>", "")
 	clause.Cmd.Flag("desc").Hidden = true
 	clause.Cmd.Flag("descr").Hidden = true
 	clause.Flags().StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")

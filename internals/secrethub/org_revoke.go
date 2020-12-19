@@ -15,7 +15,7 @@ import (
 // OrgRevokeCommand handles revoking a member from an organization.
 type OrgRevokeCommand struct {
 	orgName   api.OrgName
-	username  cli.StringArgValue
+	username  cli.StringValue
 	io        ui.IO
 	newClient newClientFunc
 }

@@ -52,7 +52,7 @@ const (
 type RunCommand struct {
 	io                   ui.IO
 	osEnv                []string
-	command              cli.StringArrArgValue
+	command              cli.StringArrValue
 	environment          *environment
 	noMasking            bool
 	maskerOptions        masker.Options

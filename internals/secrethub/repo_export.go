@@ -23,7 +23,7 @@ var (
 // RepoExportCommand exports a repo to a zip file.
 type RepoExportCommand struct {
 	path      api.RepoPath
-	zipName   cli.StringArgValue
+	zipName   cli.StringValue
 	io        ui.IO
 	newClient newClientFunc
 }

@@ -237,11 +237,13 @@ func defaultIsZeroValue(f *pflag.Flag) bool {
 			return true
 		case "[]":
 			return true
+		default:
+			if f.Changed {
+				return true
+			} else {
+				return false
+			}
 		}
-		if f.Changed {
-			return true
-		}
-		return false
 	}
 }
 

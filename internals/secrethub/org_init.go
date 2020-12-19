@@ -44,7 +44,7 @@ func (cmd *OrgInitCommand) Register(r cli.Registerer) {
 func (cmd *OrgInitCommand) Run() error {
 	var err error
 
-	incompleteInput := cmd.name.orgName == "" || cmd.description == ""
+	incompleteInput := cmd.name.Value() == "" || cmd.description == ""
 	if cmd.force && incompleteInput {
 		return ErrMissingFlags
 	} else if !cmd.force && incompleteInput {
@@ -54,12 +54,12 @@ func (cmd *OrgInitCommand) Run() error {
 				"Please answer the questions below, followed by an [ENTER]\n\n",
 		)
 
-		if cmd.name.orgName == "" {
+		if cmd.name.Value() == "" {
 			name, err := ui.AskAndValidate(cmd.io, "The name you would like to use for your organization: ", 2, api.ValidateOrgName)
 			if err != nil {
 				return err
 			}
-			cmd.name = orgNameValue{orgName: api.OrgName(name)}
+			cmd.name = orgNameValue{api.OrgName(name)}
 		}
 
 		if cmd.description == "" {
@@ -80,7 +80,7 @@ func (cmd *OrgInitCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Creating organization...\n")
 
-	resp, err := client.Orgs().Create(cmd.name.orgName.Value(), cmd.description)
+	resp, err := client.Orgs().Create(cmd.name.Value(), cmd.description)
 	if err != nil {
 		return err
 	}
@@ -91,15 +91,7 @@ func (cmd *OrgInitCommand) Run() error {
 }
 
 type orgNameValue struct {
-	orgName api.OrgName
-}
-
-func (o orgNameValue) String() string {
-	return o.orgName.String()
-}
-
-func (o orgNameValue) Set(s string) error {
-	return o.orgName.Set(s)
+	api.OrgName
 }
 
 func (o orgNameValue) Type() string {

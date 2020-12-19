@@ -41,7 +41,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg: cli.StringArgValue{Param: testPath},
+				firstArg: cli.StringValue{Param: testPath},
 				clipper:  fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
@@ -58,7 +58,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg:        cli.StringArgValue{Param: testPath},
+				firstArg:        cli.StringValue{Param: testPath},
 				copyToClipboard: true,
 				clipper:         fakeclip.New(),
 			},
@@ -77,7 +77,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg:   cli.StringArgValue{Param: testPath},
+				firstArg:   cli.StringValue{Param: testPath},
 				lengthFlag: newIntValue(24),
 				clipper:    fakeclip.New(),
 			},
@@ -95,8 +95,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg:   cli.StringArgValue{Param: "rand"},
-				secondArg:  cli.StringArgValue{Param: testPath},
+				firstArg:   cli.StringValue{Param: "rand"},
+				secondArg:  cli.StringValue{Param: testPath},
 				lengthFlag: newIntValue(24),
 				lengthArg:  newIntValue(24),
 				clipper:    fakeclip.New(),
@@ -109,8 +109,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg:  cli.StringArgValue{Param: "rand"},
-				secondArg: cli.StringArgValue{Param: testPath},
+				firstArg:  cli.StringValue{Param: "rand"},
+				secondArg: cli.StringValue{Param: testPath},
 				lengthArg: newIntValue(23),
 				clipper:   fakeclip.New(),
 			},
@@ -124,8 +124,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		},
 		"length arg 0": {
 			cmd: GenerateSecretCommand{
-				firstArg:  cli.StringArgValue{Param: "rand"},
-				secondArg: cli.StringArgValue{Param: testPath},
+				firstArg:  cli.StringValue{Param: "rand"},
+				secondArg: cli.StringValue{Param: testPath},
 				lengthArg: newIntValue(0),
 				clipper:   fakeclip.New(),
 			},
@@ -134,8 +134,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		},
 		"length arg negative": {
 			cmd: GenerateSecretCommand{
-				firstArg:  cli.StringArgValue{Param: "rand"},
-				secondArg: cli.StringArgValue{Param: testPath},
+				firstArg:  cli.StringValue{Param: "rand"},
+				secondArg: cli.StringValue{Param: testPath},
 				lengthArg: newIntValue(-1),
 				clipper:   fakeclip.New(),
 			},
@@ -145,7 +145,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		// The length arg is only for backwards compatibility of the `generate rand` command.
 		"length arg without rand": {
 			cmd: GenerateSecretCommand{
-				firstArg:  cli.StringArgValue{Param: testPath},
+				firstArg:  cli.StringValue{Param: testPath},
 				lengthArg: newIntValue(24),
 				clipper:   fakeclip.New(),
 			},
@@ -154,8 +154,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		// The second arg should only be used to supply the path when the first arg is `rand` (backwards compatibility).
 		"second arg without rand": {
 			cmd: GenerateSecretCommand{
-				firstArg:  cli.StringArgValue{Param: testPath},
-				secondArg: cli.StringArgValue{Param: "namespace/repo/secret2"},
+				firstArg:  cli.StringValue{Param: testPath},
+				secondArg: cli.StringValue{Param: "namespace/repo/secret2"},
 				clipper:   fakeclip.New(),
 			},
 			expectedErr: errors.New("unexpected namespace/repo/secret2"),
@@ -166,7 +166,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: nil,
 					Err: testErr,
 				},
-				firstArg: cli.StringArgValue{Param: testPath},
+				firstArg: cli.StringValue{Param: testPath},
 				clipper:  fakeclip.New(),
 			},
 			expectedErr: testErr,
@@ -177,7 +177,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg: cli.StringArgValue{Param: testPath},
+				firstArg: cli.StringValue{Param: testPath},
 				clipper:  fakeclip.New(),
 			},
 			newClientErr: testErr,
@@ -189,7 +189,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg: cli.StringArgValue{Param: testPath},
+				firstArg: cli.StringValue{Param: testPath},
 				clipper:  fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {

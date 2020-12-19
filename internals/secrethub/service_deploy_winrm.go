@@ -39,7 +39,7 @@ var (
 
 // ServiceDeployWinRmCommand creates a service and installs the configuration using WinRM.
 type ServiceDeployWinRmCommand struct {
-	resourceURI cli.URLArgValue
+	resourceURI cli.URLValue
 	authType    string
 	username    string
 	password    string
@@ -80,8 +80,8 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	var err error
 
 	var port int
-	if cmd.resourceURI.Param.Port() != "" {
-		port, err = strconv.Atoi(cmd.resourceURI.Param.Port())
+	if cmd.resourceURI.Port() != "" {
+		port, err = strconv.Atoi(cmd.resourceURI.Port())
 		if err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 	// Retrieve the WinRM port, default to 5986.
 	if port == 0 {
-		if cmd.resourceURI.Param.Scheme == "http" {
+		if cmd.resourceURI.Scheme == "http" {
 			port = 5985
 		} else {
 			port = 5986
@@ -113,7 +113,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	skipVerifyCert := cmd.checkWinRMVerifyCert()
 
 	config := &winrm.Config{
-		Host: cmd.resourceURI.Param.Hostname(),
+		Host: cmd.resourceURI.Hostname(),
 		Port: port,
 
 		HTTPS: https,
@@ -206,20 +206,20 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 // checkWinRMTLS checks if the given schema corresponds to the given CLI flags.
 func (cmd *ServiceDeployWinRmCommand) checkWinRMTLS() (bool, error) {
-	if cmd.resourceURI.Param.Scheme == "http" {
+	if cmd.resourceURI.Scheme == "http" {
 		fmt.Fprintln(cmd.io.Output(), "WARNING: insecure no tls flag is set! We recommend to always use TLS.")
 		return false, nil
 	}
 
-	if cmd.resourceURI.Param.Scheme == "https" {
+	if cmd.resourceURI.Scheme == "https" {
 		return true, nil
 	}
 
-	if cmd.resourceURI.Param.Scheme == "" {
+	if cmd.resourceURI.Scheme == "" {
 		return true, nil
 	}
 
-	return true, ErrIncorrectWinRMScheme(cmd.resourceURI.Param.Scheme)
+	return true, ErrIncorrectWinRMScheme(cmd.resourceURI.Scheme)
 }
 
 // checkWinRMVerifyCert checks if the given schema corresponds to the given CLI flags.

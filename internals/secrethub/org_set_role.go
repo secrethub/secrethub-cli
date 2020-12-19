@@ -13,8 +13,8 @@ import (
 // OrgSetRoleCommand handles updating the role of an organization member.
 type OrgSetRoleCommand struct {
 	orgName   api.OrgName
-	username  cli.StringArgValue
-	role      cli.StringArgValue
+	username  cli.StringValue
+	role      cli.StringValue
 	io        ui.IO
 	newClient newClientFunc
 }

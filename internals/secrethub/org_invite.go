@@ -13,7 +13,7 @@ import (
 // OrgInviteCommand handles inviting a user to an organization.
 type OrgInviteCommand struct {
 	orgName   api.OrgName
-	username  cli.StringArgValue
+	username  cli.StringValue
 	role      string
 	force     bool
 	io        ui.IO

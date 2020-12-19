@@ -8,7 +8,7 @@ import (
 )
 
 type CompletionCommand struct {
-	shell  cli.StringArgValue
+	shell  cli.StringValue
 	clause *cli.CommandClause
 }
 

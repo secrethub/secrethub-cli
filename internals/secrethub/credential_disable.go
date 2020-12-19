@@ -15,7 +15,7 @@ import (
 type CredentialDisableCommand struct {
 	io          ui.IO
 	force       bool
-	fingerprint cli.StringArgValue
+	fingerprint cli.StringValue
 	newClient   newClientFunc
 }
 

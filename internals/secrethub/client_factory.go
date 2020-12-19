@@ -42,6 +42,7 @@ type clientFactory struct {
 }
 
 // Register the flags for configuration on a cli application.
+// The environment variables of these flags are also checked on the client, but checking them here allows us to fail fast.
 func (f *clientFactory) Register(app *cli.App) {
 	commandClause := cli.CommandClause{
 		Cmd: app.Cmd,

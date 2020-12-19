@@ -396,6 +396,10 @@ func (f *Flag) Envar(name string) *Flag {
 	return f
 }
 
+func (f *Flag) HasEnvarValue() bool {
+	return os.Getenv(f.envVar) != ""
+}
+
 func (f *Flag) NoEnvar() *Flag {
 	if f.envVar != "" {
 		f.app.unregisterEnvVar(f.envVar)

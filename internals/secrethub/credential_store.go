@@ -3,6 +3,8 @@ package secrethub
 import (
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
+
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
@@ -38,7 +40,7 @@ func NewCredentialConfig(io ui.IO) CredentialConfig {
 
 type credentialConfig struct {
 	configDir                    ConfigDir
-	AccountCredential            string
+	credentialReader             *flagCredentialReader
 	credentialPassphrase         string
 	CredentialPassphraseCacheTTL time.Duration
 	io                           ui.IO
@@ -78,13 +80,38 @@ func (store *credentialConfig) Import() (credentials.Key, error) {
 }
 
 func (store *credentialConfig) getCredentialReader() credentials.Reader {
-	if store.AccountCredential != "" {
-		return credentials.FromString(store.AccountCredential)
+	if store.credentialReader.value == "" {
+		return store.configDir.Credential()
 	}
-	return store.configDir.Credential()
+	return store.credentialReader
 }
 
 // PassphraseReader returns a PassphraseReader configured by the flags.
 func (store *credentialConfig) PassphraseReader() credentials.Reader {
 	return NewPassphraseReader(store.io, store.credentialPassphrase, store.CredentialPassphraseCacheTTL)
+}
+
+// credentialReader returns a credential reader and source that reads from the given flag (and its corresponding env var).
+func credentialReader(flag *cli.Flag) *flagCredentialReader {
+	reader := flagCredentialReader{Flag: flag}
+	flag.StringVar(&reader.value)
+	flag.IsSetByUser(&reader.setByUser)
+	return &reader
+}
+
+type flagCredentialReader struct {
+	*cli.Flag
+	value     string
+	setByUser bool
+}
+
+func (f *flagCredentialReader) Read() ([]byte, error) {
+	return []byte(f.value), nil
+}
+
+func (f *flagCredentialReader) Source() string {
+	if f.HasEnvarValue() && !f.setByUser {
+		return "$SECRETHUB_CREDENTIAL"
+	}
+	return "--credential"
 }

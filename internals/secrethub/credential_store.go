@@ -59,6 +59,7 @@ func (store *credentialConfig) Register(app *cli.App) {
 		App: app,
 	}
 	commandClause.PersistentFlags().Var(&store.configDir, "config-dir", "The absolute path to a custom configuration directory.")
+	store.credentialReader = &flagCredentialReader{}
 	store.credentialReader = credentialReader(commandClause.PersistentFlags().StringVar(&store.credentialReader.value, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory."))
 	commandClause.PersistentFlags().StringVarP(&store.credentialPassphrase, "p", "p", "", "").NoEnvar() // Shorthand -p is deprecated. Use --credential-passphrase instead.
 	commandClause.Cmd.Flag("p").Hidden = true

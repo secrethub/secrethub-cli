@@ -240,9 +240,8 @@ func defaultIsZeroValue(f *pflag.Flag) bool {
 		default:
 			if f.Changed {
 				return true
-			} else {
-				return false
 			}
+			return false
 		}
 	}
 }

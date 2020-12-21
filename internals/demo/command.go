@@ -2,9 +2,8 @@ package demo
 
 //import (
 //	"github.com/secrethub/demo-app/cli"
-//
 //	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-//
+//	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 //)
 //
 //// Command is a command to run the secrethub example app.
@@ -22,7 +21,7 @@ package demo
 //}
 //
 //// Register registers the command, arguments and flags on the provided Registerer.
-//func (cmd *Command) Register(r cli.Registerer) {
+//func (cmd *Command) Register(r command.Registerer) {
 //	clause := r.Command("demo", "Manage the demo application.")
 //	clause.Hidden()
 //

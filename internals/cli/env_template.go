@@ -42,8 +42,8 @@ func Tmpl(w io.Writer, text string, data interface{}) error {
 
 // rpad adds padding to the right of a string.
 func rpad(s string, padding int) string {
-	template := fmt.Sprintf("%%-%ds", padding)
-	return fmt.Sprintf(template, s)
+	tmpl := fmt.Sprintf("%%-%ds", padding)
+	return fmt.Sprintf(tmpl, s)
 }
 
 func trimRightSpace(s string) string {
@@ -59,7 +59,7 @@ func hasManagementSubCommands(cmd *cobra.Command) bool {
 }
 
 func operationSubCommands(cmd *cobra.Command) []*cobra.Command {
-	cmds := []*cobra.Command{}
+	var cmds []*cobra.Command
 	for _, sub := range cmd.Commands() {
 		if sub.IsAvailableCommand() && !sub.HasSubCommands() {
 			cmds = append(cmds, sub)
@@ -69,7 +69,7 @@ func operationSubCommands(cmd *cobra.Command) []*cobra.Command {
 }
 
 func managementSubCommands(cmd *cobra.Command) []*cobra.Command {
-	cmds := []*cobra.Command{}
+	var cmds []*cobra.Command
 	for _, sub := range (*cmd).Commands() {
 		if sub.IsAvailableCommand() && sub.HasSubCommands() {
 			cmds = append(cmds, sub)

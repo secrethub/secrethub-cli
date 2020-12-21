@@ -60,7 +60,7 @@ func (store *credentialConfig) Register(app *cli.App) {
 	}
 	commandClause.PersistentFlags().Var(&store.configDir, "config-dir", "The absolute path to a custom configuration directory.")
 	store.credentialReader = &flagCredentialReader{}
-	store.credentialReader = credentialReader(commandClause.PersistentFlags().StringVar(&store.credentialReader.value, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory."))
+	store.credentialReader.Flag = commandClause.PersistentFlags().StringVar(&store.credentialReader.value, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.")
 	commandClause.PersistentFlags().StringVarP(&store.credentialPassphrase, "p", "p", "", "").NoEnvar() // Shorthand -p is deprecated. Use --credential-passphrase instead.
 	commandClause.Cmd.Flag("p").Hidden = true
 	commandClause.PersistentFlags().StringVar(&store.credentialPassphrase, "credential-passphrase", "", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.")
@@ -90,31 +90,9 @@ func (store *credentialConfig) PassphraseReader() credentials.Reader {
 	return NewPassphraseReader(store.io, store.credentialPassphrase, store.CredentialPassphraseCacheTTL)
 }
 
-// credentialReader returns a credential reader and source that reads from the given flag (and its corresponding env var).
-func credentialReader(flag *cli.Flag) *flagCredentialReader {
-	reader := flagCredentialReader{Flag: flag}
-	//flag.IsSetByUser(&reader.setByUser)
-	reader.setByUser = &reader.Changed
-	return &reader
-}
-
 type flagCredentialReader struct {
 	*cli.Flag
-	value     string
-	setByUser *bool
-}
-
-func (f *flagCredentialReader) String() string {
-	return f.value
-}
-
-func (f *flagCredentialReader) Set(s string) error {
-	f.value = s
-	return nil
-}
-
-func (f *flagCredentialReader) Type() string {
-	return "flagCredentialReader"
+	value string
 }
 
 func (f *flagCredentialReader) Read() ([]byte, error) {
@@ -122,7 +100,7 @@ func (f *flagCredentialReader) Read() ([]byte, error) {
 }
 
 func (f *flagCredentialReader) Source() string {
-	if f.HasEnvarValue() && !*f.setByUser {
+	if f.HasEnvarValue() && !f.Flag.Changed {
 		return "$SECRETHUB_CREDENTIAL"
 	}
 	return "--credential"

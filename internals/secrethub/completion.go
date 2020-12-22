@@ -2,13 +2,9 @@ package secrethub
 
 import (
 	"bytes"
-	"fmt"
 	"os"
-	"os/exec"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	// "github.com/spf13/cobra"
 )
 
 type CompletionCommand struct {
@@ -29,32 +25,33 @@ func (cmd *CompletionCommand) Register(r cli.Registerer) {
 	cmd.clause.Cmd.DisableFlagsInUseLine = true
 	cmd.clause.Cmd.ValidArgs = []string{"bash", "zsh", "fish", "powershell"}
 	cmd.clause.BindAction(cmd.run)
-	cmd.clause.BindArguments([]cli.Argument{{Store: &cmd.shell, Name: "shell", Required: true}})
+	cmd.clause.BindArguments([]cli.Argument{{Value: &cmd.shell, Name: "shell", Required: true}})
 }
 
 func (cmd *CompletionCommand) run() error {
 	switch cmd.shell.Param {
 	case "bash":
-		options := []string{"yes", "y", ""}
-		ok := false
-		answer, err := ui.Ask(ui.NewUserIO(), "In order to install autocompletion, sudo privileges are needed. Do you agree to give permission? [yes/no]\n")
-		if err != nil {
-			return err
-		}
-		for _, a := range options {
-			if a == answer {
-				ok = true
-			}
-		}
-		if !ok {
-			return nil
-		}
+		//options := []string{"yes", "y", ""}
+		//ok := false
+		//answer, err := ui.Ask(ui.NewUserIO(), "In order to install autocompletion, sudo privileges are needed. Do you agree to give permission? [yes/no]\n")
+		//if err != nil {
+		//	return err
+		//}
+		//for _, a := range options {
+		//	if a == answer {
+		//		ok = true
+		//	}
+		//}
+		//if !ok {
+		//	return nil
+		//}
 		buf := new(bytes.Buffer)
-		err = cmd.clause.Cmd.Root().GenBashCompletion(buf)
+		buf.Write([]byte("#!/usr/bin/env bash\n"))
+		err := cmd.clause.Cmd.Root().GenBashCompletion(buf)
 		if err != nil {
 			return err
 		}
-		f, err := os.Create("secrethub")
+		f, err := os.OpenFile("contrib/completion/bash/secrethub", os.O_RDWR|os.O_CREATE, 0755)
 		if err != nil {
 			return err
 		}
@@ -63,28 +60,37 @@ func (cmd *CompletionCommand) run() error {
 			return err
 		}
 		f.Close()
-		err = exec.Command("sudo", "mv", "secrethub", "/etc/bash_completion.d/secrethub").Run()
-		if err != nil {
-			return err
-		}
-		err = exec.Command("chmod", "+x", "/etc/bash_completion.d/secrethub").Run()
-		if err != nil {
-			return err
-		}
-		fmt.Println("Generation complete. From the next terminal onward you will have autocompletion.")
-		fmt.Println("Please execute the following command To have autocompletion on the current command:\n  source /etc/bash_completion.d/secrethub")
+		//err = exec.Command("sudo", "mv", "secrethub", "/etc/bash_completion.d/secrethub").Run()
+		//if err != nil {
+		//	return err
+		//}
+		//err = exec.Command("chmod", "+x", "/etc/bash_completion.d/secrethub").Run()
+		//if err != nil {
+		//	return err
+		//}
+		//fmt.Println("Generation complete. From the next terminal onward you will have autocompletion.")
+		//fmt.Println("Please execute the following command To have autocompletion on the current command:\n  source /etc/bash_completion.d/secrethub")
 	case "zsh":
 		buf := new(bytes.Buffer)
 		err := cmd.clause.Cmd.Root().GenZshCompletion(buf)
 		if err != nil {
 			return err
 		}
-		exec.Command("zsh", "-c", fmt.Sprint("echo", "\"autoload -U compinit; compinit\"", ">>", "~/.zshrc"))
-		path, err := exec.Command("zsh", "-c", fmt.Sprintf("\"echo %q\"", "${fpath[1]}")).Output()
+		f, err := os.OpenFile("contrib/completion/zsh/_secrethub", os.O_RDWR|os.O_CREATE, 0755)
 		if err != nil {
 			return err
 		}
-		fmt.Println(path)
+		_, err = f.Write(buf.Bytes())
+		if err != nil {
+			return err
+		}
+		f.Close()
+		//exec.Command("zsh", "-c", fmt.Sprint("echo", "\"autoload -U compinit; compinit\"", ">>", "~/.zshrc"))
+		//path, err := exec.Command("zsh", "-c", fmt.Sprintf("\"echo %q\"", "${fpath[1]}")).Output()
+		//if err != nil {
+		//	return err
+		//}
+		//fmt.Println(path)
 		//_, err = os.Create(string(path) + "/_secrethub")
 		//if err != nil {
 		//	return err
@@ -92,9 +98,35 @@ func (cmd *CompletionCommand) run() error {
 		//f.Write(buf.Bytes())
 		//defer f.Close()
 	case "fish":
-		_ = cmd.clause.Cmd.Root().GenFishCompletion(os.Stdout, true)
+		buf := new(bytes.Buffer)
+		err := cmd.clause.Cmd.Root().GenFishCompletion(buf, true)
+		if err != nil {
+			return err
+		}
+		f, err := os.OpenFile("contrib//completion/fish/secrethub.fish", os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return err
+		}
+		_, err = f.Write(buf.Bytes())
+		if err != nil {
+			return err
+		}
+		f.Close()
 	case "powershell":
-		_ = cmd.clause.Cmd.Root().GenPowerShellCompletion(os.Stdout)
+		buf := new(bytes.Buffer)
+		err := cmd.clause.Cmd.Root().GenPowerShellCompletion(buf)
+		if err != nil {
+			return err
+		}
+		f, err := os.OpenFile("contrib/completion/powershell/secrethub", os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			return err
+		}
+		_, err = f.Write(buf.Bytes())
+		if err != nil {
+			return err
+		}
+		f.Close()
 	}
 	return nil
 }

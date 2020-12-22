@@ -107,7 +107,6 @@ func newOutputUser(user *api.User, timeFormatter TimeFormatter) *outputUser {
 // outputService is a user friendly JSON representation of a service account.
 type outputService struct {
 	Description string
-	CreatedBy   string
 	CreatedAt   string `json:",omitempty"`
 	outputAccount
 }
@@ -115,7 +114,6 @@ type outputService struct {
 func newOutputService(service *api.Service, account *api.Account, timeFormatter TimeFormatter) *outputService {
 	return &outputService{
 		Description: service.Description,
-		CreatedBy:   service.CreatedBy.String(),
 		CreatedAt:   timeFormatter.Format(service.CreatedAt.Local()),
 		outputAccount: outputAccount{
 			AccountType:      accountTypeService,

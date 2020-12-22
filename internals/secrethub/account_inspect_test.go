@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"errors"
-	"github.com/secrethub/secrethub-go/internals/api/uuid"
 	"testing"
 	"time"
 
@@ -87,7 +86,6 @@ func TestAccountInspect(t *testing.T) {
 									return &api.Service{
 										ServiceID:   "s-abcdefghijkl",
 										Description: "Test description.",
-										CreatedBy:   uuid.UUID{},
 										CreatedAt:   time.Date(2020, 12, 12, 12, 12, 12, 0, time.UTC),
 									}, nil
 								}
@@ -103,7 +101,6 @@ func TestAccountInspect(t *testing.T) {
 			err: nil,
 			out: `{
     "Description": "Test description.",
-    "CreatedBy": "00000000-0000-0000-0000-000000000000",
     "CreatedAt": "2018-07-30T10:49:18Z",
     "AccountType": "service",
     "AccountName": "s-abcdefghijkl",

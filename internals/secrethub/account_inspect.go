@@ -76,6 +76,7 @@ func (cmd *AccountInspectCommand) Run() error {
 type outputAccount struct {
 	AccountType      string
 	AccountName      string
+	CreatedAt        string `json:",omitempty"`
 	PublicAccountKey []byte `json:",omitempty"`
 }
 
@@ -85,7 +86,6 @@ type outputUser struct {
 	FullName      string
 	Email         string `json:",omitempty"`
 	EmailVerified bool   `json:",omitempty"`
-	CreatedAt     string `json:",omitempty"`
 	outputAccount
 }
 
@@ -95,10 +95,10 @@ func newOutputUser(user *api.User, timeFormatter TimeFormatter) *outputUser {
 		FullName:      user.FullName,
 		Email:         user.Email,
 		EmailVerified: user.EmailVerified,
-		CreatedAt:     timeFormatter.Format(user.CreatedAt.Local()),
 		outputAccount: outputAccount{
 			AccountType:      accountTypeUser,
 			AccountName:      user.Username,
+			CreatedAt:        timeFormatter.Format(user.CreatedAt.Local()),
 			PublicAccountKey: user.PublicKey,
 		},
 	}
@@ -114,10 +114,10 @@ type outputService struct {
 func newOutputService(service *api.Service, account *api.Account, timeFormatter TimeFormatter) *outputService {
 	return &outputService{
 		Description: service.Description,
-		CreatedAt:   timeFormatter.Format(service.CreatedAt.Local()),
 		outputAccount: outputAccount{
 			AccountType:      accountTypeService,
 			AccountName:      service.ServiceID,
+			CreatedAt:        timeFormatter.Format(service.CreatedAt.Local()),
 			PublicAccountKey: account.PublicKey,
 		},
 	}

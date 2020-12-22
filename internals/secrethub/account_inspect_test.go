@@ -60,9 +60,9 @@ func TestAccountInspect(t *testing.T) {
     "FullName": "Developer Uno",
     "Email": "dev1@keylocker.eu",
     "EmailVerified": true,
-    "CreatedAt": "2018-07-30T10:49:18Z",
     "AccountType": "user",
     "AccountName": "dev1",
+    "CreatedAt": "2018-07-30T10:49:18Z",
     "PublicAccountKey": "YWJjZGU="
 }
 `,
@@ -101,9 +101,9 @@ func TestAccountInspect(t *testing.T) {
 			err: nil,
 			out: `{
     "Description": "Test description.",
-    "CreatedAt": "2018-07-30T10:49:18Z",
     "AccountType": "service",
     "AccountName": "s-abcdefghijkl",
+    "CreatedAt": "2018-07-30T10:49:18Z",
     "PublicAccountKey": "YWJjZGU="
 }
 `,

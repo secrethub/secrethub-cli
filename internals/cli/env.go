@@ -59,20 +59,19 @@ func (a *App) Command(name, help string) *CommandClause {
 	clause.Cmd.SetUsageFunc(func(command *cobra.Command) error {
 		err := Tmpl(os.Stdout, UsageTemplate, clause)
 		if err != nil {
-			fmt.Println(err)
+			os.Stderr.Write([]byte(err.Error()))
 		}
 		return err
 	})
 	clause.Cmd.SetHelpFunc(func(command *cobra.Command, str []string) {
 		err := Tmpl(os.Stdout, HelpTemplate, clause)
 		if err != nil {
-			fmt.Println(err)
+			os.Stderr.Write([]byte(err.Error()))
 		}
 	})
 	return clause
 }
 
-//
 // Version adds a flag for displaying the application version number.
 func (a *App) Version(version string) *App {
 	a.Cmd.Version = version
@@ -107,7 +106,7 @@ func (a *App) isExtraEnvVar(key string) bool {
 	return false
 }
 
-// PrintEnv reads all environment variables starting with the App name and writes
+// PrintEnv reads all environment variables starting with the app name and writes
 // a table with the keys and their status: set, empty, unrecognized. The value
 // of environment variables are not printed out for security reasons. The list
 // is limited to variables that are actually set in the environment. Setting
@@ -193,14 +192,14 @@ func (c *CommandClause) Command(name, help string) *CommandClause {
 	clause.Cmd.SetUsageFunc(func(command *cobra.Command) error {
 		err := Tmpl(os.Stdout, UsageTemplate, clause)
 		if err != nil {
-			fmt.Println(err)
+			os.Stderr.Write([]byte(err.Error()))
 		}
 		return err
 	})
 	clause.Cmd.SetHelpFunc(func(command *cobra.Command, str []string) {
 		err := Tmpl(os.Stdout, HelpTemplate, clause)
 		if err != nil {
-			fmt.Println(err)
+			os.Stderr.Write([]byte(err.Error()))
 		}
 	})
 	c.Cmd.AddCommand(clause.Cmd)
@@ -260,7 +259,7 @@ func (c *CommandClause) Flags() *FlagSet {
 }
 
 func (c *CommandClause) PersistentFlags() *FlagSet {
-	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
+	return &FlagSet{FlagSet: c.Cmd.PersistentFlags(), cmd: c}
 }
 
 // BindArguments binds a function to a command clause, so that
@@ -311,21 +310,18 @@ func (f *FlagSet) BoolVarP(reference *bool, name, shorthand string, def bool, us
 
 func (f *FlagSet) IntVarP(reference *int, name, shorthand string, def int, usage string) *Flag {
 	f.FlagSet.IntVarP(reference, name, shorthand, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = strconv.Itoa(def)
 	f.cmd.Flag(name).DefValue = strconv.Itoa(def)
 	return f.cmd.Flag(name)
 }
 
 func (f *FlagSet) StringVarP(reference *string, name, shorthand string, def string, usage string) *Flag {
 	f.FlagSet.StringVarP(reference, name, shorthand, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = def
 	f.cmd.Flag(name).DefValue = def
 	return f.cmd.Flag(name)
 }
 
 func (f *FlagSet) DurationVarP(reference *time.Duration, name, shorthand string, def time.Duration, usage string) *Flag {
 	f.FlagSet.DurationVarP(reference, name, shorthand, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = shortDur(reference)
 	f.cmd.Flag(name).DefValue = shortDur(reference)
 	return f.cmd.Flag(name)
 }
@@ -337,21 +333,18 @@ func (f *FlagSet) BoolVar(reference *bool, name string, def bool, usage string) 
 
 func (f *FlagSet) IntVar(reference *int, name string, def int, usage string) *Flag {
 	f.FlagSet.IntVar(reference, name, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = strconv.Itoa(def)
 	f.cmd.Flag(name).DefValue = strconv.Itoa(def)
 	return f.cmd.Flag(name)
 }
 
 func (f *FlagSet) StringVar(reference *string, name string, def string, usage string) *Flag {
 	f.FlagSet.StringVar(reference, name, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = def
 	f.cmd.Flag(name).DefValue = def
 	return f.cmd.Flag(name)
 }
 
 func (f *FlagSet) DurationVar(reference *time.Duration, name string, def time.Duration, usage string) *Flag {
 	f.FlagSet.DurationVar(reference, name, def, usage)
-	f.cmd.Flag(name).NoOptDefVal = shortDur(reference)
 	f.cmd.Flag(name).DefValue = shortDur(reference)
 	return f.cmd.Flag(name)
 }
@@ -439,7 +432,7 @@ func splitVar(prefix, separator, envVar string) (string, string, bool) {
 }
 
 type Argument struct {
-	Store       ArgValue
+	Value       ArgValue
 	Name        string
 	Required    bool
 	Placeholder string
@@ -453,7 +446,7 @@ type ArgValue interface {
 
 func ArgumentRegister(params []Argument, args []string) error {
 	for i, arg := range args {
-		err := params[i].Store.Set(arg)
+		err := params[i].Value.Set(arg)
 		if err != nil {
 			return err
 		}
@@ -463,7 +456,7 @@ func ArgumentRegister(params []Argument, args []string) error {
 
 func ArgumentArrRegister(params []Argument, args []string) error {
 	for _, arg := range args {
-		err := params[0].Store.Set(arg)
+		err := params[0].Value.Set(arg)
 		if err != nil {
 			return err
 		}

@@ -12,7 +12,6 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
-	//"github.com/spf13/cobra"
 )
 
 // LsCommand lists a repo, secret or namespace.
@@ -41,7 +40,7 @@ func (cmd *LsCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.path, Name: "path", Required: false, Description: "The path to list contents of."},
+		{Value: &cmd.path, Name: "path", Required: false, Description: "The path to list contents of."},
 	})
 }
 

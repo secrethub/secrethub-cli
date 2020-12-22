@@ -36,7 +36,7 @@ func (cmd *InspectCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.path, Name: "path", Required: true, Description: "Path to the repository or the secret to inspect " + repoPathPlaceHolder + " or " + secretPathOptionalVersionPlaceHolder},
+		{Value: &cmd.path, Name: "path", Required: true, Description: "Path to the repository or the secret to inspect " + repoPathPlaceHolder + " or " + secretPathOptionalVersionPlaceHolder},
 	})
 }
 

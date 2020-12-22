@@ -10,7 +10,6 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/api/uuid"
-	//"github.com/spf13/cobra"
 )
 
 // ACLListCommand prints access rules for the given directory.
@@ -42,7 +41,7 @@ func (cmd *ACLListCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to list the access rules for."},
+		{Value: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to list the access rules for."},
 	})
 }
 

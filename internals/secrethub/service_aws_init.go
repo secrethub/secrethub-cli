@@ -21,7 +21,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/sts"
-	//"github.com/spf13/cobra"
 )
 
 // Errors
@@ -177,7 +176,7 @@ func (cmd *ServiceAWSInitCommand) Register(r cli.Registerer) {
 	)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {

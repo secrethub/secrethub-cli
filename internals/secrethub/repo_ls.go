@@ -9,7 +9,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	// "github.com/spf13/cobra"
 )
 
 // RepoLSCommand lists repositories.
@@ -38,7 +37,7 @@ func (cmd *RepoLSCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.workspace, Name: "workspace", Required: false, Description: "When supplied, results are limited to repositories in this workspace."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.workspace, Name: "workspace", Required: false, Description: "When supplied, results are limited to repositories in this workspace."}})
 
 }
 

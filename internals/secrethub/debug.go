@@ -16,6 +16,7 @@ func RegisterDebugFlag(app *cli.App, logger cli.Logger) {
 		logger: logger,
 	}
 	commandClause.PersistentFlags().VarP(&flag, "debug", "D", "Enable debug mode.")
+	commandClause.Flag("debug").NoOptDefVal = "true"
 }
 
 // debugFlag configures the debug level of a logger.

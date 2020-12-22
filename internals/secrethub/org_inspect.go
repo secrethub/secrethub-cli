@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // OrgInspectCommand handles printing out the details of an organization in a JSON format.
@@ -33,7 +32,7 @@ func (cmd *OrgInspectCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.name, Name: "org-name", Required: true, Description: "The organization name."},
+		{Value: &cmd.name, Name: "org-name", Required: true, Description: "The organization name."},
 	})
 }
 

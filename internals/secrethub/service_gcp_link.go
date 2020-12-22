@@ -14,7 +14,6 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
-	//"github.com/spf13/cobra"
 )
 
 // ServiceGCPLinkCommand create a new link between a SecretHub namespace and a GCP project.
@@ -71,8 +70,8 @@ func (cmd *ServiceGCPLinkCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.namespace, Name: "namespace", Required: true, Description: "The SecretHub namespace to link."},
-		{Store: &cmd.projectID, Name: "project-id", Required: true, Description: "The GCP project to link the namespace to."},
+		{Value: &cmd.namespace, Name: "namespace", Required: true, Description: "The SecretHub namespace to link."},
+		{Value: &cmd.projectID, Name: "project-id", Required: true, Description: "The GCP project to link the namespace to."},
 	})
 }
 
@@ -129,7 +128,7 @@ func (cmd *ServiceGCPListLinksCommand) Register(r cli.Registerer) {
 	registerTimestampFlag(clause, &cmd.useTimestamps)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.namespace, Name: "namespace", Required: true, Description: "The namespace for which to list all existing links to GCP projects."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.namespace, Name: "namespace", Required: true, Description: "The namespace for which to list all existing links to GCP projects."}})
 }
 
 // ServiceGCPDeleteLinkCommand deletes the link between a SecretHub namespace and a GCP project.
@@ -153,8 +152,8 @@ func (cmd *ServiceGCPDeleteLinkCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.namespace, Name: "namespace", Required: true, Description: "The SecretHub namespace to delete the link from."},
-		{Store: &cmd.projectID, Name: "project-id", Required: true, Description: "The GCP project to delete the link to."},
+		{Value: &cmd.namespace, Name: "namespace", Required: true, Description: "The SecretHub namespace to delete the link from."},
+		{Value: &cmd.projectID, Name: "project-id", Required: true, Description: "The GCP project to delete the link to."},
 	})
 }
 

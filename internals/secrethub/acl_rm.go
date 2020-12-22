@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // ACLRmCommand handles removing an access rule.
@@ -35,8 +34,8 @@ func (cmd *ACLRmCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to remove the access rule for."},
-		{Store: &cmd.accountName, Name: "account-name", Required: true, Description: "The account name (username or service name) whose rule to remove."},
+		{Value: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to remove the access rule for."},
+		{Value: &cmd.accountName, Name: "account-name", Required: true, Description: "The account name (username or service name) whose rule to remove."},
 	})
 }
 

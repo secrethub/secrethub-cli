@@ -8,7 +8,6 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
-	//"github.com/spf13/cobra"
 )
 
 // Errors
@@ -44,7 +43,7 @@ func (cmd *RmCommand) Register(r cli.Registerer) {
 	registerForceFlag(clause, &cmd.force)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true, Placeholder: "<namespace>/<repo>[/<path>]", Description: "The path to the resource to remove."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "path", Required: true, Placeholder: "<namespace>/<repo>[/<path>]", Description: "The path to the resource to remove."}})
 }
 
 // Run removes the resource at the given path.

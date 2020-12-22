@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	//"github.com/spf13/cobra"
 )
 
 // EnvReadCommand is a command to read the value of a single environment variable.
@@ -34,7 +33,7 @@ func (cmd *EnvReadCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.key, Name: "key", Required: false, Description: "the key of the environment variable to read."},
+		{Value: &cmd.key, Name: "key", Required: false, Description: "the key of the environment variable to read."},
 	})
 }
 

@@ -79,9 +79,9 @@ func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.firstArg, Name: "secret-path", Required: true, Placeholder: secretPathPlaceHolder, Description: "The path to write the generated secret to."},
-		{Store: &cmd.secondArg, Name: "rand-command", Required: false, Hidden: true},
-		{Store: &cmd.lengthArg, Name: "length", Required: false, Hidden: true},
+		{Value: &cmd.firstArg, Name: "secret-path", Required: true, Placeholder: secretPathPlaceHolder, Description: "The path to write the generated secret to."},
+		{Value: &cmd.secondArg, Name: "rand-command", Required: false, Hidden: true},
+		{Value: &cmd.lengthArg, Name: "length", Required: false, Hidden: true},
 	})
 }
 

@@ -9,7 +9,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	//"github.com/spf13/cobra"
 )
 
 // Errors
@@ -40,7 +39,7 @@ func (cmd *MkDirCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.paths, Name: "path", Required: true, Placeholder: dirPathsPlaceHolder, Description: "The paths to the directories."},
+		{Value: &cmd.paths, Name: "path", Required: true, Placeholder: dirPathsPlaceHolder, Description: "The paths to the directories."},
 	})
 }
 

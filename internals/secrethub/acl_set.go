@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // ACLSetCommand is a command to set access rules.
@@ -36,9 +35,9 @@ func (cmd *ACLSetCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.path, Name: "dir-path", Placeholder: dirPathPlaceHolder, Required: true, Description: "The path of the directory to set the access rule for."},
-		{Store: &cmd.accountName, Name: "account-name", Required: true, Description: "The account name (username or service name) to set the access rule for."},
-		{Store: &cmd.permission, Name: "permission", Required: true, Description: "The permission to set in the access rule."},
+		{Value: &cmd.path, Name: "dir-path", Placeholder: dirPathPlaceHolder, Required: true, Description: "The path of the directory to set the access rule for."},
+		{Value: &cmd.accountName, Name: "account-name", Required: true, Description: "The account name (username or service name) to set the access rule for."},
+		{Value: &cmd.permission, Name: "permission", Required: true, Description: "The permission to set in the access rule."},
 	})
 }
 

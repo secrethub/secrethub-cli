@@ -8,7 +8,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // CredentialDisableCommand is a command that allows to disable an existing credential.
@@ -36,7 +35,7 @@ func (cmd *CredentialDisableCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.fingerprint, Name: "fingerprint", Required: false, Description: fingerprintHelp},
+		{Value: &cmd.fingerprint, Name: "fingerprint", Required: false, Description: fingerprintHelp},
 	})
 }
 

@@ -34,8 +34,8 @@ func (cmd *ACLCheckCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to check the effective permission for."},
-		{Store: &cmd.accountName, Name: "account-name", Required: false, Description: "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out."},
+		{Value: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to check the effective permission for."},
+		{Value: &cmd.accountName, Name: "account-name", Required: false, Description: "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out."},
 	})
 }
 

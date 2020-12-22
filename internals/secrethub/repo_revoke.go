@@ -9,7 +9,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // RepoRevokeCommand handles revoking an account access to a repository.
@@ -36,8 +35,8 @@ func (cmd *RepoRevokeCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to revoke the account from."},
-		{Store: &cmd.accountName, Name: "account-name", Required: true, Description: "username or service name."},
+		{Value: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to revoke the account from."},
+		{Value: &cmd.accountName, Name: "account-name", Required: true, Description: "username or service name."},
 	})
 }
 

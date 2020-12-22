@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // OrgSetRoleCommand handles updating the role of an organization member.
@@ -33,9 +32,9 @@ func (cmd *OrgSetRoleCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
-		{Store: &cmd.username, Name: "username", Required: true, Description: "The username of the user."},
-		{Store: &cmd.role, Name: "role", Required: true, Description: "The role to assign to the user. Can be either `admin` or `member`."},
+		{Value: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
+		{Value: &cmd.username, Name: "username", Required: true, Description: "The username of the user."},
+		{Value: &cmd.role, Name: "role", Required: true, Description: "The role to assign to the user. Can be either `admin` or `member`."},
 	})
 }
 

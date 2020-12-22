@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // RepoInspectCommand handles printing out the details of a repo in a JSON format.
@@ -32,7 +31,7 @@ func (cmd *RepoInspectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inspect", "Show the details of a repository.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "Path to the repository."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "Path to the repository."}})
 }
 
 // Run prints out the details of a repo.

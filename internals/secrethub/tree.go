@@ -9,7 +9,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // TreeCommand lists the contents of a directory at a given path in a tree-like format.
@@ -58,7 +57,7 @@ func (cmd *TreeCommand) Register(r cli.Registerer) {
 	clause.Flag("noreport").Hidden = true
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path to to show contents for."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path to to show contents for."}})
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.

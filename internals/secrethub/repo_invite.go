@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // RepoInviteCommand handles inviting a user to collaborate on a repository.
@@ -34,8 +33,8 @@ func (cmd *RepoInviteCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to invite the user to."},
-		{Store: &cmd.username, Name: "username", Required: true, Description: "Username of the user."},
+		{Value: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to invite the user to."},
+		{Value: &cmd.username, Name: "username", Required: true, Description: "Username of the user."},
 	})
 }
 

@@ -156,7 +156,7 @@ func useLine(c *cobra.Command, args []Argument) string {
 }
 
 func flagUsages(c CommandClause, isGlobal bool) string {
-	flagSet := c.Cmd.Flags()
+	flagSet := c.Cmd.LocalFlags()
 	if isGlobal {
 		flagSet = c.Cmd.InheritedFlags()
 	}
@@ -267,7 +267,6 @@ func wrap(i, w int, s string) string {
 	}
 
 	return r
-
 }
 
 // Splits the string `s` on whitespace into an initial substring up to
@@ -365,7 +364,7 @@ Commands:
   {{rpad .Name .NamePadding }} {{.Short}}
 {{- end}}
 {{- end}}
-{{- if or (not .Cmd.HasSubCommands) (gt (numFlags .Cmd.Flags) 1)}}
+{{- if or (not .Cmd.HasSubCommands) (gt (numFlags .Cmd.LocalFlags) 1)}}
 
 Flags:
 {{flagUsages . false | trimTrailingWhitespaces}}

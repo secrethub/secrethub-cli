@@ -22,7 +22,6 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
-	//"github.com/spf13/cobra"
 )
 
 // ServiceGCPInitCommand initializes a service for GCP.
@@ -175,7 +174,7 @@ func (cmd *ServiceGCPInitCommand) Register(r cli.Registerer) {
 	)
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
 }
 
 type gcpProjectOptionLister struct {

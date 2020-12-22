@@ -10,7 +10,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 var (
@@ -50,7 +49,7 @@ func (cmd *WriteCommand) Register(r cli.Registerer) {
 	clause.Flags().StringVarP(&cmd.inFile, "in-file", "i", "", "Use the contents of this file as the value of the secret.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "secret-path", Required: true, Placeholder: secretPathPlaceHolder, Description: "The path to the secret."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "secret-path", Required: true, Placeholder: secretPathPlaceHolder, Description: "The path to the secret."}})
 }
 
 // Run handles the command with the options as specified in the command.

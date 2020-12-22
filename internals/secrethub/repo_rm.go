@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // RepoRmCommand handles removing a repo.
@@ -31,7 +30,7 @@ func (cmd *RepoRmCommand) Register(r cli.Registerer) {
 	clause.Alias("remove")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to delete"}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to delete"}})
 }
 
 // Run removes the repository.

@@ -15,7 +15,6 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 
 	"github.com/docker/go-units"
-	//"github.com/spf13/cobra"
 )
 
 // ReadCommand is a command to read a secret.
@@ -60,7 +59,7 @@ func (cmd *ReadCommand) Register(r cli.Registerer) {
 	clause.Flags().VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. It is ignored without the --out-file flag.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.path, Name: "path", Placeholder: secretPathOptionalVersionPlaceHolder, Required: true, Description: "The path to the secret."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "path", Placeholder: secretPathOptionalVersionPlaceHolder, Required: true, Description: "The path to the secret."}})
 }
 
 // Run handles the command with the options as specified in the command.

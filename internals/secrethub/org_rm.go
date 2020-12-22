@@ -7,7 +7,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // OrgRmCommand deletes an organization, prompting the user for confirmation.
@@ -32,7 +31,7 @@ func (cmd *OrgRmCommand) Register(r cli.Registerer) {
 	clause.Alias("remove")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.name, Name: "org-name", Required: true, Description: "The organization name."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.name, Name: "org-name", Required: true, Description: "The organization name."}})
 }
 
 // Run deletes an organization, prompting the user for confirmation.

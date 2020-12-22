@@ -8,7 +8,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
 
-	//"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -36,7 +35,7 @@ func (cmd *ClearClipboardCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.hash, Name: "hash", Required: true, Description: "Hash from the secret to be cleared."},
+		{Value: &cmd.hash, Name: "hash", Required: true, Description: "Hash from the secret to be cleared."},
 	})
 }
 

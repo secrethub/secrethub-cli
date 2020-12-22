@@ -9,7 +9,6 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
-	//"github.com/spf13/cobra"
 )
 
 // OrgRevokeCommand handles revoking a member from an organization.
@@ -34,8 +33,8 @@ func (cmd *OrgRevokeCommand) Register(r cli.Registerer) {
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{
-		{Store: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
-		{Store: &cmd.username, Name: "username", Required: true, Description: "The username of the user."},
+		{Value: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
+		{Value: &cmd.username, Name: "username", Required: true, Description: "The username of the user."},
 	})
 }
 

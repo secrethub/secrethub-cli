@@ -72,7 +72,7 @@ func (cmd *ServiceDeployWinRmCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVar(&cmd.noVerify, "insecure-no-verify-cert", false, "Do not verify server TLS certificate (insecure).")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.resourceURI, Name: "resource-uri", Required: true, Placeholder: "[http[s]://]<host>[:<port>]", Description: "Hostname, optional connection protocol and port of the host. This defaults to https and port 5986."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.resourceURI, Name: "resource-uri", Required: true, Placeholder: "[http[s]://]<host>[:<port>]", Description: "Hostname, optional connection protocol and port of the host. This defaults to https and port 5986."}})
 }
 
 // Run creates a service and installs the configuration using WinRM.

@@ -15,7 +15,6 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
-	//"github.com/spf13/cobra"
 )
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.
@@ -124,7 +123,7 @@ func (cmd *ServiceInitCommand) Register(r cli.Registerer) {
 	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. It is ignored without the --file flag.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{{Store: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
+	clause.BindArguments([]cli.Argument{{Value: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
 }
 
 // givePermission gives the service permission on the repository as defined in the permission flag.

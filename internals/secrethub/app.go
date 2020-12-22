@@ -108,14 +108,14 @@ func NewApp() *App {
 	app.cli.Cmd.SetUsageFunc(func(command *cobra.Command) error {
 		err := cli.Tmpl(os.Stdout, cli.UsageTemplate, commandClause)
 		if err != nil {
-			fmt.Println(err)
+			os.Stderr.Write([]byte(err.Error()))
 		}
 		return err
 	})
 	app.cli.Cmd.SetHelpFunc(func(command *cobra.Command, i []string) {
 		err := cli.Tmpl(os.Stdout, cli.HelpTemplate, commandClause)
 		if err != nil {
-			fmt.Println(err)
+			os.Stderr.Write([]byte(err.Error()))
 		}
 	})
 	RegisterDebugFlag(app.cli, app.logger)

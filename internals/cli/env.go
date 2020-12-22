@@ -78,12 +78,12 @@ func (a *App) Version(version string) *App {
 	return a
 }
 
-// registerEnvVar ensures the App recognizes an environment variable.
+// registerEnvVar ensures the app recognizes an environment variable.
 func (a *App) registerEnvVar(name string) {
 	a.knownEnvVars[strings.ToUpper(name)] = struct{}{}
 }
 
-// unregisterEnvVar ensures the App does not recognize an environment variable.
+// unregisterEnvVar ensures the app does not recognize an environment variable.
 func (a *App) unregisterEnvVar(name string) {
 	delete(a.knownEnvVars, strings.ToUpper(name))
 }

@@ -59,14 +59,14 @@ func (a *App) Command(name, help string) *CommandClause {
 	clause.Cmd.SetUsageFunc(func(command *cobra.Command) error {
 		err := Tmpl(os.Stdout, UsageTemplate, clause)
 		if err != nil {
-			os.Stderr.Write([]byte(err.Error()))
+			fmt.Fprint(os.Stderr, err.Error())
 		}
 		return err
 	})
 	clause.Cmd.SetHelpFunc(func(command *cobra.Command, str []string) {
 		err := Tmpl(os.Stdout, HelpTemplate, clause)
 		if err != nil {
-			os.Stderr.Write([]byte(err.Error()))
+			fmt.Fprint(os.Stderr, err.Error())
 		}
 	})
 	return clause
@@ -199,14 +199,14 @@ func (c *CommandClause) Command(name, help string) *CommandClause {
 	clause.Cmd.SetUsageFunc(func(command *cobra.Command) error {
 		err := Tmpl(os.Stdout, UsageTemplate, clause)
 		if err != nil {
-			os.Stderr.Write([]byte(err.Error()))
+			fmt.Fprint(os.Stderr, err.Error())
 		}
 		return err
 	})
 	clause.Cmd.SetHelpFunc(func(command *cobra.Command, str []string) {
 		err := Tmpl(os.Stdout, HelpTemplate, clause)
 		if err != nil {
-			os.Stderr.Write([]byte(err.Error()))
+			fmt.Fprint(os.Stderr, err.Error())
 		}
 	})
 	c.Cmd.AddCommand(clause.Cmd)

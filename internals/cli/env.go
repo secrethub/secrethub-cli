@@ -76,6 +76,12 @@ func (a *App) Command(name, help string) *CommandClause {
 	return clause
 }
 
+// PersistentFlags returns a flag set that allows configuring
+// global persistent flags (that work on all commands of the CLI).
+func (a *App) PersistentFlags() *FlagSet {
+	return &FlagSet{FlagSet: a.Cmd.Cmd.PersistentFlags(), cmd: a.Cmd}
+}
+
 // Version adds a flag for displaying the application version number.
 func (a *App) Version(version string) *App {
 	a.Cmd.Cmd.Version = version
@@ -290,10 +296,6 @@ func (c *CommandClause) Flag(name string) *Flag {
 
 func (c *CommandClause) Flags() *FlagSet {
 	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
-}
-
-func (a *App) PersistentFlags() *FlagSet {
-	return &FlagSet{FlagSet: a.Cmd.Cmd.PersistentFlags(), cmd: a.Cmd}
 }
 
 // BindArguments binds a function to a command clause, so that

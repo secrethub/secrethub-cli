@@ -45,7 +45,7 @@ type clientFactory struct {
 // The environment variables of these flags are also checked on the client, but checking them here allows us to fail fast.
 func (f *clientFactory) Register(app *cli.App) {
 	app.PersistentFlags().VarPF(&f.ServerURL, "api-remote", "", "The SecretHub API address, don't set this unless you know what you're doing.")
-	app.Cmd.Flag("api-remote").Hidden = true
+	app.Root.Flag("api-remote").Hidden = true
 	app.PersistentFlags().StringVar(&f.identityProvider, "identity-provider", "key", "Enable native authentication with a trusted identity provider. Options are `aws` (IAM + KMS), `gcp` (IAM + KMS) and `key`. When you run the CLI on one of the platforms, you can leverage their respective identity providers to do native keyless authentication. Defaults to key, which uses the default credential sourced from a file, command-line flag, or environment variable.")
 	app.PersistentFlags().VarPF(&f.proxyAddress, "proxy-address", "", "Set to the address of a proxy to connect to the API through a proxy. The prepended scheme determines the proxy type (http, https and socks5 are supported). For example: `--proxy-address http://my-proxy:1234`")
 }

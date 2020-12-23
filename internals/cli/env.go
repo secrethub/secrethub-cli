@@ -25,7 +25,7 @@ var (
 // App represents a command-line application that wraps the
 // kingpin library and adds additional functionality.
 type App struct {
-	Cmd              *CommandClause
+	Root             *CommandClause
 	name             string
 	delimiters       []string
 	separator        string
@@ -36,7 +36,7 @@ type App struct {
 // NewApp defines a new command-line application.
 func NewApp(name, help string) *App {
 	app := &App{
-		Cmd: &CommandClause{
+		Root: &CommandClause{
 			Cmd: &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true},
 		},
 		name:             formatName(name, "", DefaultEnvSeparator, DefaultCommandDelimiters...),
@@ -45,7 +45,7 @@ func NewApp(name, help string) *App {
 		knownEnvVars:     make(map[string]struct{}),
 		extraEnvVarFuncs: []func(string) bool{},
 	}
-	app.Cmd.App = app
+	app.Root.App = app
 	return app
 }
 
@@ -54,7 +54,7 @@ func (a *App) Command(name, help string) *CommandClause {
 	clause := &CommandClause{
 		Cmd: func() *cobra.Command {
 			newCommand := &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true}
-			a.Cmd.Cmd.AddCommand(newCommand)
+			a.Root.Cmd.AddCommand(newCommand)
 			return newCommand
 		}(),
 		name: name,
@@ -79,12 +79,12 @@ func (a *App) Command(name, help string) *CommandClause {
 // PersistentFlags returns a flag set that allows configuring
 // global persistent flags (that work on all commands of the CLI).
 func (a *App) PersistentFlags() *FlagSet {
-	return &FlagSet{FlagSet: a.Cmd.Cmd.PersistentFlags(), cmd: a.Cmd}
+	return &FlagSet{FlagSet: a.Root.Cmd.PersistentFlags(), cmd: a.Root}
 }
 
 // Version adds a flag for displaying the application version number.
 func (a *App) Version(version string) *App {
-	a.Cmd.Cmd.Version = version
+	a.Root.Cmd.Version = version
 	return a
 }
 
@@ -252,7 +252,7 @@ func (c *CommandClause) Alias(alias string) {
 // the value of their corresponding environment variable if they are not set already.
 func (c *CommandClause) registerEnvVarParsing() {
 	c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(_ *cobra.Command, _ []string) error {
-		for _, flag := range c.App.Cmd.flags {
+		for _, flag := range c.App.Root.flags {
 			if !flag.Changed && flag.HasEnvarValue() {
 				err := flag.Value.Set(os.Getenv(flag.envVar))
 				if err != nil {

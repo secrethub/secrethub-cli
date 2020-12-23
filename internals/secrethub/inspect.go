@@ -3,9 +3,6 @@ package secrethub
 import (
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-
-	// "github.com/spf13/cobra"
-
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 

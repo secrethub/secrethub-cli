@@ -142,3 +142,14 @@ func splitVar(prefix, separator, envVar string) (string, string, bool) {
 	prefix = fmt.Sprintf("%s%s", strings.ToUpper(prefix), separator)
 	return split[0], split[1], strings.HasPrefix(strings.ToUpper(split[0]), prefix)
 }
+
+func shortDur(d *time.Duration) string {
+	s := d.String()
+	if strings.HasSuffix(s, "m0s") {
+		s = s[:len(s)-2]
+	}
+	if strings.HasSuffix(s, "h0m") {
+		s = s[:len(s)-2]
+	}
+	return s
+}

@@ -2,8 +2,6 @@ package cli
 
 import (
 	"net/url"
-	"strings"
-	"time"
 )
 
 type Argument struct {

@@ -100,20 +100,15 @@ func NewApp() *App {
 		logger:          cli.NewLogger(),
 	}
 
-	commandClause := &cli.CommandClause{
-		Cmd: app.cli.Cmd,
-		App: app.cli,
-	}
-
-	app.cli.Cmd.SetUsageFunc(func(command *cobra.Command) error {
-		err := cli.Tmpl(os.Stdout, cli.UsageTemplate, commandClause)
+	app.cli.Cmd.Cmd.SetUsageFunc(func(command *cobra.Command) error {
+		err := cli.Tmpl(os.Stdout, cli.UsageTemplate, app.cli.Cmd)
 		if err != nil {
 			os.Stderr.Write([]byte(err.Error()))
 		}
 		return err
 	})
-	app.cli.Cmd.SetHelpFunc(func(command *cobra.Command, i []string) {
-		err := cli.Tmpl(os.Stdout, cli.HelpTemplate, commandClause)
+	app.cli.Cmd.Cmd.SetHelpFunc(func(command *cobra.Command, i []string) {
+		err := cli.Tmpl(os.Stdout, cli.HelpTemplate, app.cli.Cmd)
 		if err != nil {
 			os.Stderr.Write([]byte(err.Error()))
 		}
@@ -138,7 +133,7 @@ func (app *App) Version(version string, commit string) *App {
 // configures global behavior and executes the command given by the args.
 func (app *App) Run() error {
 	// Parse also executes the command when parsing is successful.
-	err := app.cli.Cmd.Execute()
+	err := app.cli.Cmd.Cmd.Execute()
 	return err
 }
 

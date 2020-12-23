@@ -29,13 +29,8 @@ func (f mlockFlag) init() error {
 
 // RegisterMlockFlag registers a mlock flag that enables memory locking when set to true.
 func RegisterMlockFlag(app *cli.App) {
-	commandClause := cli.CommandClause{
-		Cmd: app.Cmd,
-		App: app,
-	}
 	flag := mlockFlag(false)
-	commandClause.PersistentFlags().Var(&flag, "mlock", "Enable memory locking")
-	commandClause.Flag("mlock").NoOptDefVal = "true"
+	app.PersistentFlags().Var(&flag, "mlock", "Enable memory locking")
 }
 
 // String implements the flag.Value interface.

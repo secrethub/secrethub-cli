@@ -19,7 +19,8 @@ var (
 )
 
 // App represents a command-line application that wraps the
-// kingpin library and adds additional functionality.
+// cobra library and adds functionality for verifying environment
+// variables used for configuring the cli.
 type App struct {
 	Root             *CommandClause
 	name             string
@@ -162,7 +163,7 @@ func (a *App) PrintEnv(w io.Writer, verbose bool, osEnv func() []string) error {
 	return nil
 }
 
-// CheckStrictEnv checks that every environment variable that starts with the App name is recognized by the application.
+// CheckStrictEnv checks that every environment variable that starts with the app name is recognized by the application.
 func (a *App) CheckStrictEnv() error {
 	for _, envVar := range os.Environ() {
 		key, _, match := splitVar(a.name, a.separator, envVar)
@@ -177,7 +178,7 @@ func (a *App) CheckStrictEnv() error {
 	return nil
 }
 
-// CommandClause represents a command clause in a command0-line application.
+// CommandClause represents a command clause in a command-line application.
 type CommandClause struct {
 	Cmd   *cobra.Command
 	name  string
@@ -270,7 +271,7 @@ func (c *CommandClause) registerEnvVarParsing() {
 
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
-// The help text is suffixed with a description of secrthe environment variable default.
+// The help text is suffixed with the default value of the flag.
 func (c *CommandClause) Flag(name string) *Flag {
 	fullCmd := strings.Replace(c.fullCommand(), " ", c.App.separator, -1)
 	prefix := formatName(fullCmd, c.App.name, c.App.separator, c.App.delimiters...)

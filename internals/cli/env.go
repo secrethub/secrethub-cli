@@ -177,6 +177,7 @@ type CommandClause struct {
 	name string
 	App  *App
 	Args []Argument
+	flags []*Flag
 }
 
 // Command adds a new subcommand to this command.
@@ -246,12 +247,14 @@ func (c *CommandClause) Flag(name string) *Flag {
 	envVar := formatName(name, prefix, c.App.separator, c.App.delimiters...)
 
 	c.App.registerEnvVar(envVar)
-	flag := c.Cmd.Flag(name)
-	return (&Flag{
-		Flag:   flag,
+	baseFlag := c.Cmd.Flag(name)
+	flag := (&Flag{
+		Flag:   baseFlag,
 		app:    c.App,
 		envVar: envVar,
 	}).Envar(envVar)
+	c.flags = append(c.flags, flag)
+	return flag
 }
 
 func (c *CommandClause) Flags() *FlagSet {

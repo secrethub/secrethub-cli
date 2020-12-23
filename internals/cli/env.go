@@ -238,6 +238,22 @@ func (c *CommandClause) Alias(alias string) {
 	}
 }
 
+// registerEnvVarParsing ensures that flags with environment variables are set to
+// the value of their corresponding environment variable if they are not set already.
+func (c *CommandClause) registerEnvVarParsing() {
+	c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(_ *cobra.Command, _ []string) error {
+		for _, flag := range c.flags {
+			if !flag.Changed && flag.HasEnvarValue() {
+				err := flag.Value.Set(os.Getenv(flag.envVar))
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
@@ -253,6 +269,9 @@ func (c *CommandClause) Flag(name string) *Flag {
 		app:    c.App,
 		envVar: envVar,
 	}).Envar(envVar)
+	if c.flags == nil {
+		c.registerEnvVarParsing()
+	}
 	c.flags = append(c.flags, flag)
 	return flag
 }
@@ -270,12 +289,12 @@ func (c *CommandClause) PersistentFlags() *FlagSet {
 func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
 	if params != nil {
-		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
 			if err := c.argumentError(args); err != nil {
 				return err
 			}
 			return ArgumentRegister(params, args)
-		}
+		})
 	}
 }
 
@@ -284,12 +303,12 @@ func (c *CommandClause) BindArguments(params []Argument) {
 func (c *CommandClause) BindArgumentsArr(params []Argument) {
 	c.Args = params
 	if params != nil {
-		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
 				return c.argumentError(args)
 			}
 			return ArgumentArrRegister(params, args)
-		}
+		})
 	}
 }
 
@@ -528,4 +547,18 @@ func shortDur(d *time.Duration) string {
 		s = s[:len(s)-2]
 	}
 	return s
+}
+
+type preRunAction func(*cobra.Command, []string) error
+func mergeFuncs(f1 preRunAction, f2 preRunAction) preRunAction {
+	if f1 == nil{
+		return f2
+	}
+	return func(cmd *cobra.Command, args []string) error {
+		err := f1(cmd, args)
+		if err != nil {
+			return err
+		}
+		return f2(cmd, args)
+	}
 }

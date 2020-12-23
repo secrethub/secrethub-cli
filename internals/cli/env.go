@@ -37,7 +37,7 @@ type App struct {
 func NewApp(name, help string) *App {
 	app := &App{
 		Cmd: &CommandClause{
-			Cmd:   &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true},
+			Cmd: &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true},
 		},
 		name:             formatName(name, "", DefaultEnvSeparator, DefaultCommandDelimiters...),
 		delimiters:       DefaultCommandDelimiters,
@@ -183,10 +183,10 @@ func (a *App) CheckStrictEnv() error {
 
 // CommandClause represents a command clause in a command0-line application.
 type CommandClause struct {
-	Cmd  *cobra.Command
-	name string
-	App  *App
-	Args []Argument
+	Cmd   *cobra.Command
+	name  string
+	App   *App
+	Args  []Argument
 	flags []*Flag
 }
 
@@ -564,8 +564,9 @@ func shortDur(d *time.Duration) string {
 }
 
 type preRunAction func(*cobra.Command, []string) error
+
 func mergeFuncs(f1 preRunAction, f2 preRunAction) preRunAction {
-	if f1 == nil{
+	if f1 == nil {
 		return f2
 	}
 	return func(cmd *cobra.Command, args []string) error {

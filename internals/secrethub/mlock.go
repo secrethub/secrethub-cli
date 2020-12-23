@@ -31,6 +31,7 @@ func (f mlockFlag) init() error {
 func RegisterMlockFlag(app *cli.App) {
 	flag := mlockFlag(false)
 	app.PersistentFlags().Var(&flag, "mlock", "Enable memory locking")
+	app.Cmd.Flag("mlock").NoOptDefVal = "true"
 }
 
 // String implements the flag.Value interface.

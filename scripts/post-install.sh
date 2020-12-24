@@ -9,5 +9,5 @@ fi
 
 if [ "${BASH_COMPLETION_DIR}" != "" ] && [ -d ${BASH_COMPLETION_DIR} ]; then
     echo "Installing completion for Bash"
-    /usr/bin/secrethub --completion-script-bash > ${BASH_COMPLETION_DIR}/secrethub
+    /usr/bin/secrethub completion -n bash  > ${BASH_COMPLETION_DIR}/secrethub
 fi

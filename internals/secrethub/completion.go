@@ -136,6 +136,11 @@ func (cmd *CompletionCommand) run() error {
 		profileFile := string(profilePathByte)[:len(string(profilePathByte))-2]
 		profilePath := strings.TrimSuffix(profileFile, "Microsoft.PowerShell_profile.ps1")
 
+		if _, err = os.Stat(profilePath+"secrethub.ps1"); !os.IsNotExist(err) {
+			fmt.Println("You already have installed autocompletion for powershell.")
+			return nil
+		}
+
 		err = exec.Command(ps, "secrethub", "completion", "-n", "powershell", "|", "Out-File", "-FilePath", profilePath+"secrethub.ps1").Run()
 		if err != nil {
 			return err

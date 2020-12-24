@@ -25,7 +25,7 @@ var (
 // App represents a command-line application that wraps the
 // kingpin library and adds additional functionality.
 type App struct {
-	Cmd              *cobra.Command
+	Root             *CommandClause
 	name             string
 	delimiters       []string
 	separator        string
@@ -35,14 +35,18 @@ type App struct {
 
 // NewApp defines a new command-line application.
 func NewApp(name, help string) *App {
-	return &App{
-		Cmd:              &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true},
+	app := &App{
+		Root: &CommandClause{
+			Cmd: &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true},
+		},
 		name:             formatName(name, "", DefaultEnvSeparator, DefaultCommandDelimiters...),
 		delimiters:       DefaultCommandDelimiters,
 		separator:        DefaultEnvSeparator,
 		knownEnvVars:     make(map[string]struct{}),
 		extraEnvVarFuncs: []func(string) bool{},
 	}
+	app.Root.App = app
+	return app
 }
 
 // Command defines a new top-level command with the given name and help text.
@@ -50,7 +54,7 @@ func (a *App) Command(name, help string) *CommandClause {
 	clause := &CommandClause{
 		Cmd: func() *cobra.Command {
 			newCommand := &cobra.Command{Use: name, Short: help, SilenceErrors: true, SilenceUsage: true}
-			a.Cmd.AddCommand(newCommand)
+			a.Root.Cmd.AddCommand(newCommand)
 			return newCommand
 		}(),
 		name: name,
@@ -72,9 +76,15 @@ func (a *App) Command(name, help string) *CommandClause {
 	return clause
 }
 
+// PersistentFlags returns a flag set that allows configuring
+// global persistent flags (that work on all commands of the CLI).
+func (a *App) PersistentFlags() *FlagSet {
+	return &FlagSet{FlagSet: a.Root.Cmd.PersistentFlags(), cmd: a.Root}
+}
+
 // Version adds a flag for displaying the application version number.
 func (a *App) Version(version string) *App {
-	a.Cmd.Version = version
+	a.Root.Cmd.Version = version
 	return a
 }
 
@@ -173,10 +183,11 @@ func (a *App) CheckStrictEnv() error {
 
 // CommandClause represents a command clause in a command0-line application.
 type CommandClause struct {
-	Cmd  *cobra.Command
-	name string
-	App  *App
-	Args []Argument
+	Cmd   *cobra.Command
+	name  string
+	App   *App
+	Args  []Argument
+	flags []*Flag
 }
 
 // Command adds a new subcommand to this command.
@@ -237,6 +248,30 @@ func (c *CommandClause) Alias(alias string) {
 	}
 }
 
+// registerEnvVarParsing ensures that flags with environment variables are set to
+// the value of their corresponding environment variable if they are not set already.
+func (c *CommandClause) registerEnvVarParsing() {
+	c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(_ *cobra.Command, _ []string) error {
+		for _, flag := range c.App.Root.flags {
+			if !flag.Changed && flag.HasEnvarValue() {
+				err := flag.Value.Set(os.Getenv(flag.envVar))
+				if err != nil {
+					return err
+				}
+			}
+		}
+		for _, flag := range c.flags {
+			if !flag.Changed && flag.HasEnvarValue() {
+				err := flag.Value.Set(os.Getenv(flag.envVar))
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+}
+
 // Flag defines a new flag with the given long name and help text,
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with a description of secrthe environment variable default.
@@ -246,20 +281,21 @@ func (c *CommandClause) Flag(name string) *Flag {
 	envVar := formatName(name, prefix, c.App.separator, c.App.delimiters...)
 
 	c.App.registerEnvVar(envVar)
-	flag := c.Cmd.Flag(name)
-	return (&Flag{
-		Flag:   flag,
+	baseFlag := c.Cmd.Flag(name)
+	flag := (&Flag{
+		Flag:   baseFlag,
 		app:    c.App,
 		envVar: envVar,
 	}).Envar(envVar)
+	if c.flags == nil {
+		c.registerEnvVarParsing()
+	}
+	c.flags = append(c.flags, flag)
+	return flag
 }
 
 func (c *CommandClause) Flags() *FlagSet {
 	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
-}
-
-func (c *CommandClause) PersistentFlags() *FlagSet {
-	return &FlagSet{FlagSet: c.Cmd.PersistentFlags(), cmd: c}
 }
 
 // BindArguments binds a function to a command clause, so that
@@ -267,12 +303,12 @@ func (c *CommandClause) PersistentFlags() *FlagSet {
 func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
 	if params != nil {
-		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
 			if err := c.argumentError(args); err != nil {
 				return err
 			}
 			return ArgumentRegister(params, args)
-		}
+		})
 	}
 }
 
@@ -281,12 +317,12 @@ func (c *CommandClause) BindArguments(params []Argument) {
 func (c *CommandClause) BindArgumentsArr(params []Argument) {
 	c.Args = params
 	if params != nil {
-		c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
 				return c.argumentError(args)
 			}
 			return ArgumentArrRegister(params, args)
-		}
+		})
 	}
 }
 
@@ -525,4 +561,19 @@ func shortDur(d *time.Duration) string {
 		s = s[:len(s)-2]
 	}
 	return s
+}
+
+type preRunAction func(*cobra.Command, []string) error
+
+func mergeFuncs(f1 preRunAction, f2 preRunAction) preRunAction {
+	if f1 == nil {
+		return f2
+	}
+	return func(cmd *cobra.Command, args []string) error {
+		err := f1(cmd, args)
+		if err != nil {
+			return err
+		}
+		return f2(cmd, args)
+	}
 }

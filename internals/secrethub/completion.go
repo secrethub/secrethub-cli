@@ -127,7 +127,7 @@ func (cmd *CompletionCommand) run() error {
 			return err
 		}
 
-		if a, _ := strconv.ParseBool(string(o)); !a {
+		if a, _ := strconv.ParseBool(string(o)); a {
 			//create profile
 			_ = exec.Command(ps, "New-Item", "-Type", "File", "-Force", "$PROFILE").Run()
 		}
@@ -150,7 +150,7 @@ func (cmd *CompletionCommand) run() error {
 		if err != nil {
 			return err
 		}
-		_, err = f.WriteString(". " + profilePath + "secrethub.ps1\n")
+		_, err = f.WriteString("\n. " + profilePath + "secrethub.ps1\n")
 		if err != nil {
 			return err
 		}

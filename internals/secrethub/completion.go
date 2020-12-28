@@ -13,6 +13,11 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
 
+const (
+	macOS = "darwin"
+	linux = "linux"
+)
+
 type CompletionCommand struct {
 	shell  cli.StringValue
 	clause *cli.CommandClause
@@ -44,12 +49,12 @@ func (cmd *CompletionCommand) run() error {
 			return nil
 		}
 
-		if runtime.GOOS == "darwin" {
+		if runtime.GOOS == macOS {
 			if _, err := os.Stat("/usr/local/etc/bash_completion.d/secrethub"); !os.IsNotExist(err) {
 				fmt.Println("You already have installed autocompletion for bash.")
 				return nil
 			}
-		} else if runtime.GOOS == "linux" {
+		} else if runtime.GOOS == linux {
 			if _, err := os.Stat("/usr/share/bash-completion/completions/secrethub"); !os.IsNotExist(err) {
 				fmt.Println("You already have installed autocompletion for bash.")
 				return nil
@@ -62,12 +67,12 @@ func (cmd *CompletionCommand) run() error {
 			return nil
 		}
 
-		if runtime.GOOS == "darwin" {
+		if runtime.GOOS == macOS {
 			err := exec.Command("/bin/sh", "-c", "secrethub completion -n bash | sudo tee /usr/local/etc/bash_completion.d/secrethub").Run()
 			if err != nil {
 				return err
 			}
-		} else if runtime.GOOS == "linux" {
+		} else if runtime.GOOS == linux {
 			err := exec.Command("/bin/sh", "-c", "secrethub completion -n bash | sudo tee /etc/bash_completion.d/secrethub").Run()
 			if err != nil {
 				return err

@@ -68,10 +68,6 @@ func (cmd *CompletionCommand) run() error {
 				return err
 			}
 		} else if runtime.GOOS == "linux" {
-			//err := exec.Command("/bin/sh", "-c", "[ -d /usr/share/bash-completion/completions ] && secrethub completion -n bash | sudo tee /usr/share/bash-completion/completions/secrethub").Run()
-			//if err != nil {
-			//	return err
-			//}
 			err := exec.Command("/bin/sh", "-c", "secrethub completion -n bash | sudo tee /etc/bash_completion.d/secrethub").Run()
 			if err != nil {
 				return err

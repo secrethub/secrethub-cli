@@ -101,14 +101,14 @@ func NewApp() *App {
 	}
 
 	app.cli.Root.Cmd.SetUsageFunc(func(command *cobra.Command) error {
-		err := cli.Tmpl(os.Stdout, cli.UsageTemplate, app.cli.Root)
+		err := cli.ApplyTemplate(os.Stdout, cli.UsageTemplate, app.cli.Root)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 		}
 		return err
 	})
 	app.cli.Root.Cmd.SetHelpFunc(func(command *cobra.Command, i []string) {
-		err := cli.Tmpl(os.Stdout, cli.HelpTemplate, app.cli.Root)
+		err := cli.ApplyTemplate(os.Stdout, cli.HelpTemplate, app.cli.Root)
 		if err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 		}

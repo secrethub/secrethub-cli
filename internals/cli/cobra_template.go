@@ -32,8 +32,8 @@ var templateFuncs = template.FuncMap{
 	"numFlags":                 numFlags,
 }
 
-// Tmpl executes the given template text on data, writing the result to w.
-func Tmpl(w io.Writer, text string, data interface{}) error {
+// ApplyTemplate executes the given template text on data, writing the result to w.
+func ApplyTemplate(w io.Writer, text string, data interface{}) error {
 	t := template.New("top")
 	t.Funcs(templateFuncs)
 	template.Must(t.Parse(text))

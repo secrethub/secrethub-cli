@@ -49,6 +49,7 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 		io:                  io,
 		newClient:           newClient,
 		templateVars:        make(map[string]string),
+		fileMode:            filemode.New(0600),
 	}
 }
 
@@ -66,7 +67,6 @@ func (cmd *InjectCommand) Register(r cli.Registerer) {
 	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the injected template to a file instead of stdout.")
 	clause.Flags().StringVar(&cmd.outFile, "file", "", "") // Alias of --out-file (for backwards compatibility)
 	clause.Cmd.Flag("file").Hidden = true
-	cmd.fileMode = filemode.New(0600)
 	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. It is ignored without the --out-file flag.")
 	clause.Flags().StringToStringVarP(&cmd.templateVars, "var", "v", nil, "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
 	clause.Flags().StringVar(&cmd.templateVersion, "template-version", "auto", "Do not prompt when a template variable is missing and return an error instead.")

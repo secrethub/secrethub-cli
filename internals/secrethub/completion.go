@@ -1,9 +1,11 @@
 package secrethub
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -42,23 +44,38 @@ func (cmd *CompletionCommand) run() error {
 			return nil
 		}
 
-		if _, err := os.Stat("/usr/share/bash-completion/completions/secrethub"); !os.IsNotExist(err) {
-			fmt.Println("You already have installed autocompletion for bash.")
-			return nil
-		} else if _, err := os.Stat("/etc/bash_completion.d/secrethub"); !os.IsNotExist(err) {
-			fmt.Println("You already have installed autocompletion for bash.")
-			return nil
+		if runtime.GOOS == "darwin" {
+			if _, err := os.Stat("/usr/local/etc/bash_completion.d/secrethub"); !os.IsNotExist(err) {
+				fmt.Println("You already have installed autocompletion for bash.")
+				return nil
+			}
+		} else if runtime.GOOS == "linux" {
+			if _, err := os.Stat("/usr/share/bash-completion/completions/secrethub"); !os.IsNotExist(err) {
+				fmt.Println("You already have installed autocompletion for bash.")
+				return nil
+			} else if _, err := os.Stat("/etc/bash_completion.d/secrethub"); !os.IsNotExist(err) {
+				fmt.Println("You already have installed autocompletion for bash.")
+				return nil
+			}
 		}
 		if !cmd.clause.Flag("yes").Changed && !allowSudo() {
 			return nil
 		}
-		err := exec.Command("/bin/sh", "-c", "[ -d /usr/share/bash-completion/completions ] && secrethub completion -n bash | sudo tee /usr/share/bash-completion/completions/secrethub").Run()
-		if err != nil {
-			return err
-		}
-		err = exec.Command("/bin/sh", "-c", "secrethub completion -n bash | sudo tee /etc/bash_completion.d/secrethub").Run()
-		if err != nil {
-			return err
+
+		if runtime.GOOS == "darwin" {
+			err := exec.Command("/bin/sh", "-c", "secrethub completion -n bash | sudo tee /usr/local/etc/bash_completion.d/secrethub").Run()
+			if err != nil {
+				return err
+			}
+		} else if runtime.GOOS == "linux" {
+			//err := exec.Command("/bin/sh", "-c", "[ -d /usr/share/bash-completion/completions ] && secrethub completion -n bash | sudo tee /usr/share/bash-completion/completions/secrethub").Run()
+			//if err != nil {
+			//	return err
+			//}
+			err := exec.Command("/bin/sh", "-c", "secrethub completion -n bash | sudo tee /etc/bash_completion.d/secrethub").Run()
+			if err != nil {
+				return err
+			}
 		}
 		fmt.Println("Generation complete. From the next terminal onward you will have autocompletion.")
 		fmt.Println("To enable it on the current one, run the following command:\n source <(secrethub completion -n bash)")
@@ -146,13 +163,27 @@ func (cmd *CompletionCommand) run() error {
 			return err
 		}
 
-		f, err := os.OpenFile(profileFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(profileFile, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
 			return err
+		}
+		scanner := bufio.NewScanner(f)
+		hasMenuTab := false
+		for scanner.Scan() {
+			if strings.Contains(scanner.Text(), "Set-PSReadlineKeyHandler -Chord Tab -Function MenuComplete") {
+				hasMenuTab = true
+				break
+			}
 		}
 		_, err = f.WriteString("\n. " + profilePath + "secrethub.ps1\n")
 		if err != nil {
 			return err
+		}
+		if !hasMenuTab {
+			_, err = f.WriteString("Set-PSReadlineKeyHandler -Chord Tab -Function MenuComplete\n")
+			if err != nil {
+				return err
+			}
 		}
 		f.Close()
 		fmt.Println("Installation complete. Please restart your PowerShell window to take effect.")

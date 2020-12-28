@@ -64,17 +64,17 @@ func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecret
 func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 	clause := r.Command("generate", "Generate a random secret.")
 	_ = cmd.lengthFlag.Set(strconv.Itoa(defaultLength))
-	clause.Flags().VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret.") //.PlaceHolder(strconv.Itoa(defaultLength)).Short('l').SetValue(&cmd.lengthFlag)
+	clause.Flags().VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret.")
 	clause.Cmd.Flag("length").DefValue = strconv.Itoa(defaultLength)
 	clause.Flags().Var(&cmd.mins, "min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constraints reduces the strength of the secret. When possible, avoid any constraints.")
 	clause.Flags().BoolVarP(&cmd.copyToClipboard, "clip", "c", false, "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".")
 	_ = cmd.charsetFlag.Set("alphanumeric")
-	clause.Flags().Var(&cmd.charsetFlag, "charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list.") //Default("alphanumeric").HintOptions("all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable")
+	clause.Flags().Var(&cmd.charsetFlag, "charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list.")
 	clause.Flag("charset").DefValue = "alphanumeric"
 	_ = clause.Cmd.RegisterFlagCompletionFunc("charset", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"all", "alphanumeric", "numeric", "lowercase", "uppercase", "letters", "symbols", "human-readable"}, cobra.ShellCompDirectiveDefault
 	})
-	clause.Flags().BoolVarP(&cmd.symbolsFlag, "symbols", "s", false, "Include symbols in secret.") //Short('s').Hidden().SetValue(&cmd.symbolsFlag)
+	clause.Flags().BoolVarP(&cmd.symbolsFlag, "symbols", "s", false, "Include symbols in secret.")
 	clause.Cmd.Flag("symbols").Hidden = true
 
 	clause.BindAction(cmd.Run)

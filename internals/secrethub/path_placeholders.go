@@ -7,4 +7,5 @@ const (
 	optionalDirPathPlaceHolder           = repoPathPlaceHolder + "[/<dir> ...]"
 	secretPathPlaceHolder                = optionalDirPathPlaceHolder + "/<secret>"
 	secretPathOptionalVersionPlaceHolder = secretPathPlaceHolder + "[:<version>]"
+	generalPathPlaceHolder               = repoPathPlaceHolder + "/<path>"
 )

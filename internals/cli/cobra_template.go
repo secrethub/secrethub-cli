@@ -102,9 +102,17 @@ func argUsages(args []Argument) string {
 		}
 		line := "  "
 		if arg.Placeholder != "" {
-			line += arg.Placeholder
+			if !arg.Required {
+				line += "[" + arg.Placeholder + "]"
+			} else {
+				line += arg.Placeholder
+			}
 		} else {
-			line += "<" + arg.Name + ">"
+			if !arg.Required {
+				line += "[<" + arg.Name + ">]"
+			} else {
+				line += "<" + arg.Name + ">"
+			}
 		}
 
 		// This special character will be replaced with spacing once the

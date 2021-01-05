@@ -9,11 +9,11 @@ func (c *CommandClause) argumentError(args []string) error {
 	errorText, minimum, maximum := "", getRequired(c.Args), len(c.Args)
 
 	if minimum == maximum {
-		errorText += fmt.Sprintf("`secrethub "+c.fullCommand()+"` requires exactly %d argument(s).", minimum)
+		errorText += fmt.Sprintf("`"+c.fullCommand()+"` requires exactly %d argument(s).", minimum)
 	} else {
-		errorText += fmt.Sprintf("`secrethub "+c.fullCommand()+"` requires between %d and %d arguments.", minimum, maximum)
+		errorText += fmt.Sprintf("`"+c.fullCommand()+"` requires between %d and %d arguments.", minimum, maximum)
 	}
-	errorText += "\n\nSee `secrethub " + c.fullCommand() + " --help` for help.\n\n" + useLine(c.Cmd, c.Args)
+	errorText += "\n\nSee " + c.fullCommand() + " --help` for help.\n\n" + useLine(c.Cmd, c.Args)
 	errorText += "\n\n" + c.Cmd.Short
 
 	return fmt.Errorf(errorText)

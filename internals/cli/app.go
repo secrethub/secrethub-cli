@@ -216,13 +216,11 @@ func (c *CommandClause) Hidden() *CommandClause {
 
 func (c *CommandClause) fullCommand() string {
 	if c.Cmd.Use == c.Cmd.Root().Use {
-		return ""
+		return "secrethub"
 	}
 	out := []string{c.Cmd.Use}
 	for p := c.Cmd.Parent(); p != nil; p = p.Parent() {
-		if p.Use != c.Cmd.Root().Use {
-			out = append([]string{p.Use}, out...)
-		}
+		out = append([]string{p.Use}, out...)
 	}
 	return strings.Join(out, " ")
 }
@@ -268,7 +266,7 @@ func (c *CommandClause) registerEnvVarParsing() {
 // The help text is suffixed with the default value of the flag.
 func (c *CommandClause) Flag(name string) *Flag {
 	fullCmd := strings.Replace(c.fullCommand(), " ", c.App.separator, -1)
-	prefix := formatName(fullCmd, c.App.name, c.App.separator, c.App.delimiters...)
+	prefix := formatName(fullCmd, "", c.App.separator, c.App.delimiters...)
 	envVar := formatName(name, prefix, c.App.separator, c.App.delimiters...)
 
 	c.App.registerEnvVar(envVar)

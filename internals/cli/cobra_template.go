@@ -32,7 +32,7 @@ var templateFuncs = template.FuncMap{
 	"numFlags":                 numFlags,
 }
 
-// ApplyTemplate executes the given template text on data, writing the result to w.
+// ApplyTemplate executes the given template text on data, writing the result to `w`.
 func ApplyTemplate(w io.Writer, text string, data interface{}) error {
 	t := template.New("top")
 	t.Funcs(templateFuncs)

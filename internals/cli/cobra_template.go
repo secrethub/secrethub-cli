@@ -134,7 +134,7 @@ func useLine(c *cobra.Command, args []Argument) string {
 	return useLine
 }
 
-// flagUsages makes the part of the help text in which flags are explained.
+// flagUsages returns the string listing all flags and their usage for a command.
 func flagUsages(c CommandClause, isGlobal bool) string {
 	flagSet := c.Cmd.LocalFlags()
 	if isGlobal {
@@ -195,7 +195,7 @@ func flagUsages(c CommandClause, isGlobal bool) string {
 	return buf.String()
 }
 
-// argUsages makes the section of the help text in which arguments are explained.
+// argUsages returns a string listing all arguments and their usage for a command.
 func argUsages(args []Argument) string {
 	buf := new(bytes.Buffer)
 	lines := make([]string, 0, len(args))

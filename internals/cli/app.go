@@ -9,6 +9,7 @@ import (
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -172,13 +173,19 @@ func (a *App) CheckStrictEnv() error {
 	return nil
 }
 
+// PersistentFlags returns a flag set that allows configuring
+// global persistent flags (that work on all commands of the CLI).
+func (a *App) PersistentFlags() *FlagSet {
+	return &FlagSet{FlagSet: a.Root.Cmd.PersistentFlags(), cmd: a.Root}
+}
+
 // CommandClause represents a command clause in a command-line application.
 type CommandClause struct {
 	Cmd   *cobra.Command
 	name  string
 	App   *App
 	Args  []Argument
-	flags []*Flag
+	flags map[string]*Flag
 }
 
 // Command adds a new subcommand to this command.
@@ -265,7 +272,13 @@ func (c *CommandClause) registerEnvVarParsing() {
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with the default value of the flag.
 func (c *CommandClause) Flag(name string) *Flag {
+	if _, ok := c.flags[name]; ok {
+		return c.flags[name]
+	}
 	fullCmd := strings.Replace(c.fullCommand(), " ", c.App.separator, -1)
+	if cmd, ok := c.isPersistentFlag(name); ok {
+		fullCmd = strings.Replace(cmd.fullCommand(), " ", c.App.separator, -1)
+	}
 	prefix := formatName(fullCmd, "", c.App.separator, c.App.delimiters...)
 	envVar := formatName(name, prefix, c.App.separator, c.App.delimiters...)
 
@@ -278,8 +291,9 @@ func (c *CommandClause) Flag(name string) *Flag {
 	}).Envar(envVar)
 	if c.flags == nil {
 		c.registerEnvVarParsing()
+		c.flags = make(map[string]*Flag)
 	}
-	c.flags = append(c.flags, flag)
+	c.flags[name] = flag
 	return flag
 }
 
@@ -287,10 +301,22 @@ func (c *CommandClause) Flags() *FlagSet {
 	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
 }
 
-// PersistentFlags returns a flag set that allows configuring
-// global persistent flags (that work on all commands of the CLI).
-func (a *App) PersistentFlags() *FlagSet {
-	return &FlagSet{FlagSet: a.Root.Cmd.PersistentFlags(), cmd: a.Root}
+func (c *CommandClause) isPersistentFlag(name string) (*CommandClause, bool) {
+	if c.Cmd == c.Cmd.Root() {
+		return nil, false
+	}
+	var parent *CommandClause
+	persistent := false
+	for p := c.Cmd.Parent(); p != nil; p = p.Parent() {
+		f := p.Flags()
+		f.VisitAll(func(flag *pflag.Flag) {
+			if flag.Name == name {
+				persistent = true
+				parent = &CommandClause{Cmd: p}
+			}
+		})
+	}
+	return parent, persistent
 }
 
 // BindArguments binds a function to a command clause, so that

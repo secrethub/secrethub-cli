@@ -117,8 +117,9 @@ func (f *Flag) NoEnvar() *Flag {
 	return f
 }
 
-func (f *Flag) Hidden() {
+func (f *Flag) Hidden() *Flag {
 	f.flag.Hidden = true
+	return f
 }
 
 func (f *Flag) Changed() bool {

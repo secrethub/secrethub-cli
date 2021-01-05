@@ -38,7 +38,7 @@ func (cmd *MkDirCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.")
 
 	clause.BindAction(cmd.Run)
-	clause.BindArguments([]cli.Argument{
+	clause.BindArgumentsArr([]cli.Argument{
 		{Value: &cmd.paths, Name: "path", Required: true, Placeholder: dirPathsPlaceHolder, Description: "The paths to the directories."},
 	})
 }

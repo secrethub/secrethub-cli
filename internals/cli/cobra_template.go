@@ -18,7 +18,7 @@ var templateFuncs = template.FuncMap{
 	"trim":                     strings.TrimSpace,
 	"trimRightSpace":           trimRightSpace,
 	"trimTrailingWhitespaces":  trimRightSpace,
-	"rpad":                     rpad,
+	"rightPadding":             rightPadding,
 	"gt":                       cobra.Gt,
 	"hasSubCommands":           hasSubCommands,
 	"hasManagementSubCommands": hasManagementSubCommands,
@@ -40,24 +40,31 @@ func ApplyTemplate(w io.Writer, text string, data interface{}) error {
 	return t.Execute(w, data)
 }
 
-// rpad adds padding to the right of a string.
-func rpad(s string, padding int) string {
+// rightPadding adds padding to the right of a string.
+func rightPadding(s string, padding int) string {
 	tmpl := fmt.Sprintf("%%-%ds", padding)
 	return fmt.Sprintf(tmpl, s)
 }
 
+// trimRightSpace returns a slice of the string s
+// with all trailing space characters removed.
 func trimRightSpace(s string) string {
 	return strings.TrimRightFunc(s, unicode.IsSpace)
 }
 
+// hasSubCommands checks if the current command has any subcommands that
+// do not have subcommands.
 func hasSubCommands(cmd *cobra.Command) bool {
 	return len(operationSubCommands(cmd)) > 0
 }
 
+// hasManagementSubcommands checks if the current command has any
+// subcommands that have subcommands as well.
 func hasManagementSubCommands(cmd *cobra.Command) bool {
 	return len(managementSubCommands(cmd)) > 0
 }
 
+// operationSubCommands makes a list of all commands that do not have subcommands.
 func operationSubCommands(cmd *cobra.Command) []*cobra.Command {
 	var cmds []*cobra.Command
 	for _, sub := range cmd.Commands() {
@@ -68,6 +75,8 @@ func operationSubCommands(cmd *cobra.Command) []*cobra.Command {
 	return cmds
 }
 
+// managementSubCommands makes a list of all commands that have subcommands.
+// Applicable only for the root command.
 func managementSubCommands(cmd *cobra.Command) []*cobra.Command {
 	var cmds []*cobra.Command
 	for _, sub := range (*cmd).Commands() {
@@ -78,64 +87,18 @@ func managementSubCommands(cmd *cobra.Command) []*cobra.Command {
 	return cmds
 }
 
+// decoratedName adds an extra space to the right for management commands.
 func decoratedName(cmd cobra.Command) string {
 	return cmd.Name() + " "
 }
 
+// hasArgs checks whether the command accepts any arguments.
 func hasArgs(args []Argument) bool {
 	return len(args) > 0
 }
 
-func argUsages(args []Argument) string {
-	buf := new(bytes.Buffer)
-	lines := make([]string, 0, len(args))
-	maxlen := 0
-
-	cols := 80
-	if w, _, err := term.GetSize(0); err == nil {
-		cols = w
-	}
-
-	for _, arg := range args {
-		if arg.Hidden {
-			continue
-		}
-		line := "  "
-		if arg.Placeholder != "" {
-			if !arg.Required {
-				line += "[" + arg.Placeholder + "]"
-			} else {
-				line += arg.Placeholder
-			}
-		} else {
-			if !arg.Required {
-				line += "[<" + arg.Name + ">]"
-			} else {
-				line += "<" + arg.Name + ">"
-			}
-		}
-
-		// This special character will be replaced with spacing once the
-		// correct alignment is calculated
-		line += "\x00"
-		if len(line) > maxlen {
-			maxlen = len(line)
-		}
-
-		line += arg.Description
-		lines = append(lines, line)
-	}
-
-	for _, line := range lines {
-		sidx := strings.Index(line, "\x00")
-		spacing := strings.Repeat(" ", maxlen-sidx)
-		// maxlen + 2 comes from + 1 for the \x00 and + 1 for the (deliberate) off-by-one in maxlen-sidx
-		fmt.Fprintln(buf, line[:sidx], spacing, wrap(maxlen+2, cols, line[sidx+1:]))
-	}
-
-	return buf.String()
-}
-
+// useLine makes the string that shows how the command looks like,
+// with optional flags and the arguments required in the specific order.
 func useLine(c *cobra.Command, args []Argument) string {
 	var useLine string
 
@@ -154,15 +117,24 @@ func useLine(c *cobra.Command, args []Argument) string {
 			continue
 		}
 		if arg.Placeholder != "" {
-			useLine += " " + arg.Placeholder
+			if !arg.Required {
+				useLine += " [" + arg.Placeholder + "]"
+			} else {
+				useLine += " " + arg.Placeholder
+			}
 		} else {
-			useLine += " <" + arg.Name + ">"
+			if !arg.Required {
+				useLine += " [<" + arg.Name + ">]"
+			} else {
+				useLine += " <" + arg.Name + ">"
+			}
 		}
 	}
 
 	return useLine
 }
 
+// flagUsages makes the part of the help text in which flags are explained.
 func flagUsages(c CommandClause, isGlobal bool) string {
 	flagSet := c.Cmd.LocalFlags()
 	if isGlobal {
@@ -223,74 +195,119 @@ func flagUsages(c CommandClause, isGlobal bool) string {
 	return buf.String()
 }
 
-// Wraps the string `s` to a maximum width `w` with leading indent
-// `i`. The first line is not indented (this is assumed to be done by
-// caller). Pass `w` == 0 to do no wrapping
-func wrap(i, w int, s string) string {
-	if w == 0 {
-		return strings.Replace(s, "\n", "\n"+strings.Repeat(" ", i), -1)
+// argUsages makes the section of the help text in which arguments are explained.
+func argUsages(args []Argument) string {
+	buf := new(bytes.Buffer)
+	lines := make([]string, 0, len(args))
+	maxlen := 0
+
+	cols := 80
+	if w, _, err := term.GetSize(0); err == nil {
+		cols = w
 	}
 
-	// space between indent i and end of line width w into which
+	for _, arg := range args {
+		if arg.Hidden {
+			continue
+		}
+		line := "  "
+		if arg.Placeholder != "" {
+			line += arg.Placeholder
+		} else {
+			line += "<" + arg.Name + ">"
+		}
+
+		// This special character will be replaced with spacing once the
+		// correct alignment is calculated
+		line += "\x00"
+		if len(line) > maxlen {
+			maxlen = len(line)
+		}
+
+		line += arg.Description
+		lines = append(lines, line)
+	}
+
+	for _, line := range lines {
+		sidx := strings.Index(line, "\x00")
+		spacing := strings.Repeat(" ", maxlen-sidx)
+		// maxlen + 2 comes from + 1 for the \x00 and + 1 for the (deliberate) off-by-one in maxlen-sidx
+		fmt.Fprintln(buf, line[:sidx], spacing, wrap(maxlen+2, cols, line[sidx+1:]))
+	}
+
+	return buf.String()
+}
+
+// Wraps the given text to a maximum `width` with leading `indent`.
+// The first line is not indented (this is assumed to be done by
+// caller). Pass `w` == 0 to do no wrapping
+func wrap(indent, width int, textToWrap string) string {
+	if width == 0 {
+		return strings.Replace(textToWrap, "\n", "\n"+strings.Repeat(" ", indent), -1)
+	}
+
+	// space between indent indent and end of line width width into which
 	// we should wrap the text.
-	wrap := w - i
+	wrap := width - indent
 
 	var r, l string
 
 	// Not enough space for sensible wrapping. Wrap as a block on
 	// the next line instead.
 	if wrap < 24 {
-		i = 16
-		wrap = w - i
-		r += "\n" + strings.Repeat(" ", i)
+		indent = 16
+		wrap = width - indent
+		r += "\n" + strings.Repeat(" ", indent)
 	}
 	// If still not enough space then don't even try to wrap.
 	if wrap < 24 {
-		return strings.Replace(s, "\n", r, -1)
+		return strings.Replace(textToWrap, "\n", r, -1)
 	}
 
 	// Try to avoid short orphan words on the final line, by
-	// allowing wrapN to go a bit over if that would fit in the
+	// allowing wrapOnce to go a bit over if that would fit in the
 	// remainder of the line.
 	slop := 5
 	wrap = wrap - slop
 
 	// Handle first line, which is indented by the caller (or the
 	// special case above)
-	l, s = wrapN(wrap, slop, s)
-	r = r + strings.Replace(l, "\n", "\n"+strings.Repeat(" ", i), -1)
+	l, textToWrap = wrapOnce(wrap, slop, textToWrap)
+	r = r + strings.Replace(l, "\n", "\n"+strings.Repeat(" ", indent), -1)
 
 	// Now wrap the rest
-	for s != "" {
+	for textToWrap != "" {
 		var t string
 
-		t, s = wrapN(wrap, slop, s)
-		r = r + "\n" + strings.Repeat(" ", i) + strings.Replace(t, "\n", "\n"+strings.Repeat(" ", i), -1)
+		t, textToWrap = wrapOnce(wrap, slop, textToWrap)
+		r = r + "\n" + strings.Repeat(" ", indent) + strings.Replace(t, "\n", "\n"+strings.Repeat(" ", indent), -1)
 	}
 
 	return r
 }
 
-// Splits the string `s` on whitespace into an initial substring up to
-// `i` runes in length and the remainder. Will go `slop` over `i` if
-// that encompasses the entire string (which allows the caller to
-// avoid short orphan words on the final line).
-func wrapN(i, slop int, s string) (string, string) {
-	if i+slop > len(s) {
-		return s, ""
+// wrapOnce splits the given text on whitespace into an initial substring
+// up to size `firstPartLength` and the remainder. Will go `firstPartLengthSlack`
+// over `firstPartLength` if that encompasses the entire string
+// (which allows the caller to avoid short orphan words on the final line).
+func wrapOnce(firstPartLength, firstPartLengthSlack int, textToWrap string) (string, string) {
+	if firstPartLength+firstPartLengthSlack > len(textToWrap) {
+		return textToWrap, ""
 	}
 
-	w := strings.LastIndexAny(s[:i], " \t\n")
+	w := strings.LastIndexAny(textToWrap[:firstPartLength], " \t\n")
 	if w <= 0 {
-		return s, ""
+		return textToWrap, ""
 	}
-	nlPos := strings.LastIndex(s[:i], "\n")
+	nlPos := strings.LastIndex(textToWrap[:firstPartLength], "\n")
 	if nlPos > 0 && nlPos < w {
-		return s[:nlPos], s[nlPos+1:]
+		return textToWrap[:nlPos], textToWrap[nlPos+1:]
 	}
-	return s[:w], s[w+1:]
+	return textToWrap[:w], textToWrap[w+1:]
 }
 
+// defaultIsZeroValue checks if the default value for e given type
+// is different than its standard one.
 func defaultIsZeroValue(f *pflag.Flag) bool {
 	switch f.Value.Type() {
 	case "boolFlag":
@@ -329,6 +346,7 @@ func defaultIsZeroValue(f *pflag.Flag) bool {
 	}
 }
 
+// numFlags gets the number of flags a command has.
 func numFlags(flagSet pflag.FlagSet) int {
 	num := 0
 	flagSet.VisitAll(func(flag *pflag.Flag) {
@@ -337,6 +355,23 @@ func numFlags(flagSet pflag.FlagSet) int {
 	return num
 }
 
+// UsageTemplate is the custom usage template of the command.
+// Changes in comparison to cobra's default template:
+// 1. Usage section
+//	  a. `[flags]` is placed before the arguments.
+//	  b. All arguments are put in the usage in their proper order.
+//    c. Where applicable, the argument name is replaced with its placeholder.
+// 2. Commands section
+// 	  a. For the root command (`secrethub`) the commands are grouped into
+//		 `Management commands` and `Commands`
+// 2. Flags section
+// 	  a. Flag's type was removed.
+// 	  b. The help text for flags is well divided into its own column, thus
+//		 making the visibility of the flags better.
+// 	  c. At the end of a flag's help text, the name of its environment variable is
+//       displayed between brackets.
+//    d. The section is hidden if the only flag is `--help`.
+// 4. Arguments section (created by us)
 var UsageTemplate = `Usage:
 {{if not .Cmd.HasSubCommands}} {{(useLine .Cmd .Args)}}{{end}}
 {{- if .Cmd.HasSubCommands}}  {{ .Cmd.CommandPath}}{{- if .Cmd.HasAvailableFlags}} [flags]{{end}} [command]{{end}}
@@ -356,14 +391,14 @@ Examples:
 
 Management Commands:
 {{- range managementSubCommands .Cmd }}
-  {{rpad (decoratedName .) (add .NamePadding 1)}}{{.Short}}
+  {{rightPadding (decoratedName .) (add .NamePadding 1)}}{{.Short}}
 {{- end}}
 {{- end}}
 {{- if hasSubCommands .Cmd}}
 
 Commands:
 {{- range operationSubCommands .Cmd }}
-  {{rpad .Name .NamePadding }} {{.Short}}
+  {{rightPadding .Name .NamePadding }} {{.Short}}
 {{- end}}
 {{- end}}
 {{- if or (not .Cmd.HasSubCommands) (gt (numFlags .Cmd.LocalFlags) 1)}}
@@ -387,5 +422,6 @@ Use "{{.Cmd.CommandPath}} [command] --help" for more information about a command
 {{- end}}
 `
 
+// HelpTemplate is the custom help template for the command.
 var HelpTemplate = `
 {{if or .Cmd.Runnable .Cmd.HasSubCommands}}{{.Cmd.UsageString}}{{end}}`

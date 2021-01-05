@@ -244,16 +244,16 @@ func (c *CommandClause) Alias(alias string) {
 func (c *CommandClause) registerEnvVarParsing() {
 	c.Cmd.PreRunE = MergeFuncs(c.Cmd.PreRunE, func(_ *cobra.Command, _ []string) error {
 		for _, flag := range c.App.Root.flags {
-			if !flag.Changed && flag.HasEnvarValue() {
-				err := flag.Value.Set(os.Getenv(flag.envVar))
+			if !flag.flag.Changed && flag.HasEnvarValue() {
+				err := flag.flag.Value.Set(os.Getenv(flag.envVar))
 				if err != nil {
 					return err
 				}
 			}
 		}
 		for _, flag := range c.flags {
-			if !flag.Changed && flag.HasEnvarValue() {
-				err := flag.Value.Set(os.Getenv(flag.envVar))
+			if !flag.flag.Changed && flag.HasEnvarValue() {
+				err := flag.flag.Value.Set(os.Getenv(flag.envVar))
 				if err != nil {
 					return err
 				}
@@ -274,7 +274,7 @@ func (c *CommandClause) Flag(name string) *Flag {
 	c.App.registerEnvVar(envVar)
 	baseFlag := c.Cmd.Flag(name)
 	flag := (&Flag{
-		Flag:   baseFlag,
+		flag:   baseFlag,
 		app:    c.App,
 		envVar: envVar,
 	}).Envar(envVar)

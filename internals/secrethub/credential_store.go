@@ -28,11 +28,8 @@ type CredentialConfig interface {
 
 // NewCredentialConfig creates a new CredentialConfig.
 func NewCredentialConfig(io ui.IO) CredentialConfig {
-	dir, _ := configdir.Default()
-	c := ConfigDir{Dir: *dir}
 	return &credentialConfig{
-		configDir: c,
-		io:        io,
+		io: io,
 	}
 }
 
@@ -54,11 +51,11 @@ func (store *credentialConfig) IsPassphraseSet() bool {
 
 // Register registers the flags for configuring the store on the provided Registerer.
 func (store *credentialConfig) Register(app *cli.App) {
+	_ = store.configDir.Set("")
 	app.PersistentFlags().Var(&store.configDir, "config-dir", "The absolute path to a custom configuration directory.")
 	store.credentialReader = &flagCredentialReader{}
 	store.credentialReader.Flag = app.PersistentFlags().StringVar(&store.credentialReader.value, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.")
-	app.PersistentFlags().StringVarP(&store.credentialPassphrase, "p", "p", "", "").NoEnvar() // Shorthand -p is deprecated. Use --credential-passphrase instead.
-	app.Root.Flag("p").Hidden = true
+	app.PersistentFlags().StringVarP(&store.credentialPassphrase, "p", "p", "", "").NoEnvar().Hidden() // Shorthand -p is deprecated. Use --credential-passphrase instead.
 	app.PersistentFlags().StringVar(&store.credentialPassphrase, "credential-passphrase", "", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.")
 	app.PersistentFlags().DurationVar(&store.CredentialPassphraseCacheTTL, "credential-passphrase-cache-ttl", 5*time.Minute, "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.")
 }
@@ -96,7 +93,7 @@ func (f *flagCredentialReader) Read() ([]byte, error) {
 }
 
 func (f *flagCredentialReader) Source() string {
-	if f.HasEnvarValue() && !f.Flag.Changed {
+	if f.HasEnvarValue() && !f.Flag.Changed() {
 		return "$SECRETHUB_CREDENTIAL"
 	}
 	return "--credential"

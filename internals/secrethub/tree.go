@@ -52,9 +52,7 @@ func (cmd *TreeCommand) Register(r cli.Registerer) {
 	clause.Flags().BoolVarP(&cmd.fullPaths, "full-paths", "f", false, "Print the full path of each directory and secret.")
 	clause.Flags().BoolVarP(&cmd.noIndentation, "no-indentation", "i", false, "Do not use the standard indentation.")
 	clause.Flags().BoolVar(&cmd.noReport, "no-report", false, "Turn off secret/directory count at end of tree listing.")
-	clause.Flags().BoolVar(&cmd.noReport, "noreport", false, "Turn off secret/directory count at end of tree listing.")
-
-	clause.Flag("noreport").Hidden = true
+	clause.Flags().BoolVar(&cmd.noReport, "noreport", false, "Turn off secret/directory count at end of tree listing.").Hidden()
 
 	clause.BindAction(cmd.Run)
 	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path to to show contents for."}})

@@ -293,7 +293,7 @@ func wrapN(i, slop int, s string) (string, string) {
 
 func defaultIsZeroValue(f *pflag.Flag) bool {
 	switch f.Value.Type() {
-	case "boolFlag", "debugFlag", "noColorFlag", "mlockFlag":
+	case "boolFlag":
 		return f.DefValue == "false"
 	case "durationValue":
 		// Beginning in Go 1.7, duration zero values are "0s"

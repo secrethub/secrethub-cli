@@ -1,7 +1,7 @@
 package demo
 
 import (
-	// democli "github.com/secrethub/demo-app/cli"
+	democli "github.com/secrethub/demo-app/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
@@ -26,5 +26,5 @@ func (cmd *Command) Register(r cli.Registerer) {
 	clause.Hidden()
 
 	NewInitCommand(cmd.io, cmd.newClient).Register(clause)
-	// democli.NewServeCommand(cmd.io).Register(clause)
+	democli.NewServeCommand(cmd.io).Register(clause)
 }

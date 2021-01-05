@@ -13,7 +13,7 @@ require (
 	github.com/mattn/go-isatty v0.0.7
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/secrethub/demo-app v0.5.1-0.20201221173924-a1c686b2340e
+	github.com/secrethub/demo-app v0.5.1-0.20210105185858-ad55afc2cb87
 	github.com/secrethub/secrethub-go v0.31.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5

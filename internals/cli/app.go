@@ -248,7 +248,7 @@ func (c *CommandClause) Alias(alias string) {
 // registerEnvVarParsing ensures that flags with environment variables are set to
 // the value of their corresponding environment variable if they are not set already.
 func (c *CommandClause) registerEnvVarParsing() {
-	c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(_ *cobra.Command, _ []string) error {
+	c.Cmd.PreRunE = MergeFuncs(c.Cmd.PreRunE, func(_ *cobra.Command, _ []string) error {
 		for _, flag := range c.App.Root.flags {
 			if !flag.Changed && flag.HasEnvarValue() {
 				err := flag.Value.Set(os.Getenv(flag.envVar))
@@ -300,7 +300,7 @@ func (c *CommandClause) Flags() *FlagSet {
 func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
 	if params != nil {
-		c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
+		c.Cmd.PreRunE = MergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
 			if err := c.argumentError(args); err != nil {
 				return err
 			}
@@ -314,7 +314,7 @@ func (c *CommandClause) BindArguments(params []Argument) {
 func (c *CommandClause) BindArgumentsArr(params []Argument) {
 	c.Args = params
 	if params != nil {
-		c.Cmd.PreRunE = mergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
+		c.Cmd.PreRunE = MergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
 				return c.argumentError(args)
 			}
@@ -331,9 +331,9 @@ func (c *CommandClause) BindAction(fn func() error) {
 	}
 }
 
-type preRunAction func(*cobra.Command, []string) error
+type PreRunAction func(*cobra.Command, []string) error
 
-func mergeFuncs(f1 preRunAction, f2 preRunAction) preRunAction {
+func MergeFuncs(f1 PreRunAction, f2 PreRunAction) PreRunAction {
 	if f1 == nil {
 		return f2
 	}

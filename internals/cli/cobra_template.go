@@ -191,12 +191,6 @@ func flagUsages(c CommandClause, isGlobal bool) string {
 			line = fmt.Sprintf("      --%s", f.Name)
 		}
 
-		// TODO: Decide whether we want to put the type as well. If not, remove lines.
-		//varname, _ := pflag.UnquoteUsage(f)
-		//if varname != "" {
-		//	line += " " + varname
-		//}
-
 		// This special character will be replaced with spacing once the
 		// correct alignment is calculated
 		line += "\x00"

@@ -13,6 +13,8 @@ import (
 	"golang.org/x/term"
 )
 
+const specialChar = "\x00"
+
 var templateFuncs = template.FuncMap{
 	"add":                      func(a, b int) int { return a + b },
 	"trim":                     strings.TrimSpace,
@@ -98,7 +100,7 @@ func listCommands(commands []*cobra.Command) string {
 
 		// This special character will be replaced with spacing once the
 		// correct alignment is calculated
-		line += "\x00"
+		line += specialChar
 		if len(line) > maxlen {
 			maxlen = len(line)
 		}
@@ -116,7 +118,6 @@ func listCommands(commands []*cobra.Command) string {
 
 	return buf.String()
 }
-
 
 // hasArgs checks whether the command accepts any arguments.
 func hasArgs(args []Argument) bool {
@@ -185,7 +186,7 @@ func flagUsages(c CommandClause) string {
 
 		// This special character will be replaced with spacing once the
 		// correct alignment is calculated
-		line += "\x00"
+		line += specialChar
 		if len(line) > maxlen {
 			maxlen = len(line)
 		}
@@ -239,7 +240,7 @@ func argUsages(args []Argument) string {
 
 		// This special character will be replaced with spacing once the
 		// correct alignment is calculated
-		line += "\x00"
+		line += specialChar
 		if len(line) > maxlen {
 			maxlen = len(line)
 		}

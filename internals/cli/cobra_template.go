@@ -116,18 +116,14 @@ func useLine(c *cobra.Command, args []Argument) string {
 		if arg.Hidden {
 			continue
 		}
-		if arg.Placeholder != "" {
-			if !arg.Required {
-				useLine += " [" + arg.Placeholder + "]"
-			} else {
-				useLine += " " + arg.Placeholder
-			}
+		placeHolder := arg.Placeholder
+		if placeHolder == "" {
+			placeHolder = "<" + arg.Name + ">"
+		}
+		if arg.Required {
+			useLine += " " + placeHolder
 		} else {
-			if !arg.Required {
-				useLine += " [<" + arg.Name + ">]"
-			} else {
-				useLine += " <" + arg.Name + ">"
-			}
+			useLine += " [" + placeHolder + "]"
 		}
 	}
 

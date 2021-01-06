@@ -18,13 +18,12 @@ var templateFuncs = template.FuncMap{
 	"trim":                     strings.TrimSpace,
 	"trimRightSpace":           trimRightSpace,
 	"trimTrailingWhitespaces":  trimRightSpace,
-	"rightPadding":             rightPadding,
 	"gt":                       cobra.Gt,
 	"hasSubCommands":           hasSubCommands,
 	"hasManagementSubCommands": hasManagementSubCommands,
 	"operationSubCommands":     operationSubCommands,
 	"managementSubCommands":    managementSubCommands,
-	"decoratedName":            decoratedName,
+	"listCommands":             listCommands,
 	"useLine":                  useLine,
 	"hasArgs":                  hasArgs,
 	"argUsages":                argUsages,
@@ -38,12 +37,6 @@ func ApplyTemplate(w io.Writer, text string, data interface{}) error {
 	t.Funcs(templateFuncs)
 	template.Must(t.Parse(text))
 	return t.Execute(w, data)
-}
-
-// rightPadding adds padding to the right of a string.
-func rightPadding(s string, padding int) string {
-	tmpl := fmt.Sprintf("%%-%ds", padding)
-	return fmt.Sprintf(tmpl, s)
 }
 
 // trimRightSpace returns a slice of the string s
@@ -87,10 +80,43 @@ func managementSubCommands(cmd *cobra.Command) []*cobra.Command {
 	return cmds
 }
 
-// decoratedName adds an extra space to the right for management commands.
-func decoratedName(cmd cobra.Command) string {
-	return cmd.Name() + " "
+func listCommands(commands []*cobra.Command) string {
+	buf := new(bytes.Buffer)
+	lines := make([]string, 0, len(commands))
+	maxlen := 0
+
+	cols := 80
+	if w, _, err := term.GetSize(0); err == nil {
+		cols = w
+	}
+
+	for _, cmd := range commands {
+		if cmd.Hidden {
+			continue
+		}
+		line := "  " + cmd.Name()
+
+		// This special character will be replaced with spacing once the
+		// correct alignment is calculated
+		line += "\x00"
+		if len(line) > maxlen {
+			maxlen = len(line)
+		}
+
+		line += cmd.Short
+		lines = append(lines, line)
+	}
+
+	for _, line := range lines {
+		sidx := strings.Index(line, "\x00")
+		spacing := strings.Repeat(" ", maxlen-sidx)
+		// maxlen + 2 comes from + 1 for the \x00 and + 1 for the (deliberate) off-by-one in maxlen-sidx
+		fmt.Fprintln(buf, line[:sidx], spacing, wrap(maxlen+2, cols, line[sidx+1:]))
+	}
+
+	return buf.String()
 }
+
 
 // hasArgs checks whether the command accepts any arguments.
 func hasArgs(args []Argument) bool {
@@ -131,11 +157,9 @@ func useLine(c *cobra.Command, args []Argument) string {
 }
 
 // flagUsages returns the string listing all flags and their usage for a command.
-func flagUsages(c CommandClause, isGlobal bool) string {
+func flagUsages(c CommandClause) string {
 	flagSet := c.Cmd.LocalFlags()
-	if isGlobal {
-		flagSet = c.Cmd.InheritedFlags()
-	}
+
 	buf := new(bytes.Buffer)
 
 	lines := make([]string, 0, flagSet.NFlag())
@@ -386,26 +410,22 @@ Examples:
 {{- if hasManagementSubCommands .Cmd }}
 
 Management Commands:
-{{- range managementSubCommands .Cmd }}
-  {{rightPadding (decoratedName .) (add .NamePadding 1)}}{{.Short}}
-{{- end}}
+{{ listCommands (managementSubCommands .Cmd) }}
 {{- end}}
 {{- if hasSubCommands .Cmd}}
 
 Commands:
-{{- range operationSubCommands .Cmd }}
-  {{rightPadding .Name .NamePadding }} {{.Short}}
-{{- end}}
+{{ listCommands (operationSubCommands .Cmd) }}
 {{- end}}
 {{- if or (not .Cmd.HasSubCommands) (gt (numFlags .Cmd.LocalFlags) 1)}}
 
 Flags:
-{{flagUsages . false | trimTrailingWhitespaces}}
+{{flagUsages . | trimTrailingWhitespaces}}
 {{- end}}
 {{- if .Cmd.HasAvailableInheritedFlags}}
 
 Global Flags:
-{{flagUsages . true | trimTrailingWhitespaces}}
+{{flagUsages .App.Root | trimTrailingWhitespaces}}
 {{- end}}
 {{- if hasArgs .Args}}
 

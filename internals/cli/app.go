@@ -44,6 +44,9 @@ func NewApp(name, help string) *App {
 		extraEnvVarFuncs: []func(string) bool{},
 	}
 	app.Root.App = app
+
+	app.registerRootEnvVarParsing()
+
 	return app
 }
 
@@ -179,6 +182,20 @@ func (a *App) PersistentFlags() *FlagSet {
 	return &FlagSet{FlagSet: a.Root.Cmd.PersistentFlags(), cmd: a.Root}
 }
 
+// registerRootEnvVarParsing ensures that flags on the root command with environment variables are set to
+// the value of their corresponding environment variable if they are not set already.
+func (a *App) registerRootEnvVarParsing() {
+	a.Root.Cmd.PersistentPreRunE = MergeFuncs(a.Root.Cmd.PersistentPreRunE, func(_ *cobra.Command, _ []string) error {
+		for _, flag := range a.Root.flags {
+			err := setFlagFromEnv(flag)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 // CommandClause represents a command clause in a command-line application.
 type CommandClause struct {
 	Cmd   *cobra.Command
@@ -248,20 +265,10 @@ func (c *CommandClause) Alias(alias string) {
 // the value of their corresponding environment variable if they are not set already.
 func (c *CommandClause) registerEnvVarParsing() {
 	c.Cmd.PreRunE = MergeFuncs(c.Cmd.PreRunE, func(_ *cobra.Command, _ []string) error {
-		for _, flag := range c.App.Root.flags {
-			if !flag.flag.Changed && flag.HasEnvarValue() {
-				err := flag.flag.Value.Set(os.Getenv(flag.envVar))
-				if err != nil {
-					return err
-				}
-			}
-		}
 		for _, flag := range c.flags {
-			if !flag.flag.Changed && flag.HasEnvarValue() {
-				err := flag.flag.Value.Set(os.Getenv(flag.envVar))
-				if err != nil {
-					return err
-				}
+			err := setFlagFromEnv(flag)
+			if err != nil {
+				return err
 			}
 		}
 		return nil
@@ -368,4 +375,16 @@ func MergeFuncs(f1 PreRunAction, f2 PreRunAction) PreRunAction {
 		}
 		return f2(cmd, args)
 	}
+}
+
+// setFlagFromEnv sets the value of a flag to the value found in the environment if the flag has not been
+// explicitly set in another way.
+func setFlagFromEnv(flag *Flag) error {
+	if !flag.flag.Changed && flag.HasEnvarValue() {
+		err := flag.flag.Value.Set(os.Getenv(flag.envVar))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

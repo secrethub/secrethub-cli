@@ -185,7 +185,7 @@ func (a *App) PersistentFlags() *FlagSet {
 // registerRootEnvVarParsing ensures that flags on the root command with environment variables are set to
 // the value of their corresponding environment variable if they are not set already.
 func (a *App) registerRootEnvVarParsing() {
-	a.Root.Cmd.PersistentPreRunE = MergeFuncs(a.Root.Cmd.PersistentPreRunE, func(_ *cobra.Command, _ []string) error {
+	a.Root.Cmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
 		for _, flag := range a.Root.flags {
 			err := setFlagFromEnv(flag)
 			if err != nil {
@@ -193,7 +193,7 @@ func (a *App) registerRootEnvVarParsing() {
 			}
 		}
 		return nil
-	})
+	}
 }
 
 // CommandClause represents a command clause in a command-line application.
@@ -264,7 +264,7 @@ func (c *CommandClause) Alias(alias string) {
 // registerEnvVarParsing ensures that flags with environment variables are set to
 // the value of their corresponding environment variable if they are not set already.
 func (c *CommandClause) registerEnvVarParsing() {
-	c.Cmd.PreRunE = MergeFuncs(c.Cmd.PreRunE, func(_ *cobra.Command, _ []string) error {
+	c.AddPreRunE(func(_ *cobra.Command, _ []string) error {
 		for _, flag := range c.flags {
 			err := setFlagFromEnv(flag)
 			if err != nil {
@@ -331,7 +331,7 @@ func (c *CommandClause) isPersistentFlag(name string) (*CommandClause, bool) {
 func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
 	if params != nil {
-		c.Cmd.PreRunE = MergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
+		c.AddPreRunE(func(cmd *cobra.Command, args []string) error {
 			if err := c.argumentError(args); err != nil {
 				return err
 			}
@@ -345,7 +345,7 @@ func (c *CommandClause) BindArguments(params []Argument) {
 func (c *CommandClause) BindArgumentsArr(params []Argument) {
 	c.Args = params
 	if params != nil {
-		c.Cmd.PreRunE = MergeFuncs(c.Cmd.PreRunE, func(cmd *cobra.Command, args []string) error {
+		c.AddPreRunE(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
 				return c.argumentError(args)
 			}
@@ -362,18 +362,18 @@ func (c *CommandClause) BindAction(fn func() error) {
 	}
 }
 
-type PreRunAction func(*cobra.Command, []string) error
-
-func MergeFuncs(f1 PreRunAction, f2 PreRunAction) PreRunAction {
-	if f1 == nil {
-		return f2
+func (c *CommandClause) AddPreRunE(f func(*cobra.Command, []string) error) {
+	if c.Cmd.PreRunE == nil {
+		c.Cmd.PreRunE = f
+		return
 	}
-	return func(cmd *cobra.Command, args []string) error {
+	f1 := c.Cmd.PreRunE
+	c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		err := f1(cmd, args)
 		if err != nil {
 			return err
 		}
-		return f2(cmd, args)
+		return f(cmd, args)
 	}
 }
 

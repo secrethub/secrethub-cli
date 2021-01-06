@@ -7,9 +7,9 @@ import (
 
 // RegisterDebugFlag registers a debug flag that changes the log level of the given logger to DEBUG.
 func RegisterDebugFlag(app *cli.App, logger cli.Logger) {
-	app.PersistentFlags().BoolP("debug", "D", false, "Enable debug mode.")
+	flag := app.PersistentFlags().BoolP("debug", "D", false, "Enable debug mode.")
 	app.Root.AddPreRunE(func(command *cobra.Command, strings []string) error {
-		if app.Root.Cmd.Flag("debug").Changed {
+		if flag.Changed() {
 			logger.EnableDebug()
 		}
 		return nil

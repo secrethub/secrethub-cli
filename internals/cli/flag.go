@@ -20,6 +20,11 @@ func (f *FlagSet) Bool(name string, def bool, usage string) *Flag {
 	return f.cmd.Flag(name)
 }
 
+func (f *FlagSet) BoolP(name, shorthand string, def bool, usage string) *Flag {
+	f.FlagSet.BoolP(name, shorthand, def, usage)
+	return f.cmd.Flag(name)
+}
+
 func (f *FlagSet) BoolVarP(reference *bool, name, shorthand string, def bool, usage string) *Flag {
 	f.FlagSet.BoolVarP(reference, name, shorthand, def, usage)
 	return f.cmd.Flag(name)

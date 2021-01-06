@@ -28,7 +28,7 @@ func (cmd *CompletionCommand) Register(r cli.Registerer) {
 }
 
 func (cmd *CompletionCommand) run() error {
-	switch cmd.shell.Param {
+	switch cmd.shell.Value {
 	case "bash":
 		_ = cmd.clause.Cmd.Root().GenBashCompletion(os.Stdout)
 	case "zsh":

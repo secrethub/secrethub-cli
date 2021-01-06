@@ -44,7 +44,7 @@ func (cmd *EnvReadCommand) Run() error {
 		return err
 	}
 
-	value, found := env[cmd.key.Param]
+	value, found := env[cmd.key.Value]
 	if !found {
 		return fmt.Errorf("no environment variable with that key is set")
 	}

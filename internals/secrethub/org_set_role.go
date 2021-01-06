@@ -47,7 +47,7 @@ func (cmd *OrgSetRoleCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Setting role...\n")
 
-	resp, err := client.Orgs().Members().Update(cmd.orgName.Value(), cmd.username.Param, cmd.role.Param)
+	resp, err := client.Orgs().Members().Update(cmd.orgName.Value(), cmd.username.Value, cmd.role.Value)
 	if err != nil {
 		return err
 	}

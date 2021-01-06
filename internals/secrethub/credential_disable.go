@@ -47,17 +47,17 @@ func (cmd *CredentialDisableCommand) Run() error {
 	}
 
 	fingerprint := cmd.fingerprint
-	if fingerprint.Param == "" {
+	if fingerprint.Value == "" {
 		if cmd.force {
 			return errors.New("fingerprint argument must be set when using --force")
 		}
-		fingerprint.Param, err = ui.AskAndValidate(cmd.io, "What is the fingerprint of the credential you want to disable? ", 3, api.ValidateShortCredentialFingerprint)
+		fingerprint.Value, err = ui.AskAndValidate(cmd.io, "What is the fingerprint of the credential you want to disable? ", 3, api.ValidateShortCredentialFingerprint)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = api.ValidateShortCredentialFingerprint(fingerprint.Param)
+	err = api.ValidateShortCredentialFingerprint(fingerprint.Value)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 			"This process can currently not be reversed.")
 
 	if !cmd.force {
-		ok, err := ui.AskYesNo(cmd.io, fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s?", fingerprint.Param), ui.DefaultNo)
+		ok, err := ui.AskYesNo(cmd.io, fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s?", fingerprint.Value), ui.DefaultNo)
 		if err != nil {
 			return err
 		}
@@ -77,7 +77,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 		}
 	}
 
-	err = client.Credentials().Disable(fingerprint.Param)
+	err = client.Credentials().Disable(fingerprint.Value)
 	if err != nil {
 		return err
 	}

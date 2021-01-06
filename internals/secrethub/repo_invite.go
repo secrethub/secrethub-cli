@@ -46,7 +46,7 @@ func (cmd *RepoInviteCommand) Run() error {
 	}
 
 	if !cmd.force {
-		user, err := client.Users().Get(cmd.username.Param)
+		user, err := client.Users().Get(cmd.username.Value)
 		if err != nil {
 			return err
 		}
@@ -67,12 +67,12 @@ func (cmd *RepoInviteCommand) Run() error {
 	}
 	fmt.Fprintln(cmd.io.Output(), "Inviting user...")
 
-	_, err = client.Repos().Users().Invite(cmd.path.Value(), cmd.username.Param)
+	_, err = client.Repos().Users().Invite(cmd.path.Value(), cmd.username.Value)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username.Param, cmd.path)
+	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username.Value, cmd.path)
 
 	return nil
 }

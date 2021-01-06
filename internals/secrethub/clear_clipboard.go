@@ -50,7 +50,7 @@ func (cmd *ClearClipboardCommand) Run() error {
 		return err
 	}
 
-	err = bcrypt.CompareHashAndPassword(cmd.hash.Param, read)
+	err = bcrypt.CompareHashAndPassword(cmd.hash.Value, read)
 	if err != nil {
 		return nil
 	}

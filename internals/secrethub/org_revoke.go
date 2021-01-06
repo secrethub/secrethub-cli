@@ -48,7 +48,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 	opts := &api.RevokeOpts{
 		DryRun: true,
 	}
-	planned, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username.Param, opts)
+	planned, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username.Value, opts)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 				"Flagged repositories will contain secrets flagged for rotation, "+
 				"failed repositories require a manual removal or access rule changes before proceeding and "+
 				"OK repos will not require rotation.\n\n",
-			cmd.username.Param,
+			cmd.username.Value,
 			cmd.orgName,
 			len(planned.Repos),
 		)
@@ -81,7 +81,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 		fmt.Fprintf(
 			cmd.io.Output(),
 			"The user %s has no memberships to any of %s's repos and can be safely removed.\n\n",
-			cmd.username.Param,
+			cmd.username.Value,
 			cmd.orgName,
 		)
 	}
@@ -89,7 +89,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 	confirmed, err := ui.ConfirmCaseInsensitive(
 		cmd.io,
 		"Please type in the username of the user to confirm and proceed with revocation",
-		cmd.username.Param,
+		cmd.username.Value,
 	)
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "\nRevoking user...\n")
 
-	revoked, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username.Param, nil)
+	revoked, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username.Value, nil)
 	if err != nil {
 		return err
 	}

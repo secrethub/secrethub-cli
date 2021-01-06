@@ -44,7 +44,7 @@ func (cmd *OrgInviteCommand) Register(r cli.Registerer) {
 func (cmd *OrgInviteCommand) Run() error {
 	if !cmd.force {
 		msg := fmt.Sprintf("Are you sure you want to invite %s to the %s organization?",
-			cmd.username.Param,
+			cmd.username.Value,
 			cmd.orgName)
 
 		confirmed, err := ui.AskYesNo(cmd.io, msg, ui.DefaultNo)
@@ -65,7 +65,7 @@ func (cmd *OrgInviteCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output(), "Inviting user...")
 
-	resp, err := client.Orgs().Members().Invite(cmd.orgName.Value(), cmd.username.Param, cmd.role)
+	resp, err := client.Orgs().Members().Invite(cmd.orgName.Value(), cmd.username.Value, cmd.role)
 	if err != nil {
 		return err
 	}

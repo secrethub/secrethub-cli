@@ -38,20 +38,20 @@ func ArgumentArrRegister(params []Argument, args []string) error {
 }
 
 type StringValue struct {
-	Param string
+	Value string
 }
 
 func (s *StringValue) Set(replacer string) error {
-	s.Param = replacer
+	s.Value = replacer
 	return nil
 }
 
 type StringArrValue struct {
-	Param []string
+	Value []string
 }
 
 func (s *StringArrValue) Set(replacer string) error {
-	s.Param = append(s.Param, replacer)
+	s.Value = append(s.Value, replacer)
 	return nil
 }
 
@@ -66,17 +66,12 @@ func (s *URLValue) Set(replacer string) error {
 }
 
 type ByteValue struct {
-	Param []byte
+	Value []byte
 }
 
 func (s *ByteValue) Set(replacer string) error {
-	s.Param = []byte(replacer)
+	s.Value = []byte(replacer)
 	return nil
-}
-
-// Registerer allows others to register commands on it.
-type Registerer interface {
-	Command(cmd string, help string) *CommandClause
 }
 
 func getRequired(params []Argument) int {

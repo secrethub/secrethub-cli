@@ -29,7 +29,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 		"success": {
 			cmd: OrgInviteCommand{
 				orgName:  "company",
-				username: cli.StringValue{Param: "dev1"},
+				username: cli.StringValue{Value: "dev1"},
 				role:     api.OrgRoleMember,
 			},
 			service: fakeclient.OrgMemberService{
@@ -50,7 +50,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 		"success force": {
 			cmd: OrgInviteCommand{
 				orgName:  "company",
-				username: cli.StringValue{Param: "dev1"},
+				username: cli.StringValue{Value: "dev1"},
 				role:     api.OrgRoleMember,
 				force:    true,
 			},
@@ -70,7 +70,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 		"abort": {
 			cmd: OrgInviteCommand{
 				orgName:  "company",
-				username: cli.StringValue{Param: "dev1"},
+				username: cli.StringValue{Value: "dev1"},
 				role:     api.OrgRoleMember,
 			},
 			in:        "n",
@@ -80,7 +80,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 		"new client error": {
 			cmd: OrgInviteCommand{
 				orgName:  "company",
-				username: cli.StringValue{Param: "dev1"},
+				username: cli.StringValue{Value: "dev1"},
 				role:     api.OrgRoleMember,
 				force:    true,
 			},

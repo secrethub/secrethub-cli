@@ -176,16 +176,16 @@ func (cmd *GenerateSecretCommand) length() (int, error) {
 }
 
 func (cmd *GenerateSecretCommand) path() (string, error) {
-	if cmd.firstArg.Param == "rand" {
-		return cmd.secondArg.Param, api.ValidateSecretPath(cmd.secondArg.Param)
+	if cmd.firstArg.Value == "rand" {
+		return cmd.secondArg.Value, api.ValidateSecretPath(cmd.secondArg.Value)
 	}
-	if cmd.secondArg.Param != "" {
-		return "", fmt.Errorf("unexpected %s", cmd.secondArg.Param)
+	if cmd.secondArg.Value != "" {
+		return "", fmt.Errorf("unexpected %s", cmd.secondArg.Value)
 	}
 	if cmd.lengthArg.IsSet() {
 		return "", fmt.Errorf("unexpected %d", cmd.lengthArg.Get())
 	}
-	return cmd.firstArg.Param, api.ValidateSecretPath(cmd.firstArg.Param)
+	return cmd.firstArg.Value, api.ValidateSecretPath(cmd.firstArg.Value)
 }
 
 func (cmd *GenerateSecretCommand) useSymbols() (bool, error) {

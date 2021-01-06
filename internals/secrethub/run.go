@@ -97,8 +97,8 @@ func (cmd *RunCommand) Run() error {
 	}
 
 	// This makes sure commands encapsulated in quotes also work.
-	if len(cmd.command.Param) == 1 {
-		cmd.command.Param = strings.Split(cmd.command.Param[0], " ")
+	if len(cmd.command.Value) == 1 {
+		cmd.command.Value = strings.Split(cmd.command.Value[0], " ")
 	}
 
 	sequences := make([][]byte, 0, len(secrets))
@@ -109,7 +109,7 @@ func (cmd *RunCommand) Run() error {
 	}
 	m := masker.New(sequences, &cmd.maskerOptions)
 
-	command := exec.Command(cmd.command.Param[0], cmd.command.Param[1:]...)
+	command := exec.Command(cmd.command.Value[0], cmd.command.Value[1:]...)
 	command.Env = environment
 	command.Stdin = os.Stdin
 	if cmd.noMasking {

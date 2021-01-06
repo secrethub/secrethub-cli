@@ -48,12 +48,12 @@ func (cmd *RepoExportCommand) Register(r cli.Registerer) {
 
 // Run exports a repo to a zip file
 func (cmd *RepoExportCommand) Run() error {
-	if cmd.zipName.Param == "" {
+	if cmd.zipName.Value == "" {
 		// secrethub_export_repo_date_time.zip
-		cmd.zipName.Param = fmt.Sprintf("%s_export_%s_%s.zip", ApplicationName, cmd.path.GetRepo(), time.Now().Format("20060102_150405"))
+		cmd.zipName.Value = fmt.Sprintf("%s_export_%s_%s.zip", ApplicationName, cmd.path.GetRepo(), time.Now().Format("20060102_150405"))
 	}
 
-	_, err := os.Stat(cmd.zipName.Param)
+	_, err := os.Stat(cmd.zipName.Value)
 	if err == nil {
 		return ErrExportAlreadyExists
 	}
@@ -87,7 +87,7 @@ func (cmd *RepoExportCommand) Run() error {
 		return err
 	}
 
-	zipFile, err := os.Create(cmd.zipName.Param)
+	zipFile, err := os.Create(cmd.zipName.Value)
 	if err != nil {
 		return err
 	}

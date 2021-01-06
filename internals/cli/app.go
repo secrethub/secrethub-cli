@@ -388,3 +388,8 @@ func setFlagFromEnv(flag *Flag) error {
 	}
 	return nil
 }
+
+// Registerer allows others to register commands on it.
+type Registerer interface {
+	Command(cmd string, help string) *CommandClause
+}

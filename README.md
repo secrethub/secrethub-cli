@@ -11,7 +11,8 @@
 
 # SecretHub CLI
 
-[![GoDoc](https://godoc.org/github.com/secrethub/secrethub-cli?status.svg)][godoc]
+[![GoDoc](https://godoc.org/github.com/secrethub/secrethub-cli?status.svg)][![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsecrethub%2Fsecrethub-cli.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsecrethub%2Fsecrethub-cli?ref=badge_shield)
+[godoc]
 [![CircleCI](https://circleci.com/gh/secrethub/secrethub-cli.svg?style=shield)][circle-ci]
 [![Go Report Card](https://goreportcard.com/badge/github.com/secrethub/secrethub-cli)][goreportcard]
 [![Version](https://img.shields.io/github/release/secrethub/secrethub-cli.svg)][latest-version]
@@ -127,3 +128,7 @@ Run a single test:
 [goreportcard]: https://goreportcard.com/report/github.com/secrethub/secrethub-cli
 [circle-ci]: https://circleci.com/gh/secrethub/secrethub-cli
 [discord]: https://discord.gg/gyQXAFU
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsecrethub%2Fsecrethub-cli.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsecrethub%2Fsecrethub-cli?ref=badge_large)

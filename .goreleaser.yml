@@ -48,6 +48,7 @@ archives:
         format: zip
     files:
     - LICENSE
+    - CREDITS.md
 
 checksum:
   name_template: "secrethub-{{ .Tag }}-checksums.txt"

@@ -1,10 +1,10 @@
 package secrethub
 
 import (
-	"github.com/secrethub/secrethub-cli/internals/cli"
 	"testing"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"

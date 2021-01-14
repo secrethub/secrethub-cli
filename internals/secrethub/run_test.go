@@ -482,12 +482,12 @@ func TestRunCommand_Run(t *testing.T) {
 				environment: &environment{
 					osStat: osStatNotExist,
 				},
-				command: cli.StringListValue{Value: []string{"echo", "test"}},
+				command: cli.StringListValue{"echo", "test"},
 			},
 		},
 		"missing secret": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"echo", "test"}},
+				command: cli.StringListValue{"echo", "test"},
 				environment: &environment{
 					envar: map[string]string{
 						"missing": "path/to/unexisting/secret",
@@ -511,7 +511,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"missing secret ignored": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"echo", "test"}},
+				command: cli.StringListValue{"echo", "test"},
 				environment: &environment{
 					osStat: osStatNotExist,
 					envar: map[string]string{
@@ -536,7 +536,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"repo does not exist ignored": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"echo", "test"}},
+				command: cli.StringListValue{"echo", "test"},
 				environment: &environment{
 					envar: map[string]string{
 						"missing": "path/to/unexisting/secret",
@@ -587,7 +587,7 @@ func TestRunCommand_Run(t *testing.T) {
 		},
 		"os env secret not found": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"echo", "test"}},
+				command: cli.StringListValue{"echo", "test"},
 				io:      fakeui.NewIO(t),
 				environment: &environment{
 					osEnv:  []string{"TEST=secrethub://nonexistent/secret/path"},
@@ -610,7 +610,7 @@ func TestRunCommand_Run(t *testing.T) {
 		"os env secret not found ignored": {
 			command: RunCommand{
 				ignoreMissingSecrets: true,
-				command:              cli.StringListValue{Value: []string{"echo", "test"}},
+				command:              cli.StringListValue{"echo", "test"},
 				io:                   fakeui.NewIO(t),
 				environment: &environment{
 					osEnv:  []string{"TEST=secrethub://nonexistent/secret/path"},
@@ -671,7 +671,7 @@ func TestRunCommand_environment(t *testing.T) {
 	}{
 		"invalid template syntax": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"echo", "test"}},
+				command: cli.StringListValue{"echo", "test"},
 				environment: &environment{
 					osStat:          osStatFunc("secrethub.env", nil),
 					readFile:        readFileFunc("secrethub.env", "TEST={{path/to/secret}"),
@@ -723,7 +723,7 @@ func TestRunCommand_environment(t *testing.T) {
 		},
 		"env file secret does not exist": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"echo", "test"}},
+				command: cli.StringListValue{"echo", "test"},
 				environment: &environment{
 					osStat:          osStatFunc("secrethub.env", nil),
 					readFile:        readFileFunc("secrethub.env", "TEST= {{ unexistent/secret/path }}"),
@@ -1061,7 +1061,7 @@ func TestRunCommand_environment(t *testing.T) {
 		},
 		"template var set by flag": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"/bin/sh", "./test.sh"}},
+				command: cli.StringListValue{"/bin/sh", "./test.sh"},
 				environment: &environment{
 					osStat:                       osStatFunc("secrethub.env", nil),
 					readFile:                     readFileFunc("secrethub.env", "TEST = {{ test/$variable/test }}"),
@@ -1085,7 +1085,7 @@ func TestRunCommand_environment(t *testing.T) {
 		},
 		"template var set by flag has precedence over var set by environment": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"/bin/sh", "./test.sh"}},
+				command: cli.StringListValue{"/bin/sh", "./test.sh"},
 				environment: &environment{
 					osEnv:                        []string{"SECRETHUB_VAR_VARIABLE=bar"},
 					osStat:                       osStatFunc("secrethub.env", nil),
@@ -1111,7 +1111,7 @@ func TestRunCommand_environment(t *testing.T) {
 		},
 		"v1 template syntax success": {
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"/bin/sh", "./test.sh"}},
+				command: cli.StringListValue{"/bin/sh", "./test.sh"},
 				environment: &environment{
 					osStat:          osStatFunc("secrethub.env", nil),
 					readFile:        readFileFunc("secrethub.env", "TEST= ${path/to/secret}"),
@@ -1173,7 +1173,7 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 		"--no-masking flag": {
 			script: "echo $TEST",
 			command: RunCommand{
-				command:   cli.StringListValue{Value: []string{"/bin/sh", "./test.sh"}},
+				command:   cli.StringListValue{"/bin/sh", "./test.sh"},
 				noMasking: true,
 				environment: &environment{
 					osStat:   osStatOnlySecretHubEnv,
@@ -1201,7 +1201,7 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 		"secret masking": {
 			script: "echo $TEST",
 			command: RunCommand{
-				command: cli.StringListValue{Value: []string{"/bin/sh", "./test.sh"}},
+				command: cli.StringListValue{"/bin/sh", "./test.sh"},
 				environment: &environment{
 					osStat:   osStatOnlySecretHubEnv,
 					envFile:  "secrethub.env",
@@ -1230,12 +1230,12 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			if tc.script != "" {
-				scriptFile := filepath.Join(os.TempDir(), tc.command.command.Value[1])
+				scriptFile := filepath.Join(os.TempDir(), tc.command.command[1])
 				err := ioutil.WriteFile(scriptFile, []byte(tc.script), os.ModePerm)
 				if err != nil {
 					log.Fatal("Cannot create file for test", err)
 				}
-				tc.command.command.Value[1] = scriptFile
+				tc.command.command[1] = scriptFile
 				defer os.Remove(scriptFile)
 			}
 

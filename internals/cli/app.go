@@ -9,7 +9,6 @@ import (
 
 	"bitbucket.org/zombiezen/cardcpx/natsort"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 var (
@@ -283,9 +282,6 @@ func (c *CommandClause) Flag(name string) *Flag {
 		return c.flags[name]
 	}
 	fullCmd := strings.Replace(c.fullCommand(), " ", c.App.separator, -1)
-	if cmd, ok := c.isPersistentFlag(name); ok {
-		fullCmd = strings.Replace(cmd.fullCommand(), " ", c.App.separator, -1)
-	}
 	prefix := formatName(fullCmd, "", c.App.separator, c.App.delimiters...)
 	envVar := formatName(name, prefix, c.App.separator, c.App.delimiters...)
 
@@ -306,24 +302,6 @@ func (c *CommandClause) Flag(name string) *Flag {
 
 func (c *CommandClause) Flags() *FlagSet {
 	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
-}
-
-func (c *CommandClause) isPersistentFlag(name string) (*CommandClause, bool) {
-	if c.Cmd == c.Cmd.Root() {
-		return nil, false
-	}
-	var parent *CommandClause
-	persistent := false
-	for p := c.Cmd.Parent(); p != nil; p = p.Parent() {
-		f := p.Flags()
-		f.VisitAll(func(flag *pflag.Flag) {
-			if flag.Name == name {
-				persistent = true
-				parent = &CommandClause{Cmd: p}
-			}
-		})
-	}
-	return parent, persistent
 }
 
 // BindArguments binds a function to a command clause, so that

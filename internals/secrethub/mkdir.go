@@ -19,7 +19,7 @@ var (
 // MkDirCommand creates a new directory inside a repository.
 type MkDirCommand struct {
 	io        ui.IO
-	paths     dirPathList
+	paths     cli.StringListValue
 	parents   bool
 	newClient newClientFunc
 }
@@ -75,20 +75,4 @@ func (cmd *MkDirCommand) createDirectory(client secrethub.ClientInterface, path 
 	}
 	_, err = client.Dirs().Create(dirPath.Value())
 	return err
-}
-
-// dirPathList represents the value of a repeatable directory path argument.
-type dirPathList []string
-
-func (d *dirPathList) String() string {
-	return ""
-}
-
-func (d *dirPathList) Set(path string) error {
-	*d = append(*d, path)
-	return nil
-}
-
-func (d *dirPathList) IsCumulative() bool {
-	return true
 }

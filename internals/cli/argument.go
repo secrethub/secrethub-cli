@@ -46,12 +46,10 @@ func (s *StringValue) Set(replacer string) error {
 	return nil
 }
 
-type StringArrValue struct {
-	Value []string
-}
+type StringListValue []string
 
-func (s *StringArrValue) Set(replacer string) error {
-	s.Value = append(s.Value, replacer)
+func (s *StringListValue) Set(replacer string) error {
+	*s = append(*s, replacer)
 	return nil
 }
 
@@ -65,12 +63,10 @@ func (s *URLValue) Set(replacer string) error {
 	return err
 }
 
-type ByteValue struct {
-	Value []byte
-}
+type ByteValue []byte
 
 func (s *ByteValue) Set(replacer string) error {
-	s.Value = []byte(replacer)
+	*s = []byte(replacer)
 	return nil
 }
 

@@ -185,7 +185,7 @@ func (a *App) PersistentFlags() *FlagSet {
 // registerRootEnvVarParsing ensures that flags on the root command with environment variables are set to
 // the value of their corresponding environment variable if they are not set already.
 func (a *App) registerRootEnvVarParsing() {
-	a.Root.Cmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
+	a.Root.AddPersistentPreRunE(func(_ *cobra.Command, _ []string) error {
 		for _, flag := range a.Root.flags {
 			err := setFlagFromEnv(flag)
 			if err != nil {
@@ -193,7 +193,7 @@ func (a *App) registerRootEnvVarParsing() {
 			}
 		}
 		return nil
-	}
+	})
 }
 
 // CommandClause represents a command clause in a command-line application.
@@ -369,6 +369,21 @@ func (c *CommandClause) AddPreRunE(f func(*cobra.Command, []string) error) {
 	}
 	f1 := c.Cmd.PreRunE
 	c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		err := f1(cmd, args)
+		if err != nil {
+			return err
+		}
+		return f(cmd, args)
+	}
+}
+
+func (c *CommandClause) AddPersistentPreRunE(f func(*cobra.Command, []string) error) {
+	if c.Cmd.PersistentPreRunE == nil {
+		c.Cmd.PersistentPreRunE = f
+		return
+	}
+	f1 := c.Cmd.PersistentPreRunE
+	c.Cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		err := f1(cmd, args)
 		if err != nil {
 			return err

@@ -340,33 +340,28 @@ func (c *CommandClause) BindAction(fn func() error) {
 	}
 }
 
+// AddPreRunE adds an extra function to execute before the command is executed.
+// The added function is executed after all functions previously registered as PreRunE.
 func (c *CommandClause) AddPreRunE(f func(*cobra.Command, []string) error) {
-	if c.Cmd.PreRunE == nil {
-		c.Cmd.PreRunE = f
-		return
-	}
-	f1 := c.Cmd.PreRunE
-	c.Cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		err := f1(cmd, args)
-		if err != nil {
-			return err
-		}
-		return f(cmd, args)
-	}
+	c.Cmd.PreRunE = chainRunE(c.Cmd.PreRunE, f)
 }
 
+// AddPersistentPreRunE adds an extra function to execute before the command or any of its children is executed.
+// The added function is executed after all functions previously registered as PersistentPreRunE.
 func (c *CommandClause) AddPersistentPreRunE(f func(*cobra.Command, []string) error) {
-	if c.Cmd.PersistentPreRunE == nil {
-		c.Cmd.PersistentPreRunE = f
-		return
+	c.Cmd.PersistentPreRunE = chainRunE(c.Cmd.PersistentPreRunE, f)
+}
+
+func chainRunE(f1 func(*cobra.Command, []string) error, f2 func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
+	if f1 == nil {
+		return f2
 	}
-	f1 := c.Cmd.PersistentPreRunE
-	c.Cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
 		err := f1(cmd, args)
 		if err != nil {
 			return err
 		}
-		return f(cmd, args)
+		return f2(cmd, args)
 	}
 }
 

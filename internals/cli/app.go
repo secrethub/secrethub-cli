@@ -201,7 +201,7 @@ type CommandClause struct {
 	name  string
 	App   *App
 	Args  []Argument
-	flags map[string]*Flag
+	flags []*Flag
 }
 
 // Command adds a new subcommand to this command.
@@ -278,9 +278,6 @@ func (c *CommandClause) registerEnvVarParsing() {
 // adding an environment variable default configurable by APP_COMMAND_FLAG_NAME.
 // The help text is suffixed with the default value of the flag.
 func (c *CommandClause) Flag(name string) *Flag {
-	if _, ok := c.flags[name]; ok {
-		return c.flags[name]
-	}
 	fullCmd := strings.Replace(c.fullCommand(), " ", c.App.separator, -1)
 	prefix := formatName(fullCmd, "", c.App.separator, c.App.delimiters...)
 	envVar := formatName(name, prefix, c.App.separator, c.App.delimiters...)
@@ -294,9 +291,8 @@ func (c *CommandClause) Flag(name string) *Flag {
 	}).Envar(envVar)
 	if c.flags == nil {
 		c.registerEnvVarParsing()
-		c.flags = make(map[string]*Flag)
 	}
-	c.flags[name] = flag
+	c.flags = append(c.flags, flag)
 	return flag
 }
 

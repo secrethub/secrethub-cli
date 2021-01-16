@@ -23,6 +23,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
+const DefaultAWSServiceDescription = "AWS role <role-name>"
+
 // Errors
 var (
 	ErrInvalidAWSRegion      = errMain.Code("invalid_region").Error("invalid AWS region")
@@ -130,7 +132,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		cmd.kmsKeyID = kmsKey
 	}
 
-	if cmd.description == "" {
+	if cmd.description == DefaultAWSServiceDescription {
 		cmd.description = "AWS role " + roleNameFromRole(cmd.role)
 	}
 
@@ -158,11 +160,9 @@ func (cmd *ServiceAWSInitCommand) Register(r cli.Registerer) {
 	clause.Flags().StringVar(&cmd.kmsKeyID, "kms-key", "", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.")
 	clause.Flags().StringVar(&cmd.role, "role", "", "The role name or ARN of the IAM role that should have access to this service account.")
 	clause.Flags().StringVar(&cmd.region, "region", "", "The AWS region that should be used for KMS.")
-	clause.Flags().StringVar(&cmd.description, "description", "AWS role <role-name>", "A description for the service so others will recognize it.")
-	clause.Flags().StringVar(&cmd.description, "descr", "AWS role <role-name>", "")
-	clause.Flags().StringVar(&cmd.description, "desc", "AWS role <role-name>", "")
-	clause.Cmd.Flag("desc").Hidden = true
-	clause.Cmd.Flag("descr").Hidden = true
+	clause.Flags().StringVar(&cmd.description, "description", DefaultAWSServiceDescription, "A description for the service so others will recognize it.")
+	clause.Flags().StringVar(&cmd.description, "descr", DefaultAWSServiceDescription, "").Hidden()
+	clause.Flags().StringVar(&cmd.description, "desc", DefaultAWSServiceDescription, "").Hidden()
 	clause.Flags().StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
 
 	clause.HelpLong("The native AWS identity provider uses a combination of AWS IAM and AWS KMS to provide access to SecretHub for any service running on AWS (e.g. EC2, Lambda or ECS). For this to work, an IAM role and a KMS key are needed.\n" +

@@ -73,7 +73,7 @@ func (s URLValue) Set(replacer string) error {
 }
 
 func (s *URLValue) String() string {
-	if s.URL == nil  {
+	if s.URL == nil {
 		return ""
 	}
 	return s.URL.String()

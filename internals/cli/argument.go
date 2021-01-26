@@ -27,9 +27,9 @@ func ArgumentRegister(params []Argument, args []string) error {
 	return nil
 }
 
-func ArgumentArrRegister(params []Argument, args []string) error {
+func ArgumentArrRegister(params Argument, args []string) error {
 	for _, arg := range args {
-		err := params[0].Value.Set(arg)
+		err := params.Value.Set(arg)
 		if err != nil {
 			return err
 		}

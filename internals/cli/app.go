@@ -300,13 +300,12 @@ func (c *CommandClause) Flags() *FlagSet {
 	return &FlagSet{FlagSet: c.Cmd.Flags(), cmd: c}
 }
 
-// BindArguments binds a function to a command clause, so that
-// it is executed when the command is parsed.
+// BindArguments binds a list of arguments that all parse 1 value.
 func (c *CommandClause) BindArguments(params []Argument) {
 	c.Args = params
 	if params != nil {
 		c.AddPreRunE(func(cmd *cobra.Command, args []string) error {
-			if err := c.argumentError(args); err != nil {
+			if err := c.validateArgumentsCount(args); err != nil {
 				return err
 			}
 			return ArgumentRegister(params, args)
@@ -314,18 +313,15 @@ func (c *CommandClause) BindArguments(params []Argument) {
 	}
 }
 
-// BindArgumentsArr binds a function to a command clause, so that
-// it is executed when the command is parsed.
-func (c *CommandClause) BindArgumentsArr(params []Argument) {
-	c.Args = params
-	if params != nil {
-		c.AddPreRunE(func(cmd *cobra.Command, args []string) error {
-			if len(args) <= 0 {
-				return c.argumentError(args)
-			}
-			return ArgumentArrRegister(params, args)
-		})
-	}
+// BindArgumentsArr binds a single argument that can parse 1 or more values.
+func (c *CommandClause) BindArgumentsArr(param Argument) {
+	c.Args = []Argument{param}
+	c.AddPreRunE(func(cmd *cobra.Command, args []string) error {
+		if err := c.validateArgumentsArrCount(args); err != nil {
+			return err
+		}
+		return ArgumentArrRegister(param, args)
+	})
 }
 
 func (c *CommandClause) BindAction(fn func() error) {

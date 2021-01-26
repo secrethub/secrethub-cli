@@ -14,7 +14,6 @@ type Argument struct {
 }
 
 type ArgValue interface {
-	String() string
 	Set(string) error
 }
 
@@ -47,10 +46,6 @@ func (s *StringValue) Set(replacer string) error {
 	return nil
 }
 
-func (s *StringValue) String() string {
-	return s.Value
-}
-
 type StringListValue []string
 
 func (s *StringListValue) Set(replacer string) error {
@@ -58,15 +53,11 @@ func (s *StringListValue) Set(replacer string) error {
 	return nil
 }
 
-func (s *StringListValue) String() string {
-	return "StringListValue"
-}
-
 type URLValue struct {
 	*url.URL
 }
 
-func (s URLValue) Set(replacer string) error {
+func (s *URLValue) Set(replacer string) error {
 	var err error
 	s.URL, err = url.Parse(replacer)
 	return err
@@ -84,10 +75,6 @@ type ByteValue []byte
 func (s *ByteValue) Set(replacer string) error {
 	*s = []byte(replacer)
 	return nil
-}
-
-func (s *ByteValue) String() string {
-	return string(*s)
 }
 
 func getRequired(params []Argument) int {

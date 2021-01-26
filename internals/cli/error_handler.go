@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
 )
 
 func (c *CommandClause) argumentError(args []string) error {
@@ -10,7 +12,7 @@ func (c *CommandClause) argumentError(args []string) error {
 	}
 	errorText, minimum, maximum := "", getRequired(c.Args), len(c.Args)
 
-	if c.Args[0].Value.String() == new(StringListValue).String() {
+	if strings.Contains(reflect.TypeOf(c.Args[0].Value).String(), "List") {
 		errorText += fmt.Sprintf(`"%s" requires at least %d %s.`, c.fullCommand(), minimum, pluralize("argument", minimum))
 	} else if minimum == maximum {
 		errorText += fmt.Sprintf(`"%s" requires exactly %d %s.`, c.fullCommand(), minimum, pluralize("argument", minimum))

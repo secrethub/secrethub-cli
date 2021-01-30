@@ -394,8 +394,8 @@ func numFlags(flagSet pflag.FlagSet) int {
 //    d. The section is hidden if the only flag is `--help`.
 // 4. Arguments section (created by us)
 var UsageTemplate = `Usage:
-{{if not .Cmd.HasSubCommands}} {{(useLine .Cmd .Args)}}{{end}}
-{{- if .Cmd.HasSubCommands}}  {{ .Cmd.CommandPath}}{{- if .Cmd.HasAvailableFlags}} [flags]{{end}} [command]{{end}}
+{{if .Cmd.Runnable}} {{(useLine .Cmd .Args)}}{{end}}
+{{- if .Cmd.HasAvailableSubCommands}}  {{ .Cmd.CommandPath}} [command]{{end}}
 
 {{if ne .Cmd.Long ""}}{{ .Cmd.Long | trim }}{{ else }}{{ .Cmd.Short | trim }}{{end}}
 {{- if gt (len .Cmd.Aliases) 0}}

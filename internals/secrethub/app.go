@@ -176,7 +176,7 @@ func (app *App) registerCommands() {
 
 	// Commands
 	NewInitCommand(app.io, app.clientFactory.NewUnauthenticatedClient, app.clientFactory.NewClientWithCredentials, app.credentialStore).Register(app.cli)
-	NewSignUpCommand(app.io, app.clientFactory.NewUnauthenticatedClient, app.credentialStore).Register(app.cli)
+	NewSignUpCommand(app.io).Register(app.cli)
 	NewWriteCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewReadCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewGenerateSecretCommand(app.io, app.clientFactory.NewClient).Register(app.cli)

@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 
@@ -28,152 +27,26 @@ const credentialCreationMessage = "An account credential will be generated and s
 
 // SignUpCommand signs up a new user and configures his account for use on this machine.
 type SignUpCommand struct {
-	username        string
-	fullName        string
-	email           string
-	org             string
-	orgDescription  string
-	force           bool
-	io              ui.IO
-	newClient       newClientFunc
-	credentialStore CredentialConfig
-	progressPrinter progress.Printer
+	io ui.IO
 }
 
 // NewSignUpCommand creates a new SignUpCommand.
-func NewSignUpCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *SignUpCommand {
+func NewSignUpCommand(io ui.IO) *SignUpCommand {
 	return &SignUpCommand{
-		io:              io,
-		newClient:       newClient,
-		credentialStore: credentialStore,
-		progressPrinter: progress.NewPrinter(io.Output(), 500*time.Millisecond),
+		io: io,
 	}
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *SignUpCommand) Register(r command.Registerer) {
 	clause := r.Command("signup", "Create a free personal developer account.").Hidden()
-	clause.Flag("username", "The username you would like to use on SecretHub.").StringVar(&cmd.username)
-	clause.Flag("full-name", "Your full name.").StringVar(&cmd.fullName)
-	clause.Flag("email", "Your (work) email address we will use for all correspondence.").StringVar(&cmd.email)
-	clause.Flag("org", "The name of your organization.").StringVar(&cmd.org)
-	clause.Flag("org-description", "A description (max 144 chars) for your organization so others will recognize it.").StringVar(&cmd.orgDescription)
-	registerForceFlag(clause).BoolVar(&cmd.force)
-
 	command.BindAction(clause, cmd.Run)
 }
 
 // Run signs up a new user and configures his account for use on this machine.
 // If an account was already configured, the user is prompted for confirmation to overwrite it.
 func (cmd *SignUpCommand) Run() error {
-	credentialPath := cmd.credentialStore.ConfigDir().Credential().Path()
-
-	if cmd.force {
-		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" {
-			return ErrMissingFlags
-		}
-	} else {
-		if cmd.credentialStore.ConfigDir().Credential().Exists() {
-			confirmed, err := ui.AskYesNo(
-				cmd.io,
-				fmt.Sprintf("Found account credentials at %s, do you wish to overwrite them?", credentialPath),
-				ui.DefaultNo,
-			)
-			if err == ui.ErrCannotAsk {
-				return ErrLocalAccountFound
-			} else if err != nil {
-				return err
-			}
-
-			if !confirmed {
-				fmt.Fprintln(cmd.io.Output(), "Aborting.")
-				return nil
-			}
-		}
-
-		if cmd.username == "" || cmd.fullName == "" || cmd.email == "" {
-			_, promptOut, err := cmd.io.Prompts()
-			if err != nil {
-				return err
-			}
-			fmt.Fprint(
-				promptOut,
-				"Let's get you setup. "+
-					"Before we continue, I need to know a few things about you. "+
-					"Please answer the questions below, followed by an [ENTER]\n\n",
-			)
-			if cmd.username == "" {
-				cmd.username, err = ui.AskAndValidate(cmd.io, "The username you'd like to use: ", 2, api.ValidateUsername)
-				if err != nil {
-					return err
-				}
-			}
-			if cmd.fullName == "" {
-				cmd.fullName, err = ui.AskAndValidate(cmd.io, "Your full name: ", 2, api.ValidateFullName)
-				if err != nil {
-					return err
-				}
-			}
-			if cmd.email == "" {
-				cmd.email, err = ui.AskAndValidate(cmd.io, "Your (work) email address: ", 2, api.ValidateEmail)
-				if err != nil {
-					return err
-				}
-			}
-			fmt.Fprintln(cmd.io.Output())
-		}
-	}
-
-	fmt.Fprintf(cmd.io.Output(), credentialCreationMessage, credentialPath)
-
-	// Only prompt for a passphrase when the user hasn't used --force.
-	// Otherwise, we assume the passphrase was intentionally not
-	// configured to output a plaintext credential.
-	var passphrase string
-	if !cmd.credentialStore.IsPassphraseSet() && !cmd.force {
-		var err error
-		passphrase, err = askCredentialPassphrase(cmd.io)
-		if err != nil {
-			return err
-		}
-	}
-
-	client, err := cmd.newClient()
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprint(cmd.io.Output(), "Setting up your account...")
-	cmd.progressPrinter.Start()
-	credential := credentials.CreateKey()
-	_, err = client.Users().Create(cmd.username, cmd.email, cmd.fullName, credential)
-	if err != nil {
-		cmd.progressPrinter.Stop()
-		return err
-	}
-
-	err = writeNewCredential(credential, passphrase, cmd.credentialStore.ConfigDir().Credential())
-	if err != nil {
-		cmd.progressPrinter.Stop()
-		return err
-	}
-
-	secretPath, err := createStartRepo(client, cmd.username, cmd.fullName)
-	if err != nil {
-		cmd.progressPrinter.Stop()
-		return err
-	}
-
-	cmd.progressPrinter.Stop()
-	fmt.Fprint(cmd.io.Output(), "Created your account.\n\n")
-
-	err = createWorkspace(client, cmd.io, cmd.org, cmd.orgDescription, cmd.progressPrinter)
-	if err != nil {
-		return err
-	}
-
-	fmt.Fprintf(cmd.io.Output(), "Setup complete. To read your first secret, run:\n\n    secrethub read %s\n\n", secretPath)
-
+	fmt.Fprintln(cmd.io.Output(), signupMessage)
 	return nil
 }
 

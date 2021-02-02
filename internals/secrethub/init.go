@@ -14,6 +14,8 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
 
+const signupMessage = "Go to https://signup.secrethub.io/ and follow the steps to create an account and get it set up on this machine."
+
 // InitCommand configures the user's SecretHub account for use on this machine.
 type InitCommand struct {
 	backupCode               string
@@ -104,7 +106,7 @@ func (cmd *InitCommand) Run() error {
 
 		switch option {
 		case 0:
-			fmt.Fprintln(cmd.io.Output(), "Go to https://signup.secrethub.io/ and follow the steps to create an account and get it set up on this machine.")
+			fmt.Fprintln(cmd.io.Output(), signupMessage)
 			return nil
 		case 1:
 			mode = InitModeBackupCode

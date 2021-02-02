@@ -50,8 +50,7 @@ func (cmd *InitCommand) Register(r command.Registerer) {
 type InitMode int
 
 const (
-	InitModeSignup InitMode = iota + 1
-	InitModeBackupCode
+	InitModeBackupCode InitMode = iota + 1
 	InitModeSetupCode
 )
 
@@ -113,15 +112,6 @@ func (cmd *InitCommand) Run() error {
 	}
 
 	switch mode {
-	case InitModeSignup:
-		signupCommand := SignUpCommand{
-			io:              cmd.io,
-			newClient:       cmd.newUnauthenticatedClient,
-			credentialStore: cmd.credentialStore,
-			progressPrinter: cmd.progressPrinter,
-			force:           cmd.force,
-		}
-		return signupCommand.Run()
 	case InitModeSetupCode:
 		setupCode := cmd.setupCode
 

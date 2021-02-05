@@ -25,17 +25,15 @@ type InitCommand struct {
 	setupCode                string
 	force                    bool
 	io                       ui.IO
-	newUnauthenticatedClient newClientFunc
 	newClientWithCredentials func(credentials.Provider) (secrethub.ClientInterface, error)
 	credentialStore          CredentialConfig
 	progressPrinter          progress.Printer
 }
 
 // NewInitCommand creates a new InitCommand.
-func NewInitCommand(io ui.IO, newUnauthenticatedClient newClientFunc, newClientWithCredentials func(credentials.Provider) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
+func NewInitCommand(io ui.IO, newClientWithCredentials func(credentials.Provider) (secrethub.ClientInterface, error), credentialStore CredentialConfig) *InitCommand {
 	return &InitCommand{
 		io:                       io,
-		newUnauthenticatedClient: newUnauthenticatedClient,
 		newClientWithCredentials: newClientWithCredentials,
 		credentialStore:          credentialStore,
 		progressPrinter:          progress.NewPrinter(io.Output(), 500*time.Millisecond),

@@ -13,7 +13,7 @@ import (
 
 // Errors
 var (
-	ErrCredentialNotExist = errMain.Code("credential_not_exist").Error("could not find credential file. Go to https://signup.secrethub.io/ to create an account or run `secrethub init` to use an already existing account on this machine.")
+	ErrCredentialNotExist = errMain.Code("credential_not_configured").Error("could not find credential. Go to https://signup.secrethub.io/ to create a personal account. To use the CLI as a service account, set the SECRETHUB_CREDENTIAL or SECRETHUB_IDENTITY_PROVIDER environment variable.")
 )
 
 // CredentialConfig handles the configuration necessary for local credentials.

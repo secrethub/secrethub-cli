@@ -6,8 +6,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/assert"
+	"github.com/secrethub/secrethub-go/internals/auth"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
+	httpclient "github.com/secrethub/secrethub-go/pkg/secrethub/internals/http"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
@@ -42,10 +45,24 @@ func TestNewClientFactory_ProxyAddress(t *testing.T) {
 		proxyAddress:     urlValue{proxyAddress},
 	}
 
-	client, err := factory.NewUnauthenticatedClient()
+	client, err := factory.NewClientWithCredentials(dummyCredential{})
 	assert.OK(t, err)
 
-	_, _ = client.Users().Create("test", "test@test.test", "test", credentials.CreateKey())
+	_, _ = client.Me().GetUser()
 	assert.OK(t, err)
 	assert.Equal(t, proxyReceivedRequest, true)
+}
+
+type dummyCredential struct {
+}
+
+type nopDecrypter struct {
+}
+
+func (n nopDecrypter) Unwrap(ciphertext *api.EncryptedData) ([]byte, error) {
+	return nil, nil
+}
+
+func (d dummyCredential) Provide(client *httpclient.Client) (auth.Authenticator, credentials.Decrypter, error) {
+	return auth.NopAuthenticator{}, nopDecrypter{}, nil
 }

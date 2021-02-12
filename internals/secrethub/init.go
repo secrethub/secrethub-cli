@@ -6,11 +6,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/internals/errio"
+
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
@@ -41,13 +42,14 @@ func NewInitCommand(io ui.IO, newClientWithCredentials func(credentials.Provider
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *InitCommand) Register(r command.Registerer) {
+func (cmd *InitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Initialize the SecretHub client for first use on this device.")
-	clause.Flag("backup-code", "The backup code used to restore an existing account to this device.").StringVar(&cmd.backupCode)
-	clause.Flag("setup-code", "The setup code used to configure the CLI to use an account created on the website.").StringVar(&cmd.setupCode)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	clause.Flags().StringVar(&cmd.backupCode, "backup-code", "", "The backup code used to restore an existing account to this device.")
+	clause.Flags().StringVar(&cmd.setupCode, "setup-code", "", "The setup code used to configure the CLI to use an account created on the website.")
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 type InitMode int

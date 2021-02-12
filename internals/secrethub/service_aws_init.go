@@ -6,8 +6,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	shaws "github.com/secrethub/secrethub-go/internals/aws"
@@ -22,6 +22,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
+
+const DefaultAWSServiceDescription = "AWS role <role-name>"
 
 // Errors
 var (
@@ -130,7 +132,7 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 		cmd.kmsKeyID = kmsKey
 	}
 
-	if cmd.description == "" {
+	if cmd.description == DefaultAWSServiceDescription {
 		cmd.description = "AWS role " + roleNameFromRole(cmd.role)
 	}
 
@@ -153,16 +155,15 @@ func (cmd *ServiceAWSInitCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
+func (cmd *ServiceAWSInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account that is tied to an AWS IAM role.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
-	clause.Flag("kms-key", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyID)
-	clause.Flag("role", "The role name or ARN of the IAM role that should have access to this service account.").StringVar(&cmd.role)
-	clause.Flag("region", "The AWS region that should be used for KMS.").StringVar(&cmd.region)
-	clause.Flag("description", "A description for the service so others will recognize it. Defaults to `AWS role <role-name>`.").StringVar(&cmd.description)
-	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause.Flags().StringVar(&cmd.kmsKeyID, "kms-key", "", "The ID or ARN of the KMS-key to be used for encrypting the service's account key.")
+	clause.Flags().StringVar(&cmd.role, "role", "", "The role name or ARN of the IAM role that should have access to this service account.")
+	clause.Flags().StringVar(&cmd.region, "region", "", "The AWS region that should be used for KMS.")
+	clause.Flags().StringVar(&cmd.description, "description", DefaultAWSServiceDescription, "A description for the service so others will recognize it.")
+	clause.Flags().StringVar(&cmd.description, "descr", DefaultAWSServiceDescription, "").Hidden()
+	clause.Flags().StringVar(&cmd.description, "desc", DefaultAWSServiceDescription, "").Hidden()
+	clause.Flags().StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
 
 	clause.HelpLong("The native AWS identity provider uses a combination of AWS IAM and AWS KMS to provide access to SecretHub for any service running on AWS (e.g. EC2, Lambda or ECS). For this to work, an IAM role and a KMS key are needed.\n" +
 		"\n" +
@@ -174,7 +175,8 @@ func (cmd *ServiceAWSInitCommand) Register(r command.Registerer) {
 		"If no system-wide default for the AWS region is provided (e.g. with $AWS_REGION), the AWS-region where the KMS key resides should be explicitly provided to this command with the --region flag.",
 	)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
 }
 
 func newKMSKeyOptionsGetter(cfg *aws.Config) kmsKeyOptionsGetter {

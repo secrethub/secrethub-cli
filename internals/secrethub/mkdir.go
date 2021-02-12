@@ -7,8 +7,8 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // Errors
@@ -19,7 +19,7 @@ var (
 // MkDirCommand creates a new directory inside a repository.
 type MkDirCommand struct {
 	io        ui.IO
-	paths     dirPathList
+	paths     cli.StringListValue
 	parents   bool
 	newClient newClientFunc
 }
@@ -33,12 +33,12 @@ func NewMkDirCommand(io ui.IO, newClient newClientFunc) *MkDirCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *MkDirCommand) Register(r command.Registerer) {
+func (cmd *MkDirCommand) Register(r cli.Registerer) {
 	clause := r.Command("mkdir", "Create a new directory.")
-	clause.Arg("dir-paths", "The paths to the directories").Required().PlaceHolder(dirPathsPlaceHolder).SetValue(&cmd.paths)
-	clause.Flag("parents", "Create parent directories if needed. Does not error when directories already exist.").BoolVar(&cmd.parents)
+	clause.Flags().BoolVar(&cmd.parents, "parents", false, "Create parent directories if needed. Does not error when directories already exist.")
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArgumentsArr(cli.Argument{Value: &cmd.paths, Name: "path", Required: true, Placeholder: dirPathsPlaceHolder, Description: "The paths to the directories."})
 }
 
 // Run executes the command.
@@ -73,20 +73,4 @@ func (cmd *MkDirCommand) createDirectory(client secrethub.ClientInterface, path 
 	}
 	_, err = client.Dirs().Create(dirPath.Value())
 	return err
-}
-
-// dirPathList represents the value of a repeatable directory path argument.
-type dirPathList []string
-
-func (d *dirPathList) String() string {
-	return ""
-}
-
-func (d *dirPathList) Set(path string) error {
-	*d = append(*d, path)
-	return nil
-}
-
-func (d *dirPathList) IsCumulative() bool {
-	return true
 }

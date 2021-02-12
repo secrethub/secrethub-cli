@@ -4,8 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -13,7 +14,7 @@ import (
 type CredentialDisableCommand struct {
 	io          ui.IO
 	force       bool
-	fingerprint string
+	fingerprint cli.StringValue
 	newClient   newClientFunc
 }
 
@@ -26,15 +27,16 @@ func NewCredentialDisableCommand(io ui.IO, newClient newClientFunc) *CredentialD
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *CredentialDisableCommand) Register(r command.Registerer) {
+func (cmd *CredentialDisableCommand) Register(r cli.Registerer) {
 	clause := r.Command("disable", "Disable a credential for usage on SecretHub.")
 
 	fingerprintHelp := fmt.Sprintf("Fingerprint of the credential to disable. At least the first %d characters must be entered.", api.ShortCredentialFingerprintMinimumLength)
-	clause.Arg("fingerprint", fingerprintHelp).StringVar(&cmd.fingerprint)
+	registerForceFlag(clause, &cmd.force)
 
-	registerForceFlag(clause).BoolVar(&cmd.force)
-
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.fingerprint, Name: "fingerprint", Required: false, Description: fingerprintHelp},
+	})
 }
 
 // Run disables an existing credential.
@@ -45,17 +47,17 @@ func (cmd *CredentialDisableCommand) Run() error {
 	}
 
 	fingerprint := cmd.fingerprint
-	if fingerprint == "" {
+	if fingerprint.Value == "" {
 		if cmd.force {
 			return errors.New("fingerprint argument must be set when using --force")
 		}
-		fingerprint, err = ui.AskAndValidate(cmd.io, "What is the fingerprint of the credential you want to disable? ", 3, api.ValidateShortCredentialFingerprint)
+		fingerprint.Value, err = ui.AskAndValidate(cmd.io, "What is the fingerprint of the credential you want to disable? ", 3, api.ValidateShortCredentialFingerprint)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = api.ValidateShortCredentialFingerprint(fingerprint)
+	err = api.ValidateShortCredentialFingerprint(fingerprint.Value)
 	if err != nil {
 		return err
 	}
@@ -65,7 +67,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 			"This process can currently not be reversed.")
 
 	if !cmd.force {
-		ok, err := ui.AskYesNo(cmd.io, fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s?", fingerprint), ui.DefaultNo)
+		ok, err := ui.AskYesNo(cmd.io, fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s?", fingerprint.Value), ui.DefaultNo)
 		if err != nil {
 			return err
 		}
@@ -75,7 +77,7 @@ func (cmd *CredentialDisableCommand) Run() error {
 		}
 	}
 
-	err = client.Credentials().Disable(fingerprint)
+	err = client.Credentials().Disable(fingerprint.Value)
 	if err != nil {
 		return err
 	}

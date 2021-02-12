@@ -7,7 +7,9 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/masker"
 	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
@@ -16,7 +18,6 @@ import (
 	"github.com/secrethub/secrethub-go/internals/errio"
 
 	"github.com/secrethub/secrethub-cli/internals/cli/validation"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // Errors
@@ -50,7 +51,7 @@ const (
 type RunCommand struct {
 	io                   ui.IO
 	osEnv                []string
-	command              []string
+	command              cli.StringListValue
 	environment          *environment
 	noMasking            bool
 	maskerOptions        masker.Options
@@ -69,7 +70,7 @@ func NewRunCommand(io ui.IO, newClient newClientFunc) *RunCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RunCommand) Register(r command.Registerer) {
+func (cmd *RunCommand) Register(r cli.Registerer) {
 	const helpShort = "Pass secrets as environment variables to a process."
 	const helpLong = "To protect against secrets leaking via stdout and stderr, those output streams are monitored for secrets. Detected secrets are automatically masked by replacing them with \"" + maskString + "\". " +
 		"The output is buffered to scan for secrets and can be adjusted using the masking-buffer-period flag. " +
@@ -78,13 +79,13 @@ func (cmd *RunCommand) Register(r command.Registerer) {
 	clause := r.Command("run", helpShort)
 	clause.HelpLong(helpLong)
 	clause.Alias("exec")
-	clause.Arg("command", "The command to execute").Required().StringsVar(&cmd.command)
-	clause.Flag("no-masking", "Disable masking of secrets on stdout and stderr").BoolVar(&cmd.noMasking)
-	clause.Flag("no-output-buffering", "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.").BoolVar(&cmd.maskerOptions.DisableBuffer)
-	clause.Flag("masking-buffer-period", "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.").Default("50ms").DurationVar(&cmd.maskerOptions.BufferDelay)
-	clause.Flag("ignore-missing-secrets", "Do not return an error when a secret does not exist and use an empty value instead.").BoolVar(&cmd.ignoreMissingSecrets)
+	clause.Flags().BoolVar(&cmd.noMasking, "no-masking", false, "Disable masking of secrets on stdout and stderr")
+	clause.Flags().BoolVar(&cmd.maskerOptions.DisableBuffer, "no-output-buffering", false, "Disable output buffering. This increases output responsiveness, but decreases the probability that secrets get masked.")
+	clause.Flags().DurationVar(&cmd.maskerOptions.BufferDelay, "masking-buffer-period", time.Millisecond*50, "The time period for which output is buffered. A higher value increases the probability that secrets get masked but decreases output responsiveness.")
+	clause.Flags().BoolVar(&cmd.ignoreMissingSecrets, "ignore-missing-secrets", false, "Do not return an error when a secret does not exist and use an empty value instead.")
 	cmd.environment.register(clause)
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArgumentsArr(cli.Argument{Value: &cmd.command, Name: "command", Required: true, Description: "The command to execute"})
 }
 
 // Run reads files from the .secretsenv/<env-name> directory, sets them as environment variables and runs the given command.

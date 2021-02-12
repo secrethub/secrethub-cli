@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/cloneproc"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -17,7 +17,7 @@ const defaultClearClipboardAfter = 45 * time.Second
 // ClearClipboardCommand is a command to clear the contents of the clipboard after some time passed.
 type ClearClipboardCommand struct {
 	clipper clip.Clipper
-	hash    []byte
+	hash    cli.ByteValue
 	timeout time.Duration
 }
 
@@ -29,12 +29,14 @@ func NewClearClipboardCommand() *ClearClipboardCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ClearClipboardCommand) Register(r command.Registerer) {
+func (cmd *ClearClipboardCommand) Register(r cli.Registerer) {
 	clause := r.Command("clipboard-clear", "Removes secret from clipboard.").Hidden()
-	clause.Arg("hash", "Hash from the secret to be cleared").Required().HexBytesVar(&cmd.hash)
-	clause.Flag("timeout", "Time to wait before clearing in seconds").DurationVar(&cmd.timeout)
+	clause.Flags().DurationVar(&cmd.timeout, "timeout", 0, "Time to wait before clearing in seconds")
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.hash, Name: "hash", Required: true, Description: "Hash from the secret to be cleared."},
+	})
 }
 
 // Run handles the command with the options as specified in the command.

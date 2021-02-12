@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -22,7 +22,7 @@ var (
 // RepoExportCommand exports a repo to a zip file.
 type RepoExportCommand struct {
 	path      api.RepoPath
-	zipName   string
+	zipName   cli.StringValue
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -36,22 +36,24 @@ func NewRepoExportCommand(io ui.IO, newClient newClientFunc) *RepoExportCommand 
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoExportCommand) Register(r command.Registerer) {
+func (cmd *RepoExportCommand) Register(r cli.Registerer) {
 	clause := r.Command("export", "Export the repository to a zip file.")
-	clause.Arg("repo-path", "The repository to export").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("zip-file-name", "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS").StringVar(&cmd.zipName)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to export."},
+		{Value: &cmd.zipName, Name: "zip-file-name", Required: false, Description: "The file name to assign to the exported .zip file. Defaults to secrethub_export_<namespace>_<repo>_<timestamp>.zip with the timestamp formatted as YYYYMMDD_HHMMSS"},
+	})
 }
 
 // Run exports a repo to a zip file
 func (cmd *RepoExportCommand) Run() error {
-	if cmd.zipName == "" {
+	if cmd.zipName.Value == "" {
 		// secrethub_export_repo_date_time.zip
-		cmd.zipName = fmt.Sprintf("%s_export_%s_%s.zip", ApplicationName, cmd.path.GetRepo(), time.Now().Format("20060102_150405"))
+		cmd.zipName.Value = fmt.Sprintf("%s_export_%s_%s.zip", ApplicationName, cmd.path.GetRepo(), time.Now().Format("20060102_150405"))
 	}
 
-	_, err := os.Stat(cmd.zipName)
+	_, err := os.Stat(cmd.zipName.Value)
 	if err == nil {
 		return ErrExportAlreadyExists
 	}
@@ -85,7 +87,7 @@ func (cmd *RepoExportCommand) Run() error {
 		return err
 	}
 
-	zipFile, err := os.Create(cmd.zipName)
+	zipFile, err := os.Create(cmd.zipName.Value)
 	if err != nil {
 		return err
 	}

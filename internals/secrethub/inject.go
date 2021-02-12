@@ -7,13 +7,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
-
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+	"github.com/secrethub/secrethub-cli/internals/secrethub/tpl"
 
 	"github.com/docker/go-units"
 )
@@ -50,30 +49,32 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 		io:                  io,
 		newClient:           newClient,
 		templateVars:        make(map[string]string),
+		fileMode:            filemode.New(0600),
 	}
 }
 
 // Register adds a CommandClause and it's args and flags to a cli.App.
 // Register adds args and flags.
-func (cmd *InjectCommand) Register(r command.Registerer) {
+func (cmd *InjectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inject", "Inject secrets into a template.")
-	clause.Flag(
-		"clip",
+	clause.Flags().BoolVarP(&cmd.useClipboard,
+		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the injected template to the clipboard instead of stdout. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
-		),
-	).Short('c').BoolVar(&cmd.useClipboard)
-	clause.Flag("in-file", "The filename of a template file to inject.").Short('i').StringVar(&cmd.inFile)
-	clause.Flag("out-file", "Write the injected template to a file instead of stdout.").Short('o').StringVar(&cmd.outFile)
-	clause.Flag("file", "").Hidden().StringVar(&cmd.outFile) // Alias of --out-file (for backwards compatibility)
-	clause.Flag("file-mode", "Set filemode for the output file if it does not yet exist. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
-	clause.Flag("var", "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod").Short('v').StringMapVar(&cmd.templateVars)
-	clause.Flag("template-version", "The template syntax version to be used. The options are v1, v2, latest or auto to automatically detect the version.").Default("auto").StringVar(&cmd.templateVersion)
-	clause.Flag("no-prompt", "Do not prompt when a template variable is missing and return an error instead.").BoolVar(&cmd.dontPromptMissingTemplateVars)
-	clause.Flag("force", "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.").Short('f').BoolVar(&cmd.force)
+		))
+	clause.Flags().StringVarP(&cmd.inFile, "in-file", "i", "", "The filename of a template file to inject.")
+	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the injected template to a file instead of stdout.")
+	clause.Flags().StringVar(&cmd.outFile, "file", "", "") // Alias of --out-file (for backwards compatibility)
+	clause.Cmd.Flag("file").Hidden = true
+	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the output file if it does not yet exist. It is ignored without the --out-file flag.")
+	clause.Flags().StringToStringVarP(&cmd.templateVars, "var", "v", nil, "Define the value for a template variable with `VAR=VALUE`, e.g. --var env=prod")
+	clause.Flags().StringVar(&cmd.templateVersion, "template-version", "auto", "Do not prompt when a template variable is missing and return an error instead.")
+	clause.Flags().BoolVar(&cmd.dontPromptMissingTemplateVars, "no-prompt", false, "Do not prompt when a template variable is missing and return an error instead.")
+	clause.Flags().BoolVarP(&cmd.force, "force", "f", false, "Overwrite the output file if it already exists, without prompting for confirmation. This flag is ignored if no --out-file is supplied.")
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -135,7 +136,10 @@ func (cmd *InjectCommand) Run() error {
 			return err
 		}
 
-		fmt.Fprintln(cmd.io.Output(), fmt.Sprintf("Copied injected template to clipboard. It will be cleared after %s.", units.HumanDuration(cmd.clearClipboardAfter)))
+		_, err = fmt.Fprintf(cmd.io.Output(), "Copied injected template to clipboard. It will be cleared after %s.\n", units.HumanDuration(cmd.clearClipboardAfter))
+		if err != nil {
+			return err
+		}
 	} else if cmd.outFile != "" {
 		_, err := os.Stat(cmd.outFile)
 		if err == nil && !cmd.force {

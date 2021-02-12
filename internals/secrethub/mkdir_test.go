@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -135,7 +136,7 @@ func TestMkDirCommand(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			io := fakeui.NewIO(t)
-			dirPaths := dirPathList{}
+			dirPaths := cli.StringListValue{}
 			for _, path := range tc.paths {
 				_ = dirPaths.Set(path)
 			}

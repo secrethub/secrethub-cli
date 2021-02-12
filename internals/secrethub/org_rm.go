@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -26,12 +26,12 @@ func NewOrgRmCommand(io ui.IO, newClient newClientFunc) *OrgRmCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgRmCommand) Register(r command.Registerer) {
+func (cmd *OrgRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Permanently delete an organization and all the repositories it owns.")
 	clause.Alias("remove")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.name, Name: "org-name", Required: true, Description: "The organization name."}})
 }
 
 // Run deletes an organization, prompting the user for confirmation.

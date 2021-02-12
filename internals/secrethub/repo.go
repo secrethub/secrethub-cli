@@ -1,8 +1,8 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // RepoCommand handles operations on repositories.
@@ -20,7 +20,7 @@ func NewRepoCommand(io ui.IO, newClient newClientFunc) *RepoCommand {
 }
 
 // Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *RepoCommand) Register(r command.Registerer) {
+func (cmd *RepoCommand) Register(r cli.Registerer) {
 	clause := r.Command("repo", "Manage repositories.")
 	clause.Alias("repository")
 	clause.Alias("repos")

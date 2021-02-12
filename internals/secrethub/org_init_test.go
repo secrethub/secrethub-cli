@@ -24,7 +24,7 @@ func TestOrgInitCommand_Run(t *testing.T) {
 	}{
 		"success": {
 			cmd: OrgInitCommand{
-				name:        "company",
+				name:        orgNameValue{"company"},
 				description: "description",
 				force:       true,
 			},
@@ -40,7 +40,7 @@ func TestOrgInitCommand_Run(t *testing.T) {
 		},
 		"new client error": {
 			cmd: OrgInitCommand{
-				name:        "company",
+				name:        orgNameValue{"company"},
 				description: "description",
 				force:       true,
 			},
@@ -49,7 +49,7 @@ func TestOrgInitCommand_Run(t *testing.T) {
 		},
 		"create org error": {
 			cmd: OrgInitCommand{
-				name:        "company",
+				name:        orgNameValue{"company"},
 				description: "description",
 				force:       true,
 			},

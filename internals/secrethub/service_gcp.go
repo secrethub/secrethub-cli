@@ -1,8 +1,8 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // ServiceGCPCommand handles GCP services.
@@ -20,7 +20,7 @@ func NewServiceGCPCommand(io ui.IO, newClient newClientFunc) *ServiceGCPCommand 
 }
 
 // Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *ServiceGCPCommand) Register(r command.Registerer) {
+func (cmd *ServiceGCPCommand) Register(r cli.Registerer) {
 	clause := r.Command("gcp", "Manage GCP service accounts.")
 	NewServiceGCPInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewServiceGCPLsCommand(cmd.io, cmd.newClient).Register(clause)

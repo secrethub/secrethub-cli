@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // Errors
@@ -29,9 +29,10 @@ func NewSignUpCommand(io ui.IO) *SignUpCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *SignUpCommand) Register(r command.Registerer) {
+func (cmd *SignUpCommand) Register(r cli.Registerer) {
 	clause := r.Command("signup", "Create a free personal developer account.").Hidden()
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run signs up a new user and configures his account for use on this machine.

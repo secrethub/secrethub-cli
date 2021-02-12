@@ -5,7 +5,6 @@ import (
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -28,11 +27,13 @@ func NewOrgInspectCommand(io ui.IO, newClient newClientFunc) *OrgInspectCommand 
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgInspectCommand) Register(r command.Registerer) {
+func (cmd *OrgInspectCommand) Register(r cli.Registerer) {
 	clause := r.Command("inspect", "Show the details of an organization.")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.name)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.name, Name: "org-name", Required: true, Description: "The organization name."},
+	})
 }
 
 // Run prints out the details of an organization.

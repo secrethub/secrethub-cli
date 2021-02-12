@@ -5,8 +5,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -59,14 +59,14 @@ func NewServiceGCPLsCommand(io ui.IO, newClient newClientFunc) *ServiceLsCommand
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceLsCommand) Register(r command.Registerer) {
+func (cmd *ServiceLsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", cmd.help)
 	clause.Alias("list")
-	clause.Arg("repo-path", "The path to the repository to list services for").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repoPath)
-	clause.Flag("quiet", "Only print service IDs.").Short('q').BoolVar(&cmd.quiet)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print service IDs.")
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.repoPath, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The path to the repository to list services for"}})
 }
 
 // Run lists all service accounts in a given repository.

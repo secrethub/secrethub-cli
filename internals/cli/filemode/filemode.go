@@ -18,6 +18,10 @@ var (
 // so that the file mode can be parsed from a flag.
 type FileMode os.FileMode
 
+func (m *FileMode) Type() string {
+	return "filemode"
+}
+
 // New creates a new FileMode.
 func New(fileMode os.FileMode) FileMode {
 	return FileMode(fileMode)

@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -12,7 +12,7 @@ import (
 // OrgInviteCommand handles inviting a user to an organization.
 type OrgInviteCommand struct {
 	orgName   api.OrgName
-	username  string
+	username  cli.StringValue
 	role      string
 	force     bool
 	io        ui.IO
@@ -28,21 +28,23 @@ func NewOrgInviteCommand(io ui.IO, newClient newClientFunc) *OrgInviteCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgInviteCommand) Register(r command.Registerer) {
+func (cmd *OrgInviteCommand) Register(r cli.Registerer) {
 	clause := r.Command("invite", "Invite a user to join an organization.")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
-	clause.Arg("username", "The username of the user to invite").Required().StringVar(&cmd.username)
-	clause.Flag("role", "Assign a role to the invited member. This can be either `admin` or `member`. It defaults to `member`.").Default("member").StringVar(&cmd.role)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	clause.Flags().StringVar(&cmd.role, "role", "member", "Assign a role to the invited member. This can be either `admin` or `member`.")
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
+		{Value: &cmd.username, Name: "username", Required: true, Description: "The username of the user to invite."},
+	})
 }
 
 // Run invites a user to an organization and gives them a certain role.
 func (cmd *OrgInviteCommand) Run() error {
 	if !cmd.force {
 		msg := fmt.Sprintf("Are you sure you want to invite %s to the %s organization?",
-			cmd.username,
+			cmd.username.Value,
 			cmd.orgName)
 
 		confirmed, err := ui.AskYesNo(cmd.io, msg, ui.DefaultNo)
@@ -63,7 +65,7 @@ func (cmd *OrgInviteCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output(), "Inviting user...")
 
-	resp, err := client.Orgs().Members().Invite(cmd.orgName.Value(), cmd.username, cmd.role)
+	resp, err := client.Orgs().Members().Invite(cmd.orgName.Value(), cmd.username.Value, cmd.role)
 	if err != nil {
 		return err
 	}

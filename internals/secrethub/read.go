@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 
@@ -39,25 +39,27 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 		io:                  io,
 		newClient:           newClient,
 		writeFileFunc:       ioutil.WriteFile,
+		fileMode:            filemode.New(0600),
 	}
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ReadCommand) Register(r command.Registerer) {
+func (cmd *ReadCommand) Register(r cli.Registerer) {
 	clause := r.Command("read", "Read a secret.")
-	clause.Arg("secret-path", "The path to the secret").Required().PlaceHolder(secretPathOptionalVersionPlaceHolder).SetValue(&cmd.path)
-	clause.Flag(
-		"clip",
+
+	clause.Flags().BoolVarP(&cmd.useClipboard,
+		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",
 			units.HumanDuration(cmd.clearClipboardAfter),
 		),
-	).Short('c').BoolVar(&cmd.useClipboard)
-	clause.Flag("out-file", "Write the secret value to this file.").Short('o').StringVar(&cmd.outFile)
-	clause.Flag("file-mode", "Set filemode for the output file. Defaults to 0600 (read and write for current user) and is ignored without the --out-file flag.").Default("0600").SetValue(&cmd.fileMode)
-	clause.Flag("no-newline", "Do not print a new line after the secret.").Short('n').BoolVar(&cmd.noNewLine)
+	)
+	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.")
+	clause.Flags().BoolVarP(&cmd.noNewLine, "no-newline", "n", false, "Do not print a new line after the secret")
+	clause.Flags().VarPF(&cmd.fileMode, "file-mode", "", "Set filemode for the output file. It is ignored without the --out-file flag.")
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "path", Placeholder: secretPathOptionalVersionPlaceHolder, Required: true, Description: "The path to the secret."}})
 }
 
 // Run handles the command with the options as specified in the command.
@@ -78,7 +80,7 @@ func (cmd *ReadCommand) Run() error {
 			return err
 		}
 
-		fmt.Fprintf(
+		_, _ = fmt.Fprintf(
 			cmd.io.Output(),
 			"Copied %s to clipboard. It will be cleared after %s.\n",
 			cmd.path,
@@ -99,7 +101,7 @@ func (cmd *ReadCommand) Run() error {
 	}
 
 	if cmd.outFile == "" && !cmd.useClipboard {
-		fmt.Fprintf(cmd.io.Output(), "%s", string(secretData))
+		_, _ = fmt.Fprintf(cmd.io.Output(), "%s", string(secretData))
 	}
 
 	return nil

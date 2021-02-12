@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -36,7 +37,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 	}{
 		"fail force no credential": {
 			cmd: CredentialDisableCommand{
-				fingerprint: "",
+				fingerprint: cli.StringValue{Value: ""},
 				force:       true,
 			},
 			expectedErr: errors.New("fingerprint argument must be set when using --force"),
@@ -47,7 +48,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		},
 		"fail empty credential 3 times": {
 			cmd: CredentialDisableCommand{
-				fingerprint: "",
+				fingerprint: cli.StringValue{Value: ""},
 				force:       false,
 			},
 			expectedPromptOut: "What is the fingerprint of the credential you want to disable? \n" +
@@ -62,7 +63,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		},
 		"fail abort": {
 			cmd: CredentialDisableCommand{
-				fingerprint: validFingerprint,
+				fingerprint: cli.StringValue{Value: validFingerprint},
 				force:       false,
 			},
 			expectedPromptOut: fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s? [y/N]: ", validFingerprint),
@@ -75,28 +76,28 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		},
 		"fail force wrong credential": {
 			cmd: CredentialDisableCommand{
-				fingerprint: "BillyBoy",
+				fingerprint: cli.StringValue{Value: "BillyBoy"},
 				force:       true,
 			},
 			expectedErr: api.ErrInvalidFingerprint,
 		},
 		"fail too short fingerprint": {
 			cmd: CredentialDisableCommand{
-				fingerprint: "6254",
+				fingerprint: cli.StringValue{Value: "6254"},
 				force:       true,
 			},
 			expectedErr: api.ErrTooShortFingerprint,
 		},
 		"succeed force": {
 			cmd: CredentialDisableCommand{
-				fingerprint: validFingerprint,
+				fingerprint: cli.StringValue{Value: validFingerprint},
 				force:       true,
 			},
 			expectedOut: warningMessage + "Credential disabled.\n",
 		},
 		"succeed no force": {
 			cmd: CredentialDisableCommand{
-				fingerprint: validFingerprint,
+				fingerprint: cli.StringValue{Value: validFingerprint},
 				force:       false,
 			},
 			expectedPromptOut: fmt.Sprintf("Are you sure you want to disable the credential with fingerprint %s? [y/N]: ", validFingerprint),
@@ -105,7 +106,7 @@ func TestCredentialDisableCommand_Run(t *testing.T) {
 		},
 		"fail disable error": {
 			cmd: CredentialDisableCommand{
-				fingerprint: "62542d734d7f3628",
+				fingerprint: cli.StringValue{Value: "62542d734d7f3628"},
 				force:       true,
 			},
 			expectedOut: warningMessage,

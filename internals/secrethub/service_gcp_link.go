@@ -7,9 +7,10 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/progress"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
+
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
@@ -49,10 +50,8 @@ func (cmd *ServiceGCPLinkCommand) Run() error {
 	return createGCPLink(client, cmd.io, cmd.namespace.String(), cmd.projectID.String())
 }
 
-func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
+func (cmd *ServiceGCPLinkCommand) Register(r cli.Registerer) {
 	clause := r.Command("link", "Create a new link between a namespace and a GCP project to allow creating SecretHub service accounts for GCP Service Accounts in the GCP project.")
-	clause.Arg("namespace", "The SecretHub namespace to link.").Required().SetValue(&cmd.namespace)
-	clause.Arg("project-id", "The GCP project to link the namespace to.").Required().SetValue(&cmd.projectID)
 
 	clause.HelpLong("Linking a GCP project to a namespace is required to create SecretHub service accounts that use a GCP Service Account within the project. " +
 		"A SecretHub namespace can be linked to multiple GCP projects and a GCP project can be linked to multiple namespaces.\n" +
@@ -69,7 +68,11 @@ func (cmd *ServiceGCPLinkCommand) Register(r command.Registerer) {
 		"Any reference to SecretHub should automatically disappear within a few minutes. " +
 		"If it does not, the access can safely be revoked manually.")
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.namespace, Name: "namespace", Required: true, Description: "The SecretHub namespace to link."},
+		{Value: &cmd.projectID, Name: "project-id", Required: true, Description: "The GCP project to link the namespace to."},
+	})
 }
 
 // ServiceGCPListLinksCommand lists all existing links between the given namespace and GCP projects
@@ -120,13 +123,12 @@ func (cmd *ServiceGCPListLinksCommand) Run() error {
 	return nil
 }
 
-func (cmd *ServiceGCPListLinksCommand) Register(r command.Registerer) {
+func (cmd *ServiceGCPListLinksCommand) Register(r cli.Registerer) {
 	clause := r.Command("list-links", "List all existing links between the given namespace and GCP projects.")
-	clause.Arg("namespace", "The namespace for which to list all existing links to GCP projects.").Required().SetValue(&cmd.namespace)
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
-
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.namespace, Name: "namespace", Required: true, Description: "The namespace for which to list all existing links to GCP projects."}})
 }
 
 // ServiceGCPDeleteLinkCommand deletes the link between a SecretHub namespace and a GCP project.
@@ -144,13 +146,15 @@ func NewServiceGCPDeleteLinkCommand(io ui.IO, newClient newClientFunc) *ServiceG
 	}
 }
 
-func (cmd *ServiceGCPDeleteLinkCommand) Register(r command.Registerer) {
+func (cmd *ServiceGCPDeleteLinkCommand) Register(r cli.Registerer) {
 	clause := r.Command("delete-link", "Delete the link between a SecretHub namespace and a GCP project.")
 	clause.HelpLong("After deleting the link you cannot create new GCP service accounts in the specified namespace and GCP project anymore. Exisiting service accounts will keep on working.")
-	clause.Arg("namespace", "The SecretHub namespace to delete the link from.").Required().SetValue(&cmd.namespace)
-	clause.Arg("project-id", "The GCP project to delete the link to.").Required().SetValue(&cmd.projectID)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.namespace, Name: "namespace", Required: true, Description: "The SecretHub namespace to delete the link from."},
+		{Value: &cmd.projectID, Name: "project-id", Required: true, Description: "The GCP project to delete the link to."},
+	})
 }
 
 func (cmd *ServiceGCPDeleteLinkCommand) Run() error {

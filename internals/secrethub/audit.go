@@ -3,21 +3,19 @@ package secrethub
 import (
 	"fmt"
 	"io"
-	"strconv"
 
-	"github.com/secrethub/secrethub-go/internals/errio"
+	"github.com/secrethub/secrethub-cli/internals/cli"
+	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 
 	"github.com/secrethub/secrethub-cli/internals/secrethub/pager"
 
-	"golang.org/x/crypto/ssh/terminal"
-
+	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/internals/errio"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-	"github.com/secrethub/secrethub-go/pkg/secrethub"
-
-	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 var (
@@ -60,20 +58,26 @@ func NewAuditCommand(io ui.IO, newClient newClientFunc) *AuditCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *AuditCommand) Register(r command.Registerer) {
+func (cmd *AuditCommand) Register(r cli.Registerer) {
 	defaultLimit := -1
 	if cmd.io.IsOutputPiped() {
 		defaultLimit = pipedOutputLineLimit
 	}
 
 	clause := r.Command("audit", "Show the audit log.")
-	clause.Arg("repo-path or secret-path", "Path to the repository or the secret to audit "+repoPathPlaceHolder+" or "+secretPathPlaceHolder).SetValue(&cmd.path)
-	clause.Flag("per-page", "Number of audit events shown per page").Default("20").Hidden().IntVar(&cmd.perPage)
-	clause.Flag("output-format", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.").HintOptions("table", "json").Default("table").StringVar(&cmd.format)
-	clause.Flag("max-results", "Specify the number of entries to list. If maxResults < 0 all entries are displayed. If the output of the command is piped, maxResults defaults to 1000.").Default(strconv.Itoa(defaultLimit)).IntVar(&cmd.maxResults)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	clause.Flags().IntVar(&cmd.perPage, "per-page", 20, "Number of audit events shown per page")
+	clause.Cmd.Flag("per-page").Hidden = true
+	clause.Flags().StringVar(&cmd.format, "output-format", "table", "Specify the format in which to output the log. Options are: table and json. If the output of the command is parsed by a script an alternative of the table format must be used.")
+	_ = clause.Cmd.RegisterFlagCompletionFunc("output-format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"table", "json"}, cobra.ShellCompDirectiveDefault
+	})
+	clause.Flags().IntVar(&cmd.maxResults, "max-results", defaultLimit, "Specify the number of entries to list. If maxResults < 0 all entries are displayed. If the output of the command is piped, maxResults defaults to 1000.")
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.path, Name: "path", Required: true, Description: "Path to the repository or the secret to audit " + repoPathPlaceHolder + " or " + secretPathPlaceHolder, Placeholder: optionalSecretPathPlaceHolder},
+	})
 }
 
 // Run prints all audit events for the given repository or secret.

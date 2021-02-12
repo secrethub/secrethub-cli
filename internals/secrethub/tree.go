@@ -5,8 +5,8 @@ import (
 	"io"
 	"sort"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -46,16 +46,16 @@ func (cmd *TreeCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *TreeCommand) Register(r command.Registerer) {
+func (cmd *TreeCommand) Register(r cli.Registerer) {
 	clause := r.Command("tree", "List contents of a directory in a tree-like format.")
-	clause.Arg("dir-path", "The path to to show contents for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
 
-	clause.Flag("full-paths", "Print the full path of each directory and secret.").Short('f').BoolVar(&cmd.fullPaths)
-	clause.Flag("no-indentation", "Don't print indentation lines.").Short('i').BoolVar(&cmd.noIndentation)
-	clause.Flag("no-report", "Turn off secret/directory count at end of tree listing.").BoolVar(&cmd.noReport)
-	clause.Flag("noreport", "Turn off secret/directory count at end of tree listing.").Hidden().BoolVar(&cmd.noReport)
+	clause.Flags().BoolVarP(&cmd.fullPaths, "full-paths", "f", false, "Print the full path of each directory and secret.")
+	clause.Flags().BoolVarP(&cmd.noIndentation, "no-indentation", "i", false, "Do not use the standard indentation.")
+	clause.Flags().BoolVar(&cmd.noReport, "no-report", false, "Turn off secret/directory count at end of tree listing.")
+	clause.Flags().BoolVar(&cmd.noReport, "noreport", false, "Turn off secret/directory count at end of tree listing.").Hidden()
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path to to show contents for."}})
 }
 
 // printTree recursively prints the tree's contents in a tree-like structure.

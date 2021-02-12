@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
@@ -40,13 +41,13 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg: testPath,
+				firstArg: cli.StringValue{Value: testPath},
 				clipper:  fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
 			},
-			path:        "namespace/repo/secret",
+			path:        api.SecretPath(testPath),
 			data:        testData,
 			expectedErr: nil,
 			expectedOut: "A randomly generated secret has been written to namespace/repo/secret:1.\n",
@@ -57,14 +58,14 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg:        testPath,
+				firstArg:        cli.StringValue{Value: testPath},
 				copyToClipboard: true,
 				clipper:         fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
 			},
-			path:         "namespace/repo/secret",
+			path:         api.SecretPath(testPath),
 			data:         testData,
 			expectedClip: testData,
 			expectedOut: "A randomly generated secret has been written to namespace/repo/secret:1.\n" +
@@ -76,14 +77,14 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg:   testPath,
+				firstArg:   cli.StringValue{Value: testPath},
 				lengthFlag: newIntValue(24),
 				clipper:    fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
 			},
-			path:        "namespace/repo/secret",
+			path:        api.SecretPath(testPath),
 			data:        testData,
 			expectedErr: nil,
 			expectedOut: "A randomly generated secret has been written to namespace/repo/secret:1.\n",
@@ -94,8 +95,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg:   "rand",
-				secondArg:  testPath,
+				firstArg:   cli.StringValue{Value: "rand"},
+				secondArg:  cli.StringValue{Value: testPath},
 				lengthFlag: newIntValue(24),
 				lengthArg:  newIntValue(24),
 				clipper:    fakeclip.New(),
@@ -108,23 +109,23 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg:  "rand",
-				secondArg: testPath,
+				firstArg:  cli.StringValue{Value: "rand"},
+				secondArg: cli.StringValue{Value: testPath},
 				lengthArg: newIntValue(23),
 				clipper:   fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return &api.SecretVersion{Version: 1}, nil
 			},
-			path:        "namespace/repo/secret",
+			path:        api.SecretPath(testPath),
 			data:        testData,
 			expectedErr: nil,
 			expectedOut: "A randomly generated secret has been written to namespace/repo/secret:1.\n",
 		},
 		"length arg 0": {
 			cmd: GenerateSecretCommand{
-				firstArg:  "rand",
-				secondArg: testPath,
+				firstArg:  cli.StringValue{Value: "rand"},
+				secondArg: cli.StringValue{Value: testPath},
 				lengthArg: newIntValue(0),
 				clipper:   fakeclip.New(),
 			},
@@ -133,8 +134,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		},
 		"length arg negative": {
 			cmd: GenerateSecretCommand{
-				firstArg:  "rand",
-				secondArg: testPath,
+				firstArg:  cli.StringValue{Value: "rand"},
+				secondArg: cli.StringValue{Value: testPath},
 				lengthArg: newIntValue(-1),
 				clipper:   fakeclip.New(),
 			},
@@ -144,7 +145,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		// The length arg is only for backwards compatibility of the `generate rand` command.
 		"length arg without rand": {
 			cmd: GenerateSecretCommand{
-				firstArg:  testPath,
+				firstArg:  cli.StringValue{Value: testPath},
 				lengthArg: newIntValue(24),
 				clipper:   fakeclip.New(),
 			},
@@ -153,8 +154,8 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 		// The second arg should only be used to supply the path when the first arg is `rand` (backwards compatibility).
 		"second arg without rand": {
 			cmd: GenerateSecretCommand{
-				firstArg:  testPath,
-				secondArg: "namespace/repo/secret2",
+				firstArg:  cli.StringValue{Value: testPath},
+				secondArg: cli.StringValue{Value: "namespace/repo/secret2"},
 				clipper:   fakeclip.New(),
 			},
 			expectedErr: errors.New("unexpected namespace/repo/secret2"),
@@ -165,7 +166,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: nil,
 					Err: testErr,
 				},
-				firstArg: testPath,
+				firstArg: cli.StringValue{Value: testPath},
 				clipper:  fakeclip.New(),
 			},
 			expectedErr: testErr,
@@ -176,7 +177,7 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg: testPath,
+				firstArg: cli.StringValue{Value: testPath},
 				clipper:  fakeclip.New(),
 			},
 			newClientErr: testErr,
@@ -188,13 +189,13 @@ func TestGenerateSecretCommand_run(t *testing.T) {
 					Ret: testData,
 					Err: nil,
 				},
-				firstArg: testPath,
+				firstArg: cli.StringValue{Value: testPath},
 				clipper:  fakeclip.New(),
 			},
 			writeFunc: func(path string, data []byte) (*api.SecretVersion, error) {
 				return nil, testErr
 			},
-			path:        "namespace/repo/secret",
+			path:        api.SecretPath(testPath),
 			data:        testData,
 			expectedErr: testErr,
 		},

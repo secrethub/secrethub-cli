@@ -5,7 +5,24 @@ jobs:
       - image: golangci/golangci-lint:v1.23.8-alpine
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - go-modules-{{ checksum "go.mod" }}
+      - run: go mod download
+      - save_cache:
+          key: go-modules-{{ checksum "go.mod" }}
+          paths:
+            - /go/pkg/mod
+      - restore_cache:
+          keys:
+            - golangci-lint-{{ .Branch }}
+            - golangci-lint-develop
       - run: golangci-lint run
+      - save_cache:
+          key: golangci-lint-{{ .Branch }}
+          paths:
+            - ~/.cache/golangci-lint
+            - ~/.cache/go-build
   verify-build:
     parameters:
       os:

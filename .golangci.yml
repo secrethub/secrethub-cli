@@ -24,3 +24,5 @@ linters:
     - unconvert
 disable-all: true
 exclude-use-defaults: false
+run:
+  timeout: 5m

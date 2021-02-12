@@ -13,7 +13,16 @@ jobs:
           key: go-modules-{{ checksum "go.mod" }}
           paths:
             - /go/pkg/mod
+      - restore_cache:
+          keys:
+            - golangci-lint-{{ .Branch }}
+            - golangci-lint-develop
       - run: golangci-lint run
+      - save_cache:
+          key: golangci-lint-{{ .Branch }}
+          paths:
+            - ~/.cache/golangci-lint
+            - ~/.cache/go-build
   verify-build:
     parameters:
       os:

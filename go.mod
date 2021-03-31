@@ -14,7 +14,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/secrethub/demo-app v0.5.1-0.20210105185858-ad55afc2cb87
-	github.com/secrethub/secrethub-go v0.31.0
+	github.com/secrethub/secrethub-go v0.32.1-0.20210331121623-f1a2cb802118
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/zalando/go-keyring v0.0.0-20190208082241-fbe81aec3a07

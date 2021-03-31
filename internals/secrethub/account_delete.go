@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
@@ -64,6 +65,22 @@ func (cmd *AccountDeleteCommand) Run() error {
 			}
 		}
 		return errors.New("cannot delete account that is a member of an organization. Please leave or delete the following organizations before deleting your account: " + builder.String() + ".")
+	}
+
+	var confirmed bool
+	confirmed, err = ui.ConfirmCaseInsensitive(
+		cmd.io,
+		fmt.Sprintf("[DANGER ZONE] This action cannot be undone. "+
+			"This will permanently delete the account named %s along with all its repositories and secrets. "+
+			"Please type in the name of the account to confirm", account.Name),
+		account.Name.String(),
+	)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Fprintln(cmd.io.Output(), "Name does not match. Aborting.")
+		return nil
 	}
 
 	return client.Accounts().Delete(account.AccountID)

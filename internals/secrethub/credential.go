@@ -27,4 +27,5 @@ func (cmd *CredentialCommand) Register(r cli.Registerer) {
 	NewCredentialListCommand(cmd.io, cmd.clientFactory.NewClient).Register(clause)
 	NewCredentialBackupCommand(cmd.io, cmd.clientFactory.NewClient).Register(clause)
 	NewCredentialDisableCommand(cmd.io, cmd.clientFactory.NewClient).Register(clause)
+	NewCredentialUpdatePassphraseCommand(cmd.io, cmd.credentialStore).Register(clause)
 }

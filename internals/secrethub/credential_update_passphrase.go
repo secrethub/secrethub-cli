@@ -9,21 +9,21 @@ import (
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
 
-type ConfigUpdatePassphraseCommand struct {
+type CredentialUpdatePassphraseCommand struct {
 	io              ui.IO
 	credentialStore CredentialConfig
 }
 
-// NewConfigUpdatePassphraseCommand creates a new ConfigUpdatePassphraseCommand.
-func NewConfigUpdatePassphraseCommand(io ui.IO, credentialStore CredentialConfig) *ConfigUpdatePassphraseCommand {
-	return &ConfigUpdatePassphraseCommand{
+// NewCredentialUpdatePassphraseCommand creates a new CredentialUpdatePassphraseCommand.
+func NewCredentialUpdatePassphraseCommand(io ui.IO, credentialStore CredentialConfig) *CredentialUpdatePassphraseCommand {
+	return &CredentialUpdatePassphraseCommand{
 		io:              io,
 		credentialStore: credentialStore,
 	}
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ConfigUpdatePassphraseCommand) Register(r cli.Registerer) {
+func (cmd *CredentialUpdatePassphraseCommand) Register(r cli.Registerer) {
 	clause := r.Command("update-passphrase", "Update the passphrase of your local key credential file.")
 
 	clause.BindAction(cmd.Run)
@@ -31,7 +31,7 @@ func (cmd *ConfigUpdatePassphraseCommand) Register(r cli.Registerer) {
 }
 
 // Run upgrades the configuration in the profile directory to the new version.
-func (cmd *ConfigUpdatePassphraseCommand) Run() error {
+func (cmd *CredentialUpdatePassphraseCommand) Run() error {
 	if !cmd.credentialStore.ConfigDir().Credential().Exists() {
 		fmt.Println("No credentials. Nothing to do.")
 		return nil

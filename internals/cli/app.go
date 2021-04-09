@@ -317,8 +317,11 @@ func (c *CommandClause) BindArguments(params []Argument) {
 func (c *CommandClause) BindArgumentsArr(param Argument) {
 	c.Args = []Argument{param}
 	c.AddPreRunE(func(cmd *cobra.Command, args []string) error {
-		if err := c.validateArgumentsArrCount(args); err != nil {
-			return err
+		if param.Required {
+			err := c.validateArgumentsArrCount(args)
+			if err != nil {
+				return err
+			}
 		}
 		return ArgumentArrRegister(param, args)
 	})

@@ -1,3 +1,9 @@
+<hr/>
+<p align="center">
+  <sub><img src="https://1password.com/img/logo-v1.svg" alt="1Password" width="20" /></sub> <b>SecretHub has joined 1Password!</b> Find out more on the <a href="https://secrethub.io/blog/secrethub-joins-1password/">SecretHub blog</a>. 🎉
+</p>
+<hr/>
+
 <p align="center">
   <img src="https://secrethub.io/img/github-banner.png?v4" alt="SecretHub" width="400">
 </p>

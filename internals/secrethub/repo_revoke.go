@@ -5,8 +5,8 @@ import (
 	"io"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -29,13 +29,15 @@ func NewRepoRevokeCommand(io ui.IO, newClient newClientFunc) *RepoRevokeCommand 
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoRevokeCommand) Register(r command.Registerer) {
+func (cmd *RepoRevokeCommand) Register(r cli.Registerer) {
 	clause := r.Command("revoke", "Revoke an account's access to a repository. A list of secrets that should be rotated will be printed out.")
-	clause.Arg("repo-path", "The repository to revoke the account from").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("account-name", "The account name (username or service name) to revoke access for").Required().SetValue(&cmd.accountName)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to revoke the account from."},
+		{Value: &cmd.accountName, Name: "account-name", Required: true, Description: "username or service name."},
+	})
 }
 
 // Run removes and revokes access to an account from a repo if possible.

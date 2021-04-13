@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -28,7 +29,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 		"success": {
 			cmd: OrgInviteCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringValue{Value: "dev1"},
 				role:     api.OrgRoleMember,
 			},
 			service: fakeclient.OrgMemberService{
@@ -49,7 +50,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 		"success force": {
 			cmd: OrgInviteCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringValue{Value: "dev1"},
 				role:     api.OrgRoleMember,
 				force:    true,
 			},
@@ -69,7 +70,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 		"abort": {
 			cmd: OrgInviteCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringValue{Value: "dev1"},
 				role:     api.OrgRoleMember,
 			},
 			in:        "n",
@@ -79,7 +80,7 @@ func TestOrgInviteCommand_Run(t *testing.T) {
 		"new client error": {
 			cmd: OrgInviteCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringValue{Value: "dev1"},
 				role:     api.OrgRoleMember,
 				force:    true,
 			},

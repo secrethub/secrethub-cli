@@ -5,8 +5,8 @@ import (
 	"io"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -14,7 +14,7 @@ import (
 // OrgRevokeCommand handles revoking a member from an organization.
 type OrgRevokeCommand struct {
 	orgName   api.OrgName
-	username  string
+	username  cli.StringValue
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -28,12 +28,14 @@ func NewOrgRevokeCommand(io ui.IO, newClient newClientFunc) *OrgRevokeCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgRevokeCommand) Register(r command.Registerer) {
+func (cmd *OrgRevokeCommand) Register(r cli.Registerer) {
 	clause := r.Command("revoke", "Revoke a user from an organization. This automatically revokes the user from all of the organization's repositories. A list of repositories containing secrets that should be rotated will be printed out.")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
-	clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
+		{Value: &cmd.username, Name: "username", Required: true, Description: "The username of the user."},
+	})
 }
 
 // Run revokes an organization member.
@@ -46,7 +48,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 	opts := &api.RevokeOpts{
 		DryRun: true,
 	}
-	planned, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username, opts)
+	planned, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username.Value, opts)
 	if err != nil {
 		return err
 	}
@@ -60,7 +62,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 				"Flagged repositories will contain secrets flagged for rotation, "+
 				"failed repositories require a manual removal or access rule changes before proceeding and "+
 				"OK repos will not require rotation.\n\n",
-			cmd.username,
+			cmd.username.Value,
 			cmd.orgName,
 			len(planned.Repos),
 		)
@@ -79,7 +81,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 		fmt.Fprintf(
 			cmd.io.Output(),
 			"The user %s has no memberships to any of %s's repos and can be safely removed.\n\n",
-			cmd.username,
+			cmd.username.Value,
 			cmd.orgName,
 		)
 	}
@@ -87,7 +89,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 	confirmed, err := ui.ConfirmCaseInsensitive(
 		cmd.io,
 		"Please type in the username of the user to confirm and proceed with revocation",
-		cmd.username,
+		cmd.username.Value,
 	)
 	if err != nil {
 		return err
@@ -100,7 +102,7 @@ func (cmd *OrgRevokeCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "\nRevoking user...\n")
 
-	revoked, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username, nil)
+	revoked, err := client.Orgs().Members().Revoke(cmd.orgName.Value(), cmd.username.Value, nil)
 	if err != nil {
 		return err
 	}

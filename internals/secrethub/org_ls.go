@@ -5,9 +5,8 @@ import (
 	"sort"
 	"text/tabwriter"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
-
 	"github.com/secrethub/secrethub-go/internals/api"
 )
 
@@ -29,13 +28,15 @@ func NewOrgLsCommand(io ui.IO, newClient newClientFunc) *OrgLsCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgLsCommand) Register(r command.Registerer) {
+func (cmd *OrgLsCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "List all organizations you are a member of.")
 	clause.Alias("list")
-	clause.Flag("quiet", "Only print organization names.").Short('q').BoolVar(&cmd.quiet)
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	clause.Flags().BoolVarP(&cmd.quiet, "quiet", "q", false, "Only print organization names.")
 
-	command.BindAction(clause, cmd.Run)
+	registerTimestampFlag(clause, &cmd.useTimestamps)
+
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run lists all organizations a user is a member of.

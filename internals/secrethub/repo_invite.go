@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -12,7 +12,7 @@ import (
 // RepoInviteCommand handles inviting a user to collaborate on a repository.
 type RepoInviteCommand struct {
 	path      api.RepoPath
-	username  string
+	username  cli.StringValue
 	force     bool
 	io        ui.IO
 	newClient newClientFunc
@@ -27,13 +27,15 @@ func NewRepoInviteCommand(io ui.IO, newClient newClientFunc) *RepoInviteCommand 
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoInviteCommand) Register(r command.Registerer) {
+func (cmd *RepoInviteCommand) Register(r cli.Registerer) {
 	clause := r.Command("invite", "Invite a user to collaborate on a repository.")
-	clause.Arg("repo-path", "The repository to invite the user to").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("username", "username of the user").Required().StringVar(&cmd.username)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.path, Name: "repo-path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to invite the user to."},
+		{Value: &cmd.username, Name: "username", Required: true, Description: "Username of the user."},
+	})
 }
 
 // Run invites the configured user to collaborate on the repo.
@@ -44,7 +46,7 @@ func (cmd *RepoInviteCommand) Run() error {
 	}
 
 	if !cmd.force {
-		user, err := client.Users().Get(cmd.username)
+		user, err := client.Users().Get(cmd.username.Value)
 		if err != nil {
 			return err
 		}
@@ -65,12 +67,12 @@ func (cmd *RepoInviteCommand) Run() error {
 	}
 	fmt.Fprintln(cmd.io.Output(), "Inviting user...")
 
-	_, err = client.Repos().Users().Invite(cmd.path.Value(), cmd.username)
+	_, err = client.Repos().Users().Invite(cmd.path.Value(), cmd.username.Value)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username, cmd.path)
+	fmt.Fprintf(cmd.io.Output(), "Invite complete! The user %s is now a member of the %s repository.\n", cmd.username.Value, cmd.path)
 
 	return nil
 }

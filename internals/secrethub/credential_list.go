@@ -8,8 +8,8 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // CredentialListCommand creates a backup code to restore a credential from a code.
@@ -28,13 +28,14 @@ func NewCredentialListCommand(io ui.IO, newClient newClientFunc) *CredentialList
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *CredentialListCommand) Register(r command.Registerer) {
+func (cmd *CredentialListCommand) Register(r cli.Registerer) {
 	clause := r.Command("ls", "List all your credentials.")
 	clause.Alias("list")
 
-	registerTimestampFlag(clause).BoolVar(&cmd.useTimestamps)
+	registerTimestampFlag(clause, &cmd.useTimestamps)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments(nil)
 }
 
 // Run lists all the currently authenticated account's credentials.

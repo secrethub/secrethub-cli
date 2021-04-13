@@ -17,12 +17,14 @@ import (
 
 	"github.com/secrethub/secrethub-go/internals/gcp"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 )
+
+const defaultGCPServiceDescription = "GCP Service Account <service-account-email>"
 
 // ServiceGCPInitCommand initializes a service for GCP.
 type ServiceGCPInitCommand struct {
@@ -113,7 +115,7 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 		cmd.kmsKeyResourceID = strings.TrimSpace(kmsKey)
 	}
 
-	if cmd.description == "" {
+	if cmd.description == defaultGCPServiceDescription {
 		cmd.description = "GCP Service Account " + roleNameFromRole(cmd.serviceAccountEmail)
 	}
 
@@ -154,15 +156,14 @@ func (cmd *ServiceGCPInitCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
+func (cmd *ServiceGCPInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account that is tied to a GCP Service Account.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
-	clause.Flag("kms-key", "The Resource ID of the KMS-key to be used for encrypting the service's account key.").StringVar(&cmd.kmsKeyResourceID)
-	clause.Flag("service-account-email", "The email of the GCP Service Account that should have access to this service account.").StringVar(&cmd.serviceAccountEmail)
-	clause.Flag("description", "A description for the service so others will recognize it. Defaults to the name of the role that is attached to the service.").StringVar(&cmd.description)
-	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause.Flags().StringVar(&cmd.kmsKeyResourceID, "kms-key", "", "The Resource ID of the KMS-key to be used for encrypting the service's account key.")
+	clause.Flags().StringVar(&cmd.serviceAccountEmail, "service-account-email", "", "The email of the GCP Service Account that should have access to this service account.")
+	clause.Flags().StringVar(&cmd.description, "description", defaultGCPServiceDescription, "A description for the service so others will recognize it.")
+	clause.Flags().StringVar(&cmd.description, "descr", defaultGCPServiceDescription, "").Hidden()
+	clause.Flags().StringVar(&cmd.description, "desc", defaultGCPServiceDescription, "").Hidden()
+	clause.Flags().StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
 
 	clause.HelpLong("The native GCP identity provider uses a combination of GCP IAM and GCP KMS to provide access to SecretHub for any service running on GCP. For this to work, a GCP Service Account and a KMS key are needed.\n" +
 		"\n" +
@@ -172,7 +173,8 @@ func (cmd *ServiceGCPInitCommand) Register(r command.Registerer) {
 		"To create a new service that uses the GCP identity provider, the CLI must have encryption access to the KMS key that will be used by the service account. Therefore GCP application default credentials should be configured on this system. To achieve this, first install the Google Cloud SDK (https://cloud.google.com/sdk/docs/quickstarts) and then run `gcloud auth application-default login`.",
 	)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
 }
 
 type gcpProjectOptionLister struct {

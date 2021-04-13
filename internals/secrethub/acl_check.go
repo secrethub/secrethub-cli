@@ -5,12 +5,11 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	"github.com/secrethub/secrethub-go/pkg/secretpath"
-
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
+	"github.com/secrethub/secrethub-go/pkg/secretpath"
 )
 
 // ACLCheckCommand prints the access level(s) on a given directory.
@@ -30,12 +29,14 @@ func NewACLCheckCommand(io ui.IO, newClient newClientFunc) *ACLCheckCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ACLCheckCommand) Register(r command.Registerer) {
+func (cmd *ACLCheckCommand) Register(r cli.Registerer) {
 	clause := r.Command("check", "Checks the effective permission of accounts on a path.")
-	clause.Arg("dir-path", "The path of the directory to check the effective permission for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("account-name", "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out.").SetValue(&cmd.accountName)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to check the effective permission for."},
+		{Value: &cmd.accountName, Name: "account-name", Required: false, Description: "Check permissions of a specific account name (username or service name). When left empty, all accounts with permission on the path are printed out."},
+	})
 }
 
 // Run prints the access level(s) on the given directory.

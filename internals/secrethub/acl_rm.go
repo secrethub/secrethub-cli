@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -27,14 +27,16 @@ func NewACLRmCommand(io ui.IO, newClient newClientFunc) *ACLRmCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ACLRmCommand) Register(r command.Registerer) {
+func (cmd *ACLRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Remove an account's access rules on a given directory. Although the server will deny the account access afterwards, note that removing an access rule does not actually revoke an account and does NOT trigger secret rotation.")
 	clause.Alias("remove")
-	clause.Arg("dir-path", "The path of the directory to remove the access rule for").Required().PlaceHolder(optionalDirPathPlaceHolder).SetValue(&cmd.path)
-	clause.Arg("account-name", "The account name (username or service name) whose rule to remove").Required().SetValue(&cmd.accountName)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.path, Name: "dir-path", Required: true, Placeholder: optionalDirPathPlaceHolder, Description: "The path of the directory to remove the access rule for."},
+		{Value: &cmd.accountName, Name: "account-name", Required: true, Description: "The account name (username or service name) whose rule to remove."},
+	})
 }
 
 // Run removes the access rule.

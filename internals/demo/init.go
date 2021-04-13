@@ -6,8 +6,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -19,8 +19,7 @@ type newClientFunc func() (secrethub.ClientInterface, error)
 const defaultDemoRepo = "demo"
 
 type InitCommand struct {
-	repo api.RepoPath
-
+	repo      pathValue
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -33,13 +32,13 @@ func NewInitCommand(io ui.IO, newClient newClientFunc) *InitCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *InitCommand) Register(r command.Registerer) {
+func (cmd *InitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create the secrets necessary to connect with the demo application.")
 	clause.HelpLong("demo init creates a repository with the username and password needed to connect to the demo API.")
 
-	clause.Flag("repo", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.").SetValue(&cmd.repo)
+	clause.Flags().VarPF(&cmd.repo, "repo", "", "The path of the repository to create. Defaults to a "+defaultDemoRepo+" repo in your personal namespace.")
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
 }
 
 // Run handles the command with the options as specified in the command.
@@ -51,7 +50,7 @@ func (cmd *InitCommand) Run() error {
 
 	var repoPath string
 	var username string
-	if cmd.repo == "" {
+	if cmd.repo.path == "" {
 		me, err := client.Me().GetUser()
 		if err != nil {
 			return err
@@ -59,8 +58,8 @@ func (cmd *InitCommand) Run() error {
 		username = me.Username
 		repoPath = secretpath.Join(me.Username, defaultDemoRepo)
 	} else {
-		username = secretpath.Namespace(cmd.repo.Value())
-		repoPath = cmd.repo.Value()
+		username = secretpath.Namespace(cmd.repo.path.Value())
+		repoPath = cmd.repo.path.Value()
 	}
 
 	_, err = client.Repos().Create(repoPath)
@@ -126,4 +125,25 @@ func (cmd *InitCommand) isDemoRepo(client secrethub.ClientInterface, repoPath st
 		return false, nil
 	}
 	return true, nil
+}
+
+type pathValue struct {
+	path api.RepoPath
+}
+
+func (u *pathValue) String() string {
+	return u.path.String()
+}
+
+func (u *pathValue) Set(s string) error {
+	var err error
+	u.path, err = api.NewRepoPath(s)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *pathValue) Type() string {
+	return "pathValue"
 }

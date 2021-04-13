@@ -3,6 +3,7 @@ package secrethub
 import (
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -27,9 +28,9 @@ func TestOrgSetRoleCommand_Run(t *testing.T) {
 	}{
 		"success": {
 			cmd: OrgSetRoleCommand{
-				username: "dev1",
+				username: cli.StringValue{Value: "dev1"},
 				orgName:  "company",
-				role:     api.OrgRoleMember,
+				role:     cli.StringValue{Value: api.OrgRoleMember},
 			},
 			updateFunc: func(org string, username string, role string) (*api.OrgMember, error) {
 				return &api.OrgMember{

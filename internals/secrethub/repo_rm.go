@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -25,12 +25,12 @@ func NewRepoRmCommand(io ui.IO, newClient newClientFunc) *RepoRmCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoRmCommand) Register(r command.Registerer) {
+func (cmd *RepoRmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Permanently delete a repository.")
 	clause.Alias("remove")
-	clause.Arg("repo-path", "The repository to delete").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "path", Required: true, Placeholder: repoPathPlaceHolder, Description: "The repository to delete"}})
 }
 
 // Run removes the repository.

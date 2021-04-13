@@ -6,6 +6,10 @@ type ConfigDir struct {
 	configdir.Dir
 }
 
+func (c *ConfigDir) Type() string {
+	return "configDir"
+}
+
 func (c *ConfigDir) String() string {
 	return c.Dir.Path()
 }

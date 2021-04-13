@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/posix"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -19,23 +19,27 @@ import (
 
 // ServiceInitCommand initializes a service and writes the generated config to stdout.
 type ServiceInitCommand struct {
-	clip        bool
-	description string
-	file        string
-	fileMode    filemode.FileMode
-	repo        api.RepoPath
-	permission  string
-	clipper     clip.Clipper
-	io          ui.IO
-	newClient   newClientFunc
+	clip          bool
+	description   string
+	file          string
+	fileMode      filemode.FileMode
+	repo          api.RepoPath
+	credential    *credentials.KeyCreator
+	permission    string
+	clipper       clip.Clipper
+	io            ui.IO
+	newClient     newClientFunc
+	writeFileFunc func(filename string, data []byte, perm os.FileMode) error
 }
 
 // NewServiceInitCommand creates a new ServiceInitCommand.
 func NewServiceInitCommand(io ui.IO, newClient newClientFunc) *ServiceInitCommand {
 	return &ServiceInitCommand{
-		clipper:   clip.NewClipboard(),
-		io:        io,
-		newClient: newClient,
+		clipper:       clip.NewClipboard(),
+		io:            io,
+		newClient:     newClient,
+		writeFileFunc: ioutil.WriteFile,
+		credential:    credentials.CreateKey(),
 	}
 }
 
@@ -59,8 +63,7 @@ func (cmd *ServiceInitCommand) Run() error {
 		return err
 	}
 
-	credential := credentials.CreateKey()
-	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, credential)
+	service, err := client.Services().Create(cmd.repo.Value(), cmd.description, cmd.credential)
 	if err != nil {
 		return err
 	}
@@ -71,7 +74,7 @@ func (cmd *ServiceInitCommand) Run() error {
 			return err
 		}
 	}
-	out, err := credential.Export()
+	out, err := cmd.credential.Export()
 	if err != nil {
 		return err
 	}
@@ -84,7 +87,7 @@ func (cmd *ServiceInitCommand) Run() error {
 
 		fmt.Fprintf(cmd.io.Output(), "Copied account configuration for %s to clipboard. It will be cleared after 45 seconds.\n", service.ServiceID)
 	} else if cmd.file != "" {
-		err = ioutil.WriteFile(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
+		err = cmd.writeFileFunc(cmd.file, posix.AddNewLine(out), cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.file, err)
 		}
@@ -103,20 +106,24 @@ func (cmd *ServiceInitCommand) Run() error {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *ServiceInitCommand) Register(r command.Registerer) {
+func (cmd *ServiceInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Create a new service account.")
-	clause.Arg("repo", "The service account is attached to the repository in this path.").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.repo)
-	clause.Flag("description", "A description for the service so others will recognize it.").StringVar(&cmd.description)
-	clause.Flag("descr", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("desc", "").Hidden().StringVar(&cmd.description)
-	clause.Flag("permission", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.").StringVar(&cmd.permission)
+	clause.Flags().StringVar(&cmd.description, "description", "", "A description for the service so others will recognize it.")
+	clause.Flags().StringVar(&cmd.description, "descr", "", "")
+	clause.Flags().StringVar(&cmd.description, "desc", "", "")
+	clause.Cmd.Flag("desc").Hidden = true
+	clause.Cmd.Flag("descr").Hidden = true
+	clause.Flags().StringVar(&cmd.permission, "permission", "", "Create an access rule giving the service account permission on a directory. Accepted permissions are `read`, `write` and `admin`. Use `--permission <permission>` to give permission on the root of the repo and `--permission <dir>[/<dir> ...]:<permission>` to give permission on a subdirectory.")
 	// TODO make 45 sec configurable
-	clause.Flag("clip", "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.").Short('c').BoolVar(&cmd.clip)
-	clause.Flag("file", "Write the service account configuration to a file instead of stdout.").Hidden().StringVar(&cmd.file)
-	clause.Flag("out-file", "Write the service account configuration to a file instead of stdout.").StringVar(&cmd.file)
-	clause.Flag("file-mode", "Set filemode for the written file. Defaults to 0440 (read only) and is ignored without the --file flag.").Default("0440").SetValue(&cmd.fileMode)
+	clause.Flags().BoolVarP(&cmd.clip, "clip", "c", false, "Write the service account configuration to the clipboard instead of stdout. The clipboard is automatically cleared after 45 seconds.")
+	clause.Flags().StringVar(&cmd.file, "file", "", "Write the service account configuration to a file instead of stdout.")
+	clause.Cmd.Flag("file").Hidden = true
+	clause.Flags().StringVar(&cmd.file, "out-file", "", "Write the service account configuration to a file instead of stdout.")
+	cmd.fileMode = filemode.New(0440)
+	clause.Flags().Var(&cmd.fileMode, "file-mode", "Set filemode for the written file. It is ignored without the --file flag.")
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.repo, Name: "repo", Required: true, Placeholder: repoPathPlaceHolder, Description: "The service account is attached to the repository in this path."}})
 }
 
 // givePermission gives the service permission on the repository as defined in the permission flag.

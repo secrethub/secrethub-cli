@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -27,7 +28,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"success, not a repo member": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringValue{Value: "dev1"},
 			},
 			promptIn: "dev1",
 			service: fakeclient.OrgMemberService{
@@ -46,7 +47,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"success, repo member": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringValue{Value: "dev1"},
 			},
 			promptIn: "dev1",
 			service: fakeclient.OrgMemberService{
@@ -99,7 +100,7 @@ func TestOrgRevokeCommand_Run(t *testing.T) {
 		"abort": {
 			cmd: OrgRevokeCommand{
 				orgName:  "company",
-				username: "dev1",
+				username: cli.StringValue{Value: "dev1"},
 			},
 			promptIn: "typo",
 			service: fakeclient.OrgMemberService{

@@ -1,8 +1,8 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // ServiceAWSCommand handles AWS services.
@@ -20,7 +20,7 @@ func NewServiceAWSCommand(io ui.IO, newClient newClientFunc) *ServiceAWSCommand 
 }
 
 // Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *ServiceAWSCommand) Register(r command.Registerer) {
+func (cmd *ServiceAWSCommand) Register(r cli.Registerer) {
 	clause := r.Command("aws", "Manage AWS service accounts.")
 	NewServiceAWSInitCommand(cmd.io, cmd.newClient).Register(clause)
 	NewServiceAWSLsCommand(cmd.io, cmd.newClient).Register(clause)

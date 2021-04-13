@@ -1,8 +1,8 @@
 package secrethub
 
 import (
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 )
 
 // ACLCommand handles operations on access rules.
@@ -20,7 +20,7 @@ func NewACLCommand(io ui.IO, newClient newClientFunc) *ACLCommand {
 }
 
 // Register registers the command and its sub-commands on the provided Registerer.
-func (cmd *ACLCommand) Register(r command.Registerer) {
+func (cmd *ACLCommand) Register(r cli.Registerer) {
 	clause := r.Command("acl", "Manage access rules on directories.")
 	NewACLCheckCommand(cmd.io, cmd.newClient).Register(clause)
 	NewACLListCommand(cmd.io, cmd.newClient).Register(clause)

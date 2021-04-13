@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
@@ -36,14 +36,14 @@ func NewRmCommand(io ui.IO, newClient newClientFunc) *RmCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RmCommand) Register(r command.Registerer) {
+func (cmd *RmCommand) Register(r cli.Registerer) {
 	clause := r.Command("rm", "Remove a directory, secret or version.")
 	clause.Alias("remove")
-	clause.Arg("path", "The path to the resource to remove (<namespace>/<repo>[/<path>])").Required().SetValue(&cmd.path)
-	clause.Flag("recursive", "Remove directories and their contents recursively.").Short('r').BoolVar(&cmd.recursive)
-	registerForceFlag(clause).BoolVar(&cmd.force)
+	clause.Flags().BoolVarP(&cmd.recursive, "recursive", "r", false, "Remove directories and their contents recursively.")
+	registerForceFlag(clause, &cmd.force)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "path", Required: true, Placeholder: generalPathPlaceHolder, Description: "The path to the resource to remove."}})
 }
 
 // Run removes the resource at the given path.

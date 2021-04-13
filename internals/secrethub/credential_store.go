@@ -6,12 +6,13 @@ import (
 	"github.com/secrethub/secrethub-go/pkg/secrethub/configdir"
 	"github.com/secrethub/secrethub-go/pkg/secrethub/credentials"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 )
 
 // Errors
 var (
-	ErrCredentialNotExist = errMain.Code("credential_not_exist").Error("could not find credential file. Go to https://signup.secrethub.io/ to create an account or run `secrethub init` to use an already existing account on this machine.")
+	ErrCredentialNotExist = errMain.Code("credential_not_configured").Error("could not find credential. Go to https://signup.secrethub.io/ to create a personal account. To use the CLI as a service account, set the SECRETHUB_CREDENTIAL or SECRETHUB_IDENTITY_PROVIDER environment variable.")
 )
 
 // CredentialConfig handles the configuration necessary for local credentials.
@@ -22,7 +23,7 @@ type CredentialConfig interface {
 	ConfigDir() configdir.Dir
 	PassphraseReader() credentials.Reader
 
-	Register(FlagRegisterer)
+	Register(app *cli.App)
 }
 
 // NewCredentialConfig creates a new CredentialConfig.
@@ -34,7 +35,7 @@ func NewCredentialConfig(io ui.IO) CredentialConfig {
 
 type credentialConfig struct {
 	configDir                    ConfigDir
-	AccountCredential            string
+	credentialReader             *flagCredentialReader
 	credentialPassphrase         string
 	CredentialPassphraseCacheTTL time.Duration
 	io                           ui.IO
@@ -49,12 +50,14 @@ func (store *credentialConfig) IsPassphraseSet() bool {
 }
 
 // Register registers the flags for configuring the store on the provided Registerer.
-func (store *credentialConfig) Register(r FlagRegisterer) {
-	r.Flag("config-dir", "The absolute path to a custom configuration directory. Defaults to $HOME/.secrethub").Default("").PlaceHolder("CONFIG-DIR").SetValue(&store.configDir)
-	r.Flag("credential", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.").StringVar(&store.AccountCredential)
-	r.Flag("p", "").Short('p').Hidden().NoEnvar().StringVar(&store.credentialPassphrase) // Shorthand -p is deprecated. Use --credential-passphrase instead.
-	r.Flag("credential-passphrase", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.").StringVar(&store.credentialPassphrase)
-	r.Flag("credential-passphrase-cache-ttl", "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.").Default("5m").DurationVar(&store.CredentialPassphraseCacheTTL)
+func (store *credentialConfig) Register(app *cli.App) {
+	_ = store.configDir.Set("")
+	app.PersistentFlags().Var(&store.configDir, "config-dir", "The absolute path to a custom configuration directory.")
+	store.credentialReader = &flagCredentialReader{}
+	store.credentialReader.Flag = app.PersistentFlags().StringVar(&store.credentialReader.value, "credential", "", "Use a specific account credential to authenticate to the API. This overrides the credential stored in the configuration directory.")
+	app.PersistentFlags().StringVarP(&store.credentialPassphrase, "p", "p", "", "").NoEnvar().Hidden() // Shorthand -p is deprecated. Use --credential-passphrase instead.
+	app.PersistentFlags().StringVar(&store.credentialPassphrase, "credential-passphrase", "", "The passphrase to unlock your credential file. When set, it will not prompt for the passphrase, nor cache it in the OS keyring. Please only use this if you know what you're doing and ensure your passphrase doesn't end up in bash history.")
+	app.PersistentFlags().DurationVar(&store.CredentialPassphraseCacheTTL, "credential-passphrase-cache-ttl", 5*time.Minute, "Cache the credential passphrase in the OS keyring for this duration. The cache is automatically cleared after the timer runs out. Each time the passphrase is read from the cache the timer is reset. Passphrase caching is turned on by default for 5 minutes. Turn it off by setting the duration to 0.")
 }
 
 // Provider retrieves a credential from the store.
@@ -69,13 +72,29 @@ func (store *credentialConfig) Import() (credentials.Key, error) {
 }
 
 func (store *credentialConfig) getCredentialReader() credentials.Reader {
-	if store.AccountCredential != "" {
-		return credentials.FromString(store.AccountCredential)
+	if store.credentialReader.value == "" {
+		return store.configDir.Credential()
 	}
-	return store.configDir.Credential()
+	return store.credentialReader
 }
 
 // PassphraseReader returns a PassphraseReader configured by the flags.
 func (store *credentialConfig) PassphraseReader() credentials.Reader {
 	return NewPassphraseReader(store.io, store.credentialPassphrase, store.CredentialPassphraseCacheTTL)
+}
+
+type flagCredentialReader struct {
+	*cli.Flag
+	value string
+}
+
+func (f *flagCredentialReader) Read() ([]byte, error) {
+	return []byte(f.value), nil
+}
+
+func (f *flagCredentialReader) Source() string {
+	if f.HasEnvarValue() && !f.Flag.Changed() {
+		return "$SECRETHUB_CREDENTIAL"
+	}
+	return "--credential"
 }

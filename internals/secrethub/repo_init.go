@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -25,11 +25,11 @@ func NewRepoInitCommand(io ui.IO, newClient newClientFunc) *RepoInitCommand {
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *RepoInitCommand) Register(r command.Registerer) {
+func (cmd *RepoInitCommand) Register(r cli.Registerer) {
 	clause := r.Command("init", "Initialize a new repository.")
-	clause.Arg("repo-path", "Path to the new repository").Required().PlaceHolder(repoPathPlaceHolder).SetValue(&cmd.path)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{{Value: &cmd.path, Name: "repo-path", Required: true, Description: "Path to the new repository."}})
 }
 
 // Run creates a new repository.

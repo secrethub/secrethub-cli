@@ -3,8 +3,8 @@ package secrethub
 import (
 	"fmt"
 
+	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
-	"github.com/secrethub/secrethub-cli/internals/secrethub/command"
 
 	"github.com/secrethub/secrethub-go/internals/api"
 )
@@ -12,8 +12,8 @@ import (
 // OrgSetRoleCommand handles updating the role of an organization member.
 type OrgSetRoleCommand struct {
 	orgName   api.OrgName
-	username  string
-	role      string
+	username  cli.StringValue
+	role      cli.StringValue
 	io        ui.IO
 	newClient newClientFunc
 }
@@ -27,13 +27,15 @@ func NewOrgSetRoleCommand(io ui.IO, newClient newClientFunc) *OrgSetRoleCommand 
 }
 
 // Register registers the command, arguments and flags on the provided Registerer.
-func (cmd *OrgSetRoleCommand) Register(r command.Registerer) {
+func (cmd *OrgSetRoleCommand) Register(r cli.Registerer) {
 	clause := r.Command("set-role", "Set a user's organization role.")
-	clause.Arg("org-name", "The organization name").Required().SetValue(&cmd.orgName)
-	clause.Arg("username", "The username of the user").Required().StringVar(&cmd.username)
-	clause.Arg("role", "The role to assign to the user. Can be either `admin` or `member`.").Required().StringVar(&cmd.role)
 
-	command.BindAction(clause, cmd.Run)
+	clause.BindAction(cmd.Run)
+	clause.BindArguments([]cli.Argument{
+		{Value: &cmd.orgName, Name: "org-name", Required: true, Description: "The organization name."},
+		{Value: &cmd.username, Name: "username", Required: true, Description: "The username of the user."},
+		{Value: &cmd.role, Name: "role", Required: true, Description: "The role to assign to the user. Can be either `admin` or `member`."},
+	})
 }
 
 // Run updates the role of an organization member.
@@ -45,7 +47,7 @@ func (cmd *OrgSetRoleCommand) Run() error {
 
 	fmt.Fprintf(cmd.io.Output(), "Setting role...\n")
 
-	resp, err := client.Orgs().Members().Update(cmd.orgName.Value(), cmd.username, cmd.role)
+	resp, err := client.Orgs().Members().Update(cmd.orgName.Value(), cmd.username.Value, cmd.role.Value)
 	if err != nil {
 		return err
 	}

@@ -109,7 +109,7 @@ func GetSignInAddress() (string, error) {
 	path := filepath.Join(home, ".op", "config")
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Errorf("could not read 1password config file at %s", path)
+		return "", fmt.Errorf("could not read 1password config file at %s", path)
 	}
 
 	config := struct {

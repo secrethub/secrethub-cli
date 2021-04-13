@@ -1,3 +1,4 @@
+//nolint:dupl
 package secrethub
 
 import (
@@ -898,6 +899,7 @@ func TestAddTreeToPlan(t *testing.T) {
 	}
 }
 
+//nolint:unparam
 func createTree(rootDir *api.Dir, parentPath string) *api.Tree {
 	tree := &api.Tree{
 		RootDir:    rootDir,

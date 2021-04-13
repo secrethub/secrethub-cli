@@ -375,16 +375,16 @@ func isSecretItem(dir *api.Dir) bool {
 }
 
 func walkTree(tree *api.Tree, fn func(*api.Dir) error) error {
-	return walkTreeRec(tree, tree.RootDir, fn)
+	return walkTreeRec(tree.RootDir, fn)
 }
 
-func walkTreeRec(tree *api.Tree, dir *api.Dir, fn func(*api.Dir) error) error {
+func walkTreeRec(dir *api.Dir, fn func(*api.Dir) error) error {
 	err := fn(dir)
 	if err != nil {
 		return err
 	}
 	for _, subDir := range dir.SubDirs {
-		err := walkTreeRec(tree, subDir, fn)
+		err := walkTreeRec(subDir, fn)
 		if err != nil {
 			return err
 		}
@@ -453,7 +453,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 			if !cmd.append {
 				confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A vault named %s already exists. Do you want to append the items to that vault?", vault.Name), ui.DefaultYes)
 				if err != nil {
-					return fmt.Errorf("A vault named %s already exists. Use --apend to append to existing vaults", vault.Name)
+					return fmt.Errorf("a vault named %s already exists. Use --apend to append to existing vaults", vault.Name)
 				}
 				if !confirmed {
 					fmt.Fprintln(cmd.io.Output(), "Aborting.")

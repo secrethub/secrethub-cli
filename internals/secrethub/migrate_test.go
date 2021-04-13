@@ -893,7 +893,7 @@ func TestAddTreeToPlan(t *testing.T) {
 			err := addTreeToPlan(tc.tree, plan)
 
 			assert.Equal(t, err, tc.err)
-			assert.Equal(t, plan, tc.expected)
+			assert.Equal(t, plan.vaults, tc.expected.vaults)
 		})
 	}
 }

@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -64,7 +63,7 @@ func (cmd *AccountDeleteCommand) Run() error {
 				builder.WriteString(", ")
 			}
 		}
-		return errors.New("cannot delete account that is a member of an organization. Please leave or delete the following organizations before deleting your account: " + builder.String() + ".")
+		return fmt.Errorf("cannot delete account that is a member of an organization. Please leave or delete the following organizations before deleting your account: %s", builder.String())
 	}
 
 	var confirmed bool

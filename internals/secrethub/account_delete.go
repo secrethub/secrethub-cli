@@ -82,5 +82,10 @@ func (cmd *AccountDeleteCommand) Run() error {
 		return nil
 	}
 
-	return client.Accounts().Delete(account.AccountID)
+	err = client.Accounts().Delete(account.AccountID)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintln(cmd.io.Output(), "Your account was successfully deleted.")
+	return nil
 }

@@ -100,14 +100,52 @@ func EnsureSignedIn() error {
 	return fmt.Errorf("OP_SESSION environment variable not found, run `eval $(op signin)` to set one")
 }
 
+func opConfigDirPath() (string, error) {
+	xdgConfigHome, _ := os.LookupEnv("XDG_CONFIG_HOME")
+	home, _ := homedir.Dir()
+
+	// Inspect possible config directories in reverse order of priority.
+	// This code has been taken from the op cli's source code.
+	configDirPaths := []string{}
+	if home != "" {
+		// Legacy home
+		configDirPaths = append(configDirPaths, filepath.Join(home, ".op"))
+	}
+	if xdgConfigHome != "" {
+		// Legacy xdg
+		configDirPaths = append(configDirPaths, filepath.Join(xdgConfigHome, ".op"))
+	}
+	if home != "" {
+		// New home
+		configDirPaths = append(configDirPaths, filepath.Join(home, ".config", "op"))
+	}
+	if xdgConfigHome != "" {
+		// New xdg
+		configDirPaths = append(configDirPaths, filepath.Join(xdgConfigHome, "op"))
+	}
+
+	for _, configDir := range configDirPaths {
+		fileInfo, err := os.Stat(configDir)
+		if err == nil && fileInfo.IsDir() {
+			return configDir, nil
+		}
+	}
+
+	// If we reach this point then none of those directories exist (op is executed
+	// for the first time). Default to the last entry in the list.
+	if len(configDirPaths) > 0 {
+		return configDirPaths[len(configDirPaths)-1], nil
+	}
+
+	return "", fmt.Errorf("unable to determine location of config directory")
+}
+
 func GetSignInAddress() (string, error) {
-	home, err := homedir.Dir()
+	path, err := opConfigDirPath()
 	if err != nil {
 		return "", err
 	}
-
-	path := filepath.Join(home, ".op", "config")
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(filepath.Join(path, "config"))
 	if err != nil {
 		return "", fmt.Errorf("could not read 1password config file at %s", path)
 	}

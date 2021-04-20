@@ -412,26 +412,6 @@ func (cmd *MigrateApplyCommand) Run() error {
 		return fmt.Errorf("op is signed in to a different account than planned. Run `eval $(op signin %s) to login to the desired account or change the sign-in-address in the plan", plan.SignInAddress)
 	}
 
-	fmt.Fprintln(cmd.io.Output(), "validating the migration plan...")
-	for _, vault := range plan.vaults {
-		exists, err := onepassword.ExistsVault(vault.Name)
-		if err != nil {
-			return fmt.Errorf("could not check vault existence: %s", err)
-		}
-		if exists {
-			for _, item := range vault.Items {
-				exists, err = onepassword.ExistsItemInVault(vault.Name, item.Name)
-				if err != nil {
-					return fmt.Errorf("could not check item existence: %s", err)
-				}
-				if exists {
-					return fmt.Errorf("an item named %s already exists in vault %s. Remove the item from the plan if you've already migrated it before. If not, you can rename the item in the plan", item.Name, vault.Name)
-				}
-			}
-		}
-	}
-	fmt.Fprintf(cmd.io.Output(), "plan is ok\n\n")
-
 	client, err := cmd.newClient()
 	if err != nil {
 		return err
@@ -465,18 +445,42 @@ func (cmd *MigrateApplyCommand) Run() error {
 		}
 
 		for _, item := range vault.Items {
-			template := onepassword.NewItemTemplate()
-			for _, field := range item.Fields {
-				value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
+			exists, err := onepassword.ExistsItemInVault(vault.Name, item.Name)
+			if err != nil {
+				return err
+			}
+			if !exists {
+				template := onepassword.NewItemTemplate()
+				for _, field := range item.Fields {
+					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
+					if err != nil {
+						return err
+					}
+					template.AddField(field.Name, value, field.Concealed)
+				}
+
+				err = onepassword.CreateItem(vault.Name, template, item.Name)
 				if err != nil {
 					return err
 				}
-				template.AddField(field.Name, value, field.Concealed)
-			}
+			} else {
+				for _, field := range item.Fields {
+					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
+					if err != nil {
+						return err
+					}
+					opValue, err := onepassword.GetField(vault.Name, item.Name, field.Name)
+					if err != nil {
+						return err
+					}
+					if value != opValue {
+						err = onepassword.SetField(vault.Name, item.Name, field.Name, value)
+						if err != nil {
+							return err
+						}
+					}
+				}
 
-			err = onepassword.CreateItem(vault.Name, template, item.Name)
-			if err != nil {
-				return err
 			}
 		}
 		i++

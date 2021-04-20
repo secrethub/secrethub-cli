@@ -43,9 +43,9 @@ func GetField(vault, item, field string) (string, error) {
 }
 
 func SetField(vault, item, field, value string) error {
-	_, err := execOP("edit", "item", item, fmt.Sprintf(`%s"="%s"`, field, value), "--vault="+vault)
+	_, err := execOP("edit", "item", item, fmt.Sprintf(`%s=%s`, field, value), "--vault="+vault)
 	if err != nil {
-		return fmt.Errorf("could not set field '%s'.'%s'.%s': %s: ", vault, item, field, err)
+		return fmt.Errorf("could not set field '%s'.'%s'.'%s'", vault, item, field)
 	}
 	return nil
 }

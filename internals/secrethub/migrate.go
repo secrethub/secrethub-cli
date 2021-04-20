@@ -465,6 +465,13 @@ func (cmd *MigrateApplyCommand) Run() error {
 				}
 			} else {
 				for _, field := range item.Fields {
+					hasField, err := onepassword.HasField(vault.Name, item.Name, field.Name)
+					if err != nil {
+						return err
+					}
+					if !hasField {
+						return fmt.Errorf("item %s.%s has missing field %s, please add this field manually to allow the migration tool to update it", vault.Name, item.Name, field.Name)
+					}
 					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
 					if err != nil {
 						return err

@@ -67,7 +67,7 @@ func GetFields(vault, item string) ([]string, error) {
 	}
 	fields := make([]string, len(opItem.Details.Sections[0].Fields))
 	for i, field := range opItem.Details.Sections[0].Fields {
-		fields[i] = field.Name
+		fields[i] = field.Title
 	}
 	return fields, nil
 }
@@ -115,7 +115,7 @@ func (tpl *ItemTemplate) AddField(name, value string, concealed bool) {
 	tpl.Sections[0].Fields = append(tpl.Sections[0].Fields, itemFieldTemplate{
 		Designation: designation,
 		Name:        name,
-		Type:        name,
+		Title:       name,
 		Value:       value,
 	})
 }
@@ -123,7 +123,7 @@ func (tpl *ItemTemplate) AddField(name, value string, concealed bool) {
 type itemFieldTemplate struct {
 	Designation string `json:"k"`
 	Name        string `json:"n"`
-	Type        string `json:"t"`
+	Title       string `json:"t"`
 	Value       string `json:"v"`
 }
 

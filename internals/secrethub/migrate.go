@@ -417,6 +417,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 		return err
 	}
 
+	warningCount := 0
 	i := 1
 	for _, vault := range plan.vaults {
 		exists, err := onepassword.ExistsVault(vault.Name)
@@ -470,7 +471,9 @@ func (cmd *MigrateApplyCommand) Run() error {
 						return err
 					}
 					if !hasField {
-						return fmt.Errorf("item %s.%s has missing field %s, please add this field manually to allow the migration tool to update it", vault.Name, item.Name, field.Name)
+						fmt.Fprintf(os.Stderr, "item %s.%s has missing field %s, please add this field manually to allow the migration tool to update it\n", vault.Name, item.Name, field.Name)
+						warningCount++
+						continue
 					}
 					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
 					if err != nil {
@@ -492,7 +495,11 @@ func (cmd *MigrateApplyCommand) Run() error {
 		}
 		i++
 	}
-	fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully. You can now use these secrets from 1password.")
+	if warningCount == 0 {
+		fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully. You can now use these secrets from 1password.")
+	} else {
+		fmt.Fprintf(cmd.io.Output(), "\nMigration completed with %d warning(s). Please address the warnings and run the command again.\n", warningCount)
+	}
 
 	return nil
 }

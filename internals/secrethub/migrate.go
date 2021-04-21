@@ -418,6 +418,9 @@ func (cmd *MigrateApplyCommand) Run() error {
 	}
 
 	warningCount := 0
+	updatedCount := 0
+	skippedCount := 0
+	alredyUpToDateCount := 0
 	i := 1
 	for _, vault := range plan.vaults {
 		exists, err := onepassword.ExistsVault(vault.Name)
@@ -431,7 +434,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 				return err
 			}
 		} else {
-			fmt.Fprintf(cmd.io.Output(), "[%d/%d] Appending to existing vault: %s\n", i, len(plan.vaults), vault.Name)
+			fmt.Fprintf(cmd.io.Output(), "[%d/%d] Updating vault: %s\n", i, len(plan.vaults), vault.Name)
 		}
 
 		for _, item := range vault.Items {
@@ -480,6 +483,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 							}
 							if !confirmed {
 								fmt.Fprintln(cmd.io.Output(), "Skipped field.")
+								skippedCount++
 								continue
 							}
 						}
@@ -487,15 +491,19 @@ func (cmd *MigrateApplyCommand) Run() error {
 						if err != nil {
 							return err
 						}
+						updatedCount++
+					} else {
+						alredyUpToDateCount++
 					}
 				}
-
 			}
 		}
 		i++
 	}
+
+	fmt.Fprintf(cmd.io.Output(), "\n%d fields were already up to date\n%d fields were updated\n%d fields were skipped\n", alredyUpToDateCount, updatedCount, skippedCount)
 	if warningCount == 0 {
-		fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully. You can now use these secrets from 1password.")
+		fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully.")
 	} else {
 		fmt.Fprintf(cmd.io.Output(), "\nMigration completed with %d warning(s). Please address the warnings and run the command again.\n", warningCount)
 	}

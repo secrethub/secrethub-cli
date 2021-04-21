@@ -420,7 +420,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 	warningCount := 0
 	updatedCount := 0
 	skippedCount := 0
-	alredyUpToDateCount := 0
+	alreadyUpToDateCount := 0
 	i := 1
 	for _, vault := range plan.vaults {
 		exists, err := onepassword.ExistsVault(vault.Name)
@@ -493,7 +493,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 						}
 						updatedCount++
 					} else {
-						alredyUpToDateCount++
+						alreadyUpToDateCount++
 					}
 				}
 			}
@@ -501,7 +501,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 		i++
 	}
 
-	fmt.Fprintf(cmd.io.Output(), "\n%d fields were already up to date\n%d fields were updated\n%d fields were skipped\n", alredyUpToDateCount, updatedCount, skippedCount)
+	fmt.Fprintf(cmd.io.Output(), "\n%d fields were already up to date\n%d fields were updated\n%d fields were skipped\n", alreadyUpToDateCount, updatedCount, skippedCount)
 	if warningCount == 0 {
 		fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully.")
 	} else {

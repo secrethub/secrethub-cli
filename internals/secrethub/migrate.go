@@ -431,17 +431,6 @@ func (cmd *MigrateApplyCommand) Run() error {
 				return err
 			}
 		} else {
-			if !cmd.append {
-				confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A vault named %s already exists. Do you want to append the items to that vault?", vault.Name), ui.DefaultYes)
-				if err != nil {
-					return fmt.Errorf("a vault named %s already exists. Use --apend to append to existing vaults", vault.Name)
-				}
-				if !confirmed {
-					fmt.Fprintln(cmd.io.Output(), "Aborting.")
-					return nil
-				}
-			}
-
 			fmt.Fprintf(cmd.io.Output(), "[%d/%d] Appending to existing vault: %s\n", i, len(plan.vaults), vault.Name)
 		}
 
@@ -613,7 +602,7 @@ func (cmd *MigrateApplyCommand) Register(r cli.Registerer) {
 		"Check out https://secrethub.io/docs/1password/migration/ for detailed instructions.")
 
 	clause.Flags().StringVar(&cmd.planFile, "plan-file", defaultPlanPath, "Path to the YAML file specifying what vaults and items to create.")
-	clause.Flags().BoolVar(&cmd.append, "append", false, "When a vault with the given name already exists, append items to that vault.")
+	clause.Flags().BoolVar(&cmd.append, "append", false, "When a vault with the given name already exists, append items to that vault.").Hidden()
 	clause.Flags().BoolVar(&cmd.update, "update", false, "Update 1Password fields that differ from their corresponding SecretHub value without prompting.")
 
 	clause.BindAction(cmd.Run)

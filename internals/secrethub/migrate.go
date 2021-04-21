@@ -484,6 +484,16 @@ func (cmd *MigrateApplyCommand) Run() error {
 						return err
 					}
 					if value != opValue {
+						if !cmd.update {
+							confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("The value of the field %s.%s from vault %s is different from its corresponding value in SecretHub. Do you want to set it to the value from SecretHub?", item.Name, field.Name, vault.Name), ui.DefaultYes)
+							if err != nil {
+								return fmt.Errorf("the value of the field %s.%s from vault %s is different from its corresponding value in SecretHub. Use --update to update all fields to their corresponding values from SecretHub", item.Name, field.Name, vault.Name)
+							}
+							if !confirmed {
+								fmt.Fprintln(cmd.io.Output(), "Skipped field.")
+								continue
+							}
+						}
 						err = onepassword.SetField(vault.Name, item.Name, field.Name, value)
 						if err != nil {
 							return err
@@ -585,6 +595,7 @@ type MigrateApplyCommand struct {
 
 	planFile string
 	append   bool
+	update   bool
 }
 
 func NewMigrateApplyCommand(io ui.IO, newClient newClientFunc) *MigrateApplyCommand {
@@ -603,6 +614,7 @@ func (cmd *MigrateApplyCommand) Register(r cli.Registerer) {
 
 	clause.Flags().StringVar(&cmd.planFile, "plan-file", defaultPlanPath, "Path to the YAML file specifying what vaults and items to create.")
 	clause.Flags().BoolVar(&cmd.append, "append", false, "When a vault with the given name already exists, append items to that vault.")
+	clause.Flags().BoolVar(&cmd.update, "update", false, "Update 1Password fields that differ from their corresponding SecretHub value without prompting.")
 
 	clause.BindAction(cmd.Run)
 }

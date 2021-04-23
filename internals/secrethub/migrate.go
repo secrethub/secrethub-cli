@@ -257,7 +257,7 @@ func (cmd *MigratePlanCommand) addDirToPlan(client secrethub.ClientInterface, pa
 
 	tree, err := client.Dirs().GetTree(path, -1, false)
 	if err == api.ErrForbidden {
-		fmt.Fprintf(os.Stderr, "WARN: Skipping %s because you do not have read access. ", path)
+		fmt.Fprintf(os.Stderr, "WARN: Skipping '%s' because you do not have read access. ", path)
 		accessLevels, err := client.AccessRules().ListLevels(path)
 		if err == nil {
 			var usernames []string
@@ -273,7 +273,8 @@ func (cmd *MigratePlanCommand) addDirToPlan(client secrethub.ClientInterface, pa
 		return nil
 	}
 	if err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, "WARN: Skipping '%s' because it is either not valid or you do not have read access. Ask an admin to migrate the skipped secrets if the path is valid.\n", path)
+		return nil
 	}
 
 	err = addTreeToPlan(tree, plan)

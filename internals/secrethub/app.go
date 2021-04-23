@@ -151,6 +151,7 @@ func (app *App) registerCommands() {
 	NewEnvCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 
 	// Commands
+	NewMigrateCommand(app.io, app.clientFactory.NewClient).Register(app.cli)
 	NewInitCommand(app.io, app.clientFactory.NewClientWithCredentials, app.credentialStore).Register(app.cli)
 	NewSignUpCommand(app.io).Register(app.cli)
 	NewWriteCommand(app.io, app.clientFactory.NewClient).Register(app.cli)

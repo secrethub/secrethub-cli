@@ -397,7 +397,9 @@ var UsageTemplate = `Usage:
 {{if .Cmd.Runnable}} {{(useLine .Cmd .Args)}}{{end}}
 {{- if .Cmd.HasAvailableSubCommands}}  {{ .Cmd.CommandPath}} [command]{{end}}
 
-{{if ne .Cmd.Long ""}}{{ .Cmd.Long | trim }}{{ else }}{{ .Cmd.Short | trim }}{{end}}
+{{if ne .Cmd.Long ""}}{{ .Cmd.Short | trim }}
+
+{{ .Cmd.Long | trim }}{{ else }}{{ .Cmd.Short | trim }}{{end}}
 {{- if gt (len .Cmd.Aliases) 0}}
 
 Aliases:

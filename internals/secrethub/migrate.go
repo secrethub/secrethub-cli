@@ -272,6 +272,9 @@ func (cmd *MigratePlanCommand) addDirToPlan(client secrethub.ClientInterface, pa
 		}
 		return nil
 	}
+	if err != nil {
+		return err
+	}
 
 	err = addTreeToPlan(tree, plan)
 	if err != nil {

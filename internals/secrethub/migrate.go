@@ -501,6 +501,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 		i++
 	}
 
+	fmt.Fprintln(cmd.io.Output())
 	fmt.Fprintf(cmd.io.Output(), "%d fields created\n", createdCount)
 	fmt.Fprintf(cmd.io.Output(), "%d fields updated\n", updatedCount)
 	fmt.Fprintf(cmd.io.Output(), "%d fields were already up-to-date\n", alreadyUpToDateCount)

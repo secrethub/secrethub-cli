@@ -457,21 +457,19 @@ func (cmd *MigrateApplyCommand) Run() error {
 					return err
 				}
 			} else {
+				opFields, err := onepassword.GetFields(vault.Name, item.Name)
+				if err != nil {
+					return err
+				}
 				for _, field := range item.Fields {
-					hasField, err := onepassword.HasField(vault.Name, item.Name, field.Name)
-					if err != nil {
-						return err
-					}
+					opValue, hasField := opFields[field.Name]
 					if !hasField {
 						fmt.Fprintf(os.Stderr, "item %s.%s has missing field %s, please add this field manually to allow the migration tool to update it\n", vault.Name, item.Name, field.Name)
 						warningCount++
 						continue
 					}
+
 					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
-					if err != nil {
-						return err
-					}
-					opValue, err := onepassword.GetField(vault.Name, item.Name, field.Name)
 					if err != nil {
 						return err
 					}

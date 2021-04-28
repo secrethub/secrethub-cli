@@ -34,14 +34,6 @@ func CreateItem(vault string, template *ItemTemplate, title string) error {
 	return err
 }
 
-func GetField(vault, item, field string) (string, error) {
-	value, err := execOP("get", "item", item, "--vault="+vault, "--fields="+field)
-	if err != nil {
-		return "", fmt.Errorf("could not get field '%s'.'%s'.%s': %s: ", vault, item, field, err)
-	}
-	return string(value), nil
-}
-
 func SetField(vault, item, field, value string) error {
 	_, err := execOP("edit", "item", item, fmt.Sprintf(`%s=%s`, field, value), "--vault="+vault)
 	if err != nil {
@@ -50,10 +42,10 @@ func SetField(vault, item, field, value string) error {
 	return nil
 }
 
-// GetFields returns the fields from the first section of the given 1Password item.
+// GetFields returns a title-to-value map of the fields from the first section of the given 1Password item.
 // The rest of the fields are ignored as the migration tool only stores information in the first
 // section of each item.
-func GetFields(vault, item string) ([]string, error) {
+func GetFields(vault, item string) (map[string]string, error) {
 	opItem := struct {
 		Details ItemTemplate `json:"details"`
 	}{}
@@ -65,24 +57,12 @@ func GetFields(vault, item string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unexpected format of 1Password item in `op get item` command output: %s", err)
 	}
-	fields := make([]string, len(opItem.Details.Sections[0].Fields))
-	for i, field := range opItem.Details.Sections[0].Fields {
-		fields[i] = field.Title
+
+	fields := make(map[string]string, len(opItem.Details.Sections[0].Fields))
+	for _, field := range opItem.Details.Sections[0].Fields {
+		fields[field.Title] = field.Value
 	}
 	return fields, nil
-}
-
-func HasField(vault, item, field string) (bool, error) {
-	fields, err := GetFields(vault, item)
-	if err != nil {
-		return false, err
-	}
-	for _, opField := range fields {
-		if opField == field {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 func NewItemTemplate() *ItemTemplate {

@@ -468,6 +468,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 					if !hasField {
 						fmt.Fprintf(os.Stderr, "item %s.%s has missing field %s, please add this field manually to allow the migration tool to update it\n", vault.Name, item.Name, field.Name)
 						warningCount++
+						skippedCount++
 						continue
 					}
 

@@ -256,8 +256,8 @@ func (cmd *MigratePlanCommand) addDirToPlan(client secrethub.ClientInterface, pa
 	fmt.Fprintf(cmd.io.Output(), "Planning migration for %s\n", path)
 
 	tree, err := client.Dirs().GetTree(path, -1, false)
-	if err == api.ErrForbidden {
-		fmt.Fprintf(os.Stderr, "WARN: Skipping %s because you do not have read access. ", path)
+	if err == api.ErrForbidden || api.IsErrNotFound(err) {
+		fmt.Fprintf(os.Stderr, "WARN: Skipping '%s' because you do not have read access. ", path)
 		accessLevels, err := client.AccessRules().ListLevels(path)
 		if err == nil {
 			var usernames []string

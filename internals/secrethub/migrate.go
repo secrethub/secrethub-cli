@@ -417,6 +417,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 		return err
 	}
 
+	createdCount := 0
 	warningCount := 0
 	updatedCount := 0
 	skippedCount := 0
@@ -456,6 +457,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 				if err != nil {
 					return err
 				}
+				createdCount++
 			} else {
 				opFields, err := onepassword.GetFields(vault.Name, item.Name)
 				if err != nil {
@@ -499,7 +501,10 @@ func (cmd *MigrateApplyCommand) Run() error {
 		i++
 	}
 
-	fmt.Fprintf(cmd.io.Output(), "\n%d fields were already up to date\n%d fields were updated\n%d fields were skipped\n", alreadyUpToDateCount, updatedCount, skippedCount)
+	fmt.Fprintf(cmd.io.Output(), "%d fields created\n", createdCount)
+	fmt.Fprintf(cmd.io.Output(), "%d fields updated\n", updatedCount)
+	fmt.Fprintf(cmd.io.Output(), "%d fields were already up-to-date\n", alreadyUpToDateCount)
+	fmt.Fprintf(cmd.io.Output(), "%d fields skipped\n", skippedCount)
 	if warningCount == 0 {
 		fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully.")
 	} else {

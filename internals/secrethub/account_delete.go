@@ -2,13 +2,11 @@ package secrethub
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui"
 	"github.com/secrethub/secrethub-go/internals/api"
-	"github.com/secrethub/secrethub-go/pkg/secrethub/iterator"
+	"github.com/secrethub/secrethub-go/pkg/secrethub"
+	"os"
 )
 
 // AccountDeleteCommand is a command to inspect account details.
@@ -46,27 +44,16 @@ func (cmd *AccountDeleteCommand) Run() error {
 		return err
 	}
 
-	var orgList []api.Org
-	orgIterator := client.Orgs().Iterator(nil)
-	for {
-		var org api.Org
-		org, err = orgIterator.Next()
-		if err == iterator.Done {
-			break
-		} else if err != nil {
-			return err
-		}
-		orgList = append(orgList, org)
+	orgList, err := client.Orgs().ListMine()
+	if err != nil {
+		return err
 	}
 	if len(orgList) > 0 {
-		builder := strings.Builder{}
-		for i, org := range orgList {
-			builder.WriteString(org.Name)
-			if i != len(orgList)-1 {
-				builder.WriteString(", ")
-			}
+		fmt.Fprintf(cmd.io.Output(), "You are a member of %d orgs. In order to delete your account you will need to either leave these orgs or delete them.\n", len(orgList))
+		err = cmd.leaveOrRmOrgs(client, orgList)
+		if err != nil {
+			return err
 		}
-		return fmt.Errorf("cannot delete account that is a member of an organization. Please leave or delete the following organizations before deleting your account: %s", builder.String())
 	}
 
 	var confirmed bool
@@ -97,4 +84,133 @@ func (cmd *AccountDeleteCommand) Run() error {
 	}
 	fmt.Fprintln(cmd.io.Output(), "Your account was successfully deleted.")
 	return nil
+}
+
+func (cmd *AccountDeleteCommand) leaveOrRmOrgs(client secrethub.ClientInterface, orgs []*api.Org) error {
+	me, err := client.Me().GetUser()
+	if err != nil {
+		return err
+	}
+
+	for i, org := range orgs {
+		fmt.Fprintf(cmd.io.Output(), "[%d/%d] %s\n", i, len(orgs), org.Name)
+		orgMembers, err := client.Orgs().Members().List(org.Name)
+		if err != nil {
+			return err
+		}
+
+		admin := false
+		adminCount := 0
+		for _, member := range orgMembers {
+			if member.Role == api.OrgRoleAdmin {
+				adminCount++
+				if member.User.AccountID == me.AccountID {
+					admin = true
+				}
+			}
+		}
+		if !admin {
+			choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), []string{
+				"Leave it",
+			}, 3)
+			if err != nil {
+				return err
+			}
+			if choice == 0 {
+				_, err = client.Orgs().Members().Revoke(org.Name, me.Username, nil)
+				if err != nil {
+					return err
+				}
+			}
+		} else if len(orgMembers) == 1 {
+			choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), []string{
+				"Delete it",
+			}, 3)
+			if err != nil {
+				return err
+			}
+			if choice == 0 {
+				err = cmd.deleteOrg(client, org.Name)
+				if err != nil {
+					return err
+				}
+			}
+		} else if adminCount > 1 {
+			choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), []string{
+				"Leave it",
+				"Delete it",
+			}, 3)
+			if err != nil {
+				return err
+			}
+			switch choice {
+			case 0:
+				_, err = client.Orgs().Members().Revoke(org.Name, me.Username, nil)
+			case 1:
+				err = cmd.deleteOrg(client, org.Name)
+			}
+			if err != nil {
+				return err
+			}
+		} else {
+			choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), []string{
+				"Make someone else an admin",
+				"Delete it",
+			}, 3)
+			if err != nil {
+				return err
+			}
+			switch choice {
+			case 0:
+				err = cmd.transferAdminRole(client, org, orgMembers)
+				if err != nil {
+					return err
+				}
+				_, err = client.Orgs().Members().Revoke(org.Name, me.Username, nil)
+			case 1:
+				err = cmd.deleteOrg(client, org.Name)
+			}
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (cmd *AccountDeleteCommand) deleteOrg(client secrethub.ClientInterface, org string) error {
+	confirmed, err := ui.ConfirmCaseInsensitive(
+		cmd.io,
+		fmt.Sprintf(
+			"[DANGER ZONE] This action cannot be undone. "+
+				"This will permanently delete the %s organization, repositories, and remove all team associations. "+
+				"Please type in the name of the organization to confirm",
+			org,
+		),
+		org,
+	)
+	if err != nil {
+		return err
+	}
+
+	if !confirmed {
+		fmt.Fprintln(cmd.io.Output(), "Name does not match. Aborting.")
+		return nil
+	}
+	return client.Orgs().Delete(org)
+}
+
+func (cmd *AccountDeleteCommand) transferAdminRole(client secrethub.ClientInterface, org *api.Org, members []*api.OrgMember) error {
+	var memberNames []string
+	for _, member := range members {
+		if member.Role == api.OrgRoleMember {
+			memberNames = append(memberNames, fmt.Sprintf("%s (%s)", member.User.Username, member.User.FullName))
+		}
+	}
+	choice, err := ui.Choose(cmd.io, fmt.Sprintf("Who sould become the new admin of '%s'?", org.Name), memberNames, 3)
+	if err != nil {
+		return err
+	}
+	_, err = client.Orgs().Members().Update(org.Name, memberNames[choice], api.OrgRoleAdmin)
+	return err
 }

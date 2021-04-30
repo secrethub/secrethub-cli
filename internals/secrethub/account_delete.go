@@ -187,7 +187,7 @@ func (cmd *AccountDeleteCommand) transferAdminRole(client secrethub.ClientInterf
 			memberNames = append(memberNames, fmt.Sprintf("%s (%s)", member.User.Username, member.User.FullName))
 		}
 	}
-	choice, err := ui.Choose(cmd.io, fmt.Sprintf("Who sould become the new admin of '%s'?", org.Name), memberNames, 3)
+	choice, err := ui.Choose(cmd.io, fmt.Sprintf("Who should become the new admin of '%s'?", org.Name), memberNames, 3)
 	if err != nil {
 		return err
 	}

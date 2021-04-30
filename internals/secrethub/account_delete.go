@@ -2,6 +2,7 @@ package secrethub
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
@@ -12,15 +13,17 @@ import (
 
 // AccountDeleteCommand is a command to inspect account details.
 type AccountDeleteCommand struct {
-	io        ui.IO
-	newClient newClientFunc
+	io              ui.IO
+	newClient       newClientFunc
+	credentialStore CredentialConfig
 }
 
 // NewAccountDeleteCommand creates a new AccountDeleteCommand.
-func NewAccountDeleteCommand(io ui.IO, newClient newClientFunc) *AccountDeleteCommand {
+func NewAccountDeleteCommand(io ui.IO, newClient newClientFunc, credentialStore CredentialConfig) *AccountDeleteCommand {
 	return &AccountDeleteCommand{
-		io:        io,
-		newClient: newClient,
+		io:              io,
+		newClient:       newClient,
+		credentialStore: credentialStore,
 	}
 }
 
@@ -85,6 +88,12 @@ func (cmd *AccountDeleteCommand) Run() error {
 	err = client.Accounts().Delete(account.AccountID)
 	if err != nil {
 		return err
+	}
+	if cmd.credentialStore.Source() == CredentialSourceConfigDir {
+		err := os.Remove(cmd.credentialStore.ConfigDir().Credential().Path())
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: could not delete credential file: %v", err)
+		}
 	}
 	fmt.Fprintln(cmd.io.Output(), "Your account was successfully deleted.")
 	return nil

@@ -583,13 +583,15 @@ func (cmd *MigrateApplyCommand) Run() error {
 	fmt.Fprintf(cmd.io.Output(), "%d fields are already up-to-date\n", alreadyUpToDateCount)
 	fmt.Fprintf(cmd.io.Output(), "%d fields will be skipped\n", skipCount)
 
-	confirmed, err := ui.AskYesNo(cmd.io, "Would you like to apply these changes?", ui.DefaultYes)
-	if err != nil {
-		return errors.New("error prompting for confirmation. Run the command again with --update to skip this prompt")
-	}
-	if !confirmed {
-		fmt.Fprintln(cmd.io.Output(), "Aborting...")
-		return nil
+	if !cmd.update {
+		confirmed, err := ui.AskYesNo(cmd.io, "Would you like to apply these changes?", ui.DefaultYes)
+		if err != nil {
+			return errors.New("error prompting for confirmation. Run the command again with --update to skip this prompt")
+		}
+		if !confirmed {
+			fmt.Fprintln(cmd.io.Output(), "Aborting...")
+			return nil
+		}
 	}
 
 	fmt.Fprintf(cmd.io.Output(), "Applying changes:\n")

@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
@@ -35,28 +34,28 @@ const defaultLength = 22
 
 // GenerateSecretCommand generates a new secret and writes to the output path.
 type GenerateSecretCommand struct {
-	symbolsFlag         bool
-	generator           randchar.Generator
-	io                  ui.IO
-	lengthFlag          intValue
-	firstArg            cli.StringValue
-	secondArg           cli.StringValue
-	lengthArg           intValue
-	charsetFlag         charsetValue
-	mins                minRuleValue
-	copyToClipboard     bool
-	clearClipboardAfter time.Duration
-	clipper             clip.Clipper
-	newClient           newClientFunc
+	symbolsFlag     bool
+	generator       randchar.Generator
+	io              ui.IO
+	lengthFlag      intValue
+	firstArg        cli.StringValue
+	secondArg       cli.StringValue
+	lengthArg       intValue
+	charsetFlag     charsetValue
+	mins            minRuleValue
+	copyToClipboard bool
+	newClient       newClientFunc
+	clipWriter      ClipboardWriter
 }
 
 // NewGenerateSecretCommand creates a new GenerateSecretCommand.
 func NewGenerateSecretCommand(io ui.IO, newClient newClientFunc) *GenerateSecretCommand {
 	return &GenerateSecretCommand{
-		io:                  io,
-		newClient:           newClient,
-		clearClipboardAfter: defaultClearClipboardAfter,
-		clipper:             clip.NewClipboard(),
+		io:        io,
+		newClient: newClient,
+		clipWriter: &ClipboardWriterAutoClear{
+			clipper: clip.NewClipboard(),
+		},
 	}
 }
 
@@ -66,7 +65,7 @@ func (cmd *GenerateSecretCommand) Register(r cli.Registerer) {
 	clause.Flags().VarP(&cmd.lengthFlag, "length", "l", "The length of the generated secret.")
 	clause.Cmd.Flag("length").DefValue = strconv.Itoa(defaultLength)
 	clause.Flags().Var(&cmd.mins, "min", "<charset>:<n> Ensure that the resulting password contains at least n characters from the given character set. Note that adding constraints reduces the strength of the secret. When possible, avoid any constraints.")
-	clause.Flags().BoolVarP(&cmd.copyToClipboard, "clip", "c", false, "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(cmd.clearClipboardAfter)+".")
+	clause.Flags().BoolVarP(&cmd.copyToClipboard, "clip", "c", false, "Copy the generated value to the clipboard. The clipboard is automatically cleared after "+units.HumanDuration(clearClipboardAfter)+".")
 	_ = cmd.charsetFlag.Set("alphanumeric")
 	clause.Flags().Var(&cmd.charsetFlag, "charset", "Define the set of characters to randomly generate a password from. Options are all, alphanumeric, numeric, lowercase, uppercase, letters, symbols and human-readable. Multiple character sets can be combined by supplying them in a comma separated list.")
 	clause.Cmd.Flag("charset").DefValue = "alphanumeric"
@@ -147,7 +146,7 @@ func (cmd *GenerateSecretCommand) run() error {
 	fmt.Fprintf(cmd.io.Output(), "A randomly generated secret has been written to %s:%d.\n", path, version.Version)
 
 	if cmd.copyToClipboard {
-		err = WriteClipboardAutoClear(data, cmd.clearClipboardAfter, cmd.clipper)
+		err = cmd.clipWriter.Write(data)
 		if err != nil {
 			return err
 		}
@@ -155,7 +154,7 @@ func (cmd *GenerateSecretCommand) run() error {
 		fmt.Fprintf(
 			cmd.io.Output(),
 			"The generated value has been copied to the clipboard. It will be cleared after %s.\n",
-			units.HumanDuration(cmd.clearClipboardAfter),
+			units.HumanDuration(clearClipboardAfter),
 		)
 	}
 

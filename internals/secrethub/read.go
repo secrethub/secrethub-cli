@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"time"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
@@ -19,27 +18,27 @@ import (
 
 // ReadCommand is a command to read a secret.
 type ReadCommand struct {
-	io                  ui.IO
-	path                api.SecretPath
-	useClipboard        bool
-	clearClipboardAfter time.Duration
-	clipper             clip.Clipper
-	outFile             string
-	fileMode            filemode.FileMode
-	noNewLine           bool
-	newClient           newClientFunc
-	writeFileFunc       func(filename string, data []byte, perm os.FileMode) error
+	io            ui.IO
+	path          api.SecretPath
+	useClipboard  bool
+	outFile       string
+	fileMode      filemode.FileMode
+	noNewLine     bool
+	newClient     newClientFunc
+	writeFileFunc func(filename string, data []byte, perm os.FileMode) error
+	clipWriter    ClipboardWriter
 }
 
 // NewReadCommand creates a new ReadCommand.
 func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 	return &ReadCommand{
-		clipper:             clip.NewClipboard(),
-		clearClipboardAfter: defaultClearClipboardAfter,
-		io:                  io,
-		newClient:           newClient,
-		writeFileFunc:       ioutil.WriteFile,
-		fileMode:            filemode.New(0600),
+		clipWriter: &ClipboardWriterAutoClear{
+			clipper: clip.NewClipboard(),
+		},
+		io:            io,
+		newClient:     newClient,
+		writeFileFunc: ioutil.WriteFile,
+		fileMode:      filemode.New(0600),
 	}
 }
 
@@ -51,7 +50,7 @@ func (cmd *ReadCommand) Register(r cli.Registerer) {
 		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",
-			units.HumanDuration(cmd.clearClipboardAfter),
+			units.HumanDuration(clearClipboardAfter),
 		),
 	)
 	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.")
@@ -75,7 +74,7 @@ func (cmd *ReadCommand) Run() error {
 	}
 
 	if cmd.useClipboard {
-		err = WriteClipboardAutoClear(secret.Data, cmd.clearClipboardAfter, cmd.clipper)
+		err = cmd.clipWriter.Write(secret.Data)
 		if err != nil {
 			return err
 		}
@@ -84,7 +83,7 @@ func (cmd *ReadCommand) Run() error {
 			cmd.io.Output(),
 			"Copied %s to clipboard. It will be cleared after %s.\n",
 			cmd.path,
-			units.HumanDuration(cmd.clearClipboardAfter),
+			units.HumanDuration(clearClipboardAfter),
 		)
 	}
 

@@ -43,7 +43,6 @@ func NewInjectCommand(io ui.IO, newClient newClientFunc) *InjectCommand {
 	return &InjectCommand{
 		clipWriter: &ClipboardWriterAutoClear{
 			clipper: clip.NewClipboard(),
-			timeout: defaultClearClipboardAfter,
 		},
 		osEnv:        os.Environ(),
 		io:           io,
@@ -61,7 +60,7 @@ func (cmd *InjectCommand) Register(r cli.Registerer) {
 		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the injected template to the clipboard instead of stdout. The clipboard is automatically cleared after %s.",
-			units.HumanDuration(defaultClearClipboardAfter),
+			units.HumanDuration(clearClipboardAfter),
 		))
 	clause.Flags().StringVarP(&cmd.inFile, "in-file", "i", "", "The filename of a template file to inject.")
 	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the injected template to a file instead of stdout.")
@@ -136,7 +135,7 @@ func (cmd *InjectCommand) Run() error {
 			return err
 		}
 
-		_, err = fmt.Fprintf(cmd.io.Output(), "Copied injected template to clipboard. It will be cleared after %s.\n", units.HumanDuration(defaultClearClipboardAfter))
+		_, err = fmt.Fprintf(cmd.io.Output(), "Copied injected template to clipboard. It will be cleared after %s.\n", units.HumanDuration(clearClipboardAfter))
 		if err != nil {
 			return err
 		}

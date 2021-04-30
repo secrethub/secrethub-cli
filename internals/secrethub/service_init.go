@@ -37,7 +37,6 @@ func NewServiceInitCommand(io ui.IO, newClient newClientFunc) *ServiceInitComman
 	return &ServiceInitCommand{
 		clipWriter: &ClipboardWriterAutoClear{
 			clipper: clip.NewClipboard(),
-			timeout: defaultClearClipboardAfter,
 		},
 		io:            io,
 		newClient:     newClient,

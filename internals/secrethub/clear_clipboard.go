@@ -11,8 +11,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// defaultClearClipboardAfter defines the default TTL for data written to the clipboard.
-const defaultClearClipboardAfter = 45 * time.Second
+// clearClipboardAfter defines the TTL for data written to the clipboard.
+const clearClipboardAfter = 45 * time.Second
 
 // ClearClipboardCommand is a command to clear the contents of the clipboard after some time passed.
 type ClearClipboardCommand struct {
@@ -67,7 +67,6 @@ type ClipboardWriter interface {
 }
 
 type ClipboardWriterAutoClear struct {
-	timeout time.Duration
 	clipper clip.Clipper
 }
 
@@ -85,7 +84,7 @@ func (clipWriter *ClipboardWriterAutoClear) Write(data []byte) error {
 
 	err = cloneproc.Spawn(
 		"clipboard-clear", hex.EncodeToString(hash),
-		"--timeout", clipWriter.timeout.String())
+		"--timeout", clearClipboardAfter.String())
 
 	return err
 }

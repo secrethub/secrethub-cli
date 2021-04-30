@@ -34,7 +34,6 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 	return &ReadCommand{
 		clipWriter: &ClipboardWriterAutoClear{
 			clipper: clip.NewClipboard(),
-			timeout: defaultClearClipboardAfter,
 		},
 		io:            io,
 		newClient:     newClient,
@@ -51,7 +50,7 @@ func (cmd *ReadCommand) Register(r cli.Registerer) {
 		"clip", "c", false,
 		fmt.Sprintf(
 			"Copy the secret value to the clipboard. The clipboard is automatically cleared after %s.",
-			units.HumanDuration(defaultClearClipboardAfter),
+			units.HumanDuration(clearClipboardAfter),
 		),
 	)
 	clause.Flags().StringVarP(&cmd.outFile, "out-file", "o", "", "Write the secret value to this file.")
@@ -84,7 +83,7 @@ func (cmd *ReadCommand) Run() error {
 			cmd.io.Output(),
 			"Copied %s to clipboard. It will be cleared after %s.\n",
 			cmd.path,
-			units.HumanDuration(defaultClearClipboardAfter),
+			units.HumanDuration(clearClipboardAfter),
 		)
 	}
 

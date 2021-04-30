@@ -571,7 +571,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 	lastVault := ""
 	for _, change := range changes {
 		if change.Vault() != lastVault {
-			fmt.Fprintf(cmd.io.Output(), "Vault %s\n", change.Vault())
+			fmt.Fprintf(cmd.io.Output(), "Vault %s\n:", change.Vault())
 			lastVault = change.Vault()
 		}
 		change.Print(indentedWriter)

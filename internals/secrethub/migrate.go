@@ -694,7 +694,6 @@ type MigrateApplyCommand struct {
 	newClient newClientFunc
 
 	planFile string
-	append   bool
 	update   bool
 }
 
@@ -713,8 +712,7 @@ func (cmd *MigrateApplyCommand) Register(r cli.Registerer) {
 		"Check out https://secrethub.io/docs/1password/migration/ for detailed instructions.")
 
 	clause.Flags().StringVar(&cmd.planFile, "plan-file", defaultPlanPath, "Path to the YAML file specifying what vaults and items to create.")
-	clause.Flags().BoolVar(&cmd.append, "append", false, "When a vault with the given name already exists, append items to that vault.").Hidden()
-	clause.Flags().BoolVar(&cmd.update, "update", false, "Update 1Password fields that differ from their corresponding SecretHub value without prompting.")
+	clause.Flags().BoolVar(&cmd.update, "update", false, "Perform migration without prompting for confirmation.")
 
 	clause.BindAction(cmd.Run)
 }

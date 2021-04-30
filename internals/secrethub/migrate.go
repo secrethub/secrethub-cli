@@ -497,20 +497,24 @@ func (cmd *MigrateApplyCommand) Run() error {
 	i := 1
 	for _, vault := range plan.vaults {
 		fmt.Fprintf(cmd.io.Output(), "[%d/%d] Checking vault: %s\n", i, len(plan.vaults), vault.Name)
-		exists, err := onepassword.ExistsVault(vault.Name)
+		vaultExists, err := onepassword.ExistsVault(vault.Name)
 		if err != nil {
 			return fmt.Errorf("could not check vault existence: %s", err)
 		}
-		if !exists {
+		if !vaultExists {
 			changes = append(changes, vaultCreation{vault: vault.Name})
 		}
 
 		for _, item := range vault.Items {
-			exists, err := onepassword.ExistsItemInVault(vault.Name, item.Name)
-			if err != nil {
-				return err
+			itemExists := false
+			if vaultExists {
+				itemExists, err = onepassword.ExistsItemInVault(vault.Name, item.Name)
+				if err != nil {
+					return err
+				}
 			}
-			if !exists {
+
+			if !itemExists {
 				template := onepassword.NewItemTemplate()
 				for _, field := range item.Fields {
 					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))

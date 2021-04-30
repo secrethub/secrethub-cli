@@ -109,70 +109,40 @@ func (cmd *AccountDeleteCommand) leaveOrRmOrgs(client secrethub.ClientInterface,
 				}
 			}
 		}
-		if !admin {
-			choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), []string{
-				"Leave it",
-			}, 3)
+		var options []func() error
+		var optionNames []string
+		leave := func() error {
+			_, err = client.Orgs().Members().Revoke(org.Name, me.Username, nil)
+			return err
+		}
+		delete := func() error {
+			return cmd.deleteOrg(client, org.Name)
+		}
+		transferOwnership := func() error {
+			err = cmd.transferAdminRole(client, org, orgMembers)
 			if err != nil {
 				return err
 			}
-			if choice == 0 {
-				_, err = client.Orgs().Members().Revoke(org.Name, me.Username, nil)
-				if err != nil {
-					return err
-				}
-			}
-		} else if len(orgMembers) == 1 {
-			choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), []string{
-				"Delete it",
-			}, 3)
-			if err != nil {
-				return err
-			}
-			if choice == 0 {
-				err = cmd.deleteOrg(client, org.Name)
-				if err != nil {
-					return err
-				}
-			}
-		} else if adminCount > 1 {
-			choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), []string{
-				"Leave it",
-				"Delete it",
-			}, 3)
-			if err != nil {
-				return err
-			}
-			switch choice {
-			case 0:
-				_, err = client.Orgs().Members().Revoke(org.Name, me.Username, nil)
-			case 1:
-				err = cmd.deleteOrg(client, org.Name)
-			}
-			if err != nil {
-				return err
-			}
-		} else {
-			choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), []string{
-				"Make someone else an admin",
-				"Delete it",
-			}, 3)
-			if err != nil {
-				return err
-			}
-			switch choice {
-			case 0:
-				err = cmd.transferAdminRole(client, org, orgMembers)
-				if err != nil {
-					return err
-				}
-				_, err = client.Orgs().Members().Revoke(org.Name, me.Username, nil)
-			case 1:
-				err = cmd.deleteOrg(client, org.Name)
-			}
-			if err != nil {
-				return err
-			}
+			return leave()
+		}
+
+		if admin {
+			optionNames = append(optionNames, "Delete it")
+			options = append(options, delete)
+		}
+		if !admin || adminCount > 1 {
+			optionNames = append(optionNames, "Leave it")
+			options = append(options, leave)
+		}
+		if admin && len(orgMembers) > 1 {
+			optionNames = append(optionNames, "Make someone else admin and leave it")
+			options = append(options, transferOwnership)
+		}
+
+		choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), optionNames, 3)
+		err = options[choice]()
+		if err != nil {
+			return err
 		}
 	}
 	return nil

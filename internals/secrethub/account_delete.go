@@ -119,7 +119,7 @@ func (cmd *AccountDeleteCommand) leaveOrRmOrgs(client secrethub.ClientInterface,
 			_, err = client.Orgs().Members().Revoke(org.Name, me.Username, nil)
 			return err
 		}
-		delete := func() error {
+		deleteOrg := func() error {
 			return cmd.deleteOrg(client, org.Name)
 		}
 		transferOwnership := func() error {
@@ -132,7 +132,7 @@ func (cmd *AccountDeleteCommand) leaveOrRmOrgs(client secrethub.ClientInterface,
 
 		if admin {
 			optionNames = append(optionNames, "Delete it")
-			options = append(options, delete)
+			options = append(options, deleteOrg)
 		}
 		if !admin || adminCount > 1 {
 			optionNames = append(optionNames, "Leave it")
@@ -148,6 +148,9 @@ func (cmd *AccountDeleteCommand) leaveOrRmOrgs(client secrethub.ClientInterface,
 			return ErrDone
 		})
 		choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), optionNames, 3)
+		if err != nil {
+			return err
+		}
 		err = options[choice]()
 		if err == ErrDone {
 			fmt.Fprintf(cmd.io.Output(), "Aborting...\n")

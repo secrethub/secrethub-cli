@@ -62,21 +62,30 @@ func (cmd *ClearClipboardCommand) Run() error {
 	return nil
 }
 
-// WriteClipboardAutoClear writes data to the clipboard and clears it after the timeout.
-func WriteClipboardAutoClear(data []byte, timeout time.Duration, clipper clip.Clipper) error {
+type ClipboardWriter interface {
+	Write(data []byte) error
+}
+
+type ClipboardWriterAutoClear struct {
+	timeout time.Duration
+	clipper clip.Clipper
+}
+
+// Write writes data to the clipboard and clears it after the timeout.
+func (clipWriter *ClipboardWriterAutoClear) Write(data []byte) error {
 	hash, err := bcrypt.GenerateFromPassword(data, bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
-	err = clipper.WriteAll(data)
+	err = clipWriter.clipper.WriteAll(data)
 	if err != nil {
 		return err
 	}
 
 	err = cloneproc.Spawn(
 		"clipboard-clear", hex.EncodeToString(hash),
-		"--timeout", timeout.String())
+		"--timeout", clipWriter.timeout.String())
 
 	return err
 }

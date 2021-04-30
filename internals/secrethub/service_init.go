@@ -26,16 +26,19 @@ type ServiceInitCommand struct {
 	repo          api.RepoPath
 	credential    *credentials.KeyCreator
 	permission    string
-	clipper       clip.Clipper
 	io            ui.IO
 	newClient     newClientFunc
 	writeFileFunc func(filename string, data []byte, perm os.FileMode) error
+	clipWriter    ClipboardWriter
 }
 
 // NewServiceInitCommand creates a new ServiceInitCommand.
 func NewServiceInitCommand(io ui.IO, newClient newClientFunc) *ServiceInitCommand {
 	return &ServiceInitCommand{
-		clipper:       clip.NewClipboard(),
+		clipWriter: &ClipboardWriterAutoClear{
+			clipper: clip.NewClipboard(),
+			timeout: defaultClearClipboardAfter,
+		},
 		io:            io,
 		newClient:     newClient,
 		writeFileFunc: ioutil.WriteFile,
@@ -80,7 +83,7 @@ func (cmd *ServiceInitCommand) Run() error {
 	}
 
 	if cmd.clip {
-		err = WriteClipboardAutoClear(out, defaultClearClipboardAfter, cmd.clipper)
+		err = cmd.clipWriter.Write(out)
 		if err != nil {
 			return err
 		}

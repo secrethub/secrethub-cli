@@ -1,7 +1,9 @@
 package secrethub
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -393,6 +395,73 @@ func walkTreeRec(dir *api.Dir, fn func(*api.Dir) error) error {
 	return nil
 }
 
+type change interface {
+	Vault() string
+	Apply() error
+	Print(w io.Writer)
+}
+
+type vaultCreation struct {
+	vault string
+}
+
+func (c vaultCreation) Vault() string {
+	return c.vault
+}
+
+func (c vaultCreation) Apply() error {
+	return onepassword.CreateVault(c.vault)
+}
+
+func (c vaultCreation) Print(w io.Writer) {
+	fmt.Fprintf(w, "Create vault '%s'\n", c.vault)
+}
+
+type itemCreation struct {
+	vault        string
+	item         string
+	itemTemplate *onepassword.ItemTemplate
+}
+
+func (c itemCreation) Vault() string {
+	return c.vault
+}
+
+func (c itemCreation) Apply() error {
+	return onepassword.CreateItem(c.vault, c.itemTemplate, c.item)
+}
+
+func (c itemCreation) Print(w io.Writer) {
+	fmt.Fprintf(w, "Create item '%s'\n", c.item)
+}
+
+type itemUpdate struct {
+	vault       string
+	item        string
+	fieldValues map[string]string
+}
+
+func (c itemUpdate) Vault() string {
+	return c.vault
+}
+
+func (c itemUpdate) Apply() error {
+	for field, value := range c.fieldValues {
+		err := onepassword.SetField(c.vault, c.item, field, value)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c itemUpdate) Print(w io.Writer) {
+	fmt.Fprintf(w, "Update item '%s' fields:\n", c.item)
+	for field := range c.fieldValues {
+		fmt.Fprintf(w, "  '%s'\n", field)
+	}
+}
+
 func (cmd *MigrateApplyCommand) Run() error {
 	plan, err := getPlan(cmd.planFile)
 	if err != nil {
@@ -417,25 +486,23 @@ func (cmd *MigrateApplyCommand) Run() error {
 		return err
 	}
 
-	createdCount := 0
+	createCount := 0
 	warningCount := 0
-	updatedCount := 0
-	skippedCount := 0
+	updateCount := 0
+	skipCount := 0
 	alreadyUpToDateCount := 0
+
+	var changes []change
+
 	i := 1
 	for _, vault := range plan.vaults {
+		fmt.Fprintf(cmd.io.Output(), "[%d/%d] Checking vault: %s\n", i, len(plan.vaults), vault.Name)
 		exists, err := onepassword.ExistsVault(vault.Name)
 		if err != nil {
 			return fmt.Errorf("could not check vault existence: %s", err)
 		}
 		if !exists {
-			fmt.Fprintf(cmd.io.Output(), "[%d/%d] Creating vault: %s\n", i, len(plan.vaults), vault.Name)
-			err := onepassword.CreateVault(vault.Name)
-			if err != nil {
-				return err
-			}
-		} else {
-			fmt.Fprintf(cmd.io.Output(), "[%d/%d] Updating vault: %s\n", i, len(plan.vaults), vault.Name)
+			changes = append(changes, vaultCreation{vault: vault.Name})
 		}
 
 		for _, item := range vault.Items {
@@ -453,22 +520,24 @@ func (cmd *MigrateApplyCommand) Run() error {
 					template.AddField(field.Name, value, field.Concealed)
 				}
 
-				err = onepassword.CreateItem(vault.Name, template, item.Name)
-				if err != nil {
-					return err
-				}
-				createdCount++
+				changes = append(changes, itemCreation{
+					vault:        vault.Name,
+					item:         item.Name,
+					itemTemplate: template,
+				})
+				createCount++
 			} else {
 				opFields, err := onepassword.GetFields(vault.Name, item.Name)
 				if err != nil {
 					return err
 				}
+				fieldsToUpdate := map[string]string{}
 				for _, field := range item.Fields {
 					opValue, hasField := opFields[field.Name]
 					if !hasField {
 						fmt.Fprintf(os.Stderr, "item %s.%s has missing field %s, please add this field manually to allow the migration tool to update it\n", vault.Name, item.Name, field.Name)
 						warningCount++
-						skippedCount++
+						skipCount++
 						continue
 					}
 
@@ -477,25 +546,18 @@ func (cmd *MigrateApplyCommand) Run() error {
 						return err
 					}
 					if value != opValue {
-						if !cmd.update {
-							confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("The value of the field %s.%s from vault %s is different from its corresponding value in SecretHub. Do you want to set it to the value from SecretHub?", item.Name, field.Name, vault.Name), ui.DefaultYes)
-							if err != nil {
-								return fmt.Errorf("the value of the field %s.%s from vault %s is different from its corresponding value in SecretHub. Use --update to update all fields to their corresponding values from SecretHub", item.Name, field.Name, vault.Name)
-							}
-							if !confirmed {
-								fmt.Fprintln(cmd.io.Output(), "Skipped field.")
-								skippedCount++
-								continue
-							}
-						}
-						err = onepassword.SetField(vault.Name, item.Name, field.Name, value)
-						if err != nil {
-							return err
-						}
-						updatedCount++
+						fieldsToUpdate[field.Name] = value
+						updateCount++
 					} else {
 						alreadyUpToDateCount++
 					}
+				}
+				if len(fieldsToUpdate) > 0 {
+					changes = append(changes, itemUpdate{
+						vault:       vault.Name,
+						item:        item.Name,
+						fieldValues: fieldsToUpdate,
+					})
 				}
 			}
 		}
@@ -503,17 +565,51 @@ func (cmd *MigrateApplyCommand) Run() error {
 	}
 
 	fmt.Fprintln(cmd.io.Output())
-	fmt.Fprintf(cmd.io.Output(), "%d fields created\n", createdCount)
-	fmt.Fprintf(cmd.io.Output(), "%d fields updated\n", updatedCount)
-	fmt.Fprintf(cmd.io.Output(), "%d fields were already up-to-date\n", alreadyUpToDateCount)
-	fmt.Fprintf(cmd.io.Output(), "%d fields skipped\n", skippedCount)
-	if warningCount == 0 {
-		fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully.")
-	} else {
-		fmt.Fprintf(cmd.io.Output(), "\nMigration completed with %d warning(s). Please address the warnings and run the command again.\n", warningCount)
+	indentedWriter := indentedWriter{
+		w: cmd.io.Output(),
+	}
+	lastVault := ""
+	for _, change := range changes {
+		if change.Vault() != lastVault {
+			fmt.Fprintf(cmd.io.Output(), "Vault %s\n", change.Vault())
+			lastVault = change.Vault()
+		}
+		change.Print(indentedWriter)
 	}
 
+	fmt.Fprintln(cmd.io.Output())
+	fmt.Fprintf(cmd.io.Output(), "%d fields will be created\n", createCount)
+	fmt.Fprintf(cmd.io.Output(), "%d fields will be updated\n", updateCount)
+	fmt.Fprintf(cmd.io.Output(), "%d fields are already up-to-date\n", alreadyUpToDateCount)
+	fmt.Fprintf(cmd.io.Output(), "%d fields will be skipped\n", skipCount)
+
+	confirmed, err := ui.AskYesNo(cmd.io, "Would you like to apply these changes?", ui.DefaultYes)
+	if err != nil {
+		return errors.New("error prompting for confirmation. Run the command again with --update to skip this prompt")
+	}
+	if !confirmed {
+		fmt.Fprintln(cmd.io.Output(), "Aborting...")
+		return nil
+	}
+
+	fmt.Fprintf(cmd.io.Output(), "Applying changes:\n")
+	for i, change := range changes {
+		fmt.Fprintf(cmd.io.Output(), "[%d/%d]\n", i, len(changes))
+		err := change.Apply()
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Fprintf(cmd.io.Output(), "Migration completed\n")
 	return nil
+}
+
+type indentedWriter struct {
+	w io.Writer
+}
+
+func (w indentedWriter) Write(p []byte) (n int, err error) {
+	return w.w.Write(append([]byte{' ', ' '}, p...))
 }
 
 func getPlan(planFile string) (*plan, error) {

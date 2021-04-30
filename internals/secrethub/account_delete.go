@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -10,8 +9,6 @@ import (
 	"github.com/secrethub/secrethub-go/internals/api"
 	"github.com/secrethub/secrethub-go/pkg/secrethub"
 )
-
-var ErrDone = errors.New("done")
 
 // AccountDeleteCommand is a command to inspect account details.
 type AccountDeleteCommand struct {
@@ -145,17 +142,16 @@ func (cmd *AccountDeleteCommand) leaveOrRmOrgs(client secrethub.ClientInterface,
 
 		optionNames = append(optionNames, "Abort")
 		options = append(options, func() error {
-			return ErrDone
+			fmt.Fprintf(cmd.io.Output(), "Aborting...\n")
+			os.Exit(0)
+			return nil
 		})
 		choice, err := ui.Choose(cmd.io, fmt.Sprintf("What would you like to do with the org named '%s'?", org.Name), optionNames, 3)
 		if err != nil {
 			return err
 		}
 		err = options[choice]()
-		if err == ErrDone {
-			fmt.Fprintf(cmd.io.Output(), "Aborting...\n")
-			return nil
-		} else if err != nil {
+		if err != nil {
 			return err
 		}
 	}

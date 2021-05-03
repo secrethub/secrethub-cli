@@ -588,6 +588,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 	fmt.Fprintf(cmd.io.Output(), "%d fields will be skipped\n", skipCount)
 
 	if !cmd.update {
+		fmt.Fprintln(cmd.io.Output())
 		confirmed, err := ui.AskYesNo(cmd.io, "Would you like to apply these changes?", ui.DefaultYes)
 		if err != nil {
 			return errors.New("error prompting for confirmation. Run the command again with --update to skip this prompt")
@@ -598,6 +599,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 		}
 	}
 
+	fmt.Fprintln(cmd.io.Output())
 	fmt.Fprintf(cmd.io.Output(), "Applying changes:\n")
 	for i, change := range changes {
 		fmt.Fprintf(cmd.io.Output(), "[%d/%d]\n", i, len(changes))

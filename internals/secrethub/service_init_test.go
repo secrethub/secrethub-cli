@@ -18,8 +18,10 @@ import (
 
 func TestServiceInitCommand_Run(t *testing.T) {
 	keyCreator := credentials.CreateKey()
-	_ = keyCreator.Create()
-	exportedCredential, _ := keyCreator.Export()
+	err := keyCreator.Create()
+	assert.OK(t, err)
+	exportedCredential, err := keyCreator.Export()
+	assert.OK(t, err)
 	testErr := errio.Namespace("test").Code("test").Error("test error")
 
 	cases := map[string]struct {

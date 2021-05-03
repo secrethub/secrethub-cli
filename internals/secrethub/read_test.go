@@ -3,9 +3,7 @@ package secrethub
 import (
 	"os"
 	"testing"
-	"time"
 
-	"github.com/secrethub/secrethub-cli/internals/cli/clip/fakeclip"
 	"github.com/secrethub/secrethub-cli/internals/cli/filemode"
 	"github.com/secrethub/secrethub-cli/internals/cli/ui/fakeui"
 
@@ -33,29 +31,25 @@ func TestReadCommand_Run(t *testing.T) {
 	}{
 		"success read": {
 			cmd: ReadCommand{
-				path:    "test/repo/secret",
-				clipper: fakeclip.New(),
+				path: "test/repo/secret",
 			},
 			secretVersion: api.SecretVersion{Data: testSecret},
 			expectedOut:   string(testSecret) + "\n",
 		},
 		"success clipboard": {
 			cmd: ReadCommand{
-				path:                "test/repo/secret",
-				clipper:             fakeclip.New(),
-				useClipboard:        true,
-				clearClipboardAfter: 5 * time.Minute,
+				path:         "test/repo/secret",
+				useClipboard: true,
 			},
 			secretVersion: api.SecretVersion{Data: testSecret},
 			expectedClip:  testSecret,
-			expectedOut:   "Copied test/repo/secret to clipboard. It will be cleared after 5 minutes.\n",
+			expectedOut:   "Copied test/repo/secret to clipboard. It will be cleared after 45 seconds.\n",
 		},
 		"success file": {
 			cmd: ReadCommand{
 				path:     "test/repo/secret",
 				outFile:  "secret.txt",
 				fileMode: filemode.New(os.ModePerm),
-				clipper:  fakeclip.New(),
 			},
 			secretVersion:   api.SecretVersion{Data: testSecret},
 			expectedFileOut: []byte(string(testSecret) + "\n"),
@@ -66,7 +60,6 @@ func TestReadCommand_Run(t *testing.T) {
 				path:     "test/repo/secret",
 				outFile:  "/fail/read.txt",
 				fileMode: filemode.New(os.ModeAppend),
-				clipper:  fakeclip.New(),
 			},
 			fileErr:       testErr,
 			secretVersion: api.SecretVersion{Data: testSecret},
@@ -74,17 +67,13 @@ func TestReadCommand_Run(t *testing.T) {
 			expectedErr:   ErrCannotWrite("/fail/read.txt", testErr.Error()),
 		},
 		"new client error": {
-			cmd: ReadCommand{
-				clipper: fakeclip.New(),
-			},
+			cmd:           ReadCommand{},
 			secretVersion: api.SecretVersion{Data: testSecret},
 			newClientErr:  testErr,
 			expectedErr:   testErr,
 		},
 		"read error": {
-			cmd: ReadCommand{
-				clipper: fakeclip.New(),
-			},
+			cmd:           ReadCommand{},
 			secretVersion: api.SecretVersion{Data: testSecret},
 			serviceErr:    testErr,
 			expectedErr:   testErr,
@@ -97,6 +86,9 @@ func TestReadCommand_Run(t *testing.T) {
 			var fileOut []byte
 			testIO := fakeui.NewIO(t)
 			tc.cmd.io = testIO
+
+			clipWriter := &FakeClipboardWriter{}
+			tc.cmd.clipWriter = clipWriter
 
 			tc.cmd.newClient = func() (secrethub.ClientInterface, error) {
 				return fakeclient.Client{
@@ -118,13 +110,11 @@ func TestReadCommand_Run(t *testing.T) {
 
 			// Run
 			err := tc.cmd.Run()
-			clip, clipErr := tc.cmd.clipper.ReadAll()
 
 			// Assert
 			assert.Equal(t, err, tc.expectedErr)
 			assert.Equal(t, testIO.Out.String(), tc.expectedOut)
-			assert.OK(t, clipErr)
-			assert.Equal(t, clip, tc.expectedClip)
+			assert.Equal(t, clipWriter.Buffer.Bytes(), tc.expectedClip)
 			assert.Equal(t, fileOut, tc.expectedFileOut)
 		})
 	}

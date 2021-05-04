@@ -589,7 +589,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 
 	if !cmd.update {
 		fmt.Fprintln(cmd.io.Output())
-		confirmed, err := ui.AskYesNo(cmd.io, "Would you like to apply these changes?", ui.DefaultYes)
+		confirmed, err := ui.AskYesNo(cmd.io, "Would you like to apply these changes?", ui.DefaultNo)
 		if err != nil {
 			return errors.New("error prompting for confirmation. Run the command again with --update to skip this prompt")
 		}

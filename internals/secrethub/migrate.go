@@ -522,6 +522,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 						return err
 					}
 					template.AddField(field.Name, value, field.Concealed)
+					createCount++
 				}
 
 				changes = append(changes, itemCreation{
@@ -529,7 +530,6 @@ func (cmd *MigrateApplyCommand) Run() error {
 					item:         item.Name,
 					itemTemplate: template,
 				})
-				createCount++
 			} else {
 				opFields, err := onepassword.GetFields(vault.Name, item.Name)
 				if err != nil {

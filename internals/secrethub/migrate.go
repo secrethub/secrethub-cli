@@ -481,7 +481,10 @@ func (cmd *MigrateApplyCommand) Run() error {
 		}
 		i++
 	}
-	fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully. You can now use these secrets from 1password.")
+	fmt.Fprintln(cmd.io.Output(), "\n"+
+		"Migration completed successfully.\n"+
+		"Your secrets are now available via 1Password.\n"+
+		"Learn how to load them using any of the integrations at https://secrethub.io/docs/1password/migration/#integrations")
 
 	return nil
 }

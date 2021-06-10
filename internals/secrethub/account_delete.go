@@ -78,9 +78,10 @@ func (cmd *AccountDeleteCommand) Run() error {
 		return err
 	}
 	if cmd.credentialStore.Source() == CredentialSourceConfigDir {
-		err := os.Remove(cmd.credentialStore.ConfigDir().Credential().Path())
+		credentialFilePath := cmd.credentialStore.ConfigDir().Credential().Path()
+		err := os.Remove(credentialFilePath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "warning: could not delete credential file: %v", err)
+			fmt.Fprintf(os.Stderr, "warning: could not delete credential file at '%s', please remove it manually: %v", credentialFilePath, err)
 		}
 	}
 	fmt.Fprintln(cmd.io.Output(), "Your account was successfully deleted.")

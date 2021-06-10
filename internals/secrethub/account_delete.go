@@ -29,6 +29,11 @@ func NewAccountDeleteCommand(io ui.IO, newClient newClientFunc, credentialStore 
 // Register registers the command, arguments and flags on the provided Registerer.
 func (cmd *AccountDeleteCommand) Register(r cli.Registerer) {
 	clause := r.Command("delete", "Delete your SecretHub account.")
+	clause.HelpLong("Permanently delete your SecretHub account " +
+		"along with all the secrets in your personal namespace and all associated account data.\n\n" +
+		"In order to delete your account, you first need to leave or delete all orgs that you are a member of.\n" +
+		"This command will prompt you to do so and walk you through the complete process of deleting your account.\n\n" +
+		"The account deletion cannot be undone.")
 
 	clause.BindAction(cmd.Run)
 }

@@ -15,6 +15,14 @@ var (
 	ErrCredentialNotExist = errMain.Code("credential_not_configured").Error("could not find credential. Go to https://signup.secrethub.io/ to create a personal account. To use the CLI as a service account, set the SECRETHUB_CREDENTIAL or SECRETHUB_IDENTITY_PROVIDER environment variable.")
 )
 
+type CredentialSource string
+
+const (
+	CredentialSourceFlag      CredentialSource = "--credential"
+	CredentialSourceEnvVar    CredentialSource = "$SECRETHUB_CREDENTIAL"
+	CredentialSourceConfigDir CredentialSource = "config dir"
+)
+
 // CredentialConfig handles the configuration necessary for local credentials.
 type CredentialConfig interface {
 	IsPassphraseSet() bool
@@ -22,6 +30,7 @@ type CredentialConfig interface {
 	Import() (credentials.Key, error)
 	ConfigDir() configdir.Dir
 	PassphraseReader() credentials.Reader
+	Source() CredentialSource
 
 	Register(app *cli.App)
 }
@@ -78,6 +87,14 @@ func (store *credentialConfig) getCredentialReader() credentials.Reader {
 	return store.credentialReader
 }
 
+// Source returns the source of the credential that is being used.
+func (store *credentialConfig) Source() CredentialSource {
+	if store.credentialReader.value == "" {
+		return CredentialSourceConfigDir
+	}
+	return store.credentialReader.Source()
+}
+
 // PassphraseReader returns a PassphraseReader configured by the flags.
 func (store *credentialConfig) PassphraseReader() credentials.Reader {
 	return NewPassphraseReader(store.io, store.credentialPassphrase, store.CredentialPassphraseCacheTTL)
@@ -92,9 +109,9 @@ func (f *flagCredentialReader) Read() ([]byte, error) {
 	return []byte(f.value), nil
 }
 
-func (f *flagCredentialReader) Source() string {
+func (f *flagCredentialReader) Source() CredentialSource {
 	if f.HasEnvarValue() && !f.Flag.Changed() {
-		return "$SECRETHUB_CREDENTIAL"
+		return CredentialSourceEnvVar
 	}
-	return "--credential"
+	return CredentialSourceFlag
 }

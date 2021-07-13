@@ -63,7 +63,7 @@ var regexpCompositeSecrets = regexp.MustCompile(`{{.+?}}[^\s]`)
 
 func checkForCompositeSecrets(inFileContents []byte) error {
 	if match := regexpCompositeSecrets.Find(inFileContents); match != nil {
-		return fmt.Errorf("Dotenv does not support composite environment variables: %s\nMake sure one environment variable corresponds to a single secret.", match)
+		return fmt.Errorf("composite environment variables are not supported anymore with Dotenv: %s\nMake sure one environment variable corresponds to a single secret.", match)
 	}
 	return nil
 }

@@ -67,6 +67,6 @@ workflows:
               arch: ["amd64", "386"]
             exclude:
               - os: darwin
-                arch: 386
+                arch: "386"
       - test
       - verify-goreleaser

@@ -52,13 +52,13 @@ func newReferenceMapping(p *plan) referenceMapping {
 }
 
 // addVarPossibilities adds variations to the index for all values in the passed in vars map
-func (m referenceMapping) addVarPossibilities(vars map[string][]string) (nonExistingValues []string, err error) {
+func (m referenceMapping) addVarPossibilities(vars map[string][]string) error {
 	exists := make(map[string]string)
 	for varname, possibleValues := range vars {
 		varname = strings.ToUpper(varname)
 		for _, value := range possibleValues {
 			if otherVarname := exists[value]; otherVarname != "" && otherVarname != varname {
-				return nil, fmt.Errorf("you've ran into a limitation of the migration tool. You can't have multiple variables with the same value: '%s' now occurs in both '%s' and '%s'", value, varname, otherVarname)
+				return fmt.Errorf("you've ran into a limitation of the migration tool. You can't have multiple variables with the same value: '%s' now occurs in both '%s' and '%s'", value, varname, otherVarname)
 			}
 			exists[value] = varname
 		}
@@ -80,14 +80,12 @@ func (m referenceMapping) addVarPossibilities(vars map[string][]string) (nonExis
 					for secretHubVariation, opVariation := range variations {
 						m[strings.ReplaceAll(secrethubRef, value, secretHubVariation)] = strings.ReplaceAll(opRef, value, opVariation)
 					}
-				} else {
-					nonExistingValues = append(nonExistingValues, value)
 				}
 			}
 		}
 	}
 
-	return
+	return nil
 }
 
 // stripSecretHubURIScheme removes the secrethub:// prefix from the index keys so it can be

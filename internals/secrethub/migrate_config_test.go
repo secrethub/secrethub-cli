@@ -106,9 +106,10 @@ func TestMigrateTemplates(t *testing.T) {
 			var out bytes.Buffer
 			m := referenceMapping(tc.mapping)
 			m.stripSecretHubURIScheme()
-			m.addVarPossibilities(tc.vars)
+			err := m.addVarPossibilities(tc.vars)
+			assert.OK(t, err)
 
-			_, err := migrateTemplateTags(bytes.NewReader([]byte(tc.in)), &out, m, "{{ %s }}")
+			_, err = migrateTemplateTags(bytes.NewReader([]byte(tc.in)), &out, m, "{{ %s }}")
 			if tc.expectedErr {
 				assert.Equal(t, err != nil, true)
 				return
@@ -227,9 +228,10 @@ func TestMigrateEnvfile(t *testing.T) {
 			var out bytes.Buffer
 			m := referenceMapping(tc.mapping)
 			m.stripSecretHubURIScheme()
-			m.addVarPossibilities(tc.vars)
+			err := m.addVarPossibilities(tc.vars)
+			assert.OK(t, err)
 
-			err := func() error {
+			err = func() error {
 				err := checkForCompositeSecrets([]byte(tc.in))
 				if err != nil {
 					return err

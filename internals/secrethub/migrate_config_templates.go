@@ -20,16 +20,13 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 		return err
 	}
 
-	vars, err := parseVarPossibilities(cmd.vars)
+	vars := parseVarPossibilities(cmd.vars)
+	refMapping := newReferenceMapping(plan)
+	err = refMapping.addVarPossibilities(vars)
 	if err != nil {
 		return err
 	}
 
-	refMapping := newReferenceMapping(plan)
-	_, err = refMapping.addVarPossibilities(vars)
-	if err != nil {
-		return err
-	}
 	refMapping.stripSecretHubURIScheme()
 
 	for _, filepath := range cmd.inFiles {
@@ -123,7 +120,7 @@ func (cmd *MigrateConfigTemplatesCommand) Register(r cli.Registerer) {
 	clause.BindAction(cmd.Run)
 }
 
-func parseVarPossibilities(unparsed map[string]string) (map[string][]string, error) {
+func parseVarPossibilities(unparsed map[string]string) map[string][]string {
 	result := make(map[string][]string)
 	for varname, optionsStr := range unparsed {
 		options := strings.Split(optionsStr, ",")
@@ -134,5 +131,5 @@ func parseVarPossibilities(unparsed map[string]string) (map[string][]string, err
 		result[varname] = options
 	}
 
-	return result, nil
+	return result
 }

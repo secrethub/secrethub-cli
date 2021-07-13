@@ -16,13 +16,9 @@ func (cmd *MigrateConfigEnvfileCommand) Run() error {
 		return err
 	}
 
-	vars, err := parseVarPossibilities(cmd.vars)
-	if err != nil {
-		return err
-	}
-
+	vars := parseVarPossibilities(cmd.vars)
 	refMapping := newReferenceMapping(plan)
-	_, err = refMapping.addVarPossibilities(vars)
+	err = refMapping.addVarPossibilities(vars)
 	if err != nil {
 		return err
 	}

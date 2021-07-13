@@ -55,11 +55,11 @@ func (cmd *MigrateConfigEnvfileCommand) Run() error {
 	return nil
 }
 
-var regexpCompositeSecrets = regexp.MustCompile(`{{.+?}}[^\s]`)
+var regexpCompositeSecrets = regexp.MustCompile(`{{.+?}}[^\s]+`)
 
 func checkForCompositeSecrets(inFileContents []byte) error {
 	if match := regexpCompositeSecrets.Find(inFileContents); match != nil {
-		return fmt.Errorf("composite environment variables are not supported anymore with Dotenv: %s\nMake sure one environment variable corresponds to a single secret.", match)
+		return fmt.Errorf("composite environment variables are not supported anymore with Dotenv: %s\nMake sure one environment variable corresponds to just a single secret", match)
 	}
 	return nil
 }

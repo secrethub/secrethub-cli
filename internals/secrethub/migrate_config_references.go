@@ -3,7 +3,6 @@ package secrethub
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"regexp"
 	"strings"
 
@@ -61,7 +60,7 @@ func migrateReferences(inFile string, outFile string, mapping referenceMapping) 
 		return nil, fmt.Errorf("no 1Password equivalent present in your migration plan for the following secrets:\n- %s", strings.Join(misses, "\n- "))
 	}
 
-	err = os.WriteFile(outFile, []byte(output), 0666)
+	err = ioutil.WriteFile(outFile, []byte(output), 0666)
 	if err != nil {
 		return nil, err
 	}

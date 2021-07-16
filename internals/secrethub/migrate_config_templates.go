@@ -3,6 +3,7 @@ package secrethub
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -48,7 +49,7 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 }
 
 func migrateTemplateTags(inFile io.Reader, outFile io.Writer, mapping referenceMapping, formatString string) ([]string, error) {
-	raw, err := io.ReadAll(inFile)
+	raw, err := ioutil.ReadAll(inFile)
 	if err != nil {
 		return nil, ErrReadFile(inFile, err)
 	}

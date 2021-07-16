@@ -3,6 +3,7 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"regexp"
 
@@ -29,7 +30,7 @@ func (cmd *MigrateConfigEnvfileCommand) Run() error {
 		filepath = "secrethub.env"
 	}
 
-	inFileContents, err := os.ReadFile(filepath)
+	inFileContents, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return ErrReadFile(filepath, err)
 	}

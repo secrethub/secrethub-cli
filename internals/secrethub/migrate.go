@@ -655,6 +655,9 @@ func (cmd *MigrateApplyCommand) Run() error {
 		fmt.Fprintf(cmd.io.Output(), "%d fields will be updated\n", fieldUpdateCount)
 	}
 
+	fmt.Fprintln(cmd.io.Output())
+	fmt.Fprint(cmd.io.Output(), "Note: Adding secrets to an existing vault will make them accessible to everyone who has read permission on the vault.\n")
+
 	if !cmd.update {
 		fmt.Fprintln(cmd.io.Output())
 		confirmed, err := ui.AskYesNo(cmd.io, "Would you like to apply these changes?", ui.DefaultNo)

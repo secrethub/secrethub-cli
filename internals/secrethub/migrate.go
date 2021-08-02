@@ -486,11 +486,11 @@ func (cmd *MigrateApplyCommand) Run() error {
 		return err
 	}
 
-	createCount := 0
+	vaultCreateCount := 0
+	itemCreateCount := 0
+	fieldUpdateCount := 0
 	warningCount := 0
-	updateCount := 0
 	skipCount := 0
-	alreadyUpToDateCount := 0
 
 	var changes []change
 
@@ -503,6 +503,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 		}
 		if !vaultExists {
 			changes = append(changes, vaultCreation{vault: vault.Name})
+			vaultCreateCount++
 		}
 
 		for _, item := range vault.Items {
@@ -522,7 +523,6 @@ func (cmd *MigrateApplyCommand) Run() error {
 						return err
 					}
 					template.AddField(field.Name, value, field.Concealed)
-					createCount++
 				}
 
 				changes = append(changes, itemCreation{
@@ -530,6 +530,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 					item:         item.Name,
 					itemTemplate: template,
 				})
+				itemCreateCount++
 			} else {
 				opFields, err := onepassword.GetFields(vault.Name, item.Name)
 				if err != nil {
@@ -551,9 +552,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 					}
 					if value != opValue {
 						fieldsToUpdate[field.Name] = value
-						updateCount++
-					} else {
-						alreadyUpToDateCount++
+						fieldUpdateCount++
 					}
 				}
 				if len(fieldsToUpdate) > 0 {
@@ -584,10 +583,9 @@ func (cmd *MigrateApplyCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output())
 	fmt.Fprintln(cmd.io.Output(), "Summary:")
-	fmt.Fprintf(cmd.io.Output(), "%d fields will be created\n", createCount)
-	fmt.Fprintf(cmd.io.Output(), "%d fields will be updated\n", updateCount)
-	fmt.Fprintf(cmd.io.Output(), "%d fields are already up-to-date\n", alreadyUpToDateCount)
-	fmt.Fprintf(cmd.io.Output(), "%d fields will be skipped\n", skipCount)
+	fmt.Fprintf(cmd.io.Output(), "%d vaults will be created\n", vaultCreateCount)
+	fmt.Fprintf(cmd.io.Output(), "%d items will be created\n", itemCreateCount)
+	fmt.Fprintf(cmd.io.Output(), "%d fields will be updated\n", fieldUpdateCount)
 
 	if !cmd.update {
 		fmt.Fprintln(cmd.io.Output())

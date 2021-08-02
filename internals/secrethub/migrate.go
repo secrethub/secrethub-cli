@@ -583,9 +583,15 @@ func (cmd *MigrateApplyCommand) Run() error {
 
 	fmt.Fprintln(cmd.io.Output())
 	fmt.Fprintln(cmd.io.Output(), "Summary:")
-	fmt.Fprintf(cmd.io.Output(), "%d vaults will be created\n", vaultCreateCount)
-	fmt.Fprintf(cmd.io.Output(), "%d items will be created\n", itemCreateCount)
-	fmt.Fprintf(cmd.io.Output(), "%d fields will be updated\n", fieldUpdateCount)
+	if vaultCreateCount != 0 {
+		fmt.Fprintf(cmd.io.Output(), "%d vaults will be created\n", vaultCreateCount)
+	}
+	if itemCreateCount != 0 {
+		fmt.Fprintf(cmd.io.Output(), "%d items will be created\n", itemCreateCount)
+	}
+	if fieldUpdateCount != 0 {
+		fmt.Fprintf(cmd.io.Output(), "%d fields will be updated\n", fieldUpdateCount)
+	}
 
 	if !cmd.update {
 		fmt.Fprintln(cmd.io.Output())

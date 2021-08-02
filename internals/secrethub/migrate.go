@@ -569,6 +569,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 	}
 
 	fmt.Fprintln(cmd.io.Output())
+	fmt.Fprintln(cmd.io.Output(), "Detected changes to be made:")
 	indentedWriter := indentedWriter{
 		w: cmd.io.Output(),
 	}
@@ -582,6 +583,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 	}
 
 	fmt.Fprintln(cmd.io.Output())
+	fmt.Fprintln(cmd.io.Output(), "Summary:")
 	fmt.Fprintf(cmd.io.Output(), "%d fields will be created\n", createCount)
 	fmt.Fprintf(cmd.io.Output(), "%d fields will be updated\n", updateCount)
 	fmt.Fprintf(cmd.io.Output(), "%d fields are already up-to-date\n", alreadyUpToDateCount)

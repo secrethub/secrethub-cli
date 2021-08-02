@@ -496,9 +496,6 @@ func (cmd *MigrateApplyCommand) Run() error {
 
 	i := 1
 	for _, vault := range plan.vaults {
-		if i != 1 {
-			fmt.Fprintf(cmd.io.Output(), "\033[1A\033[K")
-		}
 		fmt.Fprintf(cmd.io.Output(), "[%d/%d] Checking vault: %s\n", i, len(plan.vaults), vault.Name)
 		vaultExists, err := onepassword.ExistsVault(vault.Name)
 		if err != nil {
@@ -605,17 +602,12 @@ func (cmd *MigrateApplyCommand) Run() error {
 	fmt.Fprintln(cmd.io.Output())
 	fmt.Fprintf(cmd.io.Output(), "Applying changes:\n")
 	for i, change := range changes {
-		if i != 0 {
-			fmt.Fprintf(cmd.io.Output(), "\033[1A\033[K")
-		}
 		fmt.Fprintf(cmd.io.Output(), "[%d/%d]\n", i, len(changes))
 		err := change.Apply()
 		if err != nil {
 			return err
 		}
 	}
-	fmt.Fprintf(cmd.io.Output(), "\033[1A\033[K")
-	fmt.Fprintf(cmd.io.Output(), "[%d/%d]\n", len(changes), len(changes))
 	fmt.Fprintf(cmd.io.Output(), "Migration completed\n")
 	return nil
 }

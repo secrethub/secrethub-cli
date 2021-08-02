@@ -30,7 +30,7 @@ func CreateItem(vault string, template *ItemTemplate, title string) error {
 
 	encodedTemplate := base64.RawURLEncoding.EncodeToString(jsonTemplate)
 
-	_, err = execOP("create", "item", "login", "--vault="+vault, encodedTemplate, "title="+title)
+	_, err = execOP("create", "item", "apicredential", "--vault="+vault, encodedTemplate, "title="+title)
 	return err
 }
 

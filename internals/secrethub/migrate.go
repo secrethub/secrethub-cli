@@ -38,6 +38,68 @@ type plan struct {
 	vaults         map[string]*vault
 }
 
+type referenceMapping map[string]string
+
+func newReferenceMapping(p *plan) referenceMapping {
+	index := make(map[string]string)
+	for _, vault := range p.vaults {
+		for _, item := range vault.Items {
+			for _, field := range item.Fields {
+				opPath := fmt.Sprintf("op://%s/%s/%s", vault.Name, item.Name, field.Name)
+				index[field.Reference] = opPath
+			}
+		}
+	}
+	return referenceMapping(index)
+}
+
+// addVarPossibilities adds variations to the index for all values in the passed in vars map
+func (m referenceMapping) addVarPossibilities(vars map[string][]string) error {
+	exists := make(map[string]string)
+	for varname, possibleValues := range vars {
+		varname = strings.ToUpper(varname)
+		for _, value := range possibleValues {
+			if otherVarname := exists[value]; otherVarname != "" && otherVarname != varname {
+				return fmt.Errorf("you've ran into a limitation of the migration tool. You can't have multiple variables with the same value: '%s' now occurs in both '%s' and '%s'", value, varname, otherVarname)
+			}
+			exists[value] = varname
+		}
+	}
+
+	for varname, possibleValues := range vars {
+		uppercaseVarname := strings.ToUpper(varname)
+
+		for _, value := range possibleValues {
+			for secrethubRef, opRef := range m {
+				if strings.Contains(secrethubRef, value) && strings.Contains(opRef, value) {
+					// Add syntax variations to the index
+					variations := map[string]string{
+						"$" + varname:                 "$" + uppercaseVarname,
+						"$" + uppercaseVarname:        "$" + uppercaseVarname,
+						"${" + varname + "}":          "${" + uppercaseVarname + "}",
+						"${" + uppercaseVarname + "}": "${" + uppercaseVarname + "}",
+					}
+					for secretHubVariation, opVariation := range variations {
+						m[strings.ReplaceAll(secrethubRef, value, secretHubVariation)] = strings.ReplaceAll(opRef, value, opVariation)
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// stripSecretHubURIScheme removes the secrethub:// prefix from the index keys so it can be
+// used for secrethub.env files and config file templates.
+func (m referenceMapping) stripSecretHubURIScheme() {
+	for secrethubRef, opRef := range m {
+		stripped := strings.TrimPrefix(secrethubRef, secretReferencePrefix)
+		delete(m, secrethubRef)
+		m[stripped] = opRef
+	}
+}
+
 type vault struct {
 	Name  string `yaml:"vault-name"`
 	Items []item
@@ -258,8 +320,8 @@ func (cmd *MigratePlanCommand) addDirToPlan(client secrethub.ClientInterface, pa
 	fmt.Fprintf(cmd.io.Output(), "Planning migration for %s\n", path)
 
 	tree, err := client.Dirs().GetTree(path, -1, false)
-	if err == api.ErrForbidden {
-		fmt.Fprintf(os.Stderr, "WARN: Skipping %s because you do not have read access. ", path)
+	if err == api.ErrForbidden || api.IsErrNotFound(err) {
+		fmt.Fprintf(os.Stderr, "WARN: Skipping '%s' because you do not have read access. ", path)
 		accessLevels, err := client.AccessRules().ListLevels(path)
 		if err == nil {
 			var usernames []string
@@ -614,7 +676,10 @@ func (cmd *MigrateApplyCommand) Run() error {
 			return err
 		}
 	}
-	fmt.Fprintf(cmd.io.Output(), "Migration completed\n")
+	fmt.Fprintln(cmd.io.Output(), "\n"+
+		"Migration completed successfully.\n"+
+		"Your secrets are now available via 1Password.\n"+
+		"Learn how to load them using any of the integrations at https://secrethub.io/docs/1password/migration/#integrations")
 	return nil
 }
 

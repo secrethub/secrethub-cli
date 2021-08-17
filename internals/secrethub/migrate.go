@@ -630,6 +630,10 @@ func (cmd *MigrateApplyCommand) Run() error {
 	}
 
 	fmt.Fprintln(cmd.io.Output())
+	if len(changes) == 0 {
+		fmt.Fprintln(cmd.io.Output(), "Already up to date.")
+		return nil
+	}
 	fmt.Fprintln(cmd.io.Output(), "Detected changes to be made:")
 	indentedWriter := indentedWriter{
 		w: cmd.io.Output(),

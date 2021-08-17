@@ -673,7 +673,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 	fmt.Fprintln(cmd.io.Output())
 	fmt.Fprintf(cmd.io.Output(), "Applying changes:\n")
 	for i, change := range changes {
-		fmt.Fprintf(cmd.io.Output(), "[%d/%d]\n", i, len(changes))
+		fmt.Fprintf(cmd.io.Output(), "[%d/%d]\n", i+1, len(changes))
 		err := change.Apply()
 		if err != nil {
 			return err

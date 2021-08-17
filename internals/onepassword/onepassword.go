@@ -34,6 +34,37 @@ func CreateItem(vault string, template *ItemTemplate, title string) error {
 	return err
 }
 
+func SetField(vault, item, field, value string) error {
+	_, err := execOP("edit", "item", item, fmt.Sprintf(`%s=%s`, field, value), "--vault="+vault)
+	if err != nil {
+		return fmt.Errorf("could not set field '%s'.'%s'.'%s'", vault, item, field)
+	}
+	return nil
+}
+
+// GetFields returns a title-to-value map of the fields from the first section of the given 1Password item.
+// The rest of the fields are ignored as the migration tool only stores information in the first
+// section of each item.
+func GetFields(vault, item string) (map[string]string, error) {
+	opItem := struct {
+		Details ItemTemplate `json:"details"`
+	}{}
+	opItemJSON, err := execOP("get", "item", item, "--vault="+vault)
+	if err != nil {
+		return nil, fmt.Errorf("could not get item '%s'.'%s' from 1Password: %s", vault, item, err)
+	}
+	err = json.Unmarshal(opItemJSON, &opItem)
+	if err != nil {
+		return nil, fmt.Errorf("unexpected format of 1Password item in `op get item` command output: %s", err)
+	}
+
+	fields := make(map[string]string, len(opItem.Details.Sections[0].Fields))
+	for _, field := range opItem.Details.Sections[0].Fields {
+		fields[field.Title] = field.Value
+	}
+	return fields, nil
+}
+
 func NewItemTemplate() *ItemTemplate {
 	return &ItemTemplate{
 		Sections: []sectionTemplate{
@@ -64,7 +95,7 @@ func (tpl *ItemTemplate) AddField(name, value string, concealed bool) {
 	tpl.Sections[0].Fields = append(tpl.Sections[0].Fields, itemFieldTemplate{
 		Designation: designation,
 		Name:        name,
-		Type:        name,
+		Title:       name,
 		Value:       value,
 	})
 }
@@ -72,7 +103,7 @@ func (tpl *ItemTemplate) AddField(name, value string, concealed bool) {
 type itemFieldTemplate struct {
 	Designation string `json:"k"`
 	Name        string `json:"n"`
-	Type        string `json:"t"`
+	Title       string `json:"t"`
 	Value       string `json:"v"`
 }
 
@@ -100,14 +131,52 @@ func EnsureSignedIn() error {
 	return fmt.Errorf("OP_SESSION environment variable not found, run `eval $(op signin)` to set one")
 }
 
+func opConfigDirPath() (string, error) {
+	xdgConfigHome, _ := os.LookupEnv("XDG_CONFIG_HOME")
+	home, _ := homedir.Dir()
+
+	// Inspect possible config directories in reverse order of priority.
+	// This code has been taken from the op cli's source code.
+	configDirPaths := []string{}
+	if home != "" {
+		// Legacy home
+		configDirPaths = append(configDirPaths, filepath.Join(home, ".op"))
+	}
+	if xdgConfigHome != "" {
+		// Legacy xdg
+		configDirPaths = append(configDirPaths, filepath.Join(xdgConfigHome, ".op"))
+	}
+	if home != "" {
+		// New home
+		configDirPaths = append(configDirPaths, filepath.Join(home, ".config", "op"))
+	}
+	if xdgConfigHome != "" {
+		// New xdg
+		configDirPaths = append(configDirPaths, filepath.Join(xdgConfigHome, "op"))
+	}
+
+	for _, configDir := range configDirPaths {
+		fileInfo, err := os.Stat(configDir)
+		if err == nil && fileInfo.IsDir() {
+			return configDir, nil
+		}
+	}
+
+	// If we reach this point then none of those directories exist (op is executed
+	// for the first time). Default to the last entry in the list.
+	if len(configDirPaths) > 0 {
+		return configDirPaths[len(configDirPaths)-1], nil
+	}
+
+	return "", fmt.Errorf("unable to determine location of config directory")
+}
+
 func GetSignInAddress() (string, error) {
-	home, err := homedir.Dir()
+	path, err := opConfigDirPath()
 	if err != nil {
 		return "", err
 	}
-
-	path := filepath.Join(home, ".op", "config")
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(filepath.Join(path, "config"))
 	if err != nil {
 		return "", fmt.Errorf("could not read 1password config file at %s", path)
 	}

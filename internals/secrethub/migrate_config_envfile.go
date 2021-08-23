@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"regexp"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
@@ -40,13 +39,7 @@ func (cmd *MigrateConfigEnvfileCommand) Run() error {
 		return err
 	}
 
-	outFile, err := os.Create(".env")
-	if err != nil {
-		return fmt.Errorf("cannot create output .env file: %s", err)
-	}
-	defer outFile.Close()
-
-	replaceCount, err := migrateTemplateTags(bytes.NewBuffer(inFileContents), outFile, refMapping, "%s")
+	replaceCount, err := migrateTemplateTags(bytes.NewBuffer(inFileContents), ".env", refMapping, "%s")
 	if err != nil {
 		return err
 	}

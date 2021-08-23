@@ -1,10 +1,10 @@
 package secrethub
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"regexp"
 	"strings"
 
@@ -31,13 +31,12 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 	refMapping.stripSecretHubURIScheme()
 
 	for _, filepath := range cmd.inFiles {
-		file, err := os.Open(filepath)
+		inFileContents, err := ioutil.ReadFile(filepath)
 		if err != nil {
 			return ErrReadFile(filepath, err)
 		}
-		defer file.Close()
 
-		replaceCount, err := migrateTemplateTags(file, file, refMapping, "{{ %s }}")
+		replaceCount, err := migrateTemplateTags(bytes.NewBuffer(inFileContents), filepath, refMapping, "{{ %s }}")
 		if err != nil {
 			return err
 		}
@@ -48,7 +47,7 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 	return nil
 }
 
-func migrateTemplateTags(inFile io.Reader, outFile io.Writer, mapping referenceMapping, formatString string) ([]string, error) {
+func migrateTemplateTags(inFile io.Reader, outFile string, mapping referenceMapping, formatString string) ([]string, error) {
 	raw, err := ioutil.ReadAll(inFile)
 	if err != nil {
 		return nil, ErrReadFile(inFile, err)
@@ -89,7 +88,7 @@ func migrateTemplateTags(inFile io.Reader, outFile io.Writer, mapping referenceM
 		return nil, fmt.Errorf(errMsg)
 	}
 
-	_, err = io.WriteString(outFile, output)
+	err = ioutil.WriteFile(outFile, []byte(output), 0666)
 	if err != nil {
 		return nil, err
 	}

@@ -55,17 +55,12 @@ func migrateTemplateTags(inFile io.Reader, outFile string, mapping referenceMapp
 
 	var hits, misses []string
 	output := regexpSecretTemplateTags.ReplaceAllStringFunc(string(raw), func(templateTag string) string {
-		path := regexpSecretTemplateTags.FindStringSubmatch(templateTag)
+		path := regexpSecretTemplateTags.FindStringSubmatch(templateTag)[1]
 
-		if path == nil {
-			misses = append(misses, templateTag)
-			return ""
-		}
-
-		opRef, ok := mapping[path[1]]
+		opRef, ok := mapping[path]
 		if !ok {
-			misses = append(misses, path[1])
-			return path[1]
+			misses = append(misses, path)
+			return path
 		}
 
 		hits = append(hits, opRef)

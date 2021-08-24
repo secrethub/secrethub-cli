@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -31,31 +30,35 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 	refMapping.stripSecretHubURIScheme()
 
 	for _, filepath := range cmd.inFiles {
-		file, err := os.Open(filepath)
+		inFileContents, err := ioutil.ReadFile(filepath)
 		if err != nil {
 			return ErrReadFile(filepath, err)
 		}
-		defer file.Close()
 
-		replaceCount, err := migrateTemplateTags(file, file, refMapping, "{{ %s }}")
+		output, replaceCount, err := migrateTemplateTags(string(inFileContents), refMapping, "{{ %s }}")
 		if err != nil {
 			return err
 		}
 
-		fmt.Fprintf(cmd.io.Output(), "Updated %s with %d op:// references\n", filepath, len(replaceCount))
+		inFileInfo, err := os.Stat(filepath)
+		if err != nil {
+			return ErrReadFile(filepath, err)
+		}
+
+		err = ioutil.WriteFile(filepath, []byte(output), inFileInfo.Mode())
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(cmd.io.Output(), "Updated %s with %d op:// references\n", filepath, replaceCount)
 	}
 
 	return nil
 }
 
-func migrateTemplateTags(inFile io.Reader, outFile io.Writer, mapping referenceMapping, formatString string) ([]string, error) {
-	raw, err := ioutil.ReadAll(inFile)
-	if err != nil {
-		return nil, ErrReadFile(inFile, err)
-	}
-
+func migrateTemplateTags(inFileContents string, mapping referenceMapping, formatString string) (string, int, error) {
 	var hits, misses []string
-	output := regexpSecretTemplateTags.ReplaceAllStringFunc(string(raw), func(templateTag string) string {
+	output := regexpSecretTemplateTags.ReplaceAllStringFunc(inFileContents, func(templateTag string) string {
 		path := regexpSecretTemplatePath.FindString(templateTag)
 		if path == "" {
 			misses = append(misses, templateTag)
@@ -86,15 +89,10 @@ func migrateTemplateTags(inFile io.Reader, outFile io.Writer, mapping referenceM
 			errMsg += "\nDid you specify every possible value for your template variables? E.g. --var varname1=a,b,c,d --var varname2=x,y,z"
 		}
 
-		return nil, fmt.Errorf(errMsg)
+		return "", 0, fmt.Errorf(errMsg)
 	}
 
-	_, err = io.WriteString(outFile, output)
-	if err != nil {
-		return nil, err
-	}
-
-	return hits, nil
+	return output, len(hits), nil
 }
 
 type MigrateConfigTemplatesCommand struct {

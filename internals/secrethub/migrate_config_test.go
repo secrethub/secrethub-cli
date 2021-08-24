@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/secrethub/secrethub-go/internals/assert"
@@ -103,20 +102,20 @@ func TestMigrateTemplates(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			var out bytes.Buffer
+			var out string
 			m := referenceMapping(tc.mapping)
 			m.stripSecretHubURIScheme()
 			err := m.addVarPossibilities(tc.vars)
 			assert.OK(t, err)
 
-			_, err = migrateTemplateTags(bytes.NewReader([]byte(tc.in)), &out, m, "{{ %s }}")
+			out, _, err = migrateTemplateTags(tc.in, m, "{{ %s }}")
 			if tc.expectedErr {
 				assert.Equal(t, err != nil, true)
 				return
 			}
 
 			assert.OK(t, err)
-			assert.Equal(t, out.String(), tc.expected)
+			assert.Equal(t, out, tc.expected)
 		})
 	}
 }
@@ -225,7 +224,7 @@ func TestMigrateEnvfile(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			var out bytes.Buffer
+			var out string
 			m := referenceMapping(tc.mapping)
 			m.stripSecretHubURIScheme()
 			err := m.addVarPossibilities(tc.vars)
@@ -237,7 +236,7 @@ func TestMigrateEnvfile(t *testing.T) {
 					return err
 				}
 
-				_, err = migrateTemplateTags(bytes.NewReader([]byte(tc.in)), &out, m, "%s")
+				out, _, err = migrateTemplateTags(tc.in, m, "%s")
 				return err
 			}()
 
@@ -247,7 +246,7 @@ func TestMigrateEnvfile(t *testing.T) {
 			}
 
 			assert.OK(t, err)
-			assert.Equal(t, out.String(), tc.expected)
+			assert.Equal(t, out, tc.expected)
 		})
 	}
 }

@@ -58,7 +58,7 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 
 func migrateTemplateTags(inFileContents string, mapping referenceMapping, formatString string) (string, int, error) {
 	var hits, misses []string
-	output := regexpSecretTemplateTags.ReplaceAllStringFunc(string(raw), func(templateTag string) string {
+	output := regexpSecretTemplateTags.ReplaceAllStringFunc(inFileContents, func(templateTag string) string {
 		path := regexpSecretTemplateTags.FindStringSubmatch(templateTag)[1]
 
 		opRef, ok := mapping[path]

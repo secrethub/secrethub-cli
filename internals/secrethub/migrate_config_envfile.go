@@ -39,7 +39,7 @@ func (cmd *MigrateConfigEnvfileCommand) Run() error {
 		return err
 	}
 
-	output, replaceCount, err := migrateTemplateTags(string(inFileContents), refMapping, "{{ %s }}")
+	output, replaceCount, err := migrateTemplateTags(string(inFileContents), refMapping, "%s")
 	if err != nil {
 		return err
 	}

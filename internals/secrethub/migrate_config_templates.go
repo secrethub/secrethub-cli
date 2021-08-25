@@ -12,7 +12,7 @@ import (
 )
 
 var regexpSecretTemplatePath = regexp.MustCompile(`[A-Za-z0-9_\.\-\$\{\}]{2,}\/[A-Za-z0-9_\.\-\$\{\}]{2,}\/[A-Za-z0-9_\.\-\$\{\}\/]{2,}`)
-var regexpSecretTemplateTags = regexp.MustCompile(`{{(\s)*?(` + regexpSecretTemplatePath.String() + `)(\s)*?}}`)
+var regexpSecretTemplateTags = regexp.MustCompile(`{{\s*?(` + regexpSecretTemplatePath.String() + `)\s*?}}`)
 
 func (cmd *MigrateConfigTemplatesCommand) Run() error {
 	plan, err := getPlan(cmd.planFile)
@@ -59,11 +59,7 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 func migrateTemplateTags(inFileContents string, mapping referenceMapping, formatString string) (string, int, error) {
 	var hits, misses []string
 	output := regexpSecretTemplateTags.ReplaceAllStringFunc(inFileContents, func(templateTag string) string {
-		path := regexpSecretTemplatePath.FindString(templateTag)
-		if path == "" {
-			misses = append(misses, templateTag)
-			return ""
-		}
+		path := regexpSecretTemplateTags.FindStringSubmatch(templateTag)[1]
 
 		opRef, ok := mapping[path]
 		if !ok {

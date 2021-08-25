@@ -36,6 +36,50 @@ func TestMigrateTemplates(t *testing.T) {
 				"secrethub://org/repo/dir/password": "op://vault/item/password",
 			},
 		},
+		"json no whitespaces": {
+			in: `
+			{
+				"db_host": "db.internal",
+				"db_user": "{{org/repo/dir/user}}",
+				"db_password": "{{org/repo/dir/password}}",
+				"db_port": 5432
+			}
+			`,
+			expected: `
+			{
+				"db_host": "db.internal",
+				"db_user": "{{ op://vault/item/user }}",
+				"db_password": "{{ op://vault/item/password }}",
+				"db_port": 5432
+			}
+			`,
+			mapping: map[string]string{
+				"secrethub://org/repo/dir/user":     "op://vault/item/user",
+				"secrethub://org/repo/dir/password": "op://vault/item/password",
+			},
+		},
+		"json one whitespaces": {
+			in: `
+			{
+				"db_host": "db.internal",
+				"db_user": "{{org/repo/dir/user }}",
+				"db_password": "{{ org/repo/dir/password}}",
+				"db_port": 5432
+			}
+			`,
+			expected: `
+			{
+				"db_host": "db.internal",
+				"db_user": "{{ op://vault/item/user }}",
+				"db_password": "{{ op://vault/item/password }}",
+				"db_port": 5432
+			}
+			`,
+			mapping: map[string]string{
+				"secrethub://org/repo/dir/user":     "op://vault/item/user",
+				"secrethub://org/repo/dir/password": "op://vault/item/password",
+			},
+		},
 		"yaml": {
 			in: `
 			db_host: db.internal
@@ -71,6 +115,52 @@ func TestMigrateTemplates(t *testing.T) {
 			db_host: db.internal
 			db_user: "{{ org/repo/$env/dir/user }}"
 			db_password: {{ org/repo/$env/dir/password }}
+			db_port: 5432
+			`,
+			expected: `
+			db_host: db.internal
+			db_user: "{{ op://vault-$ENV/item/user }}"
+			db_password: {{ op://vault-$ENV/item/password }}
+			db_port: 5432
+			`,
+			mapping: map[string]string{
+				"secrethub://org/repo/prod/dir/user":     "op://vault-prod/item/user",
+				"secrethub://org/repo/prod/dir/password": "op://vault-prod/item/password",
+				"secrethub://org/repo/dev/dir/user":      "op://vault-dev/item/user",
+				"secrethub://org/repo/dev/dir/password":  "op://vault-dev/item/password",
+			},
+			vars: map[string][]string{
+				"env": {"dev", "prod"},
+			},
+		},
+		"with vars no whitespaces": {
+			in: `
+			db_host: db.internal
+			db_user: "{{org/repo/$env/dir/user}}"
+			db_password: {{org/repo/$env/dir/password}}
+			db_port: 5432
+			`,
+			expected: `
+			db_host: db.internal
+			db_user: "{{ op://vault-$ENV/item/user }}"
+			db_password: {{ op://vault-$ENV/item/password }}
+			db_port: 5432
+			`,
+			mapping: map[string]string{
+				"secrethub://org/repo/prod/dir/user":     "op://vault-prod/item/user",
+				"secrethub://org/repo/prod/dir/password": "op://vault-prod/item/password",
+				"secrethub://org/repo/dev/dir/user":      "op://vault-dev/item/user",
+				"secrethub://org/repo/dev/dir/password":  "op://vault-dev/item/password",
+			},
+			vars: map[string][]string{
+				"env": {"dev", "prod"},
+			},
+		},
+		"with vars one whitespaces": {
+			in: `
+			db_host: db.internal
+			db_user: "{{ org/repo/$env/dir/user}}"
+			db_password: {{org/repo/$env/dir/password }}
 			db_port: 5432
 			`,
 			expected: `
@@ -146,6 +236,42 @@ func TestMigrateEnvfile(t *testing.T) {
 				"secrethub://org/repo/dir/password": "op://vault/item/password",
 			},
 		},
+		"envfile no whitespaces": {
+			in: `
+			DB_HOST=db.internal
+			DB_USER={{org/repo/dir/user}}
+			DB_PASSWORD={{org/repo/dir/password}}
+			DB_PORT=5432
+			`,
+			expected: `
+			DB_HOST=db.internal
+			DB_USER=op://vault/item/user
+			DB_PASSWORD=op://vault/item/password
+			DB_PORT=5432
+			`,
+			mapping: map[string]string{
+				"secrethub://org/repo/dir/user":     "op://vault/item/user",
+				"secrethub://org/repo/dir/password": "op://vault/item/password",
+			},
+		},
+		"envfile one whitespace": {
+			in: `
+			DB_HOST=db.internal
+			DB_USER={{org/repo/dir/user }}
+			DB_PASSWORD={{ org/repo/dir/password}}
+			DB_PORT=5432
+			`,
+			expected: `
+			DB_HOST=db.internal
+			DB_USER=op://vault/item/user
+			DB_PASSWORD=op://vault/item/password
+			DB_PORT=5432
+			`,
+			mapping: map[string]string{
+				"secrethub://org/repo/dir/user":     "op://vault/item/user",
+				"secrethub://org/repo/dir/password": "op://vault/item/password",
+			},
+		},
 		"with comments": {
 			in: `
 			# Database config
@@ -184,6 +310,52 @@ func TestMigrateEnvfile(t *testing.T) {
 			DB_HOST=db.internal
 			DB_USER={{ org/repo/$env/dir/user }}
 			DB_PASSWORD={{ org/repo/$env/dir/password }}
+			DB_PORT=5432
+			`,
+			expected: `
+			DB_HOST=db.internal
+			DB_USER=op://vault-$ENV/item/user
+			DB_PASSWORD=op://vault-$ENV/item/password
+			DB_PORT=5432
+			`,
+			mapping: map[string]string{
+				"secrethub://org/repo/prod/dir/user":     "op://vault-prod/item/user",
+				"secrethub://org/repo/prod/dir/password": "op://vault-prod/item/password",
+				"secrethub://org/repo/dev/dir/user":      "op://vault-dev/item/user",
+				"secrethub://org/repo/dev/dir/password":  "op://vault-dev/item/password",
+			},
+			vars: map[string][]string{
+				"env": {"dev", "prod"},
+			},
+		},
+		"with vars no whitespaces": {
+			in: `
+			DB_HOST=db.internal
+			DB_USER={{org/repo/$env/dir/user}}
+			DB_PASSWORD={{org/repo/$env/dir/password}}
+			DB_PORT=5432
+			`,
+			expected: `
+			DB_HOST=db.internal
+			DB_USER=op://vault-$ENV/item/user
+			DB_PASSWORD=op://vault-$ENV/item/password
+			DB_PORT=5432
+			`,
+			mapping: map[string]string{
+				"secrethub://org/repo/prod/dir/user":     "op://vault-prod/item/user",
+				"secrethub://org/repo/prod/dir/password": "op://vault-prod/item/password",
+				"secrethub://org/repo/dev/dir/user":      "op://vault-dev/item/user",
+				"secrethub://org/repo/dev/dir/password":  "op://vault-dev/item/password",
+			},
+			vars: map[string][]string{
+				"env": {"dev", "prod"},
+			},
+		},
+		"with vars one whitespace": {
+			in: `
+			DB_HOST=db.internal
+			DB_USER={{org/repo/$env/dir/user }}
+			DB_PASSWORD={{ org/repo/$env/dir/password}}
 			DB_PORT=5432
 			`,
 			expected: `

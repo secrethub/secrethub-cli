@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -40,18 +39,22 @@ func (cmd *MigrateConfigEnvfileCommand) Run() error {
 		return err
 	}
 
-	outFile, err := os.Create(".env")
-	if err != nil {
-		return fmt.Errorf("cannot create output .env file: %s", err)
-	}
-	defer outFile.Close()
-
-	replaceCount, err := migrateTemplateTags(bytes.NewBuffer(inFileContents), outFile, refMapping, "%s")
+	output, replaceCount, err := migrateTemplateTags(string(inFileContents), refMapping, "%s")
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(cmd.io.Output(), "Created new .env file with %d op:// references\n", len(replaceCount))
+	inFileInfo, err := os.Stat(filepath)
+	if err != nil {
+		return ErrReadFile(filepath, err)
+	}
+
+	err = ioutil.WriteFile(".env", []byte(output), inFileInfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(cmd.io.Output(), "Created new .env file with %d op:// references\n", replaceCount)
 
 	return nil
 }

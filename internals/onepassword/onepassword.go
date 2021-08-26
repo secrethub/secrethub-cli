@@ -30,8 +30,39 @@ func CreateItem(vault string, template *ItemTemplate, title string) error {
 
 	encodedTemplate := base64.RawURLEncoding.EncodeToString(jsonTemplate)
 
-	_, err = execOP("create", "item", "login", "--vault="+vault, encodedTemplate, "title="+title)
+	_, err = execOP("create", "item", "apicredential", "--vault="+vault, encodedTemplate, "title="+title)
 	return err
+}
+
+func SetField(vault, item, field, value string) error {
+	_, err := execOP("edit", "item", item, fmt.Sprintf(`%s=%s`, field, value), "--vault="+vault)
+	if err != nil {
+		return fmt.Errorf("could not set field '%s'.'%s'.'%s'", vault, item, field)
+	}
+	return nil
+}
+
+// GetFields returns a title-to-value map of the fields from the first section of the given 1Password item.
+// The rest of the fields are ignored as the migration tool only stores information in the first
+// section of each item.
+func GetFields(vault, item string) (map[string]string, error) {
+	opItem := struct {
+		Details ItemTemplate `json:"details"`
+	}{}
+	opItemJSON, err := execOP("get", "item", item, "--vault="+vault)
+	if err != nil {
+		return nil, fmt.Errorf("could not get item '%s'.'%s' from 1Password: %s", vault, item, err)
+	}
+	err = json.Unmarshal(opItemJSON, &opItem)
+	if err != nil {
+		return nil, fmt.Errorf("unexpected format of 1Password item in `op get item` command output: %s", err)
+	}
+
+	fields := make(map[string]string, len(opItem.Details.Sections[0].Fields))
+	for _, field := range opItem.Details.Sections[0].Fields {
+		fields[field.Title] = field.Value
+	}
+	return fields, nil
 }
 
 func NewItemTemplate() *ItemTemplate {
@@ -64,7 +95,7 @@ func (tpl *ItemTemplate) AddField(name, value string, concealed bool) {
 	tpl.Sections[0].Fields = append(tpl.Sections[0].Fields, itemFieldTemplate{
 		Designation: designation,
 		Name:        name,
-		Type:        name,
+		Title:       name,
 		Value:       value,
 	})
 }
@@ -72,7 +103,7 @@ func (tpl *ItemTemplate) AddField(name, value string, concealed bool) {
 type itemFieldTemplate struct {
 	Designation string `json:"k"`
 	Name        string `json:"n"`
-	Type        string `json:"t"`
+	Title       string `json:"t"`
 	Value       string `json:"v"`
 }
 

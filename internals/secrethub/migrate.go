@@ -1,7 +1,9 @@
 package secrethub
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -34,6 +36,68 @@ type plan struct {
 	SignInAddress  string
 	dirByVaultName map[string]string
 	vaults         map[string]*vault
+}
+
+type referenceMapping map[string]string
+
+func newReferenceMapping(p *plan) referenceMapping {
+	index := make(map[string]string)
+	for _, vault := range p.vaults {
+		for _, item := range vault.Items {
+			for _, field := range item.Fields {
+				opPath := fmt.Sprintf("op://%s/%s/%s", vault.Name, item.Name, field.Name)
+				index[field.Reference] = opPath
+			}
+		}
+	}
+	return referenceMapping(index)
+}
+
+// addVarPossibilities adds variations to the index for all values in the passed in vars map
+func (m referenceMapping) addVarPossibilities(vars map[string][]string) error {
+	exists := make(map[string]string)
+	for varname, possibleValues := range vars {
+		varname = strings.ToUpper(varname)
+		for _, value := range possibleValues {
+			if otherVarname := exists[value]; otherVarname != "" && otherVarname != varname {
+				return fmt.Errorf("you've ran into a limitation of the migration tool. You can't have multiple variables with the same value: '%s' now occurs in both '%s' and '%s'", value, varname, otherVarname)
+			}
+			exists[value] = varname
+		}
+	}
+
+	for varname, possibleValues := range vars {
+		uppercaseVarname := strings.ToUpper(varname)
+
+		for _, value := range possibleValues {
+			for secrethubRef, opRef := range m {
+				if strings.Contains(secrethubRef, value) && strings.Contains(opRef, value) {
+					// Add syntax variations to the index
+					variations := map[string]string{
+						"$" + varname:                 "$" + uppercaseVarname,
+						"$" + uppercaseVarname:        "$" + uppercaseVarname,
+						"${" + varname + "}":          "${" + uppercaseVarname + "}",
+						"${" + uppercaseVarname + "}": "${" + uppercaseVarname + "}",
+					}
+					for secretHubVariation, opVariation := range variations {
+						m[strings.ReplaceAll(secrethubRef, value, secretHubVariation)] = strings.ReplaceAll(opRef, value, opVariation)
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// stripSecretHubURIScheme removes the secrethub:// prefix from the index keys so it can be
+// used for secrethub.env files and config file templates.
+func (m referenceMapping) stripSecretHubURIScheme() {
+	for secrethubRef, opRef := range m {
+		stripped := strings.TrimPrefix(secrethubRef, secretReferencePrefix)
+		delete(m, secrethubRef)
+		m[stripped] = opRef
+	}
 }
 
 type vault struct {
@@ -393,6 +457,73 @@ func walkTreeRec(dir *api.Dir, fn func(*api.Dir) error) error {
 	return nil
 }
 
+type change interface {
+	Vault() string
+	Apply() error
+	Print(w io.Writer)
+}
+
+type vaultCreation struct {
+	vault string
+}
+
+func (c vaultCreation) Vault() string {
+	return c.vault
+}
+
+func (c vaultCreation) Apply() error {
+	return onepassword.CreateVault(c.vault)
+}
+
+func (c vaultCreation) Print(w io.Writer) {
+	fmt.Fprintf(w, "Create vault '%s'\n", c.vault)
+}
+
+type itemCreation struct {
+	vault        string
+	item         string
+	itemTemplate *onepassword.ItemTemplate
+}
+
+func (c itemCreation) Vault() string {
+	return c.vault
+}
+
+func (c itemCreation) Apply() error {
+	return onepassword.CreateItem(c.vault, c.itemTemplate, c.item)
+}
+
+func (c itemCreation) Print(w io.Writer) {
+	fmt.Fprintf(w, "Create item '%s'\n", c.item)
+}
+
+type itemUpdate struct {
+	vault       string
+	item        string
+	fieldValues map[string]string
+}
+
+func (c itemUpdate) Vault() string {
+	return c.vault
+}
+
+func (c itemUpdate) Apply() error {
+	for field, value := range c.fieldValues {
+		err := onepassword.SetField(c.vault, c.item, field, value)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c itemUpdate) Print(w io.Writer) {
+	fmt.Fprintf(w, "Update item '%s' fields:\n", c.item)
+	for field := range c.fieldValues {
+		fmt.Fprintf(w, "  '%s'\n", field)
+	}
+}
+
 func (cmd *MigrateApplyCommand) Run() error {
 	plan, err := getPlan(cmd.planFile)
 	if err != nil {
@@ -412,78 +543,159 @@ func (cmd *MigrateApplyCommand) Run() error {
 		return fmt.Errorf("op is signed in to a different account than planned. Run `eval $(op signin %s) to login to the desired account or change the sign-in-address in the plan", plan.SignInAddress)
 	}
 
-	fmt.Fprintln(cmd.io.Output(), "validating the migration plan...")
-	for _, vault := range plan.vaults {
-		exists, err := onepassword.ExistsVault(vault.Name)
-		if err != nil {
-			return fmt.Errorf("could not check vault existence: %s", err)
-		}
-		if exists {
-			for _, item := range vault.Items {
-				exists, err = onepassword.ExistsItemInVault(vault.Name, item.Name)
-				if err != nil {
-					return fmt.Errorf("could not check item existence: %s", err)
-				}
-				if exists {
-					return fmt.Errorf("an item named %s already exists in vault %s. Remove the item from the plan if you've already migrated it before. If not, you can rename the item in the plan", item.Name, vault.Name)
-				}
-			}
-		}
-	}
-	fmt.Fprintf(cmd.io.Output(), "plan is ok\n\n")
-
 	client, err := cmd.newClient()
 	if err != nil {
 		return err
 	}
 
+	vaultCreateCount := 0
+	itemCreateCount := 0
+	fieldUpdateCount := 0
+	warningCount := 0
+	skipCount := 0
+
+	var changes []change
+
 	i := 1
 	for _, vault := range plan.vaults {
-		exists, err := onepassword.ExistsVault(vault.Name)
+		fmt.Fprintf(cmd.io.Output(), "[%d/%d] Checking vault: %s\n", i, len(plan.vaults), vault.Name)
+		vaultExists, err := onepassword.ExistsVault(vault.Name)
 		if err != nil {
 			return fmt.Errorf("could not check vault existence: %s", err)
 		}
-		if !exists {
-			fmt.Fprintf(cmd.io.Output(), "[%d/%d] Creating vault: %s\n", i, len(plan.vaults), vault.Name)
-			err := onepassword.CreateVault(vault.Name)
-			if err != nil {
-				return err
-			}
-		} else {
-			if !cmd.append {
-				confirmed, err := ui.AskYesNo(cmd.io, fmt.Sprintf("A vault named %s already exists. Do you want to append the items to that vault?", vault.Name), ui.DefaultYes)
-				if err != nil {
-					return fmt.Errorf("a vault named %s already exists. Use --apend to append to existing vaults", vault.Name)
-				}
-				if !confirmed {
-					fmt.Fprintln(cmd.io.Output(), "Aborting.")
-					return nil
-				}
-			}
-
-			fmt.Fprintf(cmd.io.Output(), "[%d/%d] Appending to existing vault: %s\n", i, len(plan.vaults), vault.Name)
+		if !vaultExists {
+			changes = append(changes, vaultCreation{vault: vault.Name})
+			vaultCreateCount++
 		}
 
 		for _, item := range vault.Items {
-			template := onepassword.NewItemTemplate()
-			for _, field := range item.Fields {
-				value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
+			itemExists := false
+			if vaultExists {
+				itemExists, err = onepassword.ExistsItemInVault(vault.Name, item.Name)
 				if err != nil {
 					return err
 				}
-				template.AddField(field.Name, value, field.Concealed)
 			}
 
-			err = onepassword.CreateItem(vault.Name, template, item.Name)
-			if err != nil {
-				return err
+			if !itemExists {
+				template := onepassword.NewItemTemplate()
+				for _, field := range item.Fields {
+					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
+					if err != nil {
+						return err
+					}
+					template.AddField(field.Name, value, field.Concealed)
+				}
+
+				changes = append(changes, itemCreation{
+					vault:        vault.Name,
+					item:         item.Name,
+					itemTemplate: template,
+				})
+				itemCreateCount++
+			} else {
+				opFields, err := onepassword.GetFields(vault.Name, item.Name)
+				if err != nil {
+					return err
+				}
+				fieldsToUpdate := map[string]string{}
+				for _, field := range item.Fields {
+					opValue, hasField := opFields[field.Name]
+					if !hasField {
+						fmt.Fprintf(os.Stderr, "item %s.%s has missing field %s, please add this field manually to allow the migration tool to update it\n", vault.Name, item.Name, field.Name)
+						warningCount++
+						skipCount++
+						continue
+					}
+
+					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
+					if err != nil {
+						return err
+					}
+					if value != opValue {
+						fieldsToUpdate[field.Name] = value
+						fieldUpdateCount++
+					}
+				}
+				if len(fieldsToUpdate) > 0 {
+					changes = append(changes, itemUpdate{
+						vault:       vault.Name,
+						item:        item.Name,
+						fieldValues: fieldsToUpdate,
+					})
+				}
 			}
 		}
 		i++
 	}
-	fmt.Fprintln(cmd.io.Output(), "\nMigration completed successfully. You can now use these secrets from 1password.")
 
+	fmt.Fprintln(cmd.io.Output())
+	if len(changes) == 0 {
+		fmt.Fprintln(cmd.io.Output(), "Already up to date.")
+		return nil
+	}
+	fmt.Fprintln(cmd.io.Output(), "Detected changes to be made:")
+	indentedWriter := indentedWriter{
+		w: cmd.io.Output(),
+	}
+	lastVault := ""
+	for _, change := range changes {
+		if change.Vault() != lastVault {
+			fmt.Fprintf(cmd.io.Output(), "Vault %s:\n", change.Vault())
+			lastVault = change.Vault()
+		}
+		change.Print(indentedWriter)
+	}
+
+	fmt.Fprintln(cmd.io.Output())
+	fmt.Fprintln(cmd.io.Output(), "Summary:")
+	if vaultCreateCount != 0 {
+		fmt.Fprintf(cmd.io.Output(), "%d vaults will be created\n", vaultCreateCount)
+	}
+	if itemCreateCount != 0 {
+		fmt.Fprintf(cmd.io.Output(), "%d items will be created\n", itemCreateCount)
+	}
+	if fieldUpdateCount != 0 {
+		fmt.Fprintf(cmd.io.Output(), "%d fields will be updated\n", fieldUpdateCount)
+	}
+
+	fmt.Fprintln(cmd.io.Output())
+	fmt.Fprint(cmd.io.Output(), "Note: Adding secrets to an existing vault will make them accessible to everyone who has read permission on the vault.\n")
+
+	if !cmd.update {
+		fmt.Fprintln(cmd.io.Output())
+		confirmed, err := ui.AskYesNo(cmd.io, "Would you like to apply these changes?", ui.DefaultNo)
+		if err != nil {
+			return errors.New("error prompting for confirmation. Run the command again with --update to skip this prompt")
+		}
+		if !confirmed {
+			fmt.Fprintln(cmd.io.Output(), "Aborting...")
+			return nil
+		}
+	}
+
+	fmt.Fprintln(cmd.io.Output())
+	fmt.Fprintf(cmd.io.Output(), "Applying changes:\n")
+	for i, change := range changes {
+		fmt.Fprintf(cmd.io.Output(), "[%d/%d]\n", i+1, len(changes))
+		err := change.Apply()
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Fprintln(cmd.io.Output(), "\n"+
+		"Migration completed successfully.\n"+
+		"Your secrets are now available via 1Password.\n"+
+		"Learn how to load them using any of the integrations at https://secrethub.io/docs/1password/migration/#integrations")
 	return nil
+}
+
+type indentedWriter struct {
+	w io.Writer
+}
+
+func (w indentedWriter) Write(p []byte) (n int, err error) {
+	return w.w.Write(append([]byte{' ', ' '}, p...))
 }
 
 func getPlan(planFile string) (*plan, error) {
@@ -566,7 +778,7 @@ type MigrateApplyCommand struct {
 	newClient newClientFunc
 
 	planFile string
-	append   bool
+	update   bool
 }
 
 func NewMigrateApplyCommand(io ui.IO, newClient newClientFunc) *MigrateApplyCommand {
@@ -584,7 +796,7 @@ func (cmd *MigrateApplyCommand) Register(r cli.Registerer) {
 		"Check out https://secrethub.io/docs/1password/migration/ for detailed instructions.")
 
 	clause.Flags().StringVar(&cmd.planFile, "plan-file", defaultPlanPath, "Path to the YAML file specifying what vaults and items to create.")
-	clause.Flags().BoolVar(&cmd.append, "append", false, "When a vault with the given name already exists, append items to that vault.")
+	clause.Flags().BoolVar(&cmd.update, "update", false, "Perform migration without prompting for confirmation.")
 
 	clause.BindAction(cmd.Run)
 }

@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   lint:
     docker:
-      - image: golangci/golangci-lint:v1.23.8-alpine
+      - image: golangci/golangci-lint:v1.41.1-alpine
     steps:
       - checkout
       - restore_cache:
@@ -67,6 +67,6 @@ workflows:
               arch: ["amd64", "386"]
             exclude:
               - os: darwin
-                arch: 386
+                arch: "386"
       - test
       - verify-goreleaser

@@ -7,16 +7,16 @@ import (
 	"os"
 )
 
-type OPV2Client struct {
+type OPV2CLI struct {
 	version string
 	isV2    bool
 }
 
-func (op *OPV2Client) IsV2() bool {
+func (op *OPV2CLI) IsV2() bool {
 	return op.isV2
 }
 
-func (op *OPV2Client) CreateVault(name string) error {
+func (op *OPV2CLI) CreateVault(name string) error {
 	_, err := execOP("vault", "create", name)
 	if err != nil {
 		return fmt.Errorf("could not create vault '%s': %s", name, err)
@@ -24,7 +24,7 @@ func (op *OPV2Client) CreateVault(name string) error {
 	return nil
 }
 
-func (op *OPV2Client) CreateItem(vault string, template *ItemTemplate, title string) error {
+func (op *OPV2CLI) CreateItem(vault string, template *ItemTemplate, title string) error {
 	jsonTemplate, err := json.Marshal(template)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (op *OPV2Client) CreateItem(vault string, template *ItemTemplate, title str
 	return err
 }
 
-func (op *OPV2Client) SetField(vault, item, field, value string) error {
+func (op *OPV2CLI) SetField(vault, item, field, value string) error {
 	_, err := execOP("item", "edit", item, fmt.Sprintf(`%s=%s`, field, value), "--vault="+vault)
 	if err != nil {
 		return fmt.Errorf("could not set field '%s'.'%s'.'%s'", vault, item, field)
@@ -60,7 +60,7 @@ func (op *OPV2Client) SetField(vault, item, field, value string) error {
 // GetFields returns a title-to-value map of the fields from the first section of the given 1Password item.
 // The rest of the fields are ignored as the migration tool only stores information in the first
 // section of each item.
-func (op *OPV2Client) GetFields(vault, item string) (map[string]string, error) {
+func (op *OPV2CLI) GetFields(vault, item string) (map[string]string, error) {
 	opItem := struct {
 		Fields []v2ItemFieldTemplate `json:"fields"`
 	}{}
@@ -87,7 +87,7 @@ type v2ItemFieldTemplate struct {
 	Value string `json:"value"`
 }
 
-func (op *OPV2Client) ExistsVault(vaultName string) (bool, error) {
+func (op *OPV2CLI) ExistsVault(vaultName string) (bool, error) {
 	vaultsBytes, err := execOP("vault", "list", "--format=json")
 	if err != nil {
 		return false, fmt.Errorf("could not list vaults: %s", err)
@@ -112,7 +112,7 @@ func (op *OPV2Client) ExistsVault(vaultName string) (bool, error) {
 	return false, nil
 }
 
-func (op *OPV2Client) ExistsItemInVault(vault string, itemName string) (bool, error) {
+func (op *OPV2CLI) ExistsItemInVault(vault string, itemName string) (bool, error) {
 	itemsBytes, err := execOP("item", "list", "--vault="+vault, "--format=json")
 	if err != nil {
 		return false, fmt.Errorf("could not list items in vault %s: %s", vault, err)

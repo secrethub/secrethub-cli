@@ -472,7 +472,7 @@ type change interface {
 
 type vaultCreation struct {
 	vault    string
-	opClient onepassword.OPClient
+	opClient onepassword.OPCLI
 }
 
 func (c vaultCreation) Vault() string {
@@ -491,7 +491,7 @@ type itemCreation struct {
 	vault        string
 	item         string
 	itemTemplate *onepassword.ItemTemplate
-	opClient     onepassword.OPClient
+	opClient     onepassword.OPCLI
 }
 
 func (c itemCreation) Vault() string {
@@ -510,7 +510,7 @@ type itemUpdate struct {
 	vault       string
 	item        string
 	fieldValues map[string]string
-	opClient    onepassword.OPClient
+	opClient    onepassword.OPCLI
 }
 
 func (c itemUpdate) Vault() string {

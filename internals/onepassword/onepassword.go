@@ -14,7 +14,46 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-func CreateVault(name string) error {
+type OPClient interface {
+	IsV2() bool
+	CreateVault(name string) error
+	CreateItem(vault string, template *ItemTemplate, title string) error
+	SetField(vault, item, field, value string) error
+	GetFields(vault, item string) (map[string]string, error)
+	ExistsVault(vaultName string) (bool, error)
+	ExistsItemInVault(vault string, itemName string) (bool, error)
+}
+
+func GetOPClient() (OPClient, error) {
+	out, err := execOP("--version")
+	if err != nil {
+		return nil, err
+	}
+
+	version := strings.TrimSpace(string(out))
+
+	if strings.HasPrefix(version, "2.") {
+		return &OPV2Client{
+			version: version,
+			isV2:    true,
+		}, nil
+	}
+	return &OPV1Client{
+		version: version,
+		isV2:    false,
+	}, nil
+}
+
+type OPV1Client struct {
+	version string
+	isV2    bool
+}
+
+func (op *OPV1Client) IsV2() bool {
+	return op.isV2
+}
+
+func (op *OPV1Client) CreateVault(name string) error {
 	_, err := execOP("create", "vault", name)
 	if err != nil {
 		return fmt.Errorf("could not create vault '%s': %s", name, err)
@@ -22,7 +61,7 @@ func CreateVault(name string) error {
 	return nil
 }
 
-func CreateItem(vault string, template *ItemTemplate, title string) error {
+func (op *OPV1Client) CreateItem(vault string, template *ItemTemplate, title string) error {
 	jsonTemplate, err := json.Marshal(template)
 	if err != nil {
 		return err
@@ -34,7 +73,7 @@ func CreateItem(vault string, template *ItemTemplate, title string) error {
 	return err
 }
 
-func SetField(vault, item, field, value string) error {
+func (op *OPV1Client) SetField(vault, item, field, value string) error {
 	_, err := execOP("edit", "item", item, fmt.Sprintf(`%s=%s`, field, value), "--vault="+vault)
 	if err != nil {
 		return fmt.Errorf("could not set field '%s'.'%s'.'%s'", vault, item, field)
@@ -45,7 +84,7 @@ func SetField(vault, item, field, value string) error {
 // GetFields returns a title-to-value map of the fields from the first section of the given 1Password item.
 // The rest of the fields are ignored as the migration tool only stores information in the first
 // section of each item.
-func GetFields(vault, item string) (map[string]string, error) {
+func (op *OPV1Client) GetFields(vault, item string) (map[string]string, error) {
 	opItem := struct {
 		Details ItemTemplate `json:"details"`
 	}{}
@@ -108,7 +147,7 @@ type itemFieldTemplate struct {
 }
 
 func execOP(args ...string) ([]byte, error) {
-	command := exec.Command("op", args...)
+	command := exec.Command("op1", args...)
 	command.Stderr = os.Stderr
 	var out bytes.Buffer
 	command.Stdout = &out
@@ -203,7 +242,7 @@ func GetSignInAddress() (string, error) {
 	return "", fmt.Errorf("unexpected format of 1password config file at %s: missing account entry for latest used account", path)
 }
 
-func ExistsVault(vaultName string) (bool, error) {
+func (op *OPV1Client) ExistsVault(vaultName string) (bool, error) {
 	vaultsBytes, err := execOP("list", "vaults")
 	if err != nil {
 		return false, fmt.Errorf("could not list vaults: %s", err)
@@ -228,7 +267,7 @@ func ExistsVault(vaultName string) (bool, error) {
 	return false, nil
 }
 
-func ExistsItemInVault(vault string, itemName string) (bool, error) {
+func (op *OPV1Client) ExistsItemInVault(vault string, itemName string) (bool, error) {
 	itemsBytes, err := execOP("list", "items", "--vault", vault)
 	if err != nil {
 		return false, fmt.Errorf("could not list items in vault %s: %s", vault, err)

@@ -239,11 +239,18 @@ func (cmd *MigratePlanCommand) Run() error {
 
 	plan := newPlan()
 
-	signInAddress, err := onepassword.GetSignInAddress()
+	opClient, err := onepassword.GetOPClient()
 	if err != nil {
 		return err
 	}
-	plan.SignInAddress = signInAddress
+
+	if !opClient.IsV2() {
+		signInAddress, err := onepassword.GetSignInAddress()
+		if err != nil {
+			return err
+		}
+		plan.SignInAddress = signInAddress
+	}
 
 	if len(cmd.paths) == 0 {
 		err := cmd.addReposToPlan(client, nil, plan)
@@ -464,7 +471,8 @@ type change interface {
 }
 
 type vaultCreation struct {
-	vault string
+	vault    string
+	opClient onepassword.OPClient
 }
 
 func (c vaultCreation) Vault() string {
@@ -472,7 +480,7 @@ func (c vaultCreation) Vault() string {
 }
 
 func (c vaultCreation) Apply() error {
-	return onepassword.CreateVault(c.vault)
+	return c.opClient.CreateVault(c.vault)
 }
 
 func (c vaultCreation) Print(w io.Writer) {
@@ -483,6 +491,7 @@ type itemCreation struct {
 	vault        string
 	item         string
 	itemTemplate *onepassword.ItemTemplate
+	opClient     onepassword.OPClient
 }
 
 func (c itemCreation) Vault() string {
@@ -490,7 +499,7 @@ func (c itemCreation) Vault() string {
 }
 
 func (c itemCreation) Apply() error {
-	return onepassword.CreateItem(c.vault, c.itemTemplate, c.item)
+	return c.opClient.CreateItem(c.vault, c.itemTemplate, c.item)
 }
 
 func (c itemCreation) Print(w io.Writer) {
@@ -501,6 +510,7 @@ type itemUpdate struct {
 	vault       string
 	item        string
 	fieldValues map[string]string
+	opClient    onepassword.OPClient
 }
 
 func (c itemUpdate) Vault() string {
@@ -509,7 +519,7 @@ func (c itemUpdate) Vault() string {
 
 func (c itemUpdate) Apply() error {
 	for field, value := range c.fieldValues {
-		err := onepassword.SetField(c.vault, c.item, field, value)
+		err := c.opClient.SetField(c.vault, c.item, field, value)
 		if err != nil {
 			return err
 		}
@@ -530,17 +540,24 @@ func (cmd *MigrateApplyCommand) Run() error {
 		return err
 	}
 
-	err = onepassword.EnsureSignedIn()
+	opClient, err := onepassword.GetOPClient()
 	if err != nil {
 		return err
 	}
 
-	signInAddress, err := onepassword.GetSignInAddress()
-	if err != nil {
-		return err
-	}
-	if signInAddress != plan.SignInAddress {
-		return fmt.Errorf("op is signed in to a different account than planned. Run `eval $(op signin %s) to login to the desired account or change the sign-in-address in the plan", plan.SignInAddress)
+	if !opClient.IsV2() {
+		err = onepassword.EnsureSignedIn()
+		if err != nil {
+			return err
+		}
+
+		signInAddress, err := onepassword.GetSignInAddress()
+		if err != nil {
+			return err
+		}
+		if signInAddress != plan.SignInAddress {
+			return fmt.Errorf("op is signed in to a different account than planned. Run `eval $(op signin %s) to login to the desired account or change the sign-in-address in the plan", plan.SignInAddress)
+		}
 	}
 
 	client, err := cmd.newClient()
@@ -559,19 +576,22 @@ func (cmd *MigrateApplyCommand) Run() error {
 	i := 1
 	for _, vault := range plan.vaults {
 		fmt.Fprintf(cmd.io.Output(), "[%d/%d] Checking vault: %s\n", i, len(plan.vaults), vault.Name)
-		vaultExists, err := onepassword.ExistsVault(vault.Name)
+		vaultExists, err := opClient.ExistsVault(vault.Name)
 		if err != nil {
 			return fmt.Errorf("could not check vault existence: %s", err)
 		}
 		if !vaultExists {
-			changes = append(changes, vaultCreation{vault: vault.Name})
+			changes = append(changes, vaultCreation{
+				vault:    vault.Name,
+				opClient: opClient,
+			})
 			vaultCreateCount++
 		}
 
 		for _, item := range vault.Items {
 			itemExists := false
 			if vaultExists {
-				itemExists, err = onepassword.ExistsItemInVault(vault.Name, item.Name)
+				itemExists, err = opClient.ExistsItemInVault(vault.Name, item.Name)
 				if err != nil {
 					return err
 				}
@@ -591,10 +611,11 @@ func (cmd *MigrateApplyCommand) Run() error {
 					vault:        vault.Name,
 					item:         item.Name,
 					itemTemplate: template,
+					opClient:     opClient,
 				})
 				itemCreateCount++
 			} else {
-				opFields, err := onepassword.GetFields(vault.Name, item.Name)
+				opFields, err := opClient.GetFields(vault.Name, item.Name)
 				if err != nil {
 					return err
 				}
@@ -622,6 +643,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 						vault:       vault.Name,
 						item:        item.Name,
 						fieldValues: fieldsToUpdate,
+						opClient:    opClient,
 					})
 				}
 			}

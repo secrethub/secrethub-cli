@@ -86,7 +86,7 @@ type itemFieldTemplate struct {
 }
 
 func execOP(args ...string) ([]byte, error) {
-	command := exec.Command("op1", args...)
+	command := exec.Command("op", args...)
 	command.Stderr = os.Stderr
 	var out bytes.Buffer
 	command.Stdout = &out

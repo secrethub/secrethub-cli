@@ -6,13 +6,10 @@ import (
 	"fmt"
 )
 
-type OPV1CLI struct {
-	version string
-	isV2    bool
-}
+type OPV1CLI struct{}
 
 func (op *OPV1CLI) IsV2() bool {
-	return op.isV2
+	return false
 }
 
 func (op *OPV1CLI) CreateVault(name string) error {

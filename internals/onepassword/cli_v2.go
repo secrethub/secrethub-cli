@@ -7,13 +7,10 @@ import (
 	"os"
 )
 
-type OPV2CLI struct {
-	version string
-	isV2    bool
-}
+type OPV2CLI struct{}
 
 func (op *OPV2CLI) IsV2() bool {
-	return op.isV2
+	return true
 }
 
 func (op *OPV2CLI) CreateVault(name string) error {

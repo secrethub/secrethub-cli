@@ -32,15 +32,11 @@ func GetOPClient() (OPCLI, error) {
 	version := strings.TrimSpace(string(out))
 
 	if strings.HasPrefix(version, "2.") {
-		return &OPV2CLI{
-			version: version,
-			isV2:    true,
-		}, nil
+		return &OPV2CLI{}, nil
+	} else if strings.HasPrefix(version, "1.") {
+		return &OPV1CLI{}, nil
 	}
-	return &OPV1CLI{
-		version: version,
-		isV2:    false,
-	}, nil
+	return nil, fmt.Errorf("1password: op version not recognized")
 }
 
 func NewItemTemplate() *ItemTemplate {

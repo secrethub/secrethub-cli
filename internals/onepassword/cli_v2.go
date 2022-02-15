@@ -91,7 +91,7 @@ func (op *OPV2CLI) ExistsVault(vaultName string) (bool, error) {
 	}
 
 	vaultsJSON := make([]struct {
-		UUID string `json:"uuid"`
+		ID   string `json:"id"`
 		Name string `json:"name"`
 	}, 0)
 

@@ -1,7 +1,6 @@
 package secretspec
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -279,7 +278,7 @@ func TestFileSetAndClear(t *testing.T) {
 			}
 
 			if tc.err == nil {
-				actual, err := ioutil.ReadFile(tc.target)
+				actual, err := os.ReadFile(tc.target)
 				if err != nil {
 					t.Errorf("cannot read file: %v", err)
 				} else {

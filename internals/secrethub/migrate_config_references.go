@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -33,7 +32,7 @@ func (cmd *MigrateConfigReferencesCommand) Run() error {
 }
 
 func migrateReferences(inFile string, outFile string, mapping referenceMapping) ([]string, error) {
-	raw, err := ioutil.ReadFile(inFile)
+	raw, err := os.ReadFile(inFile)
 	if err != nil {
 		return nil, ErrReadFile(inFile, err)
 	}
@@ -66,7 +65,7 @@ func migrateReferences(inFile string, outFile string, mapping referenceMapping) 
 		return nil, ErrReadFile(inFile, err)
 	}
 
-	err = ioutil.WriteFile(outFile, []byte(output), inFileInfo.Mode())
+	err = os.WriteFile(outFile, []byte(output), inFileInfo.Mode())
 	if err != nil {
 		return nil, err
 	}

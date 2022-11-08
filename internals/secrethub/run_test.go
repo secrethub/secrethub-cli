@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -1231,7 +1230,7 @@ func TestRunCommand_RunWithFile(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			if tc.script != "" {
 				scriptFile := filepath.Join(os.TempDir(), tc.command.command[1])
-				err := ioutil.WriteFile(scriptFile, []byte(tc.script), os.ModePerm)
+				err := os.WriteFile(scriptFile, []byte(tc.script), os.ModePerm)
 				if err != nil {
 					log.Fatal("Cannot create file for test", err)
 				}

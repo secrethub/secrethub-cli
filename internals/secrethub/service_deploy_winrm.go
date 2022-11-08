@@ -3,7 +3,7 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strconv"
 
@@ -98,7 +98,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 
 	var caCert []byte
 	if cmd.caCert != "" {
-		caCert, err = ioutil.ReadFile(cmd.caCert)
+		caCert, err = os.ReadFile(cmd.caCert)
 		if err != nil {
 			return ErrCouldNotReadCA(err)
 		}
@@ -148,14 +148,14 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 	case "cert":
 		var clientCert, clientKey []byte
 		if cmd.clientCert != "" {
-			clientCert, err = ioutil.ReadFile(cmd.clientCert)
+			clientCert, err = os.ReadFile(cmd.clientCert)
 			if err != nil {
 				return ErrCouldNotReadCert(err)
 			}
 		}
 
 		if cmd.clientKey != "" {
-			clientKey, err = ioutil.ReadFile(cmd.clientKey)
+			clientKey, err = os.ReadFile(cmd.clientKey)
 			if err != nil {
 				return ErrCouldNotReadKey(err)
 			}
@@ -187,7 +187,7 @@ func (cmd *ServiceDeployWinRmCommand) Run() error {
 		return ErrNoDataOnStdin
 	}
 
-	credential, err := ioutil.ReadAll(cmd.io.Input())
+	credential, err := io.ReadAll(cmd.io.Input())
 	if err != nil {
 		return err
 	}

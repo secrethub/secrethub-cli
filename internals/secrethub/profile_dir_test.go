@@ -1,7 +1,7 @@
 package secrethub
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -43,7 +43,7 @@ func TestIsOldConfiguration(t *testing.T) {
 			defer cleanup()
 
 			for _, file := range tc.files {
-				err := ioutil.WriteFile(filepath.Join(dir, file), []byte("test data"), 0770)
+				err := os.WriteFile(filepath.Join(dir, file), []byte("test data"), 0770)
 				assert.OK(t, err)
 			}
 

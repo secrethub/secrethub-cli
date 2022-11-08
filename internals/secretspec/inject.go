@@ -2,7 +2,6 @@ package secretspec
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -72,7 +71,7 @@ func (p InjectParser) Parse(rootPath string, allowMountAnywhere bool, config map
 	}
 
 	// Read and parse the file to inject.
-	bytes, err := ioutil.ReadFile(source)
+	bytes, err := os.ReadFile(source)
 	if err != nil {
 		return nil, ErrCannotReadFile(source, err)
 	}

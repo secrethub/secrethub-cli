@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -292,7 +291,7 @@ func (cmd *MigratePlanCommand) Run() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(cmd.outFile, out, cmd.fileMode.FileMode())
+	err = os.WriteFile(cmd.outFile, out, cmd.fileMode.FileMode())
 	if err != nil {
 		return err
 	}
@@ -721,7 +720,7 @@ func (w indentedWriter) Write(p []byte) (n int, err error) {
 }
 
 func getPlan(planFile string) (*plan, error) {
-	contents, err := ioutil.ReadFile(planFile)
+	contents, err := os.ReadFile(planFile)
 	if err != nil {
 		return nil, err
 	}

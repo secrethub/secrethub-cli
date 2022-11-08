@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -74,8 +73,8 @@ func AskSecret(io IO, question string) (string, error) {
 
 // AskMultiline prints out the question and reads back the input until an EOF is reached.
 // The input is displayed to the user.
-func AskMultiline(io IO, question string) ([]byte, error) {
-	promptIn, promptOut, err := io.Prompts()
+func AskMultiline(IO IO, question string) ([]byte, error) {
+	promptIn, promptOut, err := IO.Prompts()
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +84,7 @@ func AskMultiline(io IO, question string) ([]byte, error) {
 		return nil, err
 	}
 
-	raw, err := ioutil.ReadAll(promptIn)
+	raw, err := io.ReadAll(promptIn)
 	if err != nil {
 		return nil, err
 	}

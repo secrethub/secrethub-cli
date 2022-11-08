@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
@@ -37,7 +36,7 @@ func NewReadCommand(io ui.IO, newClient newClientFunc) *ReadCommand {
 		},
 		io:            io,
 		newClient:     newClient,
-		writeFileFunc: ioutil.WriteFile,
+		writeFileFunc: os.WriteFile,
 		fileMode:      filemode.New(0600),
 	}
 }

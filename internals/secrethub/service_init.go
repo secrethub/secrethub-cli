@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -40,7 +39,7 @@ func NewServiceInitCommand(io ui.IO, newClient newClientFunc) *ServiceInitComman
 		},
 		io:            io,
 		newClient:     newClient,
-		writeFileFunc: ioutil.WriteFile,
+		writeFileFunc: os.WriteFile,
 		credential:    credentials.CreateKey(),
 	}
 }

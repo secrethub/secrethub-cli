@@ -1,7 +1,6 @@
 package secrethub
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -78,7 +77,7 @@ func (td testDataDir) cleanup() error {
 func (td testDataDir) tempDir(tb testing.TB) (string, func()) {
 	tb.Helper()
 
-	path, err := ioutil.TempDir(td.root, "")
+	path, err := os.MkdirTemp(td.root, "")
 	assert.OK(tb, err)
 
 	// Log it to make debugging easier.

@@ -2,7 +2,7 @@ package secrethub
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -86,7 +86,7 @@ func (cmd *InjectCommand) Run() error {
 	var raw []byte
 
 	if cmd.inFile != "" {
-		raw, err = ioutil.ReadFile(cmd.inFile)
+		raw, err = os.ReadFile(cmd.inFile)
 		if err != nil {
 			return ErrReadFile(cmd.inFile, err)
 		}
@@ -95,7 +95,7 @@ func (cmd *InjectCommand) Run() error {
 			return ErrNoDataOnStdin
 		}
 
-		raw, err = ioutil.ReadAll(cmd.io.Input())
+		raw, err = io.ReadAll(cmd.io.Input())
 		if err != nil {
 			return err
 		}
@@ -164,7 +164,7 @@ func (cmd *InjectCommand) Run() error {
 			}
 		}
 
-		err = ioutil.WriteFile(cmd.outFile, posix.AddNewLine(out), cmd.fileMode.FileMode())
+		err = os.WriteFile(cmd.outFile, posix.AddNewLine(out), cmd.fileMode.FileMode())
 		if err != nil {
 			return ErrCannotWrite(cmd.outFile, err)
 		}

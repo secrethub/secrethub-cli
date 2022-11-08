@@ -1,4 +1,4 @@
-// +build !production
+//go:build !production
 
 package fakeui
 
@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -28,11 +27,11 @@ type FakeIO struct {
 
 // NewIO creates a new FakeIO with empty buffers.
 func NewIO(t *testing.T) *FakeIO {
-	tempDir, err := ioutil.TempDir("", "")
+	tempDir, err := os.MkdirTemp("", "")
 	assert.OK(t, err)
-	stdIn, err := ioutil.TempFile(tempDir, "in")
+	stdIn, err := os.CreateTemp(tempDir, "in")
 	assert.OK(t, err)
-	stdOut, err := ioutil.TempFile(tempDir, "out")
+	stdOut, err := os.CreateTemp(tempDir, "out")
 	assert.OK(t, err)
 
 	t.Cleanup(func() {
@@ -82,7 +81,7 @@ func (f *FakeIO) Stdout() *os.File {
 }
 
 func (f *FakeIO) ReadStdout() ([]byte, error) {
-	return ioutil.ReadFile(f.StdOut.Name())
+	return os.ReadFile(f.StdOut.Name())
 }
 
 // Prompts returns the mocked prompts and error.
@@ -99,7 +98,7 @@ func (f *FakeIO) IsOutputPiped() bool {
 }
 
 func (f *FakeIO) ReadSecret() ([]byte, error) {
-	return ioutil.ReadAll(f.PasswordReader)
+	return io.ReadAll(f.PasswordReader)
 }
 
 // FakeReader implements the Reader interface.

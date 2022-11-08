@@ -3,7 +3,6 @@ package masker
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"sync"
 	"time"
 )
@@ -80,7 +79,7 @@ func (s *stream) flush(n int) error {
 			}
 
 			// Drop all bytes until the end of the mask.
-			_, err = s.buf.writeUpToIndex(ioutil.Discard, i+int64(length))
+			_, err = s.buf.writeUpToIndex(io.Discard, i+int64(length))
 			if err != nil {
 				return err
 			}

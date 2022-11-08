@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -157,7 +156,7 @@ func GetSignInAddress() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	bytes, err := ioutil.ReadFile(filepath.Join(path, "config"))
+	bytes, err := os.ReadFile(filepath.Join(path, "config"))
 	if err != nil {
 		return "", fmt.Errorf("could not read 1password config file at %s", path)
 	}

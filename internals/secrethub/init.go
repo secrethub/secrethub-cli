@@ -353,7 +353,7 @@ func writeNewCredential(credential *credentials.KeyCreator, passphrase string, c
 		exportKey = exportKey.Passphrase(credentials.FromString(passphrase))
 	}
 
-	encodedCredential, err := credential.Export()
+	encodedCredential, err := exportKey.Export()
 	if err != nil {
 		return err
 	}

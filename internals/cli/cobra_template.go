@@ -378,21 +378,21 @@ func numFlags(flagSet pflag.FlagSet) int {
 
 // UsageTemplate is the custom usage template of the command.
 // Changes in comparison to cobra's default template:
-// 1. Usage section
-//	  a. `[flags]` is placed before the arguments.
-//	  b. All arguments are put in the usage in their proper order.
-//    c. Where applicable, the argument name is replaced with its placeholder.
-// 2. Commands section
-// 	  a. For the root command (`secrethub`) the commands are grouped into
-//		 `Management commands` and `Commands`
-// 2. Flags section
-// 	  a. Flag's type was removed.
-// 	  b. The help text for flags is well divided into its own column, thus
-//		 making the visibility of the flags better.
-// 	  c. At the end of a flag's help text, the name of its environment variable is
-//       displayed between brackets.
-//    d. The section is hidden if the only flag is `--help`.
-// 4. Arguments section (created by us)
+//  1. Usage section
+//     a. `[flags]` is placed before the arguments.
+//     b. All arguments are put in the usage in their proper order.
+//     c. Where applicable, the argument name is replaced with its placeholder.
+//  2. Commands section
+//     a. For the root command (`secrethub`) the commands are grouped into
+//     `Management commands` and `Commands`
+//  2. Flags section
+//     a. Flag's type was removed.
+//     b. The help text for flags is well divided into its own column, thus
+//     making the visibility of the flags better.
+//     c. At the end of a flag's help text, the name of its environment variable is
+//     displayed between brackets.
+//     d. The section is hidden if the only flag is `--help`.
+//  4. Arguments section (created by us)
 var UsageTemplate = `Usage:
 {{if .Cmd.Runnable}} {{(useLine .Cmd .Args)}}{{end}}
 {{- if .Cmd.HasAvailableSubCommands}}  {{ .Cmd.CommandPath}} [command]{{end}}

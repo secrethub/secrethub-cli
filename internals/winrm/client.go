@@ -46,7 +46,7 @@ type Config struct {
 	CaCert         []byte
 }
 
-/// authMethod gives an interface to retrieve the valid credentials or defaults.
+// authMethod gives an interface to retrieve the valid credentials or defaults.
 // The Client always needs both values for certificates authentication and basic authentication.
 // So we use implementations of this interface to give us the values without having to know the implementation.
 // The necessity of this is because of the weird interface giving by our dependency on the masterzen/winrm library.

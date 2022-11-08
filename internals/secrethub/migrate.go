@@ -490,7 +490,7 @@ func (c vaultCreation) Print(w io.Writer) {
 type itemCreation struct {
 	vault        string
 	item         string
-	itemTemplate *onepassword.ItemTemplate
+	itemTemplate onepassword.ItemTemplate
 	opClient     onepassword.OPCLI
 }
 
@@ -598,7 +598,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 			}
 
 			if !itemExists {
-				template := onepassword.NewItemTemplate()
+				template := onepassword.NewItemTemplate(opClient)
 				for _, field := range item.Fields {
 					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
 					if err != nil {

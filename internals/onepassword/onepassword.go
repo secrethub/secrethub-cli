@@ -16,7 +16,7 @@ import (
 type OPCLI interface {
 	IsV2() bool
 	CreateVault(name string) error
-	CreateItem(vault string, template *ItemTemplate, title string) error
+	CreateItem(vault string, template ItemTemplate, title string) error
 	SetField(vault, item, field, value string) error
 	GetFields(vault, item string) (map[string]string, error)
 	ExistsVault(vaultName string) (bool, error)
@@ -39,8 +39,11 @@ func GetOPClient() (OPCLI, error) {
 	return nil, fmt.Errorf("1password: op version not recognized")
 }
 
-func NewItemTemplate() *ItemTemplate {
-	return &ItemTemplate{
+func NewItemTemplate(client OPCLI) ItemTemplate {
+	if client.IsV2() {
+		return &v2ItemTemplate{}
+	}
+	return &v1ItemTemplate{
 		Sections: []sectionTemplate{
 			{
 				Name:  "",
@@ -50,7 +53,11 @@ func NewItemTemplate() *ItemTemplate {
 	}
 }
 
-type ItemTemplate struct {
+type ItemTemplate interface {
+	AddField(name, value string, concealed bool)
+}
+
+type v1ItemTemplate struct {
 	Sections []sectionTemplate `json:"sections"`
 }
 
@@ -60,7 +67,7 @@ type sectionTemplate struct {
 	Fields []itemFieldTemplate `json:"fields"`
 }
 
-func (tpl *ItemTemplate) AddField(name, value string, concealed bool) {
+func (tpl *v1ItemTemplate) AddField(name, value string, concealed bool) {
 	designation := "concealed"
 	if !concealed {
 		designation = "string"

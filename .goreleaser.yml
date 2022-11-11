@@ -60,7 +60,7 @@ brews:
   - name: secrethub-cli
     ids:
       - default
-    github:
+    tap:
       owner: secrethub
       name: homebrew-tools
     folder: Formula

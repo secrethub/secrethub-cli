@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -292,7 +291,7 @@ func (cmd *MigratePlanCommand) Run() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(cmd.outFile, out, cmd.fileMode.FileMode())
+	err = os.WriteFile(cmd.outFile, out, cmd.fileMode.FileMode())
 	if err != nil {
 		return err
 	}
@@ -490,7 +489,7 @@ func (c vaultCreation) Print(w io.Writer) {
 type itemCreation struct {
 	vault        string
 	item         string
-	itemTemplate *onepassword.ItemTemplate
+	itemTemplate onepassword.ItemTemplate
 	opClient     onepassword.OPCLI
 }
 
@@ -598,7 +597,7 @@ func (cmd *MigrateApplyCommand) Run() error {
 			}
 
 			if !itemExists {
-				template := onepassword.NewItemTemplate()
+				template := onepassword.NewItemTemplate(opClient)
 				for _, field := range item.Fields {
 					value, err := client.Secrets().ReadString(strings.TrimPrefix(field.Reference, secretReferencePrefix))
 					if err != nil {
@@ -721,7 +720,7 @@ func (w indentedWriter) Write(p []byte) (n int, err error) {
 }
 
 func getPlan(planFile string) (*plan, error) {
-	contents, err := ioutil.ReadFile(planFile)
+	contents, err := os.ReadFile(planFile)
 	if err != nil {
 		return nil, err
 	}

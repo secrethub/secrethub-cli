@@ -3,7 +3,8 @@ package secrethub
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"os"
 
 	"github.com/secrethub/secrethub-cli/internals/cli"
 	"github.com/secrethub/secrethub-cli/internals/cli/clip"
@@ -78,12 +79,12 @@ func (cmd *WriteCommand) Run() error {
 			return err
 		}
 	} else if cmd.inFile != "" {
-		data, err = ioutil.ReadFile(cmd.inFile)
+		data, err = os.ReadFile(cmd.inFile)
 		if err != nil {
 			return ErrReadFile(cmd.inFile, err)
 		}
 	} else if cmd.io.IsInputPiped() {
-		data, err = ioutil.ReadAll(cmd.io.Input())
+		data, err = io.ReadAll(cmd.io.Input())
 		if err != nil {
 			return ui.ErrReadInput(err)
 		}

@@ -1,7 +1,6 @@
 package secretspec
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -254,7 +253,7 @@ func overwriteFile(filename string, data []byte, perm os.FileMode) error {
 			return ErrCannotOverwriteFile(filename, err)
 		}
 	}
-	err = ioutil.WriteFile(filename, data, perm)
+	err = os.WriteFile(filename, data, perm)
 	if err != nil {
 		return ErrCannotOverwriteFile(filename, err)
 	}

@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/secrethub/secrethub-go/internals/api"
@@ -56,7 +55,7 @@ func (cmd *SetCommand) Run() error {
 		return ErrFileNotFound(cmd.in)
 	}
 
-	spec, err := ioutil.ReadFile(cmd.in)
+	spec, err := os.ReadFile(cmd.in)
 	if err != nil {
 		return ErrCannotReadFile(cmd.in, err)
 	}

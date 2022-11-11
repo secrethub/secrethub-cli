@@ -1,7 +1,6 @@
 package secretspec_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -60,7 +59,7 @@ func TestInjectSetClear(t *testing.T) {
 	}
 
 	// write a config to inject
-	err = ioutil.WriteFile("test-config.json", []byte(testConfigJSONToInject), 0644)
+	err = os.WriteFile("test-config.json", []byte(testConfigJSONToInject), 0644)
 	if err != nil {
 		t.Fatalf("could not write test config to inject: %s", err)
 	}
@@ -84,7 +83,7 @@ func TestInjectSetClear(t *testing.T) {
 		t.Fatalf("cannot set presenter: %s", err)
 	}
 
-	actual, err := ioutil.ReadFile("test-config-injected.json")
+	actual, err := os.ReadFile("test-config-injected.json")
 	if err != nil {
 		t.Fatalf("cannot read from consumable file: %s", err)
 	}

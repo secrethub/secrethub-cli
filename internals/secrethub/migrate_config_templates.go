@@ -2,7 +2,6 @@ package secrethub
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -30,7 +29,7 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 	refMapping.stripSecretHubURIScheme()
 
 	for _, filepath := range cmd.inFiles {
-		inFileContents, err := ioutil.ReadFile(filepath)
+		inFileContents, err := os.ReadFile(filepath)
 		if err != nil {
 			return ErrReadFile(filepath, err)
 		}
@@ -45,7 +44,7 @@ func (cmd *MigrateConfigTemplatesCommand) Run() error {
 			return ErrReadFile(filepath, err)
 		}
 
-		err = ioutil.WriteFile(filepath, []byte(output), inFileInfo.Mode())
+		err = os.WriteFile(filepath, []byte(output), inFileInfo.Mode())
 		if err != nil {
 			return err
 		}

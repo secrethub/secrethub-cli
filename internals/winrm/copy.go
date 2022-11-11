@@ -22,9 +22,9 @@ var (
 
 // doCopy copies the contents from the io.Reader into the to path.
 // The copy process is done in multiple steps:
-//     1. The content is uploaded to a temporary file in chunks
-//     2. The content is restored from the chunks into a single file at the target location.
-//     3. The temporary file is removed.
+//  1. The content is uploaded to a temporary file in chunks
+//  2. The content is restored from the chunks into a single file at the target location.
+//  3. The temporary file is removed.
 //
 // Progress is reported in the progress channel given as a variable.
 func doCopy(client *winrm.Client, in io.Reader, toPath string, progress chan int) error {
@@ -75,7 +75,7 @@ func uploadContent(client *winrm.Client, maxChunks int, filePath string, reader 
 }
 
 // uploadChunks uploads the content by dividing the content into multiple chunks.
-// The chunks are combined into a single file.
+//  The chunks are combined into a single file.
 // The chunks are used to get around the maximum command line size limit.
 // This allows us to use the winRM connection for uploading files.
 func uploadChunks(client *winrm.Client, filePath string, maxChunks int, reader io.Reader) (done bool, err error) {

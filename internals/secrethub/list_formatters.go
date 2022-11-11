@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type listFormatter interface {
@@ -38,7 +41,8 @@ func newJSONFormatter(writer io.Writer, fieldNames []string) *jsonFormatter {
 }
 
 func toPascalCase(s string) string {
-	return strings.ReplaceAll(strings.Title(s), " ", "")
+	caser := cases.Title(language.English)
+	return strings.ReplaceAll(caser.String(s), " ", "")
 }
 
 type jsonFormatter struct {

@@ -1,4 +1,4 @@
-// +build !production
+//go:build !production
 
 // Package fakeprogress provides an implementation of the progress.Printer interface
 // to be used in tests.

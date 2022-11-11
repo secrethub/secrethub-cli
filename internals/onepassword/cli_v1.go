@@ -20,7 +20,7 @@ func (op *OPV1CLI) CreateVault(name string) error {
 	return nil
 }
 
-func (op *OPV1CLI) CreateItem(vault string, template *ItemTemplate, title string) error {
+func (op *OPV1CLI) CreateItem(vault string, template ItemTemplate, title string) error {
 	jsonTemplate, err := json.Marshal(template)
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (op *OPV1CLI) SetField(vault, item, field, value string) error {
 // section of each item.
 func (op *OPV1CLI) GetFields(vault, item string) (map[string]string, error) {
 	opItem := struct {
-		Details ItemTemplate `json:"details"`
+		Details v1ItemTemplate `json:"details"`
 	}{}
 	opItemJSON, err := execOP("get", "item", item, "--vault="+vault)
 	if err != nil {

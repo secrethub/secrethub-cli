@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   lint:
     docker:
-      - image: golangci/golangci-lint:v1.41.1-alpine
+      - image: golangci/golangci-lint:v1.50.1-alpine
     steps:
       - checkout
       - restore_cache:
@@ -30,13 +30,13 @@ jobs:
       arch:
         type: string
     docker:
-      - image: circleci/golang:1.14
+      - image: cimg/go:1.18
     steps:
       - checkout
       - run: GOOS=<< parameters.os >> GOARCH=<< parameters.arch >> go build ./cmd/secrethub
   test:
     docker:
-      - image: circleci/golang:1.14
+      - image: cimg/go:1.18
     steps:
       - checkout
       - restore_cache:
@@ -50,7 +50,7 @@ jobs:
       - run: make test
   verify-goreleaser:
     docker:
-      - image: goreleaser/goreleaser:v0.133
+      - image: goreleaser/goreleaser:v1.12.3
     steps:
       - checkout
       - run: goreleaser check

@@ -3,7 +3,6 @@ package onepassword
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -21,13 +20,13 @@ func (op *OPV2CLI) CreateVault(name string) error {
 	return nil
 }
 
-func (op *OPV2CLI) CreateItem(vault string, template *ItemTemplate, title string) error {
+func (op *OPV2CLI) CreateItem(vault string, template ItemTemplate, title string) error {
 	jsonTemplate, err := json.Marshal(template)
 	if err != nil {
 		return err
 	}
 
-	tempJSONFile, err := ioutil.TempFile(os.TempDir(), "jsonTemplate-")
+	tempJSONFile, err := os.CreateTemp(os.TempDir(), "jsonTemplate-")
 	if err != nil {
 		return err
 	}
@@ -77,11 +76,36 @@ func (op *OPV2CLI) GetFields(vault, item string) (map[string]string, error) {
 	return fields, nil
 }
 
-type v2ItemFieldTemplate struct {
+type v2ItemTemplate struct {
+	Sections []v2SectionTemplate   `json:"sections"`
+	Fields   []v2ItemFieldTemplate `json:"fields"`
+}
+
+type v2SectionTemplate struct {
 	ID    string `json:"id"`
-	Type  string `json:"type"`
 	Label string `json:"label"`
-	Value string `json:"value"`
+}
+
+type v2ItemFieldTemplate struct {
+	ID      string            `json:"id"`
+	Section v2SectionTemplate `json:"section"`
+	Type    string            `json:"type"`
+	Label   string            `json:"label"`
+	Value   string            `json:"value"`
+}
+
+func (tpl *v2ItemTemplate) AddField(name, value string, concealed bool) {
+	fieldType := "CONCEALED"
+	if !concealed {
+		fieldType = "STRING"
+	}
+
+	tpl.Fields = append(tpl.Fields, v2ItemFieldTemplate{
+		ID:    name,
+		Type:  fieldType,
+		Label: name,
+		Value: value,
+	})
 }
 
 func (op *OPV2CLI) ExistsVault(vaultName string) (bool, error) {

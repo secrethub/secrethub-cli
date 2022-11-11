@@ -1,7 +1,6 @@
 package secretspec
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -400,7 +399,7 @@ func TestEnvSetAndClear(t *testing.T) {
 
 			if tc.err == nil {
 				for target, expected := range tc.expected {
-					actual, err := ioutil.ReadFile(filepath.Join(env.dirPath, target))
+					actual, err := os.ReadFile(filepath.Join(env.dirPath, target))
 					if err != nil {
 						t.Errorf("cannot read file: %v", err)
 					} else {

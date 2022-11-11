@@ -1,4 +1,4 @@
-// +build !production
+//go:build !production
 
 package fakes
 

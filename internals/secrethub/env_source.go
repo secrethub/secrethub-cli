@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,7 +52,7 @@ func newEnvironment(io ui.IO, newClient newClientFunc) *environment {
 		io:           io,
 		newClient:    newClient,
 		osEnv:        os.Environ(),
-		readFile:     ioutil.ReadFile,
+		readFile:     os.ReadFile,
 		osStat:       os.Stat,
 		templateVars: make(map[string]string),
 		envar:        make(map[string]string),
@@ -348,7 +347,7 @@ type EnvDir map[string]value
 // NewEnvDir sources environment variables from files in a given directory,
 // using the file name as key and contents as value.
 func NewEnvDir(path string) (EnvDir, error) {
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, ErrReadEnvDir(err)
 	}
@@ -357,7 +356,7 @@ func NewEnvDir(path string) (EnvDir, error) {
 	for _, f := range files {
 		if !f.IsDir() {
 			filePath := filepath.Join(path, f.Name())
-			fileContent, err := ioutil.ReadFile(filePath)
+			fileContent, err := os.ReadFile(filePath)
 			if err != nil {
 				return nil, ErrReadEnvFile(f.Name(), err)
 			}
@@ -603,12 +602,12 @@ const (
 // it is wrapped in either single or double quotes.
 //
 // Rules:
-// - Empty values become empty values (e.g. `''`and `""` both evaluate to the empty string ``).
-// - Inner quotes are maintained (e.g. `{"foo":"bar"}` remains unchanged).
-// - Single and double quoted values are escaped (e.g. `'foo'` and `"foo"` both evaluate to `foo`).
-// - Single and double qouted values maintain whitespace from both ends (e.g. `" foo "` becomes ` foo `)
-// - Inputs with either leading or trailing whitespace are considered unquoted,
-//   so make sure you sanitize your inputs before calling this function.
+//   - Empty values become empty values (e.g. `”`and `""` both evaluate to the empty string “).
+//   - Inner quotes are maintained (e.g. `{"foo":"bar"}` remains unchanged).
+//   - Single and double quoted values are escaped (e.g. `'foo'` and `"foo"` both evaluate to `foo`).
+//   - Single and double qouted values maintain whitespace from both ends (e.g. `" foo "` becomes ` foo `)
+//   - Inputs with either leading or trailing whitespace are considered unquoted,
+//     so make sure you sanitize your inputs before calling this function.
 func trimQuotes(s string) (string, bool) {
 	n := len(s)
 	if n > 1 &&
@@ -621,7 +620,7 @@ func trimQuotes(s string) (string, bool) {
 }
 
 func parseYML(r io.Reader) ([]envvar, error) {
-	contents, err := ioutil.ReadAll(r)
+	contents, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
